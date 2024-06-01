@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Video Dashboard</h1>
+  <ul>
+    <% videos.forEach(video => { %>
+      <li>
+        <a href="/videos/<%= video._id %>"><%= video.title %></a>
+        <% if (video.watched) { %>
+          <span>Watched</span>
+        <% } else { %>
+          <form action="/videos/<%= video._id %>/watch" method="POST">
+            <button type="submit">Mark as Watched</button>
+          </form>
+        <% } %>
+      </li>
+    <% }) %>
+  </ul>
+</body>
+</html>
