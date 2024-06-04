@@ -13,8 +13,10 @@
       <div class="relative">
         <video class="w-full h-auto" controls>
           <source src="/videos/<%= video.videoUrl %>" type="video/mp4">
+          <track kind="captions" label="English Captions" default src="/videos/<%= video.captionsUrl %>.vtt" srclang="en">
           Your browser does not support the video tag.
         </video>
+        
       </div>
       <div class="p-4">
         <p class="text-gray-600 mb-4"><%= video.description %></p>

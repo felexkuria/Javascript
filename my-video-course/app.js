@@ -42,22 +42,39 @@ const Video = require('./models/Video'); // Ensure the path is correct
 
 
 // Connect to MongoDB
-mongoose.connect(config.mongodbUri, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(config.mongodbUri,
+   { useNewUrlParser: true, 
+    useUnifiedTopology: true })
   .then(() => {
     //addDummyData();
     console.log('MongoDB connected');
-    //addVideoFiles()
+  //  addVideoFiles()
 })
 
-  .catch(err => console.log(err));
+  .catch(err =>{
+    console.error('Error connecting to MongoDB:', error);
+    process.exit(1); // Exit the application on connection failure
+  } 
+  );
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 
+const checkForCaptions = (filePath) => {
+  const ext = path.extname(filePath).toLowerCase();
+  return ext === '.srt'; // Check for lowercase '.srt' extension
+};
+
 const addVideoFiles = async () => {
   try {
+    // Ensure Mongoose connection is established before proceeding
+    if (!mongoose.connection.readyState) {
+      console.error('MongoDB connection not established.');
+      return; // Exit the function if not connected
+    }
+
     const videoDir = path.join(__dirname, 'public', 'videos');
 
     const traverseDirectory = (dir, section) => {
@@ -72,13 +89,17 @@ const addVideoFiles = async () => {
           // Recursively traverse subdirectories
           videoDocuments = videoDocuments.concat(traverseDirectory(filePath, file));
         } else if (stat.isFile()) {
+          const isCaption = checkForCaptions(filePath);
+          const property = isCaption ? 'captionsUrl' : 'videoUrl'; // Set property based on file type
+          const url = path.relative(videoDir, filePath); // Relative path
+
           videoDocuments.push({
             title: path.basename(file, path.extname(file)), // Use filename without extension as title
             description: `Description for ${file}`, // Placeholder description
-            videoUrl: path.relative(videoDir, filePath), // Relative path from videoDir
             section: section,
             watched: false,
-            watchedAt: null // Default to null
+            watchedAt: null, // Default to null
+            [property]: url // Dynamically add videoUrl or captionsUrl property
           });
         }
       });
@@ -95,15 +116,21 @@ const addVideoFiles = async () => {
 
     // Insert video documents
     await Video.insertMany(videoDocuments);
-    console.log('Video files inserted into MongoDB.');
+    console.log('Video files and captions inserted into MongoDB.');
 
-    // Close the database connection
+    // Close the database connection (optional for development)
     mongoose.connection.close();
     console.log('Database connection closed.');
   } catch (err) {
-    console.error('Error adding video files:', err);
+    if (err instanceof error_1.MongoNotConnectedError) {
+      console.error('MongoDB connection not established.');
+    } else {
+      console.error('Error adding video files:', err);
+    }
   }
 };
+
+
 
 // const addVideoFiles = async () => {
 //     try {
