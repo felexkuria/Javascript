@@ -11,9 +11,11 @@
     <h1 class="text-3xl font-bold mb-4 text-center"><%= video.title %></h1>
     <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
       <div class="relative">
-        <video class="w-full h-auto" controls>
+        <video class="w-full h-auto max-w-full"  controls>
           <source src="/videos/<%= video.videoUrl %>" type="video/mp4">
-          <track kind="captions" label="English Captions" default src="/videos/<%= video.captionsUrl %>.vtt" srclang="en">
+          <button id="ccButton">CC</button>
+
+    <track kind="subtitles" label="English Captions" src="/videos/<%= video.captionsUrl %>.srt"" default></track> 
           Your browser does not support the video tag.
         </video>
         
@@ -22,7 +24,9 @@
         <p class="text-gray-600 mb-4"><%= video.description %></p>
         <form action="/videos/<%= video._id %>/watch" method="POST" class="text-center">
           <img src="https://vendorcenter.jumia.com/assets/images/local_red.svg" alt="" srcset="">
-          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"> <img src="https://vendorcenter.jumia.com/assets/images/local_green.svg" alt="" srcset="">Mark as Watched</button>
+          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"> 
+            <img src="https://vendorcenter.jumia.com/assets/images/local_green.svg" alt="" srcset="">
+            Mark as Watched</button>
         </form>
         <!-- <div class="mt-4 text-center">
           <a href="/videos/dashboard" class="text-blue-500 hover:underline">Back to Dashboard</a>
