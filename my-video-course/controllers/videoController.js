@@ -22,6 +22,7 @@ const Video = require('../models/Video');
 exports.getAllVideos = async (req, res) => {
   try {
     const videos = await Video.find();
+    
     res.render('dashboard', { videos });
   } catch (err) {
     res.status(500).json({ error: err.message });
