@@ -173,13 +173,24 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
 app.get('/', async (req, res) => {
-  const allSections = await Video.distinct('section');
-  const sections = {};
-  for (const section of allSections) {
-    sections[section] = await Video.find({ section });
+  try {
+    const allSections = await Video.distinct('section');
+    const sections = {};
+    const sectionWatchedStatus = {};
+
+    for (const section of allSections) {
+      const videos = await Video.find({ section });
+      sections[section] = videos;
+      sectionWatchedStatus[section] = videos.every(video => video.watched);
+    }
+
+    res.render('index', { sections, sectionWatchedStatus });
+  } catch (err) {
+    console.error('Error fetching sections:', err);
+    res.status(500).send('Server Error');
   }
-  res.render('index', { sections });
 });
+
 
 // app.get('/section/:sectionName', async (req, res) => {
 //   const sectionName = req.params.sectionName;
