@@ -48,7 +48,7 @@ mongoose.connect(config.mongodbUri,
   .then(() => {
     //addDummyData();
     console.log('MongoDB connected');
-  //  addVideoFiles()
+    //addVideoFiles()
 })
 
   .catch(err =>{
@@ -172,19 +172,29 @@ app.use('/videos', videoRoutes);
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
+// Endpoint to fetch and render videos, sections, and progress
 app.get('/', async (req, res) => {
   try {
     const allSections = await Video.distinct('section');
     const sections = {};
     const sectionWatchedStatus = {};
+    const videos = await Video.find();
+    const totalVideos = videos.length;
+    const watchedVideos = videos.filter(video => video.watched).length;
 
     for (const section of allSections) {
-      const videos = await Video.find({ section });
-      sections[section] = videos;
-      sectionWatchedStatus[section] = videos.every(video => video.watched);
+      const sectionVideos = await Video.find({ section });
+      sections[section] = sectionVideos;
+      sectionWatchedStatus[section] = sectionVideos.every(video => video.watched);
     }
 
-    res.render('index', { sections, sectionWatchedStatus });
+    res.render('index', { 
+      videos, 
+      totalVideos, 
+      watchedVideos, 
+      sections, 
+      sectionWatchedStatus 
+    });
   } catch (err) {
     console.error('Error fetching sections:', err);
     res.status(500).send('Server Error');

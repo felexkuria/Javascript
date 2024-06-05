@@ -19,6 +19,18 @@
 // controllers/videoController.js
 const Video = require('../models/Video');
 
+exports.getVideos = async (req, res) => {
+  try {
+    const videos = await Video.find();
+    const totalVideos = videos.length;
+    const watchedVideos = videos.filter(video => video.watched).length;
+
+    res.render('index', { videos, totalVideos, watchedVideos });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getAllVideos = async (req, res) => {
   try {
     const videos = await Video.find();
@@ -44,21 +56,35 @@ exports.getVideoById = async (req, res) => {
 //     video.watched = true;
 //     video.watchedAt = new Date(); // Set the current date and time
 //     await video.save();
-//     res.redirect(`/videos/${req.params.id}`);
+    // res.redirect(`/videos/${req.params.id}`);
 //   } catch (err) {
 //     res.status(500).json({ error: err.message });
 //   }
 // };
+// Mark video as watched and redirect to the next video
 exports.markVideoAsWatched = async (req, res) => {
   try {
-    const video = await Video.findById(req.params.id);
+    const videoId = req.params.id;
+    const video = await Video.findById(videoId);
     const videos = await Video.find();
+
+    // Mark the current video as watched
     video.watched = true;
     video.watchedAt = new Date(); // Set the current date and time
     await video.save();
-    // Redirect to the dashboard page after marking the video as watched
-    res.render('dashboard', { videos });
-    // res.redirect(`/videos/${req.params.id}`);
+
+    // Find the index of the current video
+    const currentIndex = videos.findIndex(v => v._id.toString() === videoId);
+
+    // Determine the next video, if it exists
+    const nextVideo = currentIndex < videos.length - 1 ? videos[currentIndex + 1] : null;
+
+    // Redirect to the next video or to the dashboard if no more videos
+    if (nextVideo) {
+      res.redirect(`/videos/${nextVideo._id}`);
+    } else {
+      res.redirect(`/videos/${req.params.id}`); // Or any other endpoint you want to redirect to after the last video
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
