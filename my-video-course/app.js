@@ -40,7 +40,10 @@ const Video = require('./models/Video'); // Ensure the path is correct
 
 
 
-
+const textIn=fs.readFileSync('./public/videos/The Complete Node Bootcamp 2021/[TutsNode.com] - Node.js, Express, MongoDB & More - The Complete Bootcamp 2021/02 Introduction to Node.js and NPM/006 Download-starter-project-from-GitHub.txt','utf-8')
+console.log(textIn)
+ fs.writeFileSync('./public.txt',"This is Node js Writing")
+ //console.log(textOut)
 // Connect to MongoDB
 mongoose.connect(config.mongodbUri,
    { useNewUrlParser: true, 
@@ -172,7 +175,6 @@ app.use('/videos', videoRoutes);
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
-// Endpoint to fetch and render videos, sections, and progress
 app.get('/', async (req, res) => {
   try {
     const allSections = await Video.distinct('section');
@@ -230,6 +232,7 @@ app.get('/section/:sectionName', async (req, res) => {
   try {
     const sectionName = req.params.sectionName;
     const videos = await Video.find({ section: sectionName });
+    const selectedSection = req.query.section || null;
     const allSections = await Video.distinct('section'); // Get all section names
     const sections = {};
 

@@ -46,7 +46,7 @@
       </div>
       <div class="p-4">
         <p class="text-gray-600 mb-4"><%= video.description %></p>
-        <form action="/videos/<%= video._id %>/watch" method="POST" class="text-center">
+        <form id="watchForm" action="/videos/<%= video._id %>/watch" method="POST" class="text-center">
           <% if (video.watched) { %>
             <button type="submit" class="bg-black text-white px-4 py-2 rounded flex items-center justify-center transition duration-300">
               <img src="https://vendorcenter.jumia.com/assets/images/local_green.svg" alt="Watched" class="w-6 h-6 mr-2">

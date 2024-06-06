@@ -1,60 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Section: <%= sectionName %></title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100;200;300;400;500;600;700;800;900&display=swap">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-</head>
-<body class="bg-gray-100 font-lexend-deca flex">
- 
-  <div class="w-1/4 bg-white shadow-lg">
-    <div class="p-4 border-b bg-blue-500">
-      <h2 class="text-xl font-lexend-deca font-semibold text-white">Sections</h2>
-    </div>
-    <div>
-      <!-- //TODO: when video finishe go to next automatic and mark watched 
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Section: <%= sectionName %></title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100;200;300;400;500;600;700;800;900&display=swap"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+      integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body class="bg-gray-100 font-lexend-deca flex">
+    
+      <div class="w-1/4 bg-white shadow-lg p-2">
+        <div class="p-4 border-b bg-blue-500 flex justify-between items-center">
+          <h2 class="text-xl font-lexend-deca font-semibold text-white">
+            Sections
+          </h2>
+        </div>
+
+        <div>
+          <!-- //TODO: when video finishe go to next automatic and mark watched 
         have attachment display 
         show caption
         show progress of whole section and compute the whole course -->
-      <% for (let section in sections) { %>
-        <a href="/section/<%= section %>" class="block text-xs truncate py-2 px-4 text-gray-700 font-lexend-deca hover:bg-gray-200 flex items-center">
-          <img src="https://vendorcenter.jumia.com/assets/images/local_red.svg" alt="Section" class="mr-2 w-4 h-4" />
-          <span><%= section %></span>
-        </a>
-      <% } %>
-    </div>
-    
-  </div>
-  
-  <div class="w-3/4 p-6">
-    <h1 class="text-2xl font-bold mb-8 text-center text-gray-800">Section: <%= sectionName %></h1>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <% videos.forEach(video => { %>
-        <% if (video.videoUrl) { %>
-          <div class="p-6 bg-white rounded-lg shadow-md hover:shadow-lg hover:bg-gray-100 transition duration-300">
-            <a href="/videos/<%= video._id %>">
-              <img src="/download.jpg" alt="<%= video.title %>" class="w-full h-auto object-cover rounded-lg mb-4">
-            </a>
-            <h2 class="text-xs font-lexend-deca font-semibold text-gray-800 mb-2 truncate"><%= video.title %></h2>
-  
-            <p class="text-gray-600 font-lexend-deca text-sm truncate"><%= video.description %></p>
-  
-            <img src="<%- video.watched ? 'https://vendorcenter.jumia.com/assets/images/local_green.svg' : 'https://vendorcenter.jumia.com/assets/images/local_red.svg' %>"
-                 alt="Watch Status"
-                 class="w-6 h-6 inline-block ml-2">
-          </div>
-        <% } %>
-      <% }) %>
-    </div>
-  </div>
-  
-  
-  
-  
-  
-</body>
+          <% for (let section in sections) { %>
+          <a
+            href="/section/<%= section %>"
+            class="block text-xs truncate py-2 px-4 text-gray-700 font-lexend-deca hover:bg-blue-200 flex items-center"
+          >
+            <!-- <img src="https://vendorcenter.jumia.com/assets/images/local_red.svg" alt="Section" class="mr-2 w-4 h-4" /> -->
+            <span><%= section %></span>
+          </a>
+          <% } %>
+        </div>
+      </div>
 
+      <div class="w-3/4 p-6">
+        <h1 class="text-2xl font-bold mb-8 text-center text-gray-800">
+          Section: <%= sectionName %>
+        </h1>
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+        >
+          <% videos.forEach(video => { %> <% if (video.videoUrl) { %>
+          <div
+            class="p-6 bg-white rounded-lg shadow-md hover:shadow-lg hover:bg-blue-100 transition duration-300"
+          >
+            <a href="/videos/<%= video._id %>">
+              <img
+                src="/download.jpg"
+                alt="<%= video.title %>"
+                class="w-full h-auto object-cover rounded-lg mb-4"
+              />
+            </a>
+            <h2
+              class="text-xs font-lexend-deca font-semibold text-gray-800 mb-2 truncate"
+            >
+              <%= video.title %>
+            </h2>
+
+            <p class="text-gray-600 font-lexend-deca text-sm truncate">
+              <%= video.description %>
+            </p>
+
+            <img
+              src="<%- video.watched ? 'https://vendorcenter.jumia.com/assets/images/local_green.svg' : 'https://vendorcenter.jumia.com/assets/images/local_red.svg' %>"
+              alt="Watch Status"
+              class="w-6 h-6 inline-block ml-2"
+            />
+          </div>
+          <% } %> <% }) %>
+        </div>
+      </div>
+    
+  </body>
 </html>
