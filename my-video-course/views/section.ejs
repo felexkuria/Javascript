@@ -155,10 +155,10 @@
             <a href="/videos/<%= video._id %>">
               <img src="/download.jpg" alt="<%= video.title %>" class="w-full h-auto object-cover rounded-lg mb-4" />
             </a>
-            <h2 class="video-title text-xs font-lexend-deca font-semibold text-gray-800 mb-2 truncate">
-              <%= video.title %>
+            <h2 class="video-title text-xs font-lexend-deca  <%- video.watched?"text-fuchsia-800 ":"text-gray-900" %> mb-2 truncate">
+              <i class="fa-solid <%- video.watched?"fa-check":"fa-xmark" %> "></i>  <%= video.title %>
             </h2>
-            <p class="video-description text-gray-600 font-lexend-deca text-sm truncate">
+            <p class="video-description  <%- video.watched?"text-fuchsia-800 ":"text-gray-900" %>  font-lexend-deca text-sm truncate">
               <%= video.description %>
             </p>
             <img
