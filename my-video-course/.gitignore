@@ -1,2 +1,3 @@
-/node-modules/
-/public/
+node-modules/
+public/
+*.env
