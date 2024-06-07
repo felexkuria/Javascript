@@ -218,14 +218,20 @@ app.get('/', async (req, res) => {
 //   res.render('section', { sectionName, videos, sections });
 // });
 app.get('/videos/:id', async (req, res) => {
-  const video = await Video.findById(req.params.id);
-  const allSections = await Video.distinct('section');
-  const sections = {};
-  for (const section of allSections) {
-    sections[section] = await Video.find({ section });
+  try {
+    const video = await Video.findById(req.params.id);
+    const allSections = await Video.distinct('section');
+    const sections = {};
+    for (const section of allSections) {
+      sections[section] = await Video.find({ section });
+    }
+    res.render('video', { video, sections, captionsUrl: video.captionsUrl });
+  } catch (error) {
+    console.error('Error fetching video:', error);
+    res.status(500).send('Server Error');
   }
-  res.render('video', { video, sections });
 });
+
 app.post('/videos/:id/watch', async (req, res) => {
   await Video.findByIdAndUpdate(req.params.id, { watched: true, watchedAt: new Date() });
   res.redirect(`/videos/${req.params.id}`);

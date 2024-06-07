@@ -127,9 +127,9 @@
             <video id="currentVideo" class="w-full h-auto max-w-full video" autoplay controls>
               <source src="/videos/<%= video.videoUrl %>" type="video/mp4">
               <button id="ccButton">CC</button>
-              <track kind="subtitles" label="English Captions" src="/videos/<%= video.captionsUrl %>.srt" srclang="en"
-                default>
-              </track>
+              <% if (video.captionsUrl) { %>
+                <track kind="subtitles" label="English Captions" src="/videos/<%= video.captionsUrl %>" default>
+              <% } %>
               Your browser does not support the video tag.
             </video>
 

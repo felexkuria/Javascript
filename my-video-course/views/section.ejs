@@ -1,150 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Section: <%= sectionName %></title>
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100;200;300;400;500;600;700;800;900&display=swap"
-    />
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <style>
-      .progress-circle {
-        width: 40px;
-        height: 40px;
-        position: relative;
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Section: <%= sectionName %>
+  </title>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100;200;300;400;500;600;700;800;900&display=swap" />
+  <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <style>
+    .progress-circle {
+      width: 40px;
+      height: 40px;
+      margin-left: 10px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .progress-circle .circle-bg {
+      fill: none;
+      stroke: #e6e6e6;
+      stroke-width: 3.8;
+    }
+
+    .progress-circle .circle {
+      fill: none;
+      stroke-width: 3.8;
+      stroke-linecap: round;
+      animation: progress 1s ease-out forwards;
+    }
+
+    .progress-circle text {
+      fill: #333;
+      font-size: 10px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    @keyframes progress {
+      from {
+        stroke-dasharray: 0 100;
       }
-    
-      .progress-circle .circle-bg {
-        fill: none;
-        stroke: #e6e6e6;
-        stroke-width: 3.8;
-      }
-    
-      .progress-circle .circle {
-        fill: none;
-        stroke-width: 3.8;
-        stroke-linecap: round;
-        animation: progress 1s ease-out forwards;
-      }
-    
-      @keyframes progress {
-        from {
-          stroke-dasharray: 0 100;
-        }
-      }
-    
-      .progress-container {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-    
-      .section-dropdown {
-        display: none;
-      }
-    
-      .section-dropdown.open {
-        display: block;
-      }
-    
-      /* Add styles for watched and unwatched circles */
-      .circle-bg {
-        stroke: rgb(214, 218, 214); /* Change the stroke color for watched */
-      }
-    
-      .circle.unwatched {
-        stroke: purple; /* Change the stroke color for unwatched */
-      }
-    </style>
-    
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
-      integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
-  </head>
-  <body class="bg-gray-100 font-lexend-deca flex">
-    
-      <div class="w-1/4 bg-white shadow-lg p-2">
-        <div class="p-4 border-b bg-blue-500 flex justify-between items-center">
-          <h2 class="text-xl font-lexend-deca font-semibold text-white">
-            Sections
-          </h2>
+    }
+
+    .grid-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .video-card {
+      position: relative;
+      padding: 16px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+    }
+
+    .video-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+      background-color: #f0f8ff;
+    }
+
+    .video-card img {
+      border-radius: 8px;
+    }
+
+    .video-title {
+      margin-top: 12px;
+      margin-bottom: 8px;
+    }
+
+    .video-description {
+      margin-bottom: 8px;
+    }
+
+    .watch-status {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .section-dropdown {
+      display: none;
+    }
+
+    .section-dropdown.open {
+      display: block;
+    }
+
+    /* Add styles for watched and unwatched circles */
+    .circle-bg {
+      stroke: rgb(214, 218, 214);
+      /* Change the stroke color for watched */
+    }
+
+    .circle.unwatched {
+      stroke: purple;
+      /* Change the stroke color for unwatched */
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+    integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body class="bg-gray-100 font-lexend-deca flex">
+  <div class="w-1/4 bg-white shadow-lg p-2">
+    <div class="p-4 border-b bg-blue-500 flex justify-between items-center">
+      <h2 class="text-xl font-lexend-deca font-semibold text-white">Sections</h2>
+    </div>
+
+    <div>
+      <% for (let section in sections) { %>
+        <a href="/section/<%= section %>"
+          class="block text-xs truncate py-2 px-4 text-gray-700 font-lexend-deca hover:bg-blue-200 flex items-center">
+          <!-- <img src="https://vendorcenter.jumia.com/assets/images/local_red.svg" alt="Section" class="mr-2 w-4 h-4" /> -->
+          <span>
+            <%= section %>
+          </span>
+        </a>
+        <% } %>
+    </div>
+  </div>
+  <div class="w-3/4 p-6 ">
+    <div class="grid-container">
+      <h1 class="text-2xl font-bold text-gray-800 flex items-center justify-center">
+        Section: <%= sectionName %>
           <div class="progress-circle">
             <svg viewBox="0 0 36 36">
               <path class="circle-bg" d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0 -31.831" />
-              <path class="circle <%= videos.watched ? 'watched' : 'unwatched' %>" stroke-dasharray="<%= (watchedVideos / totalVideos) * 100 %>, 100"
+              <path class="circle <%= (watchedVideos / totalVideos) * 100 >= 75 ? 'watched' : 'unwatched' %>"
+                stroke-dasharray="<%= (watchedVideos / totalVideos) * 100 %>, 100"
                 d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0 -31.831" />
+              <text x="18" y="20">
+                <%= Math.round((watchedVideos / totalVideos) * 100) %>%
+              </text>
             </svg>
           </div>
-        </div>
-
-        <div>
-          <!-- //TODO: when video finishe go to next automatic and mark watched 
-        have attachment display 
-        show caption
-        show progress of whole section and compute the whole course -->
-          <% for (let section in sections) { %>
-          <a
-            href="/section/<%= section %>"
-            class="block text-xs truncate py-2 px-4 text-gray-700 font-lexend-deca hover:bg-blue-200 flex items-center"
-          >
-            <!-- <img src="https://vendorcenter.jumia.com/assets/images/local_red.svg" alt="Section" class="mr-2 w-4 h-4" /> -->
-            <span><%= section %></span>
-          </a>
+      </h1>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <% videos.forEach(video=> { %>
+        <% if (video.videoUrl) { %>
+          <div class="video-card">
+            <a href="/videos/<%= video._id %>">
+              <img src="/download.jpg" alt="<%= video.title %>" class="w-full h-auto object-cover rounded-lg mb-4" />
+            </a>
+            <h2 class="video-title text-xs font-lexend-deca font-semibold text-gray-800 mb-2 truncate">
+              <%= video.title %>
+            </h2>
+            <p class="video-description text-gray-600 font-lexend-deca text-sm truncate">
+              <%= video.description %>
+            </p>
+            <img
+              src="<%- video.watched ? 'https://vendorcenter.jumia.com/assets/images/local_green.svg' : 'https://vendorcenter.jumia.com/assets/images/local_red.svg' %>"
+              alt="Watch Status" class="watch-status" />
+          </div>
           <% } %>
-        </div>
-      </div>
+            <% }) %>
+    </div>
 
-      <div class="w-3/4 p-6">
-        <h1 class="text-2xl font-bold mb-8 text-center text-gray-800">
-          Section: <%= sectionName %>
-        </h1>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          <% videos.forEach(video => { %>
-            <% if (video.videoUrl) { %>
-              <div class="p-6 bg-white rounded-lg shadow-md hover:shadow-lg hover:bg-blue-100 transition duration-300">
-                <a href="/videos/<%= video._id %>">
-                  <img
-                    src="/download.jpg"
-                    alt="<%= video.title %>"
-                    class="w-full h-auto object-cover rounded-lg mb-4"
-                  />
-                </a>
-                <h2 class="text-xs font-lexend-deca font-semibold text-gray-800 mb-2 truncate">
-                  <%= video.title %>
-                </h2>
-                <p class="text-gray-600 font-lexend-deca text-sm truncate">
-                  <%= video.description %>
-                </p>
-                <img
-                  src="<%- video.watched ? 'https://vendorcenter.jumia.com/assets/images/local_green.svg' : 'https://vendorcenter.jumia.com/assets/images/local_red.svg' %>"
-                  alt="Watch Status"
-                  class="w-6 h-6 inline-block ml-2"
-                />
-              </div>
-            <% } %>
-          <% }) %>
-        </div>
-        
-      </div>
-    
-  </body>
-  <script>
-    window.addEventListener('message', function(event) {
-      if (typeof event.data === 'number') {
-        const progress = event.data;
-        document.querySelector('.circle').setAttribute('stroke-dasharray', `${progress}, 100`);
-        document.querySelector('.circle').setAttribute('stroke', progress >= 75 ? 'green' : 'orange');
-      }
-    });
-  </script>
+  </div>
+
+</body>
+<script>
+  window.addEventListener('message', function (event) {
+    if (typeof event.data === 'number') {
+      const progress = event.data;
+      document.querySelector('.circle').setAttribute('stroke-dasharray', `${progress}, 100`);
+      document.querySelector('.circle').setAttribute('stroke', progress >= 75 ? 'green' : 'orange');
+    }
+  });
+</script>
+
 </html>
