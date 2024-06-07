@@ -175,17 +175,19 @@ app.use('/videos', videoRoutes);
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
+// Endpoint to fetch and render videos, sections, and progress
 app.get('/', async (req, res) => {
   try {
     const allSections = await Video.distinct('section');
     const sections = {};
     const sectionWatchedStatus = {};
-    const videos = await Video.find();
+    const videos = await Video.find().sort({ _id: 1 }); // Sort by ID
+
     const totalVideos = videos.length;
     const watchedVideos = videos.filter(video => video.watched).length;
 
     for (const section of allSections) {
-      const sectionVideos = await Video.find({ section });
+      const sectionVideos = await Video.find({ section }).sort({ _id: 1 }); // Sort by ID within each section
       sections[section] = sectionVideos;
       sectionWatchedStatus[section] = sectionVideos.every(video => video.watched);
     }
@@ -202,6 +204,7 @@ app.get('/', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
 
 
 // app.get('/section/:sectionName', async (req, res) => {
@@ -227,6 +230,26 @@ app.post('/videos/:id/watch', async (req, res) => {
   await Video.findByIdAndUpdate(req.params.id, { watched: true, watchedAt: new Date() });
   res.redirect(`/videos/${req.params.id}`);
 });
+// Endpoint to mark video as watched
+// app.post('/videos/:id/watch', async (req, res) => {
+//   try {
+//     const video = await Video.findById(req.params.id);
+//     video.watched = true;
+//     video.watchedAt = new Date();
+//     await video.save();
+
+//     const videos = await Video.find();
+//     const totalVideos = videos.length;
+//     const watchedVideos = videos.filter(video => video.watched).length;
+//     const progress = (watchedVideos / totalVideos) * 100;
+// // post data to  db
+//     res.json({ success: true, progress, watchedVideos, totalVideos });
+//   } catch (err) {
+//     console.error('Error marking video as watched:', err);
+//     res.status(500).send('Server Error');
+//   }
+// });
+
 
 app.get('/section/:sectionName', async (req, res) => {
   try {
@@ -235,6 +258,8 @@ app.get('/section/:sectionName', async (req, res) => {
     const selectedSection = req.query.section || null;
     const allSections = await Video.distinct('section'); // Get all section names
     const sections = {};
+    const totalVideos = videos.length;
+    const watchedVideos = videos.filter(video => video.watched).length;
 
     allSections.forEach(section => {
       sections[section] = [];
@@ -244,7 +269,8 @@ app.get('/section/:sectionName', async (req, res) => {
       sections[video.section].push(video);
     });
 
-    res.render('section', { sectionName, videos, sections });
+    res.render('section', { sectionName, videos, sections,totalVideos, 
+      watchedVideos,  });
   } catch (err) {
     res.status(500).send(err);
   }

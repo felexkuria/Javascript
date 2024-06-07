@@ -8,10 +8,61 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100;200;300;400;500;600;700;800;900&display=swap"
     />
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
     />
+    <style>
+      .progress-circle {
+        width: 40px;
+        height: 40px;
+        position: relative;
+      }
+    
+      .progress-circle .circle-bg {
+        fill: none;
+        stroke: #e6e6e6;
+        stroke-width: 3.8;
+      }
+    
+      .progress-circle .circle {
+        fill: none;
+        stroke-width: 3.8;
+        stroke-linecap: round;
+        animation: progress 1s ease-out forwards;
+      }
+    
+      @keyframes progress {
+        from {
+          stroke-dasharray: 0 100;
+        }
+      }
+    
+      .progress-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+    
+      .section-dropdown {
+        display: none;
+      }
+    
+      .section-dropdown.open {
+        display: block;
+      }
+    
+      /* Add styles for watched and unwatched circles */
+      .circle-bg {
+        stroke: rgb(214, 218, 214); /* Change the stroke color for watched */
+      }
+    
+      .circle.unwatched {
+        stroke: purple; /* Change the stroke color for unwatched */
+      }
+    </style>
+    
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
@@ -27,6 +78,13 @@
           <h2 class="text-xl font-lexend-deca font-semibold text-white">
             Sections
           </h2>
+          <div class="progress-circle">
+            <svg viewBox="0 0 36 36">
+              <path class="circle-bg" d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0 -31.831" />
+              <path class="circle <%= videos.watched ? 'watched' : 'unwatched' %>" stroke-dasharray="<%= (watchedVideos / totalVideos) * 100 %>, 100"
+                d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+          </div>
         </div>
 
         <div>
@@ -50,39 +108,43 @@
         <h1 class="text-2xl font-bold mb-8 text-center text-gray-800">
           Section: <%= sectionName %>
         </h1>
-        <div
-          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-        >
-          <% videos.forEach(video => { %> <% if (video.videoUrl) { %>
-          <div
-            class="p-6 bg-white rounded-lg shadow-md hover:shadow-lg hover:bg-blue-100 transition duration-300"
-          >
-            <a href="/videos/<%= video._id %>">
-              <img
-                src="/download.jpg"
-                alt="<%= video.title %>"
-                class="w-full h-auto object-cover rounded-lg mb-4"
-              />
-            </a>
-            <h2
-              class="text-xs font-lexend-deca font-semibold text-gray-800 mb-2 truncate"
-            >
-              <%= video.title %>
-            </h2>
-
-            <p class="text-gray-600 font-lexend-deca text-sm truncate">
-              <%= video.description %>
-            </p>
-
-            <img
-              src="<%- video.watched ? 'https://vendorcenter.jumia.com/assets/images/local_green.svg' : 'https://vendorcenter.jumia.com/assets/images/local_red.svg' %>"
-              alt="Watch Status"
-              class="w-6 h-6 inline-block ml-2"
-            />
-          </div>
-          <% } %> <% }) %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <% videos.forEach(video => { %>
+            <% if (video.videoUrl) { %>
+              <div class="p-6 bg-white rounded-lg shadow-md hover:shadow-lg hover:bg-blue-100 transition duration-300">
+                <a href="/videos/<%= video._id %>">
+                  <img
+                    src="/download.jpg"
+                    alt="<%= video.title %>"
+                    class="w-full h-auto object-cover rounded-lg mb-4"
+                  />
+                </a>
+                <h2 class="text-xs font-lexend-deca font-semibold text-gray-800 mb-2 truncate">
+                  <%= video.title %>
+                </h2>
+                <p class="text-gray-600 font-lexend-deca text-sm truncate">
+                  <%= video.description %>
+                </p>
+                <img
+                  src="<%- video.watched ? 'https://vendorcenter.jumia.com/assets/images/local_green.svg' : 'https://vendorcenter.jumia.com/assets/images/local_red.svg' %>"
+                  alt="Watch Status"
+                  class="w-6 h-6 inline-block ml-2"
+                />
+              </div>
+            <% } %>
+          <% }) %>
         </div>
+        
       </div>
     
   </body>
+  <script>
+    window.addEventListener('message', function(event) {
+      if (typeof event.data === 'number') {
+        const progress = event.data;
+        document.querySelector('.circle').setAttribute('stroke-dasharray', `${progress}, 100`);
+        document.querySelector('.circle').setAttribute('stroke', progress >= 75 ? 'green' : 'orange');
+      }
+    });
+  </script>
 </html>

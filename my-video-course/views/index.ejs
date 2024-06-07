@@ -86,4 +86,13 @@
  
   
 </body>
+<script>
+   window.addEventListener('message', function(event) {
+      if (typeof event.data === 'number') {
+        const progress = event.data;
+        document.querySelector('.circle').setAttribute('stroke-dasharray', `${progress}, 100`);
+        document.querySelector('.circle').setAttribute('stroke', progress >= 75 ? 'green' : 'orange');
+      }
+    });
+</script>
 </html>
