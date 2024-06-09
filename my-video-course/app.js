@@ -40,24 +40,26 @@ const Video = require('./models/Video'); // Ensure the path is correct
 
 
 
-const textIn=fs.readFileSync('./public/videos/The Complete Node Bootcamp 2021/[TutsNode.com] - Node.js, Express, MongoDB & More - The Complete Bootcamp 2021/02 Introduction to Node.js and NPM/006 Download-starter-project-from-GitHub.txt','utf-8')
+const textIn = fs.readFileSync('./public/videos/The Complete Node Bootcamp 2021/[TutsNode.com] - Node.js, Express, MongoDB & More - The Complete Bootcamp 2021/02 Introduction to Node.js and NPM/006 Download-starter-project-from-GitHub.txt', 'utf-8')
 console.log(textIn)
- fs.writeFileSync('./public.txt',"This is Node js Writing")
- //console.log(textOut)
+fs.writeFileSync('./public.txt', "This is Node js Writing")
+//console.log(textOut)
 // Connect to MongoDB
 mongoose.connect(config.mongodbUri,
-   { useNewUrlParser: true, 
-    useUnifiedTopology: true })
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
   .then(() => {
     //addDummyData();
     console.log('MongoDB connected');
     //addVideoFiles()
-})
+  })
 
-  .catch(err =>{
+  .catch(err => {
     console.error('Error connecting to MongoDB:', error);
     process.exit(1); // Exit the application on connection failure
-  } 
+  }
   );
 
 // Middleware
@@ -72,10 +74,9 @@ const checkForCaptions = (filePath) => {
 
 const addVideoFiles = async () => {
   try {
-    // Ensure Mongoose connection is established before proceeding
     if (!mongoose.connection.readyState) {
       console.error('MongoDB connection not established.');
-      return; // Exit the function if not connected
+      return;
     }
 
     const videoDir = path.join(__dirname, 'public', 'videos');
@@ -89,20 +90,19 @@ const addVideoFiles = async () => {
         const stat = fs.statSync(filePath);
 
         if (stat.isDirectory()) {
-          // Recursively traverse subdirectories
           videoDocuments = videoDocuments.concat(traverseDirectory(filePath, file));
         } else if (stat.isFile()) {
-          const isCaption = checkForCaptions(filePath);
-          const property = isCaption ? 'captionsUrl' : 'videoUrl'; // Set property based on file type
-          const url = path.relative(videoDir, filePath); // Relative path
+          const isCaption = checkForCaptions(filePath); // Ensure this function is defined elsewhere
+          const property = isCaption ? 'captionsUrl' : 'videoUrl';
+          const url = path.relative(videoDir, filePath);
 
           videoDocuments.push({
-            title: path.basename(file, path.extname(file)), // Use filename without extension as title
-            description: `Description for ${file}`, // Placeholder description
+            title: path.basename(file, path.extname(file)),
+            description: `Description for ${file}`,
             section: section,
             watched: false,
-            watchedAt: null, // Default to null
-            [property]: url // Dynamically add videoUrl or captionsUrl property
+            watchedAt: null,
+            [property]: url
           });
         }
       });
@@ -110,22 +110,26 @@ const addVideoFiles = async () => {
       return videoDocuments;
     };
 
-    // Traverse the main video directory
-    const videoDocuments = traverseDirectory(videoDir, null);
+    const courseFolders = fs.readdirSync(videoDir).filter(folder => {
+      return fs.statSync(path.join(videoDir, folder)).isDirectory();
+    });
 
-    // Clear the collection before inserting new data
-    await Video.deleteMany({});
-    console.log('Cleared existing data.');
+    for (const courseFolder of courseFolders) {
+      const courseDir = path.join(videoDir, courseFolder);
+      const videoDocuments = traverseDirectory(courseDir, null);
 
-    // Insert video documents
-    await Video.insertMany(videoDocuments);
-    console.log('Video files and captions inserted into MongoDB.');
+      const courseCollection = mongoose.connection.collection(courseFolder);
+      await courseCollection.deleteMany({});
+      console.log(`Cleared existing data for ${courseFolder}.`);
 
-    // Close the database connection (optional for development)
+      await courseCollection.insertMany(videoDocuments);
+      console.log(`Video files and captions inserted into ${courseFolder} collection.`);
+    }
+
     mongoose.connection.close();
     console.log('Database connection closed.');
   } catch (err) {
-    if (err instanceof error_1.MongoNotConnectedError) {
+    if (err.name === 'MongoNotConnectedError') {
       console.error('MongoDB connection not established.');
     } else {
       console.error('Error adding video files:', err);
@@ -135,11 +139,11 @@ const addVideoFiles = async () => {
 
 
 
-// const addVideoFiles = async () => {
+
 //     try {
 //       const videoDir = path.join(__dirname, 'public', 'videos');
 //       const files = fs.readdirSync(videoDir);
-  
+
 //       const videoDocuments = files.map(file => ({
 //         title: path.basename(file, path.extname(file)), // Use filename without extension as title
 //         description: `Description for ${file}`, // Placeholder description
@@ -147,15 +151,15 @@ const addVideoFiles = async () => {
 //         watched: false,
 //         watchedAt: null // Default to null
 //       }));
-  
+
 //       // Clear the collection before inserting new data
 //       await Video.deleteMany({});
 //       console.log('Cleared existing data.');
-  
+
 //       // Insert video documents
 //       await Video.insertMany(videoDocuments);
 //       console.log('Video files inserted into MongoDB.');
-  
+
 //       // Close the database connection
 //       mongoose.connection.close();
 //       console.log('Database connection closed.');
@@ -163,7 +167,7 @@ const addVideoFiles = async () => {
 //       console.error('Error adding video files:', err);
 //     }
 //   };
-  // View Engine
+// View Engine
 app.set('view engine', 'ejs');
 
 // Routes
@@ -192,18 +196,77 @@ app.get('/', async (req, res) => {
       sectionWatchedStatus[section] = sectionVideos.every(video => video.watched);
     }
 
-    res.render('index', { 
-      videos, 
-      totalVideos, 
-      watchedVideos, 
-      sections, 
-      sectionWatchedStatus 
+    res.render('index', {
+      videos,
+      totalVideos,
+      watchedVideos,
+      sections,
+      sectionWatchedStatus
     });
   } catch (err) {
     console.error('Error fetching sections:', err);
     res.status(500).send('Server Error');
   }
 });
+
+// Route to render the dashboard
+app.get('/dashboard', async (req, res) => {
+  try {
+    const videoDir = path.join(__dirname, 'public', 'videos');
+    const courseFolders = fs.readdirSync(videoDir).filter(folder => {
+      return fs.statSync(path.join(videoDir, folder)).isDirectory();
+    });
+
+    let courses = [];
+    for (const courseFolder of courseFolders) {
+      const courseCollection = mongoose.connection.collection(courseFolder);
+      const videos = await courseCollection.find({}).toArray();
+
+      courses.push({
+        name: courseFolder,
+        videos: videos
+      });
+    }
+
+    res.render('dashboard', { courses: courses });
+  } catch (err) {
+    console.error('Error fetching course data:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Route to render sections and videos of a specific course
+// Route to render sections and videos of a specific course
+app.get('/course/:courseName', async (req, res) => {
+  try {
+    const courseName = req.params.courseName;
+    const courseCollection = mongoose.connection.collection(courseName);
+    const videos = await courseCollection.find({}).toArray();
+
+    const sections = {};
+    videos.forEach(video => {
+      if (!sections[video.section]) {
+        sections[video.section] = [];
+      }
+      sections[video.section].push(video);
+    });
+
+    const totalVideos = videos.length;
+    const watchedVideos = videos.filter(video => video.watched).length;
+
+    res.render('section', {
+      courseName,
+      videos,
+      sections,
+      totalVideos,
+      watchedVideos
+    });
+  } catch (err) {
+    console.error('Error fetching course data:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 
 
 
@@ -261,7 +324,6 @@ app.get('/section/:sectionName', async (req, res) => {
   try {
     const sectionName = req.params.sectionName;
     const videos = await Video.find({ section: sectionName });
-    const selectedSection = req.query.section || null;
     const allSections = await Video.distinct('section'); // Get all section names
     const sections = {};
     const totalVideos = videos.length;
@@ -275,12 +337,18 @@ app.get('/section/:sectionName', async (req, res) => {
       sections[video.section].push(video);
     });
 
-    res.render('section', { sectionName, videos, sections,totalVideos, 
-      watchedVideos,  });
+    res.render('section', {
+      sectionName,
+      videos,
+      sections,
+      totalVideos,
+      watchedVideos
+    });
   } catch (err) {
     res.status(500).send(err);
   }
 });
+
 
 // app.get('/', (req, res) => {
 //     res.redirect('/videos');
@@ -288,8 +356,7 @@ app.get('/section/:sectionName', async (req, res) => {
 //    // addDummyData()
 //   });
 
-  // Start Server
+// Start Server
 app.listen(config.port, () => {
-    console.log(`Server running on port ${config.port}`);
-  });
-   
+  console.log(`Server running on port ${config.port}`);
+});

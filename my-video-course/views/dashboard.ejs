@@ -10,30 +10,30 @@
 <body class="bg-gray-100 font-sans text-gray-900">
   <div class="flex h-screen">
     <nav class="w-64 bg-white shadow-md h-full flex flex-col">
-        <div class="p-4">
-          <h1 class="text-2xl font-bold mb-2 truncate">Chapters</h1>
-          <ul class="space-y-4">
-            <li><a href="/" class="text-gray-700 hover:text-blue-500"><i class="fas fa-home"></i> Home</a></li>
-            <li><a href="/upload" class="text-gray-700 hover:text-blue-500"><i class="fas fa-upload"></i> Upload Video</a></li>
-            <li><a href="/" class="text-gray-700 hover:text-blue-500"><i class="fas fa-user"></i> Profile</a></li>
-            <li><a href="#" class="text-gray-700 hover:text-blue-500"><i class="fas fa-cog"></i> Settings</a></li>
-          </ul>
-        </div>
-      </nav>
+      <div class="p-4">
+        <h1 class="text-2xl font-bold mb-2 truncate">Chapters</h1>
+        <ul class="space-y-4">
+          <li><a href="/" class="text-gray-700 hover:text-blue-500"><i class="fas fa-home"></i> Home</a></li>
+          <li><a href="/upload" class="text-gray-700 hover:text-blue-500"><i class="fas fa-upload"></i> Upload Video</a></li>
+          <li><a href="/" class="text-gray-700 hover:text-blue-500"><i class="fas fa-user"></i> Profile</a></li>
+          <li><a href="#" class="text-gray-700 hover:text-blue-500"><i class="fas fa-cog"></i> Settings</a></li>
+        </ul>
+      </div>
+    </nav>
 
     <main class="flex-grow overflow-y-auto px-4 py-8">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-       
+        <% courses.forEach(course => { %>
+          <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <img src="/download.jpg" alt="<%= course.name %>" class="w-full h-32 sm:h-48 object-cover">
+            <div class="p-4">
+              <h2 class="text-xl font-semibold mb-2"><%= course.name %></h2>
+              <a href="/course/<%= course.name %>" class="text-blue-500 hover:underline">View Course</a>
+            </div>
+          </div>
+        <% }) %>
       </div>
     </main>
   </div>
-  <script>
-    const menuButton = document.getElementById('menuButton');
-    const menuLinks = document.getElementById('menuLinks');
-
-    menuButton.addEventListener('click', () => {
-      menuLinks.classList.toggle('hidden');
-    });
-  </script>
 </body>
 </html>
