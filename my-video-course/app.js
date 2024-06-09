@@ -180,34 +180,15 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
 // Endpoint to fetch and render videos, sections, and progress
-app.get('/', async (req, res) => {
+app.get('/', (req, res) => {
   try {
-    const allSections = await Video.distinct('section');
-    const sections = {};
-    const sectionWatchedStatus = {};
-    const videos = await Video.find().sort({ _id: 1 }); // Sort by ID
-
-    const totalVideos = videos.length;
-    const watchedVideos = videos.filter(video => video.watched).length;
-
-    for (const section of allSections) {
-      const sectionVideos = await Video.find({ section }).sort({ _id: 1 }); // Sort by ID within each section
-      sections[section] = sectionVideos;
-      sectionWatchedStatus[section] = sectionVideos.every(video => video.watched);
-    }
-
-    res.render('index', {
-      videos,
-      totalVideos,
-      watchedVideos,
-      sections,
-      sectionWatchedStatus
-    });
+    res.redirect('/dashboard');
   } catch (err) {
-    console.error('Error fetching sections:', err);
+    console.error('Error redirecting to dashboard:', err);
     res.status(500).send('Server Error');
   }
 });
+
 
 // Route to render the dashboard
 app.get('/dashboard', async (req, res) => {
@@ -240,6 +221,7 @@ app.get('/dashboard', async (req, res) => {
 app.get('/course/:courseName', async (req, res) => {
   try {
     const courseName = req.params.courseName;
+    const selectedSection = req.query.section || 'All Videos';
     const courseCollection = mongoose.connection.collection(courseName);
     const videos = await courseCollection.find({}).toArray();
 
@@ -253,19 +235,24 @@ app.get('/course/:courseName', async (req, res) => {
 
     const totalVideos = videos.length;
     const watchedVideos = videos.filter(video => video.watched).length;
+    const watchedPercentage = (totalVideos === 0) ? 0 : (watchedVideos / totalVideos) * 100;
 
     res.render('section', {
       courseName,
       videos,
       sections,
       totalVideos,
-      watchedVideos
+      watchedVideos,
+      watchedPercentage,
+      selectedSection
     });
   } catch (err) {
     console.error('Error fetching course data:', err);
     res.status(500).send('Internal Server Error');
   }
 });
+
+
 
 
 
