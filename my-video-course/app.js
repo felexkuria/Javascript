@@ -33,6 +33,7 @@ const config = require('./config');
 const videoRoutes = require('./routes/video');
 const fs = require('fs');
 const path = require('path');
+const ObjectId = mongoose.Types.ObjectId;
 
 const app = express();
 // const mongoose = require('mongoose');
@@ -40,9 +41,9 @@ const Video = require('./models/Video'); // Ensure the path is correct
 
 
 
-const textIn = fs.readFileSync('./public/videos/The Complete Node Bootcamp 2021/[TutsNode.com] - Node.js, Express, MongoDB & More - The Complete Bootcamp 2021/02 Introduction to Node.js and NPM/006 Download-starter-project-from-GitHub.txt', 'utf-8')
-console.log(textIn)
-fs.writeFileSync('./public.txt', "This is Node js Writing")
+//const textIn = fs.readFileSync('./public/videos/The Complete Node Bootcamp 2021/[TutsNode.com] - Node.js, Express, MongoDB & More - The Complete Bootcamp 2021/02 Introduction to Node.js and NPM/006 Download-starter-project-from-GitHub.txt', 'utf-8')
+//console.log(textIn)
+//fs.writeFileSync('./public.txt', "This is Node js Writing")
 //console.log(textOut)
 // Connect to MongoDB
 mongoose.connect(config.mongodbUri,
@@ -53,7 +54,7 @@ mongoose.connect(config.mongodbUri,
   .then(() => {
     //addDummyData();
     console.log('MongoDB connected');
-    //addVideoFiles()
+   // addVideoFiles()
   })
 
   .catch(err => {
@@ -110,20 +111,27 @@ const addVideoFiles = async () => {
       return videoDocuments;
     };
 
-    const courseFolders = fs.readdirSync(videoDir).filter(folder => {
-      return fs.statSync(path.join(videoDir, folder)).isDirectory();
-    });
+    const targetCollectionName = 'The Complete Node Bootcamp 2021';
 
-    for (const courseFolder of courseFolders) {
-      const courseDir = path.join(videoDir, courseFolder);
-      const videoDocuments = traverseDirectory(courseDir, null);
+    // Ensure the new collection is cleared first
+    const targetCollection = mongoose.connection.collection(targetCollectionName);
+    await targetCollection.deleteMany({});
+    console.log(`Cleared existing data for ${targetCollectionName}.`);
 
-      const courseCollection = mongoose.connection.collection(courseFolder);
-      await courseCollection.deleteMany({});
-      console.log(`Cleared existing data for ${courseFolder}.`);
+    const videoDocuments = traverseDirectory(videoDir, null);
 
-      await courseCollection.insertMany(videoDocuments);
-      console.log(`Video files and captions inserted into ${courseFolder} collection.`);
+    // Insert the new video documents into the target collection
+    await targetCollection.insertMany(videoDocuments);
+    console.log(`Video files and captions inserted into ${targetCollectionName} collection.`);
+
+    // Move existing data from 'videos' collection to the target collection
+    const oldCollection = mongoose.connection.collection('videos');
+    const oldData = await oldCollection.find({}).toArray();
+    if (oldData.length > 0) {
+      await targetCollection.insertMany(oldData);
+      console.log(`Existing videos data moved from 'videos' to '${targetCollectionName}'.`);
+      await oldCollection.deleteMany({});
+      console.log(`Old 'videos' collection cleared.`);
     }
 
     mongoose.connection.close();
@@ -136,6 +144,7 @@ const addVideoFiles = async () => {
     }
   }
 };
+
 
 
 
@@ -218,39 +227,116 @@ app.get('/dashboard', async (req, res) => {
 
 // Route to render sections and videos of a specific course
 // Route to render sections and videos of a specific course
-app.get('/course/:courseName', async (req, res) => {
-  try {
-    const courseName = req.params.courseName;
-    const selectedSection = req.query.section || 'All Videos';
-    const courseCollection = mongoose.connection.collection(courseName);
-    const videos = await courseCollection.find({}).toArray();
+// app.get('/course/:courseName', async (req, res) => {
+//   try {
+//     const courseName = req.params.courseName;
+//     const selectedSection = req.query.section || 'All Videos';
+//     const courseCollection = mongoose.connection.collection(courseName);
+//     const videos = await courseCollection.find({}).toArray();
 
-    const sections = {};
-    videos.forEach(video => {
-      if (!sections[video.section]) {
-        sections[video.section] = [];
-      }
-      sections[video.section].push(video);
-    });
+//     const sections = {};
+//     videos.forEach(video => {
+//       if (!sections[video.section]) {
+//         sections[video.section] = [];
+//       }
+//       sections[video.section].push(video);
+//     });
+
+//     const totalVideos = videos.length;
+//     const watchedVideos = videos.filter(video => video.watched).length;
+//     const watchedPercentage = (totalVideos === 0) ? 0 : (watchedVideos / totalVideos) * 100;
+
+//     res.render('section', {
+//       courseName,
+//       videos,
+//       sections,
+//       totalVideos,
+//       watchedVideos,
+//       watchedPercentage,
+//       selectedSection
+//     });
+//   } catch (err) {
+//     console.error('Error fetching course data:', err);
+//     res.status(500).send('Internal Server Error');
+//   }
+// });
+
+app.get('/section/:sectionName', async (req, res) => {
+  try {
+    const sectionName = req.params.sectionName;
+    const courseName = req.query.courseName; // Get the course name from the query parameter
+    const courseCollection = mongoose.connection.collection(`videoCourseDB.${courseName}`);
+    const videos = await courseCollection.find({ section: sectionName }).toArray();
 
     const totalVideos = videos.length;
     const watchedVideos = videos.filter(video => video.watched).length;
-    const watchedPercentage = (totalVideos === 0) ? 0 : (watchedVideos / totalVideos) * 100;
 
     res.render('section', {
       courseName,
+      sectionName,
       videos,
-      sections,
+      sections: { [sectionName]: videos },
       totalVideos,
-      watchedVideos,
-      watchedPercentage,
-      selectedSection
+      watchedVideos
+    });
+  } catch (err) {
+    console.error('Error fetching section data:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.get('/videos/:id', async (req, res) => {
+  try {
+    const videoId = req.params.id;
+    const courseName = req.query.courseName; // Get the course name from the query parameter
+    const courseCollection = mongoose.connection.collection(`videoCourseDB.${courseName}`);
+    const video = await courseCollection.findOne({ _id: new mongoose.Types.ObjectId(videoId) });
+
+    if (video) {
+      res.render('video', { video });
+    } else {
+      res.status(404).send('Video not found');
+    }
+  } catch (error) {
+    console.error('Error fetching video:', error);
+    res.status(500).send('Server Error');
+  }
+});
+
+
+app.get('/course/:courseName', async (req, res) => {
+  try {
+    const courseName = req.params.courseName;
+
+    // Construct the video directory path for this course
+    const videoDir = path.join(__dirname, 'public', 'videos', courseName);
+
+    // Check if the course directory exists
+    if (!fs.existsSync(videoDir)) {
+      console.error(`Course video directory not found: ${videoDir}`);
+      return res.status(404).send('Course not found.');
+    }
+
+    // Read the video filenames from the directory (assuming MP4 format)
+    const videoFiles = fs.readdirSync(videoDir).filter(file => file.endsWith('.mp4'));
+
+    // Construct video data objects (replace with your video data structure if needed)
+    const videos = videoFiles.map(file => ({
+      title: path.basename(file, '.mp4'), // Extract title from filename without extension
+      url: path.join('/videos', courseName, file) // Construct relative URL for the video
+    }));
+
+    res.render('course', {
+      courseName,
+      videos
     });
   } catch (err) {
     console.error('Error fetching course data:', err);
     res.status(500).send('Internal Server Error');
   }
 });
+
+
 
 
 
@@ -267,20 +353,52 @@ app.get('/course/:courseName', async (req, res) => {
 //   }
 //   res.render('section', { sectionName, videos, sections });
 // });
-app.get('/videos/:id', async (req, res) => {
-  try {
-    const video = await Video.findById(req.params.id);
-    const allSections = await Video.distinct('section');
-    const sections = {};
-    for (const section of allSections) {
-      sections[section] = await Video.find({ section });
-    }
-    res.render('video', { video, sections, captionsUrl: video.captionsUrl });
-  } catch (error) {
-    console.error('Error fetching video:', error);
-    res.status(500).send('Server Error');
-  }
-});
+
+
+ // Import the Video model
+
+ 
+ 
+ app.get('/videos/:id', async (req, res) => {
+   try {
+     const videoId = req.params.id;
+     const db = mongoose.connection.db;
+     const collections = await db.listCollections().toArray();
+     let video = null;
+     let courseName = '';
+ 
+     // Iterate over collections within videoCourseDB to find the video
+     for (const collection of collections) {
+       if (collection.name.startsWith('videoCourseDB.')) {
+         const collectionName = collection.name;
+         const courseCollection = db.collection(collectionName);
+ 
+         // Check if the video exists in the current collection
+         video = await courseCollection.findOne({ _id: new ObjectId(videoId) });
+         if (video) {
+           courseName = collectionName.replace('videoCourseDB.', ''); // Get the actual course name
+           break;
+         }
+       }
+     }
+ 
+     if (video) {
+       res.render('video', { video });
+     } else {
+       res.status(404).send('Video not found');
+     }
+   } catch (error) {
+     console.error('Error fetching video:', error);
+     res.status(500).send('Server Error');
+   }
+ });
+ 
+
+
+
+
+// app.use('/videos', express.static(path.join(__dirname, 'videos')));
+
 
 app.post('/videos/:id/watch', async (req, res) => {
   await Video.findByIdAndUpdate(req.params.id, { watched: true, watchedAt: new Date() });
@@ -307,34 +425,34 @@ app.post('/videos/:id/watch', async (req, res) => {
 // });
 
 
-app.get('/section/:sectionName', async (req, res) => {
-  try {
-    const sectionName = req.params.sectionName;
-    const videos = await Video.find({ section: sectionName });
-    const allSections = await Video.distinct('section'); // Get all section names
-    const sections = {};
-    const totalVideos = videos.length;
-    const watchedVideos = videos.filter(video => video.watched).length;
+// app.get('/section/:sectionName', async (req, res) => {
+//   try {
+//     const sectionName = req.params.sectionName;
+//     const videos = await Video.find({ section: sectionName });
+//     const allSections = await Video.distinct('section'); // Get all section names
+//     const sections = {};
+//     const totalVideos = videos.length;
+//     const watchedVideos = videos.filter(video => video.watched).length;
 
-    allSections.forEach(section => {
-      sections[section] = [];
-    });
+//     allSections.forEach(section => {
+//       sections[section] = [];
+//     });
 
-    videos.forEach(video => {
-      sections[video.section].push(video);
-    });
+//     videos.forEach(video => {
+//       sections[video.section].push(video);
+//     });
 
-    res.render('section', {
-      sectionName,
-      videos,
-      sections,
-      totalVideos,
-      watchedVideos
-    });
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
+//     res.render('section', {
+//       sectionName,
+//       videos,
+//       sections,
+//       totalVideos,
+//       watchedVideos
+//     });
+//   } catch (err) {
+//     res.status(500).send(err);
+//   }
+// });
 
 
 // app.get('/', (req, res) => {
