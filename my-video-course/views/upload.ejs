@@ -1,0 +1,12 @@
+<form action="/videos/upload" method="POST" enctype="multipart/form-data">
+    <input type="text" name="title" placeholder="Video Title" required>
+    <textarea name="description" placeholder="Video Description" required></textarea>
+    <select name="courseId">
+      <!-- Loop through available courses to select -->
+      <option value="courseId1">Node.js</option>
+      <option value="courseId2">Python</option>
+    </select>
+    <input type="file" name="video" required>
+    <button type="submit">Upload</button>
+  </form>
+  

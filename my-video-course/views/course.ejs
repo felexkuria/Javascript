@@ -1,114 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= courseName %></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/styles_section.css">
-    <style>
-        .progress-circle svg {
-            width: 50px;
-            height: 50px;
-        }
-        .circle-bg {
-            fill: none;
-            stroke: #eee;
-            stroke-width: 3.8;
-        }
-        .watched {
-            fill: none;
-            stroke: #00e676;
-            stroke-width: 2.8;
-            stroke-linecap: round;
-        }
-        .unwatched {
-            fill: none;
-            stroke: #ff3d00;
-            stroke-width: 2.8;
-            stroke-linecap: round;
-        }
-        .video-card {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            transition: transform 0.3s;
-        }
-        .video-card:hover {
-            transform: translateY(-5px);
-        }
-        .watch-status {
-            width: 20px;
-            height: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= courseName %> Course</title>
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-200 dark:bg-slate-800 font-lexend-deca flex">
-    <div class="w-1/4 bg-white shadow-lg p-2">
-        <div class="p-4 border-b bg-blue-500 flex justify-between items-center">
-            <h2 class="text-xl font-lexend-deca font-semibold text-white">Sections</h2>
-            <div class="progress-circle">
-                <svg viewBox="0 0 36 36">
-                    <path class="circle-bg" d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle <%= watchedPercentage >= 75 ? 'watched' : 'unwatched' %>"
-                        stroke-dasharray="<%= watchedPercentage %>, 100"
-                        d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0 -31.831" />
-                    <text x="18" y="20" text-anchor="middle" class="text-sm font-semibold">
-                        <%= Math.round(watchedPercentage) %>%
-                    </text>
-                </svg>
-            </div>
-        </div>
-        <div class="mt-4">
-            <% Object.keys(sections).forEach(section => { %>
-                <a href="/course/<%= courseName %>?section=<%= encodeURIComponent(section) %>"
-                    class="block text-xs truncate py-2 px-4 text-gray-700 font-lexend-deca hover:bg-blue-200 flex items-center <%= selectedSection === section ? 'bg-green-200' : '' %>">
-                    <span>
-                        <%= section %>
-                    </span>
-                </a>
-            <% }) %>
-        </div>
+<body>
+  <h1 class="text-3xl font-bold mb-4"><%= courseName %> Course</h1>
+
+  <% if (videos.length === 0) { %>
+    <div class="text-center p-4 bg-red-100 text-red-700 rounded-md">
+      No videos found for this course.
     </div>
-    <div class="w-3/4 p-6 mx-auto">
-        <div class="flex items-center justify-center mb-8">
-            <h1 class="text-2xl font-bold text-gray-800"><%= courseName %></h1>
-            <div class="ml-4 progress-circle">
-                <svg viewBox="0 0 36 36">
-                    <path class="circle-bg" d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle <%= watchedPercentage >= 75 ? 'watched' : 'unwatched' %>"
-                        stroke-dasharray="<%= watchedPercentage %>, 100"
-                        d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0 -31.831" />
-                    <text x="18" y="20" text-anchor="middle" class="text-sm font-semibold">
-                        <%= Math.round(watchedPercentage) %>%
-                    </text>
-                </svg>
-            </div>
-        </div>
-        <% Object.entries(sections).forEach(([section, sectionVideos]) => { %>
-            <h2 class="text-xl font-semibold mt-8 mb-4 text-gray-800"><%= section %></h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <% sectionVideos.forEach(video => { %>
-                    <div class="video-card p-4">
-                        <a href="/videos/<%= video._id.$oid %>?courseName=<%= encodeURIComponent(courseName) %>">
-                            <img src="/download.jpg" alt="<%= video.title %>" class="w-full h-auto object-cover rounded-lg mb-4" />
-                        </a>
-                        <h2 class="video-title text-sm font-lexend-deca <%- video.watched ? 'text-fuchsia-800' : 'text-gray-900' %> mb-2 truncate">
-                            <i class="fa-solid <%- video.watched ? 'fa-check text-green-500' : 'fa-times text-red-500' %> mr-2"></i>
-                            <%= video.title %>
-                        </h2>
-                        <p class="video-description text-sm <%- video.watched ? 'text-fuchsia-800' : 'text-gray-900' %> font-lexend-deca truncate">
-                            <%= video.description %>
-                        </p>
-                        <img
-                            src="<%- video.watched ? 'https://vendorcenter.jumia.com/assets/images/local_green.svg' : 'https://vendorcenter.jumia.com/assets/images/local_red.svg' %>"
-                            alt="Watch Status" class="watch-status mt-2" />
-                    </div>
-                <% }) %>
-            </div>
-        <% }) %>
-    </div>
+  <% } else { %>
+    <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% for (const video of videos) { %>
+        <li class="rounded-md overflow-hidden shadow-md">
+          <img src="<%= video.url %>" alt="<%= video.title %>" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <h3 class="text-lg font-medium mb-2"><%= video.title %></h3>
+            <a href="<%= video.url %>" class="inline-block px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-700">Watch Now</a>
+          </div>
+        </li>
+      <% } %>
+    </ul>
+  <% } %>
+
 </body>
 </html>
