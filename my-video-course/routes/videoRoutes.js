@@ -11,3 +11,11 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+const router = require('express').Router();
+
+router.post('/upload', upload.single('video'), (req, res) => {
+  // Handle the uploaded file
+  res.redirect('/dashboard');
+});
+
+module.exports = router;

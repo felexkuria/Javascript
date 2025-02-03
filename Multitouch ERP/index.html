@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modern ERP System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="min-h-screen flex">
+      <!-- Sidebar -->
+      <aside class="bg-gray-800 text-white w-64 space-y-6 py-7 px-2">
+        <div class="text-2xl font-bold px-4">ERP System</div>
+        <nav>
+          <a
+            href="#"
+            class="block py-2.5 px-4 hover:bg-gray-700 rounded transition duration-200"
+            onclick="showModule('dashboard')"
+          >
+            Dashboard
+          </a>
+          <a
+            href="#"
+            class="block py-2.5 px-4 hover:bg-gray-700 rounded transition duration-200"
+            onclick="showModule('inventory')"
+          >
+            Inventory
+          </a>
+          <a
+            href="#"
+            class="block py-2.5 px-4 hover:bg-gray-700 rounded transition duration-200"
+            onclick="showModule('sales')"
+          >
+            Sales
+          </a>
+          <a
+            href="#"
+            class="block py-2.5 px-4 hover:bg-gray-700 rounded transition duration-200"
+            onclick="showModule('hr')"
+          >
+            HR Management
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 p-8">
+        <!-- Dashboard Module -->
+        <div id="dashboard" class="module">
+          <h1 class="text-3xl font-bold mb-6">Dashboard Overview</h1>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          >
+            <div class="bg-white p-6 rounded-lg shadow">
+              <h3 class="text-gray-500 text-sm">Total Sales</h3>
+              <p class="text-2xl font-bold">Kes 245,300</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+              <h3 class="text-gray-500 text-sm">Inventory Items</h3>
+              <p class="text-2xl font-bold">1,234</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+              <h3 class="text-gray-500 text-sm">Employees</h3>
+              <p class="text-2xl font-bold">89</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+              <h3 class="text-gray-500 text-sm">Pending Orders</h3>
+              <p class="text-2xl font-bold">24</p>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-bold mb-4">Sales Chart</h2>
+            <div id="salesChart" class="h-64"></div>
+          </div>
+        </div>
+
+        <!-- Inventory Module (Hidden by default) -->
+        <div id="inventory" class="module hidden">
+          <h1 class="text-3xl font-bold mb-6">Inventory Management</h1>
+
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Item
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                  >
+                    SKU
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Stock
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                  >
+                    Price
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <!-- Sample Data -->
+                <tr>
+                  <td class="px-6 py-4">Laptop Pro X1</td>
+                  <td class="px-6 py-4">LPX1-2023</td>
+                  <td class="px-6 py-4">45</td>
+                  <td class="px-6 py-4">$1,299</td>
+                </tr>
+                <!-- Add more rows as needed -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Other modules would follow similar structure -->
+      </main>
+    </div>
+
+    <script>
+      // Module visibility control
+      function showModule(moduleId) {
+        document.querySelectorAll(".module").forEach((module) => {
+          module.classList.add("hidden");
+        });
+        document.getElementById(moduleId).classList.remove("hidden");
+      }
+
+      // Sample Chart (using Chart.js - would need CDN link)
+      // const ctx = document.getElementById('salesChart').getContext('2d');
+      // const myChart = new Chart(ctx, { ... });
+
+      // Initial module to show
+      showModule("dashboard");
+    </script>
+
+    <style>
+      /* Additional custom styles */
+      .module {
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </body>
+</html>

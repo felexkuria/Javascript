@@ -1,69 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Video Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-</head>
-<body class="bg-gray-100 font-sans text-gray-900">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+      defer
+    ></script>
+  </head>
+  <body class="bg-gray-100 font-sans text-gray-900">
     <div class="flex h-screen" x-data="{ sidebarOpen: false }">
-        <!-- Desktop Sidebar -->
-        <nav class="bg-gradient-to-b from-blue-600 to-blue-800 text-white w-64 min-h-screen px-4 py-6 hidden md:block">
-            <div class="flex items-center mb-8">
-                <i class="fas fa-play-circle text-3xl mr-3"></i>
-                <h1 class="text-2xl font-bold">VideoLearn</h1>
-            </div>
-            <ul class="space-y-4">
-                <li><a href="/" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"><i class="fas fa-home mr-3"></i> Home</a></li>
-                <li><a href="/upload" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"><i class="fas fa-upload mr-3"></i> Upload Video</a></li>
-                <li><a href="/profile" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"><i class="fas fa-user mr-3"></i> Profile</a></li>
-                <li><a href="/settings" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"><i class="fas fa-cog mr-3"></i> Settings</a></li>
-            </ul>
+      <!-- Desktop Sidebar -->
+      <nav
+        class="bg-gradient-to-b from-blue-600 to-blue-800 text-white w-64 min-h-screen px-4 py-6 hidden md:block"
+      >
+        <div class="flex items-center mb-8">
+          <i class="fas fa-play-circle text-3xl mr-3"></i>
+          <h1 class="text-2xl font-bold">VideoLearn</h1>
+        </div>
+        <ul class="space-y-4">
+          <li>
+            <a
+              href="/"
+              class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+              ><i class="fas fa-home mr-3"></i> Home</a
+            >
+          </li>
+          <li>
+            <a
+              href="/upload"
+              class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+              ><i class="fas fa-upload mr-3"></i> Upload Video</a
+            >
+          </li>
+          <li>
+            <a
+              href="/profile"
+              class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+              ><i class="fas fa-user mr-3"></i> Profile</a
+            >
+          </li>
+          <li>
+            <a
+              href="/settings"
+              class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+              ><i class="fas fa-cog mr-3"></i> Settings</a
+            >
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Mobile Sidebar Toggle -->
+      <div class="md:hidden fixed top-4 left-4 z-50">
+        <button
+          @click="sidebarOpen = !sidebarOpen"
+          class="text-gray-800 focus:outline-none"
+        >
+          <i class="fas fa-bars text-2xl"></i>
+        </button>
+      </div>
+
+      <!-- Mobile Sidebar -->
+      <div x-show="sidebarOpen" class="fixed inset-0 z-40 md:hidden" x-cloak>
+        <div
+          class="fixed inset-0 bg-black opacity-50"
+          @click="sidebarOpen = false"
+        ></div>
+        <nav
+          class="fixed top-0 left-0 bottom-0 flex flex-col w-64 bg-gradient-to-b from-blue-600 to-blue-800 text-white py-6 px-4 overflow-y-auto"
+        >
+          <div class="flex items-center mb-8">
+            <i class="fas fa-play-circle text-3xl mr-3"></i>
+            <h1 class="text-2xl font-bold">VideoLearn</h1>
+          </div>
+          <ul class="space-y-4">
+            <li>
+              <a
+                href="/"
+                class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+                ><i class="fas fa-home mr-3"></i> Home</a
+              >
+            </li>
+            <!-- This link is not yet connected to upload.ejs -->
+            <li>
+              <a
+                href="/upload"
+                class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+                ><i class="fas fa-upload mr-3"></i> Upload Video</a
+              >
+            </li>
+            <li>
+              <a
+                href="/profile"
+                class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+                ><i class="fas fa-user mr-3"></i> Profile</a
+              >
+            </li>
+            <li>
+              <a
+                href="/settings"
+                class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+                ><i class="fas fa-cog mr-3"></i> Settings</a
+              >
+            </li>
+          </ul>
         </nav>
+      </div>
 
-        <!-- Mobile Sidebar Toggle -->
-        <div class="md:hidden fixed top-4 left-4 z-50">
-            <button @click="sidebarOpen = !sidebarOpen" class="text-gray-800 focus:outline-none">
-                <i class="fas fa-bars text-2xl"></i>
-            </button>
-        </div>
-
-        <!-- Mobile Sidebar -->
-        <div x-show="sidebarOpen" class="fixed inset-0 z-40 md:hidden" x-cloak>
-            <div class="fixed inset-0 bg-black opacity-50" @click="sidebarOpen = false"></div>
-            <nav class="fixed top-0 left-0 bottom-0 flex flex-col w-64 bg-gradient-to-b from-blue-600 to-blue-800 text-white py-6 px-4 overflow-y-auto">
-                <div class="flex items-center mb-8">
-                    <i class="fas fa-play-circle text-3xl mr-3"></i>
-                    <h1 class="text-2xl font-bold">VideoLearn</h1>
-                </div>
-                <ul class="space-y-4">
-                    <li><a href="/" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"><i class="fas fa-home mr-3"></i> Home</a></li>
-                    <li><a href="/upload" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"><i class="fas fa-upload mr-3"></i> Upload Video</a></li>
-                    <li><a href="/profile" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"><i class="fas fa-user mr-3"></i> Profile</a></li>
-                    <li><a href="/settings" class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"><i class="fas fa-cog mr-3"></i> Settings</a></li>
-                </ul>
-            </nav>
-        </div>
-
-        <!-- Main Content -->
-        <main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
-            <h1 class="text-3xl font-bold mb-8 text-center md:text-left">Available Courses</h1>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <% courses.forEach(course => { %>
-                    <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
-                        <img src="/download.jpg" alt="<%= course.name %>" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h2 class="text-xl font-semibold mb-2"><%= course.name %></h2>
-                            <p class="text-gray-600 mb-4">Learn the fundamentals and advanced concepts of <%= course.name %>.</p>
-                            <a href="/course/<%= course.name %>" class="inline-block bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition duration-200">View Course</a>
-                        </div>
-                    </div>
-                <% }) %>
+      <!-- Main Content -->
+      <main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
+        <h1 class="text-3xl font-bold mb-8 text-center md:text-left">
+          Available Courses
+        </h1>
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+          <% courses.forEach(course => { %>
+          <div
+            class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105"
+          >
+            <img
+              src="/download.jpg"
+              alt="<%= course.name %>"
+              class="w-full h-48 object-cover"
+            />
+            <div class="p-6">
+              <h2 class="text-xl font-semibold mb-2"><%= course.name %></h2>
+              <p class="text-gray-600 mb-4">
+                Learn the fundamentals and advanced concepts of <%= course.name
+                %>.
+              </p>
+              <a
+                href="/course/<%= course.name %>"
+                class="inline-block bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+                >View Course</a
+              >
             </div>
-        </main>
+          </div>
+          <% }) %>
+        </div>
+      </main>
     </div>
-</body>
+  </body>
 </html>
