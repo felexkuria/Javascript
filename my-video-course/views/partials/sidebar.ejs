@@ -1,0 +1,96 @@
+
+<!-- Desktop Sidebar -->
+<nav
+  class="bg-gradient-to-b from-blue-600 to-blue-800 text-white w-64 min-h-screen px-4 py-6 hidden md:block"
+>
+  <div class="flex items-center mb-8">
+    <i class="fas fa-play-circle text-3xl mr-3"></i>
+    <h1 class="text-2xl font-bold">VideoLearn</h1>
+  </div>
+  <ul class="space-y-4">
+    <li>
+      <a
+        href="/"
+        class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+        ><i class="fas fa-home mr-3"></i> Home</a
+      >
+    </li>
+    <li>
+      <a
+        href="/upload"
+        class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+        ><i class="fas fa-upload mr-3"></i> Upload Video</a
+      >
+    </li>
+    <li>
+      <a
+        href="/profile"
+        class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+        ><i class="fas fa-user mr-3"></i> Profile</a
+      >
+    </li>
+    <li>
+      <a
+        href="/settings"
+        class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+        ><i class="fas fa-cog mr-3"></i> Settings</a
+      >
+    </li>
+  </ul>
+</nav>
+
+<!-- Mobile Sidebar Toggle -->
+<div class="md:hidden fixed top-4 left-4 z-50">
+  <button
+    @click="sidebarOpen = !sidebarOpen"
+    class="text-gray-800 focus:outline-none"
+  >
+    <i class="fas fa-bars text-2xl"></i>
+  </button>
+</div>
+
+<!-- Mobile Sidebar -->
+<div x-show="sidebarOpen" class="fixed inset-0 z-40 md:hidden" x-cloak>
+  <div
+    class="fixed inset-0 bg-black opacity-50"
+    @click="sidebarOpen = false"
+  ></div>
+  <nav
+    class="fixed top-0 left-0 bottom-0 flex flex-col w-64 bg-gradient-to-b from-blue-600 to-blue-800 text-white py-6 px-4 overflow-y-auto"
+  >
+    <div class="flex items-center mb-8">
+      <i class="fas fa-play-circle text-3xl mr-3"></i>
+      <h1 class="text-2xl font-bold">VideoLearn</h1>
+    </div>
+    <ul class="space-y-4">
+      <li>
+        <a
+          href="/"
+          class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+          ><i class="fas fa-home mr-3"></i> Home</a
+        >
+      </li>
+      <li>
+        <a
+          href="/upload"
+          class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+          ><i class="fas fa-upload mr-3"></i> Upload Video</a
+        >
+      </li>
+      <li>
+        <a
+          href="/profile"
+          class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+          ><i class="fas fa-user mr-3"></i> Profile</a
+        >
+      </li>
+      <li>
+        <a
+          href="/settings"
+          class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+          ><i class="fas fa-cog mr-3"></i> Settings</a
+        >
+      </li>
+    </ul>
+  </nav>
+</div>

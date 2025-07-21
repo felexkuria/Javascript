@@ -2,7 +2,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const config = require('./config'); 
+const config = require('./config');
 const videoRoutes = require('./routes/video');
 const fs = require('fs');
 const path = require('path');
@@ -27,22 +27,25 @@ const Video = require('./models/Video');
 // - Add clustering for better performance
 
 // Connect to MongoDB with proper error handling
-mongoose.connect(config.mongodbUri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  console.log('MongoDB connected');
-})
-.catch(error => { // Fixed error variable name
-  console.error('Error connecting to MongoDB:', error);
-  process.exit(1);
-});
+mongoose.connect(config.mongodbUri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('MongoDB connected');
+    // Call addVideoFiles after successful connection
+    addVideoFiles()
+      .then(() => console.log('Video files added to MongoDB'))
+      .catch(err => console.error('Error adding video files:', err));
+  })
+  .catch(error => {
+    console.error('Error connecting to MongoDB:', error);
+    process.exit(1);
+  });
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
+// Middleware to serve static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Helper function to check for caption files
 const checkForCaptions = (filePath) => {
@@ -59,9 +62,9 @@ const addVideoFiles = async () => {
 
     const videoDir = path.join(__dirname, 'public', 'videos');
 
-    // Improved directory traversal with error handling
     const traverseDirectory = (dir, section) => {
       try {
+        console.log(`Traversing directory: ${dir}`);
         const files = fs.readdirSync(dir);
         let videoDocuments = [];
 
@@ -70,8 +73,10 @@ const addVideoFiles = async () => {
           const stat = fs.statSync(filePath);
 
           if (stat.isDirectory()) {
+            console.log(`Found directory: ${file}`);
             videoDocuments = videoDocuments.concat(traverseDirectory(filePath, file));
           } else if (stat.isFile()) {
+            console.log(`Found file: ${file}`);
             const isCaption = checkForCaptions(filePath);
             const property = isCaption ? 'captionsUrl' : 'videoUrl';
             const url = path.relative(videoDir, filePath);
@@ -94,24 +99,26 @@ const addVideoFiles = async () => {
       }
     };
 
-    const targetCollectionName = 'The Complete Node Bootcamp 2021';
-    const targetCollection = mongoose.connection.collection(targetCollectionName);
-    
-    await targetCollection.deleteMany({});
-    
-    const videoDocuments = traverseDirectory(videoDir, null);
-    if (videoDocuments.length > 0) {
-      await targetCollection.insertMany(videoDocuments);
-    }
+    const courseFolders = fs.readdirSync(videoDir).filter(folder => {
+      return fs.statSync(path.join(videoDir, folder)).isDirectory();
+    });
 
-    // Move existing data with error handling
-    const oldCollection = mongoose.connection.collection('videos');
-    const oldData = await oldCollection.find({}).toArray();
-    if (oldData.length > 0) {
-      await targetCollection.insertMany(oldData);
-      await oldCollection.deleteMany({});
-    }
+    for (const courseFolder of courseFolders) {
+      console.log(`Processing course folder: ${courseFolder}`);
+      const courseCollection = mongoose.connection.collection(courseFolder);
 
+      // Clear existing data
+      await courseCollection.deleteMany({});
+      console.log(`Cleared existing data for collection: ${courseFolder}`);
+
+      const videoDocuments = traverseDirectory(path.join(videoDir, courseFolder), null);
+      if (videoDocuments.length > 0) {
+        console.log(`Adding ${videoDocuments.length} videos to collection: ${courseFolder}`);
+        await courseCollection.insertMany(videoDocuments);
+      } else {
+        console.log(`No videos found for course: ${courseFolder}`);
+      }
+    }
   } catch (err) {
     console.error('Error in addVideoFiles:', err);
     throw err;
@@ -120,6 +127,7 @@ const addVideoFiles = async () => {
 
 // View engine setup
 app.set('view engine', 'ejs');
+
 
 // Routes
 
@@ -149,7 +157,7 @@ app.get('/upload', (req, res) => {
 app.get('/dashboard', async (req, res) => {
   try {
     const videoDir = path.join(__dirname, 'public', 'videos');
-    
+
     if (!fs.existsSync(videoDir)) {
       throw new Error('Video directory not found');
     }
@@ -172,6 +180,78 @@ app.get('/dashboard', async (req, res) => {
     res.render('dashboard', { courses });
   } catch (err) {
     console.error('Error fetching course data:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Course route
+app.get('/course/:courseName', async (req, res) => {
+  try {
+    const courseName = req.params.courseName;
+    const courseCollection = mongoose.connection.collection(courseName);
+
+    // Fetch videos for the course
+    const videos = await courseCollection.find({}).toArray();
+
+    // Preprocess video URLs to include the basename
+    const processedVideos = videos.map(video => ({
+      ...video,
+      basename: video.videoUrl ? path.basename(video.videoUrl) : null
+    }));
+
+    res.render('course', { courseName, videos: processedVideos });
+  } catch (err) {
+    console.error('Error fetching course data:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Route to serve video files dynamically
+app.get('/videos/:courseName/:id', async (req, res) => {
+  try {
+    const { courseName, id } = req.params;
+    const ObjectId = require('mongoose').Types.ObjectId;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send('Invalid video ID');
+    }
+
+    const video = await mongoose.connection.collection(courseName).findOne({ _id: new ObjectId(id) });
+
+    if (!video || !video.videoUrl) {
+      return res.status(404).send('Video not found');
+    }
+
+    const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl); // <-- ✅ FIXED HERE
+    console.log("Serving video from:", videoPath);
+
+    if (!fs.existsSync(videoPath)) {
+      return res.status(404).send('Video file not found on disk');
+    }
+
+    res.sendFile(videoPath);
+  } catch (err) {
+    console.error('Error serving video:', err.stack);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
+// Route to serve PDF files dynamically
+app.get('/pdf/:courseName/*', (req, res) => {
+  try {
+    const { courseName } = req.params;
+    const filePath = req.params[0]; // Capture the full path after /pdf/:courseName/
+    const decodedFilePath = decodeURIComponent(filePath); // Decode special characters
+    const pdfPath = path.join(__dirname, 'public', 'videos', courseName, decodedFilePath);
+
+    if (!fs.existsSync(pdfPath)) {
+      return res.status(404).send('PDF file not found');
+    }
+
+    res.sendFile(pdfPath);
+  } catch (err) {
+    console.error('Error serving PDF:', err);
     res.status(500).send('Internal Server Error');
   }
 });

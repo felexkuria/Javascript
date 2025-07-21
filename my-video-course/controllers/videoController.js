@@ -44,9 +44,19 @@ exports.getAllVideos = async (req, res) => {
 exports.getVideoById = async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
+
+    if (!video || !video.videoUrl) {
+      return res.status(404).send('Video not found');
+    }
+
+    // Ensure the videoUrl is prefixed with a slash for public access
+    video.videoUrl = `/${video.videoUrl}`;
+
+    // Render the video page
     res.render('video', { video });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error fetching video:', err);
+    res.status(500).send('Internal Server Error');
   }
 };
 

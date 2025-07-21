@@ -10,14 +10,16 @@
 <body class="bg-gray-100 font-sans text-gray-900">
   <div class="container mx-auto px-4 py-8">
     <% if (video) { %>
-      <h1 class="text-3xl font-bold mb-4"><%= video.title %></h1>
-      <div class="mb-4">
+      <% if (video.videoUrl.endsWith('.mp4')) { %>
         <video controls class="w-full h-auto">
-          <source src="<%= video.videoUrl %>" type="video/mp4">
+         <source src="/videos/<%= courseName %>/<%= video._id %>" type="video/mp4">
           Your browser does not support the video tag.
         </video>
-      </div>
-      <p class="text-gray-700"><%= video.description %></p>
+      <% } else { %>
+        <div class="text-center p-4 bg-red-100 text-red-700 rounded-md">
+          Unsupported file type.
+        </div>
+      <% } %>
     <% } else { %>
       <h1 class="text-3xl font-bold mb-4 text-red-500">Video Not Found</h1>
       <p class="text-gray-700">The video you are looking for does not exist or has been removed.</p>
