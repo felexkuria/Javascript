@@ -1,58 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Video Dashboard</title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <script
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
-      defer
-    ></script>
-  </head>
-  <body class="bg-gray-100 font-sans text-gray-900">
-    <div class="flex h-screen" x-data="{ sidebarOpen: false }">
-      <%- include('partials/sidebar') %>
-      <!-- Main Content -->
-      <main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
-        <h1 class="text-3xl font-bold mb-8 text-center md:text-left">
-          Available Courses
-        </h1>
-        <div
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-        >
-          <% courses.forEach(course => { %>
-          <div
-            class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105"
-          >
-            <img
-              src="/download.jpg"
-              alt="<%= course.name %>"
-              class="w-full h-48 object-cover"
-            />
-            <div class="p-6">
-              <h2 class="text-xl font-semibold mb-2"><%= course.name %></h2>
-              <p class="text-gray-600 mb-4">
-                Learn the fundamentals and advanced concepts of <%= course.name
-                %>.
-              </p>
-              <a
-                href="/course/<%= course.name %>"
-                class="inline-block bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
-                >View Course</a
-              >
-            </div>
-          </div>
-          <% }) %>
+<%- include('partials/header', { title: 'Video Dashboard' }) %>
+
+<!-- Main Content -->
+<main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
+  <h1 class="text-4xl font-bold mb-12 text-gray-800 text-center md:text-left">
+    Available Courses
+  </h1>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+    <% courses.forEach(course => { %>
+      <div class="group bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
+        <div class="relative">
+          <img
+            src="https://static.wixstatic.com/media/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png/v1/fill/w_960,h_540,al_c/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png"
+            alt="<%= course.name %>"
+            class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
         </div>
-      </main>
-    </div>
-  </body>
-</html>
+        <div class="p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-3">
+            <%= course.name %>
+          </h2>
+          <p class="text-gray-600 mb-6">
+            Learn the fundamentals and advanced concepts of <%= course.name %>.
+          </p>
+          <a
+            href="/course/<%= course.name %>"
+            class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors duration-200"
+          >
+            <span>Start Learning</span>
+            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

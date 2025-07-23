@@ -1,29 +1,247 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= video ? video.title : 'Video Not Found' %></title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 font-sans text-gray-900">
-  <div class="container mx-auto px-4 py-8">
-    <% if (video) { %>
-      <% if (video.videoUrl.endsWith('.mp4')) { %>
-        <video controls class="w-full h-auto">
-         <source src="/videos/<%= courseName %>/<%= video._id %>" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-      <% } else { %>
-        <div class="text-center p-4 bg-red-100 text-red-700 rounded-md">
-          Unsupported file type.
+<%- include('partials/header', {
+  title: video ? video.title : 'Video Not Found',
+  extraStyles: `
+    <style>
+        .video-controls {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem;
+        }
+        
+        .control-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+        }
+
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+  `
+}) %>
+
+<!-- Main Content -->
+<main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
+  <div class="video-content-container">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div class="lg:col-span-3">
+        <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
+          <% if (video && video.videoUrl && video.videoUrl.endsWith('.pdf')) { %>
+            <div class="p-8">
+              <a href="/pdf/<%= encodeURIComponent(video.videoUrl) %>" 
+                target="_blank"
+                class="inline-flex items-center px-6 py-3 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors duration-200">
+                <i class="fas fa-file-pdf mr-2"></i> View PDF: <%= video.title %>
+              </a>
+            </div>
+          <% } else { %>
+            <div class="relative">
+              <div class="video-container">
+                <video controls 
+                      class="bg-black"
+                      controlsList="nodownload"
+                      poster="https://static.wixstatic.com/media/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png/v1/fill/w_960,h_540,al_c/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png">
+                  <source src="/videos/<%= courseName %>/file/<%= video._id %>" type="video/mp4">
+                  <% if (video.captionsUrl) { %>
+                    <track kind="captions" src="/videos/<%= encodeURIComponent(video.captionsUrl) %>" srclang="en" label="English" default>
+                  <% } %>
+                  <button class="next-button">Next</button>
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+              
+              <div class="video-controls">
+                <button id="prevVideo" 
+                        class="control-btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600">
+                  <i class="fas fa-step-backward"></i>
+                  Previous
+                </button>
+                <button id="nextVideo"
+                        class="control-btn bg-indigo-600 text-white hover:bg-indigo-500">
+                  Next
+                  <i class="fas fa-step-forward"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="p-6">
+              <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                <%= video ? video.title : 'Video Not Found' %>
+              </h1>
+              <p class="text-gray-600 dark:text-gray-300">
+                <%= video ? video.description : '' %>
+              </p>
+            </div>
+          <% } %>
         </div>
-      <% } %>
-    <% } else { %>
-      <h1 class="text-3xl font-bold mb-4 text-red-500">Video Not Found</h1>
-      <p class="text-gray-700">The video you are looking for does not exist or has been removed.</p>
-    <% } %>
+      </div>
+      
+      <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+          <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Course Navigation</h2>
+          <a href="/course/<%= courseName %>" class="block py-2 px-4 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-lg mb-2">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Course
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
-</body>
-</html>
+</main>
+
+<%- include('partials/footer', {
+  extraScripts: `
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const videoElement = document.querySelector("video");
+            const prevButton = document.getElementById("prevVideo");
+            const nextButton = document.getElementById("nextVideo");
+            
+            if (videoElement) {
+                videoElement.addEventListener("play", () => {
+                    console.log("Video started playing:", "${video ? video.title : ''}");
+                });
+
+                videoElement.addEventListener("ended", async () => {
+                    await markVideoAsWatched();
+                    handleNextVideo();
+                });
+
+                // Add fullscreen toggle
+                videoElement.addEventListener('dblclick', () => {
+                    if (!document.fullscreenElement) {
+                        videoElement.requestFullscreen();
+                    } else {
+                        document.exitFullscreen();
+                    }
+                });
+            }
+
+            async function markVideoAsWatched() {
+                try {
+                    const response = await fetch('/api/mark-watched', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            videoId: "${video ? video._id : ''}",
+                            courseName: "${courseName}"
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to mark video as watched');
+                    }
+                } catch (err) {
+                    console.error('Error marking video as watched:', err);
+                }
+            }
+
+            async function handlePrevVideo() {
+                try {
+                    const prevVideoUrl = getPrevVideoUrl("${video ? video._id : ''}", "${courseName}");
+                    if (prevVideoUrl) {
+                        window.location.href = \`/watch/\${encodeURIComponent(prevVideoUrl)}?courseName=${courseName}\`;
+                    } else {
+                        showMessage("This is the first video of the course", "warning");
+                    }
+                } catch (err) {
+                    showError("Failed to load previous video");
+                }
+            }
+
+            async function handleNextVideo() {
+                try {
+                    const response = await fetch(\`/api/next-video?currentVideoId=${video ? video._id : ''}&courseName=${courseName}\`);
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch next video');
+                    }
+                    
+                    const nextVideo = await response.json();
+                    
+                    if (nextVideo.error) {
+                        showMessage("Congratulations! You have completed this section.", "success");
+                        return;
+                    }
+                    
+                    window.location.href = \`/watch/\${nextVideo.videoUrl}?courseName=${courseName}\`;
+                } catch (err) {
+                    showError("Failed to load next video");
+                }
+            }
+
+            function showMessage(message, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = type === 'success' ? 
+                    'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4' :
+                    'bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mt-4';
+                messageDiv.textContent = message;
+                document.querySelector('.video-content-container').appendChild(messageDiv);
+            }
+
+            function showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+                errorDiv.textContent = 'Error: ' + message;
+                document.querySelector('.video-content-container').prepend(errorDiv);
+            }
+
+            if (prevButton) prevButton.addEventListener("click", handlePrevVideo);
+            if (nextButton) nextButton.addEventListener("click", handleNextVideo);
+        });
+
+        function getNextVideoUrl(currentVideoId, courseName) {
+            const videoUrls = {
+                "course1": ["video1.mp4", "video2.mp4", "video3.mp4"],
+                "course2": ["videoA.mp4", "videoB.mp4"]
+            };
+
+            const currentCourseVideos = videoUrls[courseName] || [];
+            const currentIndex = currentCourseVideos.indexOf(currentVideoId);
+
+            if (currentIndex !== -1 && currentIndex < currentCourseVideos.length - 1) {
+                return currentCourseVideos[currentIndex + 1];
+            }
+            return null;
+        }
+
+        function getPrevVideoUrl(currentVideoId, courseName) {
+            const videoUrls = {
+                "course1": ["video1.mp4", "video2.mp4", "video3.mp4"],
+                "course2": ["videoA.mp4", "videoB.mp4"]
+            };
+
+            const currentCourseVideos = videoUrls[courseName] || [];
+            const currentIndex = currentCourseVideos.indexOf(currentVideoId);
+
+            if (currentIndex > 0) {
+                return currentCourseVideos[currentIndex - 1];
+            }
+            return null;
+        }
+    </script>
+  `
+}) %>
