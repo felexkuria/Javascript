@@ -1,239 +1,243 @@
-<%- include('partials/header', {
-  title: video ? video.title : 'Video Not Found',
+<%- include('partials/header', { 
+  title: `${video ? video.title : 'Video'} - ${courseName}`,
   extraStyles: `
     <style>
-        .video-controls {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            padding: 1rem;
-        }
-        
-        .control-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s;
-        }
-        
-        .control-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
-            height: 0;
-            overflow: hidden;
-        }
-
-        .video-container video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        
-        .progress-bar {
-            height: 8px;
-            border-radius: 4px;
-            background-color: #e5e7eb;
-            overflow: hidden;
-            margin: 1rem 0;
-        }
-        
-        .progress-bar-fill {
-            height: 100%;
-            background-color: #4CAF50;
-            transition: width 0.3s ease;
-        }
-        
-        .watched-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.5rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            margin-left: 0.5rem;
-        }
-        
-        .watched-badge.watched {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        
-        .watched-badge.unwatched {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .key-hint {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background-color: rgba(0, 0, 0, 0.7);
-          color: white;
-          padding: 20px;
-          border-radius: 10px;
-          font-size: 24px;
-          z-index: 1000;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        }
-        
-        .key-hint.show {
-          opacity: 1;
-        }
+      .video-container {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        height: 0;
+        overflow: hidden;
+      }
+      .video-container video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .watched-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-left: 0.5rem;
+      }
+      .watched-badge.watched {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: rgb(16, 185, 129);
+      }
+      .watched-badge.unwatched {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: rgb(239, 68, 68);
+      }
+      .key-hint {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-size: 1.5rem;
+        font-weight: bold;
+        z-index: 50;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .key-hint.visible {
+        opacity: 1;
+      }
+      #confetti-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+        pointer-events: none;
+      }
+      .celebration-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        z-index: 101;
+        text-align: center;
+        max-width: 90%;
+        width: 500px;
+      }
+      .celebration-modal h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #4f46e5;
+      }
+      .celebration-modal p {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        color: #4b5563;
+      }
+      .celebration-modal button {
+        padding: 0.75rem 1.5rem;
+        background-color: #4f46e5;
+        color: white;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: background-color 0.2s;
+      }
+      .celebration-modal button:hover {
+        background-color: #4338ca;
+      }
     </style>
   `
 }) %>
 
 <!-- Main Content -->
 <main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
-  <div class="video-content-container">
-    <!-- Course Progress Bar -->
-    <div class="mb-4">
-      <div class="flex justify-between items-center mb-1">
-        <span class="text-sm font-medium text-gray-700">Course Progress</span>
-        <span class="text-sm font-medium text-gray-700"><%= watchedVideos %>/<%= totalVideos %> videos (<%= watchedPercent %>%)</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-bar-fill" style="width: <%= watchedPercent %>%"></div>
-      </div>
-    </div>
-    
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-      <div class="lg:col-span-3">
-        <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
-          <% if (video && video.videoUrl && video.videoUrl.endsWith('.pdf')) { %>
-            <div class="p-8">
-              <a href="/pdf/<%= encodeURIComponent(video.videoUrl) %>" 
-                target="_blank"
-                class="inline-flex items-center px-6 py-3 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors duration-200">
-                <i class="fas fa-file-pdf mr-2"></i> View PDF: <%= video.title %>
-              </a>
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div class="lg:col-span-3">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+        <div class="p-6">
+          <div class="mb-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
+                  <%= video ? video.title : 'Video Not Found' %>
+                </h1>
+                <% if (video && video.watched) { %>
+                  <span class="watched-badge watched">
+                    <i class="fas fa-check mr-1"></i> Watched
+                  </span>
+                <% } else { %>
+                  <span class="watched-badge unwatched">
+                    <i class="fas fa-times mr-1"></i> Unwatched
+                  </span>
+                <% } %>
+              </div>
+              <button id="forceSyncButton" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                <i class="fas fa-sync-alt mr-1"></i> Force Sync
+              </button>
             </div>
-          <% } else { %>
-            <div class="relative">
-              <div class="video-container">
-                <video controls autoplay
-                      class="bg-black"
-                      controlsList="nodownload"
-                      poster="https://static.wixstatic.com/media/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png/v1/fill/w_960,h_540,al_c/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png">
+            <p class="text-gray-600 dark:text-gray-400 mt-2">
+              <%= video ? video.description : 'No description available' %>
+            </p>
+          </div>
+          
+          <div class="video-content-container">
+            <% if (video && video.videoUrl) { %>
+              <div class="video-container mb-4">
+                <video id="videoPlayer" controls class="w-full">
                   <source src="/videos/<%= courseName %>/file/<%= video._id %>" type="video/mp4">
-                  <% if (video.captionsUrl) { %>
-                    <track kind="captions" src="/videos/<%= encodeURIComponent(video.captionsUrl) %>" srclang="en" label="English" default>
-                  <% } %>
-                  <button class="next-button">Next</button>
                   Your browser does not support the video tag.
                 </video>
               </div>
               
-              <div class="video-controls">
-                <button id="prevVideo" 
-                        class="control-btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
-                        <%= typeof isFirstVideo !== 'undefined' && isFirstVideo ? 'disabled' : '' %>
-                        <%= typeof isFirstVideo !== 'undefined' && isFirstVideo ? 'style="opacity: 0.5; cursor: not-allowed;"' : '' %>>
-                  <i class="fas fa-step-backward"></i>
-                  Previous
-                </button>
-                <button id="nextVideo"
-                        class="control-btn bg-indigo-600 text-white hover:bg-indigo-500"
-                        <%= typeof isLastVideo !== 'undefined' && isLastVideo ? 'disabled' : '' %>
-                        <%= typeof isLastVideo !== 'undefined' && isLastVideo ? 'style="opacity: 0.5; cursor: not-allowed;"' : '' %>>
-                  Next
-                  <i class="fas fa-step-forward"></i>
-                </button>
-              </div>
-            </div>
-            
-            <div class="p-6">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                  <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
-                    <%= video ? video.title : 'Video Not Found' %>
-                  </h1>
-                  <% if (video && video.watched) { %>
-                    <span class="watched-badge watched">
-                      <i class="fas fa-check mr-1"></i> Watched
-                    </span>
-                  <% } else { %>
-                    <span class="watched-badge unwatched">
-                      <i class="fas fa-times mr-1"></i> Unwatched
-                    </span>
+              <div class="flex justify-between items-center mb-4">
+                <div class="flex space-x-2">
+                  <% if (!isFirstVideo) { %>
+                    <button id="prevButton" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                      <i class="fas fa-step-backward mr-1"></i> Previous
+                    </button>
+                  <% } %>
+                  
+                  <% if (!isLastVideo) { %>
+                    <button id="nextButton" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                      Next <i class="fas fa-step-forward ml-1"></i>
+                    </button>
                   <% } %>
                 </div>
-                <button id="forceSyncButton" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                  <i class="fas fa-sync-alt mr-1"></i> Force Sync
-                </button>
+                
+                <div class="flex items-center">
+                  <span class="text-sm text-gray-600 dark:text-gray-400 mr-2">
+                    <%= watchedVideos %>/<%= totalVideos %> videos (<%= watchedPercent %>%)
+                  </span>
+                  <div class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div class="h-full bg-green-500" style="width: <%= watchedPercent %>%"></div>
+                  </div>
+                </div>
               </div>
-              <p class="text-gray-600 dark:text-gray-300 mt-2">
-                <%= video ? video.description : '' %>
-              </p>
-            </div>
-          <% } %>
+              
+              <div class="flex justify-between items-center">
+                <button id="markWatchedButton" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+                  <i class="fas fa-check mr-1"></i> Mark as Watched
+                </button>
+                
+                <a href="/course/<%= courseName %>" class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors">
+                  <i class="fas fa-arrow-left mr-1"></i> Back to Course
+                </a>
+              </div>
+            <% } else { %>
+              <div class="text-center p-8 bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-xl">
+                <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                <h2 class="text-xl font-bold mb-2">Video Not Found</h2>
+                <p>The requested video could not be found or is not available.</p>
+                <a href="/course/<%= courseName %>" class="inline-block mt-4 px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors">
+                  <i class="fas fa-arrow-left mr-1"></i> Back to Course
+                </a>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="lg:col-span-1">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Keyboard Shortcuts</h2>
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li class="flex justify-between">
+            <span class="font-medium">F</span>
+            <span>Toggle fullscreen</span>
+          </li>
+          <li class="flex justify-between">
+            <span class="font-medium">J</span>
+            <span>Rewind 15 seconds</span>
+          </li>
+          <li class="flex justify-between">
+            <span class="font-medium">K</span>
+            <span>Play/Pause</span>
+          </li>
+          <li class="flex justify-between">
+            <span class="font-medium">L</span>
+            <span>Forward 15 seconds</span>
+          </li>
+        </ul>
+        <div class="mt-4">
+          <a href="/course/<%= courseName %>" class="block py-2 px-4 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-lg text-center">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Course
+          </a>
         </div>
       </div>
       
-      <div class="lg:col-span-1">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
-          <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Keyboard Shortcuts</h2>
-          <ul class="space-y-2 text-sm text-gray-600">
-            <li class="flex justify-between">
-              <span class="font-medium">F</span>
-              <span>Toggle fullscreen</span>
+      <% if (typeof pdfs !== 'undefined' && pdfs.length > 0) { %>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+          <i class="fas fa-file-pdf text-red-500 mr-2"></i> PDF Resources
+        </h2>
+        <ul class="space-y-2">
+          <% pdfs.forEach((pdf, index) => { %>
+            <li>
+              <a href="/pdf/<%= pdf.path %>" target="_blank" 
+                 class="flex items-center py-2 px-3 rounded-lg hover:bg-gray-100 transition-colors">
+                <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-red-100 text-red-500 rounded-full mr-2">
+                  <%= index + 1 %>
+                </span>
+                <span class="text-sm text-gray-700 truncate flex-grow">
+                  <%= pdf.name %>
+                </span>
+                <i class="fas fa-paperclip text-gray-400"></i>
+              </a>
             </li>
-            <li class="flex justify-between">
-              <span class="font-medium">J</span>
-              <span>Rewind 15 seconds</span>
-            </li>
-            <li class="flex justify-between">
-              <span class="font-medium">K</span>
-              <span>Play/Pause</span>
-            </li>
-            <li class="flex justify-between">
-              <span class="font-medium">L</span>
-              <span>Forward 15 seconds</span>
-            </li>
-          </ul>
-          <div class="mt-4">
-            <a href="/course/<%= courseName %>" class="block py-2 px-4 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-lg text-center">
-              <i class="fas fa-arrow-left mr-2"></i> Back to Course
-            </a>
-          </div>
-        </div>
-        
-        <% if (typeof pdfs !== 'undefined' && pdfs.length > 0) { %>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-          <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-            <i class="fas fa-file-pdf text-red-500 mr-2"></i> PDF Resources
-          </h2>
-          <ul class="space-y-2">
-            <% pdfs.forEach((pdf, index) => { %>
-              <li>
-                <a href="/pdf/<%= pdf.path %>" target="_blank" 
-                   class="flex items-center py-2 px-3 rounded-lg hover:bg-gray-100 transition-colors">
-                  <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-red-100 text-red-500 rounded-full mr-2">
-                    <%= index + 1 %>
-                  </span>
-                  <span class="text-sm text-gray-700 truncate flex-grow">
-                    <%= pdf.name %>
-                  </span>
-                  <i class="fas fa-paperclip text-gray-400"></i>
-                </a>
-              </li>
-            <% }); %>
-          </ul>
-        </div>
-        <% } %>
+          <% }); %>
+        </ul>
       </div>
+      <% } %>
     </div>
   </div>
 </main>
@@ -241,6 +245,17 @@
 <!-- Key hint element -->
 <div id="keyHint" class="key-hint"></div>
 
+<!-- Confetti canvas -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Celebration modal -->
+<div id="celebration-modal" class="celebration-modal hidden">
+  <h2>🎉 Congratulations! 🎉</h2>
+  <p>You've completed the course! Great job on your learning journey.</p>
+  <button id="back-to-course-btn">Back to Course</button>
+</div>
+
+<script src="/js/confetti.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   // Add force sync button handler
@@ -370,261 +385,149 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }).start();
-    const videoElement = document.querySelector("video");
-    const prevButton = document.getElementById("prevVideo");
-    const nextButton = document.getElementById("nextVideo");
-    const keyHint = document.getElementById("keyHint");
-    
-    if (videoElement) {
-        // Set autoplay
-        videoElement.autoplay = true;
-        
-        videoElement.addEventListener("play", () => {
-            console.log("Video started playing:", "<%= video ? video.title : '' %>");
-        });
 
-        videoElement.addEventListener("ended", async () => {
-            await markVideoAsWatched();
-            // Only go to next video if not the last one
-            <% if (!isLastVideo) { %>
-                handleNextVideo();
-            <% } else { %>
-                showCongratulations();
-            <% } %>
-        });
-
-        // Add fullscreen toggle
-        videoElement.addEventListener('dblclick', () => {
-            toggleFullscreen();
-        });
-        
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            // Only process if not typing in an input field
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
-            switch(e.key.toLowerCase()) {
-                case 'f': // Fullscreen
-                    toggleFullscreen();
-                    showKeyHint('Fullscreen');
-                    break;
-                case 'j': // Rewind 15 seconds
-                    videoElement.currentTime = Math.max(0, videoElement.currentTime - 15);
-                    showKeyHint('Rewind 15s');
-                    break;
-                case 'k': // Play/Pause
-                    if (videoElement.paused) {
-                        videoElement.play();
-                        showKeyHint('Play');
-                    } else {
-                        videoElement.pause();
-                        showKeyHint('Pause');
-                    }
-                    break;
-                case 'l': // Forward 15 seconds
-                    videoElement.currentTime = Math.min(videoElement.duration, videoElement.currentTime + 15);
-                    showKeyHint('Forward 15s');
-                    break;
-            }
-        });
-    }
-    
-    function showKeyHint(text) {
-        keyHint.textContent = text;
-        keyHint.classList.add('show');
-        
-        setTimeout(() => {
-            keyHint.classList.remove('show');
-        }, 1000);
-    }
-    
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            videoElement.requestFullscreen().catch(err => {
-                console.error('Error attempting to enable fullscreen:', err);
-            });
-        } else {
+  const videoPlayer = document.getElementById('videoPlayer');
+  const markWatchedButton = document.getElementById('markWatchedButton');
+  const prevButton = document.getElementById('prevButton');
+  const nextButton = document.getElementById('nextButton');
+  const keyHint = document.getElementById('keyHint');
+  
+  if (videoPlayer) {
+    // Video player keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (document.activeElement.tagName === 'INPUT' || 
+          document.activeElement.tagName === 'TEXTAREA') {
+        return;
+      }
+      
+      switch (e.key.toLowerCase()) {
+        case 'f':
+          if (document.fullscreenElement) {
             document.exitFullscreen();
-        }
-    }
-
-    async function markVideoAsWatched() {
-        try {
-            const response = await fetch('/api/mark-watched', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    videoId: "<%= video ? video._id : '' %>",
-                    courseName: "<%= courseName %>"
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to mark video as watched');
-            }
-            
-            // Update UI to show video as watched
-            const watchedBadge = document.querySelector('.watched-badge');
-            if (watchedBadge) {
-                watchedBadge.className = 'watched-badge watched';
-                watchedBadge.innerHTML = '<i class="fas fa-check mr-1"></i> Watched';
-            }
-            
-            // Update progress bar
-            const progressFill = document.querySelector('.progress-bar-fill');
-            const progressText = document.querySelector('.text-sm.font-medium.text-gray-700:last-child');
-            if (progressFill && progressText) {
-                const progressContent = progressText.textContent;
-                const watchedMatch = progressContent.match(/(\d+)\/(\d+)/);
-                
-                if (watchedMatch && watchedMatch.length >= 3) {
-                    const watched = parseInt(watchedMatch[1]);
-                    const total = parseInt(watchedMatch[2]);
-                    
-                    if (!isNaN(watched) && !isNaN(total) && watched < total) {
-                        const newWatched = watched + 1;
-                        const newPercent = Math.round((newWatched / total) * 100);
-                        progressFill.style.width = newPercent + '%';
-                        progressText.textContent = newWatched + '/' + total + ' videos (' + newPercent + '%)';
-                    }
-                }
-            }
-        } catch (err) {
-            console.error('Error marking video as watched:', err);
-        }
-    }
-
-    async function handlePrevVideo() {
-        try {
-            const response = await fetch("/api/next-video?currentVideoId=<%= video ? video._id : '' %>&courseName=<%= courseName %>&direction=prev");
-            
-            if (!response.ok) {
-                if (response.status === 404) {
-                    showMessage("This is the first video of the course", "warning");
-                    return;
-                }
-                throw new Error('Failed to fetch previous video');
-            }
-            
-            const prevVideo = await response.json();
-            window.location.href = "/videos/<%= courseName %>/" + prevVideo._id;
-        } catch (err) {
-            showError("Failed to load previous video");
-        }
-    }
-
-    async function handleNextVideo() {
-        try {
-            const response = await fetch("/api/next-video?currentVideoId=<%= video ? video._id : '' %>&courseName=<%= courseName %>");
-            
-            if (!response.ok) {
-                if (response.status === 404) {
-                    // Show congratulations message with confetti effect
-                    showCongratulations();
-                    return;
-                }
-                throw new Error('Failed to fetch next video');
-            }
-            
-            const nextVideo = await response.json();
-            window.location.href = "/videos/<%= courseName %>/" + nextVideo._id;
-        } catch (err) {
-            showError("Failed to load next video");
-        }
-    }
+          } else {
+            videoPlayer.requestFullscreen();
+          }
+          showKeyHint('Fullscreen');
+          break;
+        case 'k':
+          if (videoPlayer.paused) {
+            videoPlayer.play();
+            showKeyHint('Play');
+          } else {
+            videoPlayer.pause();
+            showKeyHint('Pause');
+          }
+          break;
+        case 'j':
+          videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 15);
+          showKeyHint('Rewind 15s');
+          break;
+        case 'l':
+          videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 15);
+          showKeyHint('Forward 15s');
+          break;
+      }
+    });
     
-    function showCongratulations() {
-        // Create a modal for the congratulations message
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 flex items-center justify-center z-50';
-        modal.innerHTML = `
-            <div class="fixed inset-0 bg-black bg-opacity-50"></div>
-            <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 z-10 relative">
-                <div class="text-center">
-                    <div class="text-5xl mb-4">🎉</div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Congratulations!</h2>
-                    <p class="text-gray-600 mb-6">You have completed all videos in this course!</p>
-                    <div class="flex justify-center space-x-4">
-                        <a href="/course/<%= courseName %>" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors">
-                            Back to Course
-                        </a>
-                        <a href="/dashboard" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                            Go to Dashboard
-                        </a>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        
-        // Add confetti effect
-        for (let i = 0; i < 100; i++) {
-            createConfetti();
-        }
-    }
-    
-    function createConfetti() {
-        const confetti = document.createElement('div');
-        confetti.className = 'fixed z-50';
-        confetti.style.width = '10px';
-        confetti.style.height = '10px';
-        confetti.style.backgroundColor = getRandomColor();
-        confetti.style.position = 'fixed';
-        confetti.style.top = '-10px';
-        confetti.style.left = Math.random() * window.innerWidth + 'px';
-        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
-        confetti.style.opacity = Math.random() + 0.5;
-        document.body.appendChild(confetti);
-        
-        const duration = Math.random() * 3 + 2;
-        const rotation = Math.random() * 360;
-        
-        confetti.animate([
-            { transform: `translateY(0) rotate(0deg)`, opacity: 1 },
-            { transform: `translateY(${window.innerHeight}px) rotate(${rotation}deg)`, opacity: 0 }
-        ], {
-            duration: duration * 1000,
-            easing: 'cubic-bezier(0, .9, .57, 1)'
-        }).onfinish = () => confetti.remove();
-    }
-    
-    function getRandomColor() {
-        const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
-        return colors[Math.floor(Math.random() * colors.length)];
-    }
-
-    function showMessage(message, type) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = type === 'success' ? 
-            'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4' :
-            'bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mt-4';
-        messageDiv.textContent = message;
-        document.querySelector('.video-content-container').appendChild(messageDiv);
-        
-        // Auto-remove message after 5 seconds
+    // Mark video as watched when it ends and navigate to next video
+    videoPlayer.addEventListener('ended', () => {
+      markVideoAsWatched();
+      
+      // Check if this is the last video
+      if (<%= isLastVideo %>) {
+        showCelebration();
+      } else {
+        // Navigate to next video after a short delay
         setTimeout(() => {
-            if (document.body.contains(messageDiv)) {
-                messageDiv.remove();
-            }
-        }, 5000);
-    }
-
-    function showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
-        errorDiv.textContent = 'Error: ' + message;
-        document.querySelector('.video-content-container').prepend(errorDiv);
-    }
-
-    if (prevButton && !prevButton.hasAttribute('disabled')) {
-        prevButton.addEventListener("click", handlePrevVideo);
+          navigateToAdjacentVideo('next');
+        }, 1500);
+      }
+    });
+    
+    // Mark video as watched when button is clicked
+    if (markWatchedButton) {
+      markWatchedButton.addEventListener('click', () => {
+        markVideoAsWatched();
+      });
     }
     
-    if (nextButton && !nextButton.hasAttribute('disabled')) {
-        nextButton.addEventListener("click", handleNextVideo);
+    // Previous and next video buttons
+    if (prevButton) {
+      prevButton.addEventListener('click', () => {
+        navigateToAdjacentVideo('prev');
+      });
     }
+    
+    if (nextButton) {
+      nextButton.addEventListener('click', () => {
+        navigateToAdjacentVideo('next');
+      });
+    }
+  }
+  
+  function showKeyHint(text) {
+    keyHint.textContent = text;
+    keyHint.classList.add('visible');
+    
+    setTimeout(() => {
+      keyHint.classList.remove('visible');
+    }, 1000);
+  }
+  
+  async function markVideoAsWatched() {
+    try {
+      const response = await fetch('/api/mark-watched', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          videoId: '<%= video ? video._id : "" %>',
+          courseName: '<%= courseName %>'
+        })
+      });
+      
+      if (response.ok) {
+        // Update UI to show video is watched
+        const watchedBadge = document.querySelector('.watched-badge');
+        if (watchedBadge) {
+          watchedBadge.className = 'watched-badge watched';
+          watchedBadge.innerHTML = '<i class="fas fa-check mr-1"></i> Watched';
+        }
+        
+        // Disable the mark as watched button
+        if (markWatchedButton) {
+          markWatchedButton.disabled = true;
+          markWatchedButton.classList.add('bg-gray-400');
+          markWatchedButton.classList.remove('bg-green-500', 'hover:bg-green-600');
+          markWatchedButton.innerHTML = '<i class="fas fa-check mr-1"></i> Watched';
+        }
+        
+        showKeyHint('Marked as Watched');
+      } else {
+        console.error('Failed to mark video as watched');
+        showKeyHint('Error');
+      }
+    } catch (err) {
+      console.error('Error marking video as watched:', err);
+      showKeyHint('Error');
+    }
+  }
+  
+  async function navigateToAdjacentVideo(direction) {
+    try {
+      const response = await fetch(`/api/next-video?currentVideoId=<%= video ? video._id : "" %>&courseName=<%= courseName %>&direction=${direction}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        window.location.href = `/videos/<%= courseName %>/${data._id}`;
+      } else {
+        console.error(`No ${direction === 'prev' ? 'previous' : 'next'} video available`);
+      }
+    } catch (err) {
+      console.error(`Error navigating to ${direction === 'prev' ? 'previous' : 'next'} video:`, err);
+    }
+  }
 });
 </script>
 

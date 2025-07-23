@@ -108,6 +108,11 @@
         // Check if we have AWS credentials
         if (form.dataset.bucket && form.dataset.region) {
           try {
+            // Configure AWS SDK
+            AWS.config.update({
+              region: form.dataset.region
+            });
+            
             // Show debug info
             console.log('S3 Upload Config:', {
               region: form.dataset.region,
@@ -116,7 +121,7 @@
             
             // Check if we have all required credentials
             if (!form.dataset.region || !form.dataset.bucket) {
-              throw new Error('Missing S3 credentials. Falling back to direct upload.');
+              throw new Error('Missing S3 configuration. Falling back to direct upload.');
             }
             
             // Use S3 uploader
