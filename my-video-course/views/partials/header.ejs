@@ -8,11 +8,12 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="/css/main.css" rel="stylesheet">
+  <link href="/css/video-controls.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <% if (typeof extraStyles !== 'undefined') { %>
     <%- extraStyles %>
   <% } %>
 </head>
 <body class="bg-gray-50 font-['Inter']">
-  <div class="flex h-screen" x-data="{ sidebarOpen: false }">
+  <div class="flex h-screen" x-data="{ sidebarOpen: false, sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' }" x-init="$watch('sidebarCollapsed', val => localStorage.setItem('sidebarCollapsed', val))">
     <%- include('sidebar') %>

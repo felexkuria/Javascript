@@ -1,52 +1,26 @@
-// Import required modules
 const express = require('express');
 const mongoose = require('mongoose');
+const path = require('path');
+const fs = require('fs');
 const bodyParser = require('body-parser');
 const config = require('./config');
-const videoRoutes = require('./routes/video');
-const fs = require('fs');
-const path = require('path');
+const videoRoutes = require('./routes/videoRoutes');
 const ObjectId = mongoose.Types.ObjectId;
 
-// Initialize express app
 const app = express();
 
-// Import Video model
-const Video = require('./models/Video');
-
-// IMPROVEMENTS:
-// - Add error handling middleware
-// - Add request logging middleware
-// - Add input validation
-// - Add authentication/authorization
-// - Use environment variables for configuration
-// - Add API documentation
-// - Add request rate limiting
-// - Add security headers
-// - Add compression middleware
-// - Add clustering for better performance
-
-// Connect to MongoDB with proper error handling
+// Connect to MongoDB
 mongoose.connect(config.mongodbUri, { 
-  // These options are deprecated and will be removed in future versions
-  // useNewUrlParser: true, 
-  // useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-  family: 4 // Use IPv4, skip trying IPv6
+  useNewUrlParser: true, 
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000
 })
   .then(() => {
-    console.log('MongoDB connected');
-    // Call addVideoFiles after successful connection
-    addVideoFiles()
-      .then(() => console.log('Video files added to MongoDB'))
-      .catch(err => console.error('Error adding video files:', err));
+    console.log('Connected to MongoDB');
   })
-  .catch(error => {
-    console.error('Error connecting to MongoDB:', error);
-    console.log('Please check your internet connection and MongoDB Atlas network access settings.');
-    // Don't exit the process, let the app continue running so it can be restarted by nodemon
-    // process.exit(1);
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
   });
 
 // Middleware
@@ -219,25 +193,22 @@ app.get('/dashboard', async (req, res) => {
   }
 });
 
+// Import video service
+const videoService = require('./services/videoService');
+
 // Course route
 app.get('/course/:courseName', async (req, res) => {
   try {
     const courseName = req.params.courseName;
     
-    // Check if MongoDB is connected
-    if (!mongoose.connection.readyState) {
-      return res.render('course', { 
-        courseName, 
-        videos: [],
-        pdfs: [],
-        error: 'Database connection unavailable'
-      });
-    }
+    // Get videos from service (will use localStorage if MongoDB is not available)
+    let videos = await videoService.getVideosForCourse(courseName);
     
-    const courseCollection = mongoose.connection.collection(courseName);
-
-    // Fetch all videos for the course
-    const videos = await courseCollection.find({}).toArray();
+    // If no videos found, try to initialize from filesystem
+    if (!videos || videos.length === 0) {
+      const videoDir = path.join(__dirname, 'public', 'videos');
+      videos = await videoService.initializeVideosFromFilesystem(courseName, videoDir);
+    }
 
     // Preprocess video URLs to include the basename
     const processedVideos = videos.map(video => ({
@@ -266,11 +237,16 @@ app.get('/course/:courseName', async (req, res) => {
           if (stat.isDirectory()) {
             findPdfs(filePath);
           } else if (file.toLowerCase().endsWith('.pdf')) {
+            // Extract number from filename for sorting
+            const numberMatch = file.match(/\d+/);
+            const fileNumber = numberMatch ? parseInt(numberMatch[0]) : 0;
+            
             // Create relative path for serving
             const relativePath = path.relative(path.join(__dirname, 'public', 'videos'), filePath);
             pdfFiles.push({
               name: file,
-              path: relativePath
+              path: relativePath,
+              number: fileNumber
             });
           }
         });
@@ -278,17 +254,23 @@ app.get('/course/:courseName', async (req, res) => {
       
       try {
         findPdfs(codeDir);
+        // Sort PDFs by number
+        pdfFiles.sort((a, b) => a.number - b.number);
       } catch (err) {
         console.error('Error finding PDF files:', err);
       }
     }
 
+    // Calculate watched percentage for progress bar
+    const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
+    
     res.render('course', { 
       courseName, 
       videos: processedVideos,
       pdfs: pdfFiles,
       totalVideos,
-      watchedVideos
+      watchedVideos,
+      watchedPercent
     });
   } catch (err) {
     console.error('Error fetching course data:', err);
@@ -306,7 +288,8 @@ app.get('/videos/:courseName/:id', async (req, res) => {
       return res.status(400).send('Invalid video ID');
     }
 
-    const video = await mongoose.connection.collection(courseName).findOne({ _id: new ObjectId(id) });
+    // Get video from service (will use localStorage if MongoDB is not available)
+    const video = await videoService.getVideoById(courseName, id);
 
     if (!video || !video.videoUrl) {
       return res.status(404).send('Video not found');
@@ -320,11 +303,63 @@ app.get('/videos/:courseName/:id', async (req, res) => {
     }
 
     // Get course stats for progress bar
-    const courseCollection = mongoose.connection.collection(courseName);
-    const allVideos = await courseCollection.find({}).toArray();
+    const allVideos = await videoService.getVideosForCourse(courseName);
     const totalVideos = allVideos.length;
     const watchedVideos = allVideos.filter(v => v.watched).length;
     const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
+    
+    // Find PDF files in the course directory
+    const pdfFiles = [];
+    const courseDir = path.join(__dirname, 'public', 'videos', courseName);
+    const codeDir = path.join(courseDir, '[TutsNode.com] - DevOps Bootcamp', 'code');
+    
+    // Check if code directory exists
+    if (fs.existsSync(codeDir)) {
+      // Function to recursively find PDF files
+      const findPdfs = (dir) => {
+        const files = fs.readdirSync(dir);
+        files.forEach(file => {
+          const filePath = path.join(dir, file);
+          const stat = fs.statSync(filePath);
+          
+          if (stat.isDirectory()) {
+            findPdfs(filePath);
+          } else if (file.toLowerCase().endsWith('.pdf')) {
+            // Extract number from filename for sorting
+            const numberMatch = file.match(/\d+/);
+            const fileNumber = numberMatch ? parseInt(numberMatch[0]) : 0;
+            
+            // Create relative path for serving
+            const relativePath = path.relative(path.join(__dirname, 'public', 'videos'), filePath);
+            pdfFiles.push({
+              name: file,
+              path: relativePath,
+              number: fileNumber
+            });
+          }
+        });
+      };
+      
+      try {
+        findPdfs(codeDir);
+        // Sort PDFs by number
+        pdfFiles.sort((a, b) => a.number - b.number);
+      } catch (err) {
+        console.error('Error finding PDF files:', err);
+      }
+    }
+    
+    // Sort videos to determine if this is the last video
+    const sortedVideos = allVideos.sort((a, b) => {
+      const aNum = parseInt(a.title.match(/\d+/)) || 0;
+      const bNum = parseInt(b.title.match(/\d+/)) || 0;
+      return aNum - bNum;
+    });
+    
+    // Check if this is the first or last video
+    const currentIndex = sortedVideos.findIndex(v => v._id.toString() === id);
+    const isFirstVideo = currentIndex === 0;
+    const isLastVideo = currentIndex === sortedVideos.length - 1;
 
     // Render the video view
     res.render('video', { 
@@ -332,7 +367,10 @@ app.get('/videos/:courseName/:id', async (req, res) => {
       courseName, 
       totalVideos,
       watchedVideos,
-      watchedPercent
+      watchedPercent,
+      isFirstVideo,
+      isLastVideo,
+      pdfs: pdfFiles
     });
   } catch (err) {
     console.error('Error serving video:', err.stack);
@@ -357,7 +395,7 @@ app.get('/watch/:videoUrl', async (req, res) => {
     // Redirect to the video route
     res.redirect(`/videos/${courseName}/${videoId}`);
   } catch (err) {
-    console.error('Error redirecting to videos:', err.stack);
+    console.error('Error redirecting to video:', err.stack);
     res.status(500).send('Internal Server Error');
   }
 });
@@ -372,10 +410,11 @@ app.get('/videos/:courseName/file/:id', async (req, res) => {
       return res.status(400).send('Invalid video ID');
     }
 
-    const video = await mongoose.connection.collection(courseName).findOne({ _id: new ObjectId(id) });
+    // Get video from service (will use localStorage if MongoDB is not available)
+    const video = await videoService.getVideoById(courseName, id);
 
     if (!video || !video.videoUrl) {
-      return res.status(404).send('Video file not found');
+      return res.status(404).send('Video file  not found');
     }
 
     const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
@@ -422,13 +461,11 @@ app.post('/api/mark-watched', async (req, res) => {
       return res.status(400).json({ error: "Invalid video ID" });
     }
 
-    // Update directly in the course collection
-    const result = await mongoose.connection.collection(courseName).updateOne(
-      { _id: new ObjectId(videoId) },
-      { $set: { watched: true, watchedAt: new Date() } }
-    );
-
-    if (result.matchedCount === 0) {
+    // Mark video as watched using the service
+    // This will update both MongoDB (if connected) and localStorage
+    const success = await videoService.markVideoAsWatched(courseName, videoId);
+    
+    if (!success) {
       return res.status(404).json({ error: "Video not found" });
     }
 
@@ -451,10 +488,8 @@ app.get('/api/next-video', async (req, res) => {
       return res.status(400).json({ error: "Invalid current video ID" });
     }
 
-    const courseCollection = mongoose.connection.collection(courseName);
-
-    // Fetch all videos in the course
-    const videos = await courseCollection.find({}).toArray();
+    // Get videos from service (will use localStorage if MongoDB is not available)
+    const videos = await videoService.getVideosForCourse(courseName);
     
     // Sort videos by lesson number in title
     const sortedVideos = videos.sort((a, b) => {
@@ -498,9 +533,46 @@ app.get('/api/next-video', async (req, res) => {
   }
 });
 
+// Sync route to sync localStorage with MongoDB
+app.post('/api/sync', async (req, res) => {
+  try {
+    // Force a reconnection attempt if not connected
+    if (!mongoose.connection.readyState) {
+      try {
+        // Try to reconnect to MongoDB
+        await mongoose.connect(config.mongodbUri, { 
+          serverSelectionTimeoutMS: 5000,
+          socketTimeoutMS: 45000,
+          family: 4
+        });
+        console.log('Reconnected to MongoDB for sync');
+      } catch (connErr) {
+        console.error('Failed to reconnect to MongoDB:', connErr);
+        return res.status(503).json({ error: 'Could not reconnect to MongoDB', success: false });
+      }
+    }
+    
+    // Now try to sync
+    const syncResult = await videoService.syncWithMongoDB();
+    if (syncResult) {
+      res.status(200).json({ success: true, message: 'Sync completed successfully' });
+    } else {
+      res.status(503).json({ error: 'MongoDB connection issue during sync', success: false });
+    }
+  } catch (err) {
+    console.error('Error syncing with MongoDB:', err);
+    res.status(500).json({ error: 'Failed to sync with MongoDB: ' + err.message, success: false });
+  }
+});
+
 // Start server
 app.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);
+  
+  // Try to sync on startup
+  if (mongoose.connection.readyState) {
+    videoService.syncWithMongoDB()
+      .then(() => console.log('Synced localStorage with MongoDB'))
+      .catch(err => console.error('Error syncing with MongoDB:', err));
+  }
 });
-
-

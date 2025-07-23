@@ -1,40 +1,60 @@
-
 <!-- Desktop Sidebar -->
 <nav
-  class="sidebar bg-gradient-to-b from-blue-600 to-blue-800 text-white w-64 min-h-screen px-4 py-6 hidden md:block"
+  class="sidebar bg-gradient-to-b from-blue-600 to-blue-800 text-white transition-all duration-300"
+  :class="{'w-64': !sidebarCollapsed, 'w-16': sidebarCollapsed}"
 >
-  <div class="flex items-center mb-8">
-    <i class="fas fa-play-circle text-3xl mr-3"></i>
-    <h1 class="text-2xl font-bold">VideoLearn</h1>
+  <div class="flex items-center justify-between py-6 px-4">
+    <div class="flex items-center" :class="{'justify-center w-full': sidebarCollapsed}">
+      <i class="fas fa-play-circle text-3xl" :class="{'mr-3': !sidebarCollapsed}"></i>
+      <h1 class="text-2xl font-bold" x-show="!sidebarCollapsed">VideoLearn</h1>
+    </div>
+    <button 
+      @click="sidebarCollapsed = !sidebarCollapsed" 
+      class="text-white focus:outline-none hidden md:block"
+    >
+      <i class="fas" :class="sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+    </button>
   </div>
-  <ul class="space-y-4">
+  <ul class="space-y-4 px-4">
     <li>
       <a
         href="/"
         class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
-        ><i class="fas fa-home mr-3"></i> Home</a
+        :class="{'justify-center': sidebarCollapsed}"
       >
+        <i class="fas fa-home" :class="{'mr-3': !sidebarCollapsed}"></i>
+        <span x-show="!sidebarCollapsed">Home</span>
+      </a>
     </li>
     <li>
       <a
         href="/upload"
         class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
-        ><i class="fas fa-upload mr-3"></i> Upload Video</a
+        :class="{'justify-center': sidebarCollapsed}"
       >
+        <i class="fas fa-upload" :class="{'mr-3': !sidebarCollapsed}"></i>
+        <span x-show="!sidebarCollapsed">Upload Video</span>
+      </a>
     </li>
     <li>
       <a
         href="/profile"
         class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
-        ><i class="fas fa-user mr-3"></i> Profile</a
+        :class="{'justify-center': sidebarCollapsed}"
       >
+        <i class="fas fa-user" :class="{'mr-3': !sidebarCollapsed}"></i>
+        <span x-show="!sidebarCollapsed">Profile</span>
+      </a>
     </li>
     <li>
       <a
         href="/settings"
         class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
-        ><i class="fas fa-cog mr-3"></i> Settings</a
+        :class="{'justify-center': sidebarCollapsed}"
       >
+        <i class="fas fa-cog" :class="{'mr-3': !sidebarCollapsed}"></i>
+        <span x-show="!sidebarCollapsed">Settings</span>
+      </a>
     </li>
   </ul>
 </nav>
@@ -58,38 +78,47 @@
   <nav
     class="fixed top-0 left-0 bottom-0 flex flex-col w-64 bg-gradient-to-b from-blue-600 to-blue-800 text-white py-6 px-4 overflow-y-auto"
   >
-    <div class="flex items-center mb-8">
-      <i class="fas fa-play-circle text-3xl mr-3"></i>
-      <h1 class="text-2xl font-bold">VideoLearn</h1>
+    <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center">
+        <i class="fas fa-play-circle text-3xl mr-3"></i>
+        <h1 class="text-2xl font-bold">VideoLearn</h1>
+      </div>
+      <button @click="sidebarOpen = false" class="text-white focus:outline-none">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
     <ul class="space-y-4">
       <li>
         <a
           href="/"
           class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
-          ><i class="fas fa-home mr-3"></i> Home</a
         >
+          <i class="fas fa-home mr-3"></i> Home
+        </a>
       </li>
       <li>
         <a
           href="/upload"
           class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
-          ><i class="fas fa-upload mr-3"></i> Upload Video</a
         >
+          <i class="fas fa-upload mr-3"></i> Upload Video
+        </a>
       </li>
       <li>
         <a
           href="/profile"
           class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
-          ><i class="fas fa-user mr-3"></i> Profile</a
         >
+          <i class="fas fa-user mr-3"></i> Profile
+        </a>
       </li>
       <li>
         <a
           href="/settings"
           class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
-          ><i class="fas fa-cog mr-3"></i> Settings</a
         >
+          <i class="fas fa-cog mr-3"></i> Settings
+        </a>
       </li>
     </ul>
   </nav>

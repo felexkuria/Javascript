@@ -72,6 +72,25 @@
             background-color: #fee2e2;
             color: #991b1b;
         }
+        
+        .key-hint {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background-color: rgba(0, 0, 0, 0.7);
+          color: white;
+          padding: 20px;
+          border-radius: 10px;
+          font-size: 24px;
+          z-index: 1000;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        
+        .key-hint.show {
+          opacity: 1;
+        }
     </style>
   `
 }) %>
@@ -104,7 +123,7 @@
           <% } else { %>
             <div class="relative">
               <div class="video-container">
-                <video controls 
+                <video controls autoplay
                       class="bg-black"
                       controlsList="nodownload"
                       poster="https://static.wixstatic.com/media/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png/v1/fill/w_960,h_540,al_c/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png">
@@ -119,12 +138,16 @@
               
               <div class="video-controls">
                 <button id="prevVideo" 
-                        class="control-btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600">
+                        class="control-btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
+                        <%= typeof isFirstVideo !== 'undefined' && isFirstVideo ? 'disabled' : '' %>
+                        <%= typeof isFirstVideo !== 'undefined' && isFirstVideo ? 'style="opacity: 0.5; cursor: not-allowed;"' : '' %>>
                   <i class="fas fa-step-backward"></i>
                   Previous
                 </button>
                 <button id="nextVideo"
-                        class="control-btn bg-indigo-600 text-white hover:bg-indigo-500">
+                        class="control-btn bg-indigo-600 text-white hover:bg-indigo-500"
+                        <%= typeof isLastVideo !== 'undefined' && isLastVideo ? 'disabled' : '' %>
+                        <%= typeof isLastVideo !== 'undefined' && isLastVideo ? 'style="opacity: 0.5; cursor: not-allowed;"' : '' %>>
                   Next
                   <i class="fas fa-step-forward"></i>
                 </button>
@@ -155,41 +178,142 @@
       </div>
       
       <div class="lg:col-span-1">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-          <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Course Navigation</h2>
-          <a href="/course/<%= courseName %>" class="block py-2 px-4 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-lg mb-2">
-            <i class="fas fa-arrow-left mr-2"></i> Back to Course
-          </a>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
+          <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Keyboard Shortcuts</h2>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li class="flex justify-between">
+              <span class="font-medium">F</span>
+              <span>Toggle fullscreen</span>
+            </li>
+            <li class="flex justify-between">
+              <span class="font-medium">J</span>
+              <span>Rewind 15 seconds</span>
+            </li>
+            <li class="flex justify-between">
+              <span class="font-medium">K</span>
+              <span>Play/Pause</span>
+            </li>
+            <li class="flex justify-between">
+              <span class="font-medium">L</span>
+              <span>Forward 15 seconds</span>
+            </li>
+          </ul>
+          <div class="mt-4">
+            <a href="/course/<%= courseName %>" class="block py-2 px-4 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-lg text-center">
+              <i class="fas fa-arrow-left mr-2"></i> Back to Course
+            </a>
+          </div>
         </div>
+        
+        <% if (typeof pdfs !== 'undefined' && pdfs.length > 0) { %>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+          <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+            <i class="fas fa-file-pdf text-red-500 mr-2"></i> PDF Resources
+          </h2>
+          <ul class="space-y-2">
+            <% pdfs.forEach((pdf, index) => { %>
+              <li>
+                <a href="/pdf/<%= pdf.path %>" target="_blank" 
+                   class="flex items-center py-2 px-3 rounded-lg hover:bg-gray-100 transition-colors">
+                  <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-red-100 text-red-500 rounded-full mr-2">
+                    <%= index + 1 %>
+                  </span>
+                  <span class="text-sm text-gray-700 truncate flex-grow">
+                    <%= pdf.name %>
+                  </span>
+                  <i class="fas fa-paperclip text-gray-400"></i>
+                </a>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+        <% } %>
       </div>
     </div>
   </div>
 </main>
+
+<!-- Key hint element -->
+<div id="keyHint" class="key-hint"></div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const videoElement = document.querySelector("video");
     const prevButton = document.getElementById("prevVideo");
     const nextButton = document.getElementById("nextVideo");
+    const keyHint = document.getElementById("keyHint");
     
     if (videoElement) {
+        // Set autoplay
+        videoElement.autoplay = true;
+        
         videoElement.addEventListener("play", () => {
             console.log("Video started playing:", "<%= video ? video.title : '' %>");
         });
 
         videoElement.addEventListener("ended", async () => {
             await markVideoAsWatched();
-            handleNextVideo();
+            // Only go to next video if not the last one
+            <% if (!isLastVideo) { %>
+                handleNextVideo();
+            <% } else { %>
+                showCongratulations();
+            <% } %>
         });
 
         // Add fullscreen toggle
         videoElement.addEventListener('dblclick', () => {
-            if (!document.fullscreenElement) {
-                videoElement.requestFullscreen();
-            } else {
-                document.exitFullscreen();
+            toggleFullscreen();
+        });
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Only process if not typing in an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            switch(e.key.toLowerCase()) {
+                case 'f': // Fullscreen
+                    toggleFullscreen();
+                    showKeyHint('Fullscreen');
+                    break;
+                case 'j': // Rewind 15 seconds
+                    videoElement.currentTime = Math.max(0, videoElement.currentTime - 15);
+                    showKeyHint('Rewind 15s');
+                    break;
+                case 'k': // Play/Pause
+                    if (videoElement.paused) {
+                        videoElement.play();
+                        showKeyHint('Play');
+                    } else {
+                        videoElement.pause();
+                        showKeyHint('Pause');
+                    }
+                    break;
+                case 'l': // Forward 15 seconds
+                    videoElement.currentTime = Math.min(videoElement.duration, videoElement.currentTime + 15);
+                    showKeyHint('Forward 15s');
+                    break;
             }
         });
+    }
+    
+    function showKeyHint(text) {
+        keyHint.textContent = text;
+        keyHint.classList.add('show');
+        
+        setTimeout(() => {
+            keyHint.classList.remove('show');
+        }, 1000);
+    }
+    
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            videoElement.requestFullscreen().catch(err => {
+                console.error('Error attempting to enable fullscreen:', err);
+            });
+        } else {
+            document.exitFullscreen();
+        }
     }
 
     async function markVideoAsWatched() {
@@ -265,7 +389,8 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (!response.ok) {
                 if (response.status === 404) {
-                    showMessage("Congratulations! You have completed this section.", "success");
+                    // Show congratulations message with confetti effect
+                    showCongratulations();
                     return;
                 }
                 throw new Error('Failed to fetch next video');
@@ -277,6 +402,66 @@ document.addEventListener("DOMContentLoaded", () => {
             showError("Failed to load next video");
         }
     }
+    
+    function showCongratulations() {
+        // Create a modal for the congratulations message
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+            <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 z-10 relative">
+                <div class="text-center">
+                    <div class="text-5xl mb-4">🎉</div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Congratulations!</h2>
+                    <p class="text-gray-600 mb-6">You have completed all videos in this course!</p>
+                    <div class="flex justify-center space-x-4">
+                        <a href="/course/<%= courseName %>" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors">
+                            Back to Course
+                        </a>
+                        <a href="/dashboard" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                            Go to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Add confetti effect
+        for (let i = 0; i < 100; i++) {
+            createConfetti();
+        }
+    }
+    
+    function createConfetti() {
+        const confetti = document.createElement('div');
+        confetti.className = 'fixed z-50';
+        confetti.style.width = '10px';
+        confetti.style.height = '10px';
+        confetti.style.backgroundColor = getRandomColor();
+        confetti.style.position = 'fixed';
+        confetti.style.top = '-10px';
+        confetti.style.left = Math.random() * window.innerWidth + 'px';
+        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        confetti.style.opacity = Math.random() + 0.5;
+        document.body.appendChild(confetti);
+        
+        const duration = Math.random() * 3 + 2;
+        const rotation = Math.random() * 360;
+        
+        confetti.animate([
+            { transform: `translateY(0) rotate(0deg)`, opacity: 1 },
+            { transform: `translateY(${window.innerHeight}px) rotate(${rotation}deg)`, opacity: 0 }
+        ], {
+            duration: duration * 1000,
+            easing: 'cubic-bezier(0, .9, .57, 1)'
+        }).onfinish = () => confetti.remove();
+    }
+    
+    function getRandomColor() {
+        const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
 
     function showMessage(message, type) {
         const messageDiv = document.createElement('div');
@@ -285,6 +470,13 @@ document.addEventListener("DOMContentLoaded", () => {
             'bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mt-4';
         messageDiv.textContent = message;
         document.querySelector('.video-content-container').appendChild(messageDiv);
+        
+        // Auto-remove message after 5 seconds
+        setTimeout(() => {
+            if (document.body.contains(messageDiv)) {
+                messageDiv.remove();
+            }
+        }, 5000);
     }
 
     function showError(message) {
@@ -294,8 +486,13 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelector('.video-content-container').prepend(errorDiv);
     }
 
-    if (prevButton) prevButton.addEventListener("click", handlePrevVideo);
-    if (nextButton) nextButton.addEventListener("click", handleNextVideo);
+    if (prevButton && !prevButton.hasAttribute('disabled')) {
+        prevButton.addEventListener("click", handlePrevVideo);
+    }
+    
+    if (nextButton && !nextButton.hasAttribute('disabled')) {
+        nextButton.addEventListener("click", handleNextVideo);
+    }
 });
 </script>
 

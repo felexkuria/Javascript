@@ -25,7 +25,7 @@
       </div>
     </div>
     <div class="h-2 bg-gray-200 rounded-full overflow-hidden w-full max-w-md mb-6">
-      <div class="h-full bg-green-500" style="width: <%= Math.round((watchedVideos / totalVideos) * 100) %>%"></div>
+      <div class="h-full bg-green-500" style="width: <%= typeof watchedPercent !== 'undefined' ? watchedPercent : Math.round((watchedVideos / totalVideos) * 100) %>%"></div>
     </div>
   <% } %>
   
