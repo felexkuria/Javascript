@@ -125,13 +125,13 @@ const addVideoFiles = async () => {
 
     const videoDir = path.join(__dirname, 'public', 'videos');
 
-    const traverseDirectory = (dir, section) => {
+    const traverseDirectory = (dir, section, chapter = null) => {
       try {
         if (!fs.existsSync(dir)) {
           console.warn(`Directory not found: ${dir}`);
           return [];
         }
-        // Log the directory being traversed
+        // Log the directory being traversed 
         console.log(`Traversing directory: ${dir}`);
         const files = fs.readdirSync(dir);
         let videoDocuments = [];
@@ -142,7 +142,8 @@ const addVideoFiles = async () => {
 
           if (stat.isDirectory()) {
             console.log(`Found directory: ${file}`);
-            videoDocuments = videoDocuments.concat(traverseDirectory(filePath, file));
+            // Pass current directory name as chapter when recursing
+            videoDocuments = videoDocuments.concat(traverseDirectory(filePath, section, file));
           } else if (stat.isFile()) {
             console.log(`Found file: ${file}`);
             const ext = path.extname(file).toLowerCase();
@@ -157,6 +158,7 @@ const addVideoFiles = async () => {
               title: path.basename(file, path.extname(file)),
               description: `Description for ${file}`,
               section: section,
+              chapter: chapter, // Add chapter info to document
               watched: false,
               watchedAt: null,
               [property]: url
@@ -213,8 +215,8 @@ const addVideoFiles = async () => {
     throw err;
   }
 };
-
-// addVideoFiles();
+ 
+//  addVideoFiles();
 // Import video service
 const videoService = require('./services/videoService');
 const thumbnailGenerator = require('./services/thumbnailGenerator');
@@ -224,6 +226,116 @@ app.set('view engine', 'ejs');
 
 
 // Routes
+
+// Course video route
+app.get('/course/:courseName/video/:videoId?', async (req, res) => {
+  try {
+    const courseName = req.params.courseName;
+    const videoId = req.params.videoId;
+    
+    // Get all videos for the course
+    let videos = await videoService.getVideosForCourse(courseName);
+    
+    if (!videos || videos.length === 0) {
+      return res.status(404).render('error', { message: 'Course not found or has no videos' });
+    }
+    
+    // Sort videos by lesson number
+    videos = videos.sort((a, b) => {
+      // Extract numbers from titles
+      const aMatch = a.title ? a.title.match(/\d+/) : null;
+      const bMatch = b.title ? b.title.match(/\d+/) : null;
+      
+      const aNum = aMatch ? parseInt(aMatch[0]) : 0;
+      const bNum = bMatch ? parseInt(bMatch[0]) : 0;
+      
+      return aNum - bNum;
+    });
+    
+    // If no videoId is provided, show the first video
+    let video;
+    let videoIndex = 0;
+    
+    if (videoId) {
+      // Find the video by ID
+      video = videos.find(v => v._id.toString() === videoId);
+      videoIndex = videos.findIndex(v => v._id.toString() === videoId);
+      
+      if (!video) {
+        return res.status(404).render('error', { message: 'Video not found' });
+      }
+    } else {
+      // Show the first video
+      video = videos[0];
+    }
+    
+    // Calculate watched stats
+    const watchedVideos = videos.filter(v => v.watched).length;
+    const totalVideos = videos.length;
+    const watchedPercent = Math.round((watchedVideos / totalVideos) * 100);
+    
+    // Determine if this is the first or last video
+    const isFirstVideo = videoIndex === 0;
+    const isLastVideo = videoIndex === videos.length - 1;
+    
+    // Get IDs for previous and next videos
+    const prevVideoId = !isFirstVideo ? videos[videoIndex - 1]._id.toString() : null;
+    const nextVideoId = !isLastVideo ? videos[videoIndex + 1]._id.toString() : null;
+    
+    // Check if this is the last video in a chapter
+    let isLastInChapter = false;
+    if (!isLastVideo && video.chapter) {
+      const nextVideo = videos[videoIndex + 1];
+      isLastInChapter = !nextVideo.chapter || nextVideo.chapter !== video.chapter;
+    } else if (isLastVideo && video.chapter) {
+      isLastInChapter = true;
+    }
+    
+    // Get PDF resources if any
+    const pdfs = [];
+    
+    res.render('video', {
+      video,
+      courseName,
+      videos,
+      watchedVideos,
+      totalVideos,
+      watchedPercent,
+      isFirstVideo,
+      isLastVideo,
+      isLastInChapter,
+      prevVideoId,
+      nextVideoId,
+      pdfs
+    });
+  } catch (err) {
+    console.error('Error rendering video page:', err);
+    res.status(500).render('error', { message: 'Server error' });
+  }
+});
+
+// API route for marking videos as watched
+app.post('/api/videos/:videoId/watch', async (req, res) => {
+  try {
+    const videoId = req.params.videoId;
+    const courseName = req.body.courseName || req.query.courseName;
+    
+    if (!videoId || !courseName) {
+      return res.status(400).json({ success: false, message: 'Video ID and course name are required' });
+    }
+    
+    const result = await videoService.markVideoAsWatched(courseName, videoId);
+    
+    if (result) {
+      return res.json({ success: true, message: 'Video marked as watched' });
+    } else {
+      return res.status(404).json({ success: false, message: 'Video not found' });
+    }
+  } catch (error) {
+    console.error('Error marking video as watched:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 app.use('/videos', videoRoutes);
 
@@ -508,25 +620,33 @@ app.post('/videos/upload-direct', upload.single('video'), async (req, res) => {
 app.get('/course/:courseName', async (req, res) => {
   try {
     const courseName = req.params.courseName;
+    console.log(`Accessing course: ${courseName}`);
 
     // Get videos from service (will use localStorage if MongoDB is not available)
     let videos = await videoService.getVideosForCourse(courseName);
+    console.log(`Found ${videos ? videos.length : 0} videos for course ${courseName}`);
 
     // If no videos found, try to initialize from filesystem
     if (!videos || videos.length === 0) {
       const videoDir = path.join(__dirname, 'public', 'videos');
       videos = await videoService.initializeVideosFromFilesystem(courseName, videoDir);
+      console.log(`Initialized ${videos ? videos.length : 0} videos from filesystem for course ${courseName}`);
     }
 
     // Preprocess video URLs to include the basename
-    const processedVideos = videos.map(video => ({
-      ...video,
-      basename: video.videoUrl ? path.basename(video.videoUrl) : null
-    }));
+    const processedVideos = videos.map(video => {
+      if (!video) return null;
+      return {
+        ...video,
+        basename: video.videoUrl ? path.basename(video.videoUrl) : null,
+        watched: video.watched || false // Ensure watched property exists
+      };
+    }).filter(video => video !== null); // Remove any null entries
 
     // Calculate watched videos stats
     const totalVideos = videos.length;
-    const watchedVideos = videos.filter(v => v.watched).length;
+    const watchedVideos = videos.filter(v => v && v.watched).length;
+    console.log(`Course ${courseName}: ${watchedVideos}/${totalVideos} videos watched`);
 
     // Find PDF files in the course directory
     const pdfFiles = [];
@@ -571,6 +691,7 @@ app.get('/course/:courseName', async (req, res) => {
 
     // Calculate watched percentage for progress bar
     const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
+    console.log(`Course ${courseName}: Progress ${watchedPercent}%`);
 
     res.render('course', {
       courseName,
@@ -583,6 +704,19 @@ app.get('/course/:courseName', async (req, res) => {
   } catch (err) {
     console.error('Error fetching course data:', err);
     res.status(500).send('Internal Server Error');
+  }
+});
+
+// Route to handle course videos listing
+app.get('/videos/:courseName', async (req, res) => {
+  try {
+    const courseName = req.params.courseName;
+    
+    // Redirect to the course page
+    res.redirect(`/course/${courseName}`);
+  } catch (err) {
+    console.error('Error redirecting to course page:', err);
+    res.status(500).render('error', { message: 'Server error' });
   }
 });
 
@@ -766,12 +900,18 @@ app.get('/pdf/*', (req, res) => {
   });
 });
 
+// API endpoint for marking videos as watched
 app.post('/api/mark-watched', async (req, res) => {
   const { videoId, courseName } = req.body;
 
   try {
-    console.log("Marking video as watched:", { videoId, courseName });
+    console.log("API: Marking video as watched:", { videoId, courseName });
 
+    if (!videoId || !courseName) {
+      console.error("Missing videoId or courseName:", { videoId, courseName });
+      return res.status(400).json({ error: "Video ID and course name are required" });
+    }
+    
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
       console.error("Invalid video ID:", videoId);
       return res.status(400).json({ error: "Invalid video ID" });
@@ -782,9 +922,11 @@ app.post('/api/mark-watched', async (req, res) => {
     const success = await videoService.markVideoAsWatched(courseName, videoId);
 
     if (!success) {
+      console.error(`Failed to mark video ${videoId} as watched in course ${courseName}`);
       return res.status(404).json({ error: "Video not found" });
     }
 
+    console.log(`Successfully marked video ${videoId} as watched in course ${courseName}`);
     res.status(200).json({ success: true });
   } catch (err) {
     console.error("Error marking video as watched:", err);
@@ -809,8 +951,10 @@ app.get('/api/next-video', async (req, res) => {
 
     // Sort videos by lesson number in title
     const sortedVideos = videos.sort((a, b) => {
-      const aNum = parseInt(a.title.match(/\d+/)) || 0;
-      const bNum = parseInt(b.title.match(/\d+/)) || 0;
+      const aMatch = a.title.match(/\d+/);
+      const bMatch = b.title.match(/\d+/);
+      const aNum = aMatch ? parseInt(aMatch[0]) : 0;
+      const bNum = bMatch ? parseInt(bMatch[0]) : 0;
       return aNum - bNum;
     });
 

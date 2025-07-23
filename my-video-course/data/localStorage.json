@@ -1006,7 +1006,7 @@
       "section": "[TutsNode.com] - DevOps Bootcamp",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson2.mp4",
       "watched": true,
-      "watchedAt": "2025-07-23T13:23:15.740Z"
+      "watchedAt": "2025-07-23T22:17:15.295Z"
     },
     {
       "_id": "6880c584980c1a9b21c2002e",
@@ -1275,8 +1275,8 @@
       "description": "Video: lesson3.mp4",
       "section": "[TutsNode.com] - DevOps Bootcamp",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson3.mp4",
-      "watched": false,
-      "watchedAt": null
+      "watched": true,
+      "watchedAt": "2025-07-23T22:20:41.109Z"
     },
     {
       "_id": "6880c584980c1a9b21c2004c",
@@ -1961,6 +1961,66 @@
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson99.mp4",
       "watched": false,
       "watchedAt": null
+    },
+    {
+      "_id": "68814f68dc9d1042fb1635ea",
+      "title": "lesson1",
+      "watched": true,
+      "watchedAt": "2025-07-23T22:16:16.078Z"
+    },
+    {
+      "_id": "68814f68dc9d1042fb163659",
+      "title": "lesson2",
+      "watched": true,
+      "watchedAt": "2025-07-23T22:19:40.702Z"
+    },
+    {
+      "_id": "68814f68dc9d1042fb1635f5",
+      "title": "lesson109",
+      "watched": true,
+      "watchedAt": "2025-07-23T21:17:43.288Z"
+    },
+    {
+      "_id": "68814f68dc9d1042fb163677",
+      "title": "lesson3",
+      "watched": true,
+      "watchedAt": "2025-07-23T21:24:06.542Z"
+    },
+    {
+      "_id": "68814f68dc9d1042fb163682",
+      "title": "lesson4",
+      "watched": true,
+      "watchedAt": "2025-07-23T21:48:18.159Z"
+    },
+    {
+      "_id": "68814f68dc9d1042fb16368d",
+      "title": "lesson5",
+      "watched": true,
+      "watchedAt": "2025-07-23T21:52:48.934Z"
+    },
+    {
+      "_id": "688163cea2d751e1b882fe6c",
+      "title": "lesson1",
+      "watched": true,
+      "watchedAt": "2025-07-23T22:36:57.622Z"
+    },
+    {
+      "_id": "688163cea2d751e1b882fef8",
+      "title": "lesson29",
+      "watched": true,
+      "watchedAt": "2025-07-23T22:37:54.976Z"
+    },
+    {
+      "_id": "688164f95e4effa0995c4326",
+      "title": "lesson20",
+      "watched": true,
+      "watchedAt": "2025-07-23T22:44:46.144Z"
+    },
+    {
+      "_id": "688164f95e4effa0995c4380",
+      "title": "lesson85",
+      "watched": true,
+      "watchedAt": "2025-07-23T22:48:36.433Z"
     }
   ],
   "video_editing": [
@@ -1981,8 +2041,8 @@
       "description": "Video: 1. Introduction and How to use this Course.mp4",
       "section": "1. Introduction",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/1. Introduction/1. Introduction and How to use this Course.mp4",
-      "watched": false,
-      "watchedAt": null
+      "watched": true,
+      "watchedAt": "2025-07-23T20:58:49.100Z"
     },
     {
       "_id": "68812162d4fed02e912e6704",
@@ -1990,8 +2050,8 @@
       "description": "Video: 1. Introduction.mp4",
       "section": "10. Serverless",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/10. Serverless/1. Introduction.mp4",
-      "watched": false,
-      "watchedAt": null
+      "watched": true,
+      "watchedAt": "2025-07-23T22:49:09.875Z"
     },
     {
       "_id": "68812162d4fed02e912e670f",
@@ -5655,6 +5715,68 @@
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/7. Amazon S3 and CloudFront/30. Exam Cram - CloudFront.mp4",
       "watched": false,
       "watchedAt": null
+    },
+    {
+      "_id": "6881411f4878ace8838d5c41",
+      "title": "2. SAA-C02 Exam Guide",
+      "watched": true,
+      "watchedAt": "2025-07-23T20:59:52.398Z"
+    },
+    {
+      "_id": "68814d7f0d334d53c10e2fb3",
+      "title": "1. Introduction and How to use this Course",
+      "watched": true,
+      "watchedAt": "2025-07-23T21:05:55.574Z"
+    },
+    {
+      "_id": "68814eb6dc9d1042fb16313a",
+      "title": "1. Introduction and How to use this Course",
+      "watched": true,
+      "watchedAt": "2025-07-23T21:19:36.205Z"
+    },
+    {
+      "_id": "688165e167a0168b9638370f",
+      "title": "5. AWS Security Token Service (STS)",
+      "watched": true,
+      "watchedAt": "2025-07-23T22:46:08.876Z"
+    },
+    {
+      "_id": "688166e8a829e9e6b61a5e5f",
+      "title": "17. Architecture Patterns",
+      "watched": true,
+      "watchedAt": "2025-07-23T22:49:54.764Z"
+    }
+  ],
+  "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced": [
+    {
+      "_id": "68814f33dc9d1042fb16346e",
+      "title": "1. How to Download your Free Copy of DaVinci Resolve 16 or 17 Beta",
+      "watched": true,
+      "watchedAt": "2025-07-23T21:11:44.490Z"
+    },
+    {
+      "_id": "68814f33dc9d1042fb163478",
+      "title": "3. Launching DaVinci - New Project & Workflow",
+      "watched": true,
+      "watchedAt": "2025-07-23T21:35:50.744Z"
+    },
+    {
+      "_id": "68814f33dc9d1042fb163479",
+      "title": "5. How to Import Media from within the Cut Page",
+      "watched": true,
+      "watchedAt": "2025-07-23T21:37:37.386Z"
+    },
+    {
+      "_id": "68814f33dc9d1042fb16347e",
+      "title": "1. All about text, graphics and Fusion Text",
+      "watched": true,
+      "watchedAt": "2025-07-23T21:37:54.143Z"
+    },
+    {
+      "_id": "688166a70ce4e8a45cd9418d",
+      "title": "3. Launching DaVinci - New Project & Workflow",
+      "watched": true,
+      "watchedAt": "2025-07-23T23:06:48.899Z"
     }
   ]
 }

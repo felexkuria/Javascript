@@ -25,7 +25,9 @@ class VideoService {
   getLocalStorage() {
     try {
       const data = fs.readFileSync(this.localStorageFile, 'utf8');
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      console.log(`Read localStorage file with ${Object.keys(parsed).length} courses`);
+      return parsed;
     } catch (err) {
       console.error('Error reading localStorage file:', err);
       return {};
@@ -36,6 +38,7 @@ class VideoService {
   saveLocalStorage(data) {
     try {
       fs.writeFileSync(this.localStorageFile, JSON.stringify(data, null, 2), 'utf8');
+      console.log(`Saved localStorage file with ${Object.keys(data).length} courses`);
     } catch (err) {
       console.error('Error saving localStorage file:', err);
     }
@@ -46,11 +49,13 @@ class VideoService {
     // Check if MongoDB URI is defined
     const config = require('../config');
     if (!config.mongodbUri) {
+      console.log('MongoDB URI is not defined in config');
       return false;
     }
     try {
       // First check if we're in offline mode
       if (global.isOfflineMode === true) {
+        console.log('System is in offline mode');
         return false;
       }
       
@@ -61,7 +66,10 @@ class VideoService {
       
       // If not connected, set offline mode
       if (!isConnected) {
+        console.log('MongoDB connection is not ready, setting offline mode');
         global.isOfflineMode = true;
+      } else {
+        console.log('MongoDB is connected');
       }
       
       return isConnected;
@@ -74,8 +82,10 @@ class VideoService {
 
   // Get videos for a course
   async getVideosForCourse(courseName) {
+    console.log(`Getting videos for course: ${courseName}`);
     if (this.isMongoConnected()) {
       try {
+        console.log(`MongoDB is connected, fetching videos for ${courseName}`);
         // Create a promise that will timeout after 2 seconds
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error('MongoDB operation timed out')), 2000);
@@ -87,12 +97,14 @@ class VideoService {
         
         // Race the promises - use whichever resolves/rejects first
         const videos = await Promise.race([queryPromise, timeoutPromise]);
+        console.log(`Retrieved ${videos.length} videos from MongoDB for course ${courseName}`);
         return videos;
       } catch (err) {
         console.error(`Error fetching videos from MongoDB for course ${courseName}:`, err);
         return this.getVideosFromLocalStorage(courseName);
       }
     } else {
+      console.log(`MongoDB not connected, using localStorage for course ${courseName}`);
       return this.getVideosFromLocalStorage(courseName);
     }
   }
@@ -100,7 +112,9 @@ class VideoService {
   // Get videos from localStorage
   getVideosFromLocalStorage(courseName) {
     const localStorage = this.getLocalStorage();
-    return localStorage[courseName] || [];
+    const videos = localStorage[courseName] || [];
+    console.log(`Retrieved ${videos.length} videos from localStorage for course ${courseName}`);
+    return videos;
   }
 
   // Get a single video by ID
@@ -138,17 +152,48 @@ class VideoService {
   async markVideoAsWatched(courseName, videoId) {
     const now = new Date();
     let videoTitle = null;
+    let success = false;
     
-    // Always update localStorage first
+    console.log(`Marking video as watched: ${courseName}/${videoId}`);
+    
+    // Try MongoDB first if connected
+    if (this.isMongoConnected()) {
+      try {
+        const courseCollection = mongoose.connection.collection(courseName);
+        
+        // Try to update by ID
+        let result = await courseCollection.updateOne(
+          { _id: new ObjectId(videoId) },
+          { $set: { watched: true, watchedAt: now } }
+        );
+        
+        if (result.matchedCount > 0) {
+          console.log(`Updated video in MongoDB by ID`);
+          success = true;
+          
+          // Get the video title for localStorage update
+          const video = await courseCollection.findOne({ _id: new ObjectId(videoId) });
+          if (video) {
+            videoTitle = video.title;
+          }
+        }
+      } catch (err) {
+        console.error(`Error updating video in MongoDB:`, err);
+      }
+    }
+    
+    // Update localStorage
     const localStorage = this.getLocalStorage();
     if (!localStorage[courseName]) {
       localStorage[courseName] = [];
+      console.log(`Created new localStorage entry for course ${courseName}`);
     }
     
     // Find the video in localStorage by ID
     const videoIndex = localStorage[courseName].findIndex(v => 
-      v._id.toString() === videoId.toString()
+      v && v._id && v._id.toString() === videoId.toString()
     );
+    console.log(`Video index in localStorage: ${videoIndex}`);
     
     if (videoIndex >= 0) {
       // Update localStorage
@@ -157,43 +202,50 @@ class VideoService {
       videoTitle = localStorage[courseName][videoIndex].title;
       this.saveLocalStorage(localStorage);
       console.log(`Marked video ${videoTitle} as watched in localStorage`);
+      success = true;
+    } else if (videoTitle) {
+      // If not found by ID but we have the title from MongoDB, create a new entry
+      const newVideo = {
+        _id: new ObjectId(videoId),
+        title: videoTitle,
+        watched: true,
+        watchedAt: now
+      };
+      localStorage[courseName].push(newVideo);
+      this.saveLocalStorage(localStorage);
+      console.log(`Added video ${videoTitle} to localStorage as watched`);
+      success = true;
     } else {
-      console.log(`Video ${videoId} not found in localStorage`);
-      return false;
-    }
-    
-    // If MongoDB is connected, update there too
-    if (this.isMongoConnected()) {
+      // Try to find the video by ID in the course collection
       try {
-        const courseCollection = mongoose.connection.collection(courseName);
-        
-        // Try to update by ID first
-        let result = await courseCollection.updateOne(
-          { _id: new ObjectId(videoId) },
-          { $set: { watched: true, watchedAt: now } }
-        );
-        
-        // If no document was updated and we have the title, try by title
-        if (result.matchedCount === 0 && videoTitle) {
-          result = await courseCollection.updateOne(
-            { title: videoTitle },
-            { $set: { watched: true, watchedAt: now } }
-          );
-          
-          if (result.matchedCount > 0) {
-            console.log(`Updated video ${videoTitle} in MongoDB by title`);
+        if (this.isMongoConnected()) {
+          const courseCollection = mongoose.connection.collection(courseName);
+          const video = await courseCollection.findOne({ _id: new ObjectId(videoId) });
+          if (video) {
+            // Add to localStorage
+            const newVideo = {
+              _id: new ObjectId(videoId),
+              title: video.title || 'Unknown',
+              watched: true,
+              watchedAt: now
+            };
+            localStorage[courseName].push(newVideo);
+            this.saveLocalStorage(localStorage);
+            console.log(`Added video ${newVideo.title} to localStorage as watched (found in MongoDB)`);
+            success = true;
           } else {
-            console.log(`Could not find video ${videoTitle} in MongoDB`);
+            console.log(`Video ${videoId} not found in MongoDB collection ${courseName}`);
           }
         } else {
-          console.log(`Updated video in MongoDB by ID`);
+          console.log(`Video ${videoId} not found in localStorage and MongoDB is not connected`);
         }
       } catch (err) {
-        console.error(`Error updating video in MongoDB:`, err);
+        console.error(`Error finding video in MongoDB:`, err);
+        console.log(`Video ${videoId} not found in localStorage or MongoDB`);
       }
     }
     
-    return true;
+    return success;
   }
 
   // Sync localStorage with MongoDB when connection is available

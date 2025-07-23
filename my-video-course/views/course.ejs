@@ -46,11 +46,49 @@
   </div>
   <% } else { %>
   <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-    <% // Sort videos by title (assuming titles start with numbers) const
-    sortedVideos = videos.sort((a, b) => { const aNum =
-    parseInt(a.title.match(/\d+/)) || 0; const bNum =
-    parseInt(b.title.match(/\d+/)) || 0; return aNum - bNum; });
-    sortedVideos.forEach((video, index) => { %>
+    <% 
+    // Group videos by chapter
+    const videosByChapter = {};
+    videos.forEach(video => {
+      const chapter = video.chapter || 'Uncategorized';
+      if (!videosByChapter[chapter]) {
+        videosByChapter[chapter] = [];
+      }
+      videosByChapter[chapter].push(video);
+    });
+
+    // Sort videos within each chapter
+    Object.keys(videosByChapter).forEach(chapter => {
+      videosByChapter[chapter].sort((a, b) => {
+        const aNum = parseInt(a.title.match(/\d+/)) || 0;
+        const bNum = parseInt(b.title.match(/\d+/)) || 0;
+        return aNum - bNum;
+      });
+    });
+
+    // Sort chapters numerically and flatten sorted videos back into single array
+    const sortedVideos = Object.keys(videosByChapter)
+      .sort((a, b) => {
+        const aMatch = a.match(/\d+/);
+        const bMatch = b.match(/\d+/);
+        const aNum = aMatch ? parseInt(aMatch[0]) : 0;
+        const bNum = bMatch ? parseInt(bMatch[0]) : 0;
+        return aNum - bNum;
+      })
+      .flatMap(chapter => videosByChapter[chapter]);
+
+    let currentChapter = '';
+    let chapterCount = 0;
+    sortedVideos.forEach((video, index) => { 
+      const chapter = video.chapter || 'Uncategorized';
+      if (chapter !== currentChapter) {
+        currentChapter = chapter;
+        chapterCount++;
+    %>
+        <li class="col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4"><%= chapterCount %>. <%= video.chapter || 'Uncategorized' %></h2>
+        </li>
+    <% } %>
     <li
       class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
     >
