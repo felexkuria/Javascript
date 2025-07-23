@@ -21,9 +21,27 @@
           <h2 class="text-xl font-semibold text-gray-800 mb-3">
             <%= course.name %>
           </h2>
-          <p class="text-gray-600 mb-6">
+          <p class="text-gray-600 mb-3">
             Learn the fundamentals and advanced concepts of <%= course.name %>.
           </p>
+          
+          <% if (course.videos && course.videos.length > 0) { %>
+            <% 
+              const totalVideos = course.videos.length;
+              const watchedVideos = course.videos.filter(v => v.watched).length;
+              const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
+            %>
+            <div class="mb-4">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-xs font-medium text-gray-500">Progress</span>
+                <span class="text-xs font-medium text-gray-500"><%= watchedVideos %>/<%= totalVideos %> (<%= watchedPercent %>%)</span>
+              </div>
+              <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-green-500" style="width: <%= watchedPercent %>%"></div>
+              </div>
+            </div>
+          <% } %>
+          
           <a
             href="/course/<%= course.name %>"
             class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors duration-200"

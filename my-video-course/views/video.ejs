@@ -38,6 +38,40 @@
             height: 100%;
             object-fit: contain;
         }
+        
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #e5e7eb;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
+        }
+        
+        .watched-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+        
+        .watched-badge.watched {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .watched-badge.unwatched {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
     </style>
   `
 }) %>
@@ -45,6 +79,17 @@
 <!-- Main Content -->
 <main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
   <div class="video-content-container">
+    <!-- Course Progress Bar -->
+    <div class="mb-4">
+      <div class="flex justify-between items-center mb-1">
+        <span class="text-sm font-medium text-gray-700">Course Progress</span>
+        <span class="text-sm font-medium text-gray-700"><%= watchedVideos %>/<%= totalVideos %> videos (<%= watchedPercent %>%)</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" style="width: <%= watchedPercent %>%"></div>
+      </div>
+    </div>
+    
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-3">
         <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
@@ -87,10 +132,21 @@
             </div>
             
             <div class="p-6">
-              <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                <%= video ? video.title : 'Video Not Found' %>
-              </h1>
-              <p class="text-gray-600 dark:text-gray-300">
+              <div class="flex items-center">
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
+                  <%= video ? video.title : 'Video Not Found' %>
+                </h1>
+                <% if (video && video.watched) { %>
+                  <span class="watched-badge watched">
+                    <i class="fas fa-check mr-1"></i> Watched
+                  </span>
+                <% } else { %>
+                  <span class="watched-badge unwatched">
+                    <i class="fas fa-times mr-1"></i> Unwatched
+                  </span>
+                <% } %>
+              </div>
+              <p class="text-gray-600 dark:text-gray-300 mt-2">
                 <%= video ? video.description : '' %>
               </p>
             </div>
@@ -110,138 +166,137 @@
   </div>
 </main>
 
-<%- include('partials/footer', {
-  extraScripts: `
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const videoElement = document.querySelector("video");
-            const prevButton = document.getElementById("prevVideo");
-            const nextButton = document.getElementById("nextVideo");
-            
-            if (videoElement) {
-                videoElement.addEventListener("play", () => {
-                    console.log("Video started playing:", "${video ? video.title : ''}");
-                });
-
-                videoElement.addEventListener("ended", async () => {
-                    await markVideoAsWatched();
-                    handleNextVideo();
-                });
-
-                // Add fullscreen toggle
-                videoElement.addEventListener('dblclick', () => {
-                    if (!document.fullscreenElement) {
-                        videoElement.requestFullscreen();
-                    } else {
-                        document.exitFullscreen();
-                    }
-                });
-            }
-
-            async function markVideoAsWatched() {
-                try {
-                    const response = await fetch('/api/mark-watched', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            videoId: "${video ? video._id : ''}",
-                            courseName: "${courseName}"
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to mark video as watched');
-                    }
-                } catch (err) {
-                    console.error('Error marking video as watched:', err);
-                }
-            }
-
-            async function handlePrevVideo() {
-                try {
-                    const prevVideoUrl = getPrevVideoUrl("${video ? video._id : ''}", "${courseName}");
-                    if (prevVideoUrl) {
-                        window.location.href = \`/watch/\${encodeURIComponent(prevVideoUrl)}?courseName=${courseName}\`;
-                    } else {
-                        showMessage("This is the first video of the course", "warning");
-                    }
-                } catch (err) {
-                    showError("Failed to load previous video");
-                }
-            }
-
-            async function handleNextVideo() {
-                try {
-                    const response = await fetch(\`/api/next-video?currentVideoId=${video ? video._id : ''}&courseName=${courseName}\`);
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch next video');
-                    }
-                    
-                    const nextVideo = await response.json();
-                    
-                    if (nextVideo.error) {
-                        showMessage("Congratulations! You have completed this section.", "success");
-                        return;
-                    }
-                    
-                    window.location.href = \`/watch/\${nextVideo.videoUrl}?courseName=${courseName}\`;
-                } catch (err) {
-                    showError("Failed to load next video");
-                }
-            }
-
-            function showMessage(message, type) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = type === 'success' ? 
-                    'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4' :
-                    'bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mt-4';
-                messageDiv.textContent = message;
-                document.querySelector('.video-content-container').appendChild(messageDiv);
-            }
-
-            function showError(message) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
-                errorDiv.textContent = 'Error: ' + message;
-                document.querySelector('.video-content-container').prepend(errorDiv);
-            }
-
-            if (prevButton) prevButton.addEventListener("click", handlePrevVideo);
-            if (nextButton) nextButton.addEventListener("click", handleNextVideo);
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const videoElement = document.querySelector("video");
+    const prevButton = document.getElementById("prevVideo");
+    const nextButton = document.getElementById("nextVideo");
+    
+    if (videoElement) {
+        videoElement.addEventListener("play", () => {
+            console.log("Video started playing:", "<%= video ? video.title : '' %>");
         });
 
-        function getNextVideoUrl(currentVideoId, courseName) {
-            const videoUrls = {
-                "course1": ["video1.mp4", "video2.mp4", "video3.mp4"],
-                "course2": ["videoA.mp4", "videoB.mp4"]
-            };
+        videoElement.addEventListener("ended", async () => {
+            await markVideoAsWatched();
+            handleNextVideo();
+        });
 
-            const currentCourseVideos = videoUrls[courseName] || [];
-            const currentIndex = currentCourseVideos.indexOf(currentVideoId);
-
-            if (currentIndex !== -1 && currentIndex < currentCourseVideos.length - 1) {
-                return currentCourseVideos[currentIndex + 1];
+        // Add fullscreen toggle
+        videoElement.addEventListener('dblclick', () => {
+            if (!document.fullscreenElement) {
+                videoElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
             }
-            return null;
-        }
+        });
+    }
 
-        function getPrevVideoUrl(currentVideoId, courseName) {
-            const videoUrls = {
-                "course1": ["video1.mp4", "video2.mp4", "video3.mp4"],
-                "course2": ["videoA.mp4", "videoB.mp4"]
-            };
-
-            const currentCourseVideos = videoUrls[courseName] || [];
-            const currentIndex = currentCourseVideos.indexOf(currentVideoId);
-
-            if (currentIndex > 0) {
-                return currentCourseVideos[currentIndex - 1];
+    async function markVideoAsWatched() {
+        try {
+            const response = await fetch('/api/mark-watched', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    videoId: "<%= video ? video._id : '' %>",
+                    courseName: "<%= courseName %>"
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to mark video as watched');
             }
-            return null;
+            
+            // Update UI to show video as watched
+            const watchedBadge = document.querySelector('.watched-badge');
+            if (watchedBadge) {
+                watchedBadge.className = 'watched-badge watched';
+                watchedBadge.innerHTML = '<i class="fas fa-check mr-1"></i> Watched';
+            }
+            
+            // Update progress bar
+            const progressFill = document.querySelector('.progress-bar-fill');
+            const progressText = document.querySelector('.text-sm.font-medium.text-gray-700:last-child');
+            if (progressFill && progressText) {
+                const progressContent = progressText.textContent;
+                const watchedMatch = progressContent.match(/(\d+)\/(\d+)/);
+                
+                if (watchedMatch && watchedMatch.length >= 3) {
+                    const watched = parseInt(watchedMatch[1]);
+                    const total = parseInt(watchedMatch[2]);
+                    
+                    if (!isNaN(watched) && !isNaN(total) && watched < total) {
+                        const newWatched = watched + 1;
+                        const newPercent = Math.round((newWatched / total) * 100);
+                        progressFill.style.width = newPercent + '%';
+                        progressText.textContent = newWatched + '/' + total + ' videos (' + newPercent + '%)';
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error marking video as watched:', err);
         }
-    </script>
-  `
-}) %>
+    }
+
+    async function handlePrevVideo() {
+        try {
+            const response = await fetch("/api/next-video?currentVideoId=<%= video ? video._id : '' %>&courseName=<%= courseName %>&direction=prev");
+            
+            if (!response.ok) {
+                if (response.status === 404) {
+                    showMessage("This is the first video of the course", "warning");
+                    return;
+                }
+                throw new Error('Failed to fetch previous video');
+            }
+            
+            const prevVideo = await response.json();
+            window.location.href = "/videos/<%= courseName %>/" + prevVideo._id;
+        } catch (err) {
+            showError("Failed to load previous video");
+        }
+    }
+
+    async function handleNextVideo() {
+        try {
+            const response = await fetch("/api/next-video?currentVideoId=<%= video ? video._id : '' %>&courseName=<%= courseName %>");
+            
+            if (!response.ok) {
+                if (response.status === 404) {
+                    showMessage("Congratulations! You have completed this section.", "success");
+                    return;
+                }
+                throw new Error('Failed to fetch next video');
+            }
+            
+            const nextVideo = await response.json();
+            window.location.href = "/videos/<%= courseName %>/" + nextVideo._id;
+        } catch (err) {
+            showError("Failed to load next video");
+        }
+    }
+
+    function showMessage(message, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = type === 'success' ? 
+            'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4' :
+            'bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mt-4';
+        messageDiv.textContent = message;
+        document.querySelector('.video-content-container').appendChild(messageDiv);
+    }
+
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+        errorDiv.textContent = 'Error: ' + message;
+        document.querySelector('.video-content-container').prepend(errorDiv);
+    }
+
+    if (prevButton) prevButton.addEventListener("click", handlePrevVideo);
+    if (nextButton) nextButton.addEventListener("click", handleNextVideo);
+});
+</script>
+
+<%- include('partials/footer') %>

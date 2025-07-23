@@ -223,26 +223,21 @@ app.get('/dashboard', async (req, res) => {
 app.get('/course/:courseName', async (req, res) => {
   try {
     const courseName = req.params.courseName;
-    const selectedSection = req.query.section;
     
     // Check if MongoDB is connected
     if (!mongoose.connection.readyState) {
       return res.render('course', { 
         courseName, 
         videos: [],
+        pdfs: [],
         error: 'Database connection unavailable'
       });
     }
     
     const courseCollection = mongoose.connection.collection(courseName);
 
-    // Fetch videos for the course
-    let query = {};
-    if (selectedSection) {
-      query = { section: selectedSection };
-    }
-    
-    const videos = await courseCollection.find(query).toArray();
+    // Fetch all videos for the course
+    const videos = await courseCollection.find({}).toArray();
 
     // Preprocess video URLs to include the basename
     const processedVideos = videos.map(video => ({
@@ -250,42 +245,48 @@ app.get('/course/:courseName', async (req, res) => {
       basename: video.videoUrl ? path.basename(video.videoUrl) : null
     }));
 
-    // Group videos by section if no specific section is selected
-    let sections = {};
-    let totalVideos = 0;
-    let watchedVideos = 0;
+    // Calculate watched videos stats
+    const totalVideos = videos.length;
+    const watchedVideos = videos.filter(v => v.watched).length;
     
-    if (!selectedSection) {
-      // Get all videos to count watched/total
-      const allVideos = await courseCollection.find({}).toArray();
-      totalVideos = allVideos.length;
-      watchedVideos = allVideos.filter(v => v.watched).length;
+    // Find PDF files in the course directory
+    const pdfFiles = [];
+    const courseDir = path.join(__dirname, 'public', 'videos', courseName);
+    const codeDir = path.join(courseDir, '[TutsNode.com] - DevOps Bootcamp', 'code');
+    
+    // Check if code directory exists
+    if (fs.existsSync(codeDir)) {
+      // Function to recursively find PDF files
+      const findPdfs = (dir) => {
+        const files = fs.readdirSync(dir);
+        files.forEach(file => {
+          const filePath = path.join(dir, file);
+          const stat = fs.statSync(filePath);
+          
+          if (stat.isDirectory()) {
+            findPdfs(filePath);
+          } else if (file.toLowerCase().endsWith('.pdf')) {
+            // Create relative path for serving
+            const relativePath = path.relative(path.join(__dirname, 'public', 'videos'), filePath);
+            pdfFiles.push({
+              name: file,
+              path: relativePath
+            });
+          }
+        });
+      };
       
-      // Group by section
-      allVideos.forEach(video => {
-        const section = video.section || 'Uncategorized';
-        if (!sections[section]) {
-          sections[section] = [];
-        }
-        sections[section].push(video);
-      });
-    } else {
-      // If a section is selected, count only for that section
-      totalVideos = processedVideos.length;
-      watchedVideos = processedVideos.filter(v => v.watched).length;
-      
-      // Still populate sections for the sidebar
-      const allSections = await courseCollection.distinct('section');
-      allSections.forEach(section => {
-        sections[section || 'Uncategorized'] = [];
-      });
+      try {
+        findPdfs(codeDir);
+      } catch (err) {
+        console.error('Error finding PDF files:', err);
+      }
     }
 
     res.render('course', { 
       courseName, 
       videos: processedVideos,
-      sections,
-      selectedSection,
+      pdfs: pdfFiles,
       totalVideos,
       watchedVideos
     });
@@ -315,13 +316,48 @@ app.get('/videos/:courseName/:id', async (req, res) => {
     console.log("Serving video from:", videoPath);
 
     if (!fs.existsSync(videoPath)) {
-      return res.status(404).send('Video file not found on disks');
+      return res.status(404).send('Video file not found on disk');
     }
 
+    // Get course stats for progress bar
+    const courseCollection = mongoose.connection.collection(courseName);
+    const allVideos = await courseCollection.find({}).toArray();
+    const totalVideos = allVideos.length;
+    const watchedVideos = allVideos.filter(v => v.watched).length;
+    const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
+
     // Render the video view
-    res.render('video', { video, courseName });
+    res.render('video', { 
+      video, 
+      courseName, 
+      totalVideos,
+      watchedVideos,
+      watchedPercent
+    });
   } catch (err) {
     console.error('Error serving video:', err.stack);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Watch route - redirects to the video route
+app.get('/watch/:videoUrl', async (req, res) => {
+  try {
+    const videoUrl = req.params.videoUrl;
+    const courseName = req.query.courseName;
+    
+    if (!videoUrl || !courseName) {
+      return res.status(400).send('Missing video URL or course name');
+    }
+    
+    // Extract the video ID from the URL
+    const urlParts = videoUrl.split('/');
+    const videoId = urlParts[urlParts.length - 1];
+    
+    // Redirect to the video route
+    res.redirect(`/videos/${courseName}/${videoId}`);
+  } catch (err) {
+    console.error('Error redirecting to videos:', err.stack);
     res.status(500).send('Internal Server Error');
   }
 });
@@ -383,14 +419,16 @@ app.post('/api/mark-watched', async (req, res) => {
 
     if (!ObjectId.isValid(videoId)) {
       console.error("Invalid video ID:", videoId);
+      return res.status(400).json({ error: "Invalid video ID" });
     }
 
-    const video = await Video.findByIdAndUpdate(videoId, { 
-      watched: true, 
-      watchedAt: new Date() 
-    });
+    // Update directly in the course collection
+    const result = await mongoose.connection.collection(courseName).updateOne(
+      { _id: new ObjectId(videoId) },
+      { $set: { watched: true, watchedAt: new Date() } }
+    );
 
-    if (!video) {
+    if (result.matchedCount === 0) {
       return res.status(404).json({ error: "Video not found" });
     }
 
@@ -402,10 +440,11 @@ app.post('/api/mark-watched', async (req, res) => {
 });
 
 app.get('/api/next-video', async (req, res) => {
-  const { currentVideoId, courseName } = req.query;
+  const { currentVideoId, courseName, direction } = req.query;
+  const isPrev = direction === 'prev';
 
   try {
-    console.log("Fetching next video for:", { currentVideoId, courseName });
+    console.log(`Fetching ${isPrev ? 'previous' : 'next'} video for:`, { currentVideoId, courseName });
 
     if (!ObjectId.isValid(currentVideoId)) {
       console.error("Invalid current video ID:", currentVideoId);
@@ -416,27 +455,46 @@ app.get('/api/next-video', async (req, res) => {
 
     // Fetch all videos in the course
     const videos = await courseCollection.find({}).toArray();
+    
+    // Sort videos by lesson number in title
+    const sortedVideos = videos.sort((a, b) => {
+      const aNum = parseInt(a.title.match(/\d+/)) || 0;
+      const bNum = parseInt(b.title.match(/\d+/)) || 0;
+      return aNum - bNum;
+    });
 
-    // Find the index of the current video 
-    const currentIndex = videos.findIndex(
+    // Find the index of the current video in the sorted array
+    const currentIndex = sortedVideos.findIndex(
       (video) => video._id.toString() === currentVideoId
     );
 
-    if (currentIndex === -1 || currentIndex === videos.length - 1) {
+    if (currentIndex === -1) {
+      console.log("Current video not found in course.");
+      return res.status(404).json({ error: "Current video not found in course" });
+    }
+
+    // Check if we're at the beginning or end
+    if (isPrev && currentIndex === 0) {
+      console.log("No previous video available.");
+      return res.status(404).json({ error: "No previous video available" });
+    }
+    
+    if (!isPrev && currentIndex === sortedVideos.length - 1) {
       console.log("No next video available.");
       return res.status(404).json({ error: "No next video available" });
     }
 
-    // Return the next video
-    const nextVideo = videos[currentIndex + 1];
-    console.log("Next video found:", nextVideo);
+    // Return the next or previous video
+    const adjacentVideo = sortedVideos[isPrev ? currentIndex - 1 : currentIndex + 1];
+    console.log(`${isPrev ? 'Previous' : 'Next'} video found:`, adjacentVideo);
+    
     res.status(200).json({
-      ...nextVideo,
-      videoUrl: `/videos/${courseName}/${nextVideo._id}`
+      ...adjacentVideo,
+      _id: adjacentVideo._id.toString()
     });
   } catch (err) {
-    console.error("Error fetching next video: ", err);
-    res.status(500).json({ error: "Failed to fetch next video" });
+    console.error(`Error fetching ${isPrev ? 'previous' : 'next'} video: `, err);
+    res.status(500).json({ error: `Failed to fetch ${isPrev ? 'previous' : 'next'} video` });
   }
 });
 
