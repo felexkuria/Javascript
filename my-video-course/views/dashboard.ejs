@@ -3,9 +3,19 @@
 <!-- Main Content -->
 <main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
   <div class="flex justify-between items-center mb-8">
-    <h1 class="text-4xl font-bold text-gray-800">
-      Available Courses
-    </h1>
+    <div>
+      <h1 class="text-4xl font-bold text-gray-800">
+        Available Courses
+      </h1>
+      <% if (typeof offlineMode !== 'undefined' && offlineMode) { %>
+        <div class="mt-2 flex items-center text-sm text-amber-600">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+          <span>Offline Mode - Your progress is saved locally</span>
+        </div>
+      <% } %>
+    </div>
     <button id="syncButton" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center">
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -35,8 +45,14 @@
           
           <% if (course.videos && course.videos.length > 0) { %>
             <% 
-              const totalVideos = course.videos.length;
-              const watchedVideos = course.videos.filter(v => v.watched).length;
+              // Sort videos by lesson number for consistent calculation
+              const sortedVideos = [...course.videos].sort((a, b) => {
+                const aNum = parseInt(a.title.match(/\d+/)) || 0;
+                const bNum = parseInt(b.title.match(/\d+/)) || 0;
+                return aNum - bNum;
+              });
+              const totalVideos = sortedVideos.length;
+              const watchedVideos = sortedVideos.filter(v => v.watched).length;
               const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
             %>
             <div class="mb-4">
@@ -67,6 +83,63 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // Initialize connection monitor
+    const connectionMonitor = new ConnectionMonitor({
+      checkInterval: 30000, // Check every 30 seconds
+      onOnline: async () => {
+        console.log('Connection restored! Syncing data...');
+        // Show reconnection message
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
+        statusDiv.textContent = 'Connection restored! Syncing data...';
+        document.body.appendChild(statusDiv);
+        
+        try {
+          // Attempt to sync data
+          const response = await fetch('/api/sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            statusDiv.textContent = 'Data synced successfully!';
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } else {
+            statusDiv.textContent = result.message || 'Sync completed with some issues';
+            setTimeout(() => {
+              if (document.body.contains(statusDiv)) {
+                document.body.removeChild(statusDiv);
+              }
+            }, 5000);
+          }
+        } catch (err) {
+          console.error('Error syncing after reconnection:', err);
+          statusDiv.textContent = 'Error syncing data';
+          setTimeout(() => {
+            if (document.body.contains(statusDiv)) {
+              document.body.removeChild(statusDiv);
+            }
+          }, 5000);
+        }
+      },
+      onOffline: () => {
+        console.log('Connection lost! Running in offline mode.');
+        // Show offline message if not already shown
+        if (!document.querySelector('#offline-indicator')) {
+          const offlineDiv = document.createElement('div');
+          offlineDiv.id = 'offline-indicator';
+          offlineDiv.className = 'fixed top-4 right-4 bg-amber-100 border border-amber-400 text-amber-700 px-4 py-3 rounded';
+          offlineDiv.textContent = 'You are offline. Your progress will be saved locally.';
+          document.body.appendChild(offlineDiv);
+        }
+      }
+    }).start();
     const syncButton = document.getElementById('syncButton');
     
     if (syncButton) {
@@ -104,6 +177,9 @@
             setTimeout(() => {
               window.location.reload();
             }, 1500);
+          } else if (result.offline) {
+            statusDiv.className = 'fixed bottom-4 right-4 bg-amber-100 border border-amber-400 text-amber-700 px-4 py-3 rounded';
+            statusDiv.textContent = result.message || 'Currently in offline mode. Your progress is saved locally.';
           } else {
             statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
             statusDiv.textContent = 'Sync failed: ' + (result.error || 'Unknown error');

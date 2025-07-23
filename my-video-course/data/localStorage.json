@@ -6,8 +6,8 @@
       "description": "Video: lesson1.mp4",
       "section": "[TutsNode.com] - DevOps Bootcamp",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson1.mp4",
-      "watched": true,
-      "watchedAt": "2025-07-23T11:33:58.930Z"
+      "watched": false,
+      "watchedAt": null
     },
     {
       "_id": "6880c584980c1a9b21c1ffbf",
@@ -312,8 +312,8 @@
       "description": "Video: lesson13.mp4",
       "section": "[TutsNode.com] - DevOps Bootcamp",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson13.mp4",
-      "watched": false,
-      "watchedAt": null
+      "watched": true,
+      "watchedAt": "2025-07-23T13:12:35.135Z"
     },
     {
       "_id": "6880c584980c1a9b21c1ffe1",
@@ -411,8 +411,8 @@
       "description": "Video: lesson14.mp4",
       "section": "[TutsNode.com] - DevOps Bootcamp",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson14.mp4",
-      "watched": false,
-      "watchedAt": null
+      "watched": true,
+      "watchedAt": "2025-07-23T13:25:59.557Z"
     },
     {
       "_id": "6880c584980c1a9b21c1ffec",
@@ -1005,8 +1005,8 @@
       "description": "Video: lesson2.mp4",
       "section": "[TutsNode.com] - DevOps Bootcamp",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson2.mp4",
-      "watched": false,
-      "watchedAt": null
+      "watched": true,
+      "watchedAt": "2025-07-23T13:23:15.740Z"
     },
     {
       "_id": "6880c584980c1a9b21c2002e",
@@ -1971,7 +1971,7 @@
       "section": null,
       "videoUrl": "video_editing/✅$700 MILLION LAWSUIT.mp4",
       "watched": true,
-      "watchedAt": "2025-07-23T11:42:31.024Z"
+      "watchedAt": "2025-07-23T13:13:40.759Z"
     }
   ]
 }

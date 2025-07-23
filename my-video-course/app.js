@@ -6,22 +6,32 @@ const bodyParser = require('body-parser');
 const config = require('./config');
 const videoRoutes = require('./routes/videoRoutes');
 const ObjectId = mongoose.Types.ObjectId;
-
+// .ics after travesring and adding video check video lenght  if video a and video b duratiion is 1 hour
 const app = express();
 
-// Connect to MongoDB
-mongoose.connect(config.mongodbUri, { 
-  useNewUrlParser: true, 
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000
-})
+// Connect to MongoDB with offline fallback
+let isOfflineMode = false;
+
+const connectToMongoDB = () => {
+  return mongoose.connect(config.mongodbUri, { 
+    useNewUrlParser: true, 
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000
+  })
   .then(() => {
     console.log('Connected to MongoDB');
+    isOfflineMode = false;
   })
   .catch(err => {
     console.error('MongoDB connection error:', err);
-    process.exit(1);
+    console.log('Running in offline mode with localStorage');
+    isOfflineMode = true;
+    // Don't exit the process, continue in offline mode
   });
+};
+
+// Initial connection attempt
+connectToMongoDB();
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -156,16 +166,46 @@ app.get('/dashboard', async (req, res) => {
 
     let courses = [];
     
+    // Check if we're in offline mode
+    if (isOfflineMode) {
+      console.log('Dashboard: Running in offline mode, using localStorage');
+      // Use localStorage data
+      const localStorage = videoService.getLocalStorage();
+      
+      for (const courseFolder of courseFolders) {
+        const courseVideos = localStorage[courseFolder] || [];
+        
+        // Sort videos by lesson number for consistent ordering
+        const sortedVideos = [...courseVideos].sort((a, b) => {
+          const aNum = parseInt(a.title.match(/\d+/)) || 0;
+          const bNum = parseInt(b.title.match(/\d+/)) || 0;
+          return aNum - bNum;
+        });
+        
+        courses.push({
+          name: courseFolder,
+          videos: sortedVideos,
+          offlineMode: true
+        });
+      }
+    }
     // Check if MongoDB is connected
-    if (mongoose.connection.readyState) {
+    else if (mongoose.connection.readyState) {
       for (const courseFolder of courseFolders) {
         try {
           const courseCollection = mongoose.connection.collection(courseFolder);
           const videos = await courseCollection.find({}).toArray();
+          
+          // Sort videos by lesson number for consistent ordering
+          const sortedVideos = [...videos].sort((a, b) => {
+            const aNum = parseInt(a.title.match(/\d+/)) || 0;
+            const bNum = parseInt(b.title.match(/\d+/)) || 0;
+            return aNum - bNum;
+          });
 
           courses.push({
             name: courseFolder,
-            videos: videos
+            videos: sortedVideos
           });
         } catch (collectionErr) {
           console.error(`Error fetching videos for course ${courseFolder}:`, collectionErr);
@@ -182,19 +222,21 @@ app.get('/dashboard', async (req, res) => {
       courses = courseFolders.map(folder => ({
         name: folder,
         videos: [],
-        error: 'Database is connection unavailable'
+        error: 'Database connection unavailable',
+        offlineMode: true
       }));
     }
 
-    res.render('dashboard', { courses });
+    res.render('dashboard', { courses, offlineMode: isOfflineMode });
   } catch (err) {
     console.error('Error fetching course data:', err);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// Import video service
+// Import services
 const videoService = require('./services/videoService');
+const thumbnailGenerator = require('./services/thumbnailGenerator');
 
 // Course route
 app.get('/course/:courseName', async (req, res) => {
@@ -533,22 +575,105 @@ app.get('/api/next-video', async (req, res) => {
   }
 });
 
-// Sync route to sync localStorage with MongoDB
-app.post('/api/sync', async (req, res) => {
+// Simple ping endpoint for connection detection
+app.head('/api/ping', (req, res) => {
+  // If MongoDB is connected, return 200, otherwise 503
+  if (mongoose.connection.readyState) {
+    res.status(200).end();
+  } else {
+    res.status(503).end();
+  }
+});
+
+// API endpoint to check connection status
+app.get('/api/connection-status', (req, res) => {
+  res.json({
+    online: !isOfflineMode,
+    mongoConnected: mongoose.connection.readyState === 1
+  });
+});
+
+// API endpoint to force sync a specific video
+app.post('/api/force-sync-video', async (req, res) => {
   try {
+    const { courseName, videoTitle } = req.body;
+    
+    if (!courseName || !videoTitle) {
+      return res.status(400).json({ error: 'Missing courseName or videoTitle', success: false });
+    }
+    
+    console.log(`Force syncing video ${videoTitle} in course ${courseName}...`);
+    
     // Force a reconnection attempt if not connected
     if (!mongoose.connection.readyState) {
       try {
-        // Try to reconnect to MongoDB
-        await mongoose.connect(config.mongodbUri, { 
-          serverSelectionTimeoutMS: 5000,
-          socketTimeoutMS: 45000,
-          family: 4
-        });
-        console.log('Reconnected to MongoDB for sync');
+        await connectToMongoDB();
+      } catch (connErr) {
+        return res.status(503).json({ error: 'Could not connect to MongoDB', success: false });
+      }
+    }
+    
+    // Get the video from localStorage
+    const localStorage = videoService.getLocalStorage();
+    if (!localStorage[courseName]) {
+      return res.status(404).json({ error: `Course ${courseName} not found in localStorage`, success: false });
+    }
+    
+    const localVideo = localStorage[courseName].find(v => v.title === videoTitle);
+    if (!localVideo) {
+      return res.status(404).json({ error: `Video ${videoTitle} not found in localStorage for course ${courseName}`, success: false });
+    }
+    
+    // Get the video from MongoDB
+    const courseCollection = mongoose.connection.collection(courseName);
+    const dbVideo = await courseCollection.findOne({ title: videoTitle });
+    
+    if (!dbVideo) {
+      return res.status(404).json({ error: `Video ${videoTitle} not found in MongoDB for course ${courseName}`, success: false });
+    }
+    
+    // Update the video in MongoDB
+    const result = await courseCollection.updateOne(
+      { _id: dbVideo._id },
+      { $set: { watched: localVideo.watched, watchedAt: localVideo.watchedAt } }
+    );
+    
+    if (result.matchedCount > 0) {
+      res.status(200).json({ success: true, message: `Successfully synced video ${videoTitle}` });
+    } else {
+      res.status(500).json({ error: `Failed to update video ${videoTitle} in MongoDB`, success: false });
+    }
+  } catch (err) {
+    console.error('Error force syncing video:', err);
+    res.status(500).json({ error: 'Error force syncing video: ' + err.message, success: false });
+  }
+});
+
+// Sync route to sync localStorage with MongoDB
+app.post('/api/sync', async (req, res) => {
+  try {
+    // Check if we're in offline mode
+    if (isOfflineMode) {
+      // Try to reconnect to MongoDB
+      try {
+        console.log('Attempting to reconnect to MongoDB...');
+        await connectToMongoDB();
+        
+        // If still offline after reconnection attempt
+        if (isOfflineMode) {
+          return res.status(200).json({ 
+            success: false, 
+            offline: true,
+            message: 'Currently in offline mode. Your progress is saved locally and will sync when online.' 
+          });
+        }
       } catch (connErr) {
         console.error('Failed to reconnect to MongoDB:', connErr);
-        return res.status(503).json({ error: 'Could not reconnect to MongoDB', success: false });
+        return res.status(200).json({ 
+          success: false, 
+          offline: true,
+          message: 'Currently offline. Your progress is saved locally and will sync when online.' 
+        });
       }
     }
     
@@ -557,11 +682,20 @@ app.post('/api/sync', async (req, res) => {
     if (syncResult) {
       res.status(200).json({ success: true, message: 'Sync completed successfully' });
     } else {
-      res.status(503).json({ error: 'MongoDB connection issue during sync', success: false });
+      res.status(200).json({ 
+        success: false, 
+        offline: true,
+        message: 'Currently in offline mode. Your progress is saved locally and will sync when online.' 
+      });
     }
   } catch (err) {
     console.error('Error syncing with MongoDB:', err);
-    res.status(500).json({ error: 'Failed to sync with MongoDB: ' + err.message, success: false });
+    res.status(200).json({ 
+      success: false, 
+      offline: true,
+      error: err.message,
+      message: 'Error occurred, but your progress is saved locally and will sync when online.' 
+    });
   }
 });
 
@@ -570,9 +704,28 @@ app.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);
   
   // Try to sync on startup
-  if (mongoose.connection.readyState) {
+  if (!isOfflineMode && mongoose.connection.readyState) {
     videoService.syncWithMongoDB()
       .then(() => console.log('Synced localStorage with MongoDB'))
       .catch(err => console.error('Error syncing with MongoDB:', err));
+  } else {
+    console.log('Running in offline mode. Videos will be served from localStorage.');
   }
+  
+  // Set up periodic connection check
+  setInterval(() => {
+    if (isOfflineMode) {
+      console.log('Checking if online connection is available...');
+      connectToMongoDB()
+        .then(() => {
+          if (!isOfflineMode) {
+            console.log('Reconnected to MongoDB! Syncing data...');
+            return videoService.syncWithMongoDB();
+          }
+        })
+        .catch(err => {
+          // Still offline, continue in offline mode
+        });
+    }
+  }, 60000); // Check every minute
 });
