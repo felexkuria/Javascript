@@ -25,64 +25,72 @@
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-    <% courses.forEach(course => { %>
-      <div class="group bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
-        <div class="relative">
-          <img
-            src="https://static.wixstatic.com/media/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png/v1/fill/w_960,h_540,al_c/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png"
-            alt="<%= course.name %>"
-            class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
-        </div>
-        <div class="p-6">
-          <h2 class="text-xl font-semibold text-gray-800 mb-3">
-            <%= course.name %>
-          </h2>
-          <p class="text-gray-600 mb-3">
-            Learn the fundamentals and advanced concepts of <%= course.name %>.
-          </p>
-          
-          <% if (course.videos && course.videos.length > 0) { %>
-            <% 
-              // Sort videos by lesson number for consistent calculation
-              const sortedVideos = [...course.videos].sort((a, b) => {
-                const aNum = parseInt(a.title.match(/\d+/)) || 0;
-                const bNum = parseInt(b.title.match(/\d+/)) || 0;
-                return aNum - bNum;
-              });
-              const totalVideos = sortedVideos.length;
-              const watchedVideos = sortedVideos.filter(v => v.watched).length;
-              const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
-            %>
-            <div class="mb-4">
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-xs font-medium text-gray-500">Progress</span>
-                <span class="text-xs font-medium text-gray-500"><%= watchedVideos %>/<%= totalVideos %> (<%= watchedPercent %>%)</span>
+    <% if (courses && courses.length > 0) { %>
+      <% courses.forEach(course => { %>
+        <div class="group bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
+          <div class="relative">
+            <img
+              src="/thumbnails/default.jpg"
+              alt="<%= course.name %>"
+              class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+          </div>
+          <div class="p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-3">
+              <%= course.name %>
+            </h2>
+            <p class="text-gray-600 mb-3">
+              Learn the fundamentals and advanced concepts of <%= course.name %>.
+            </p>
+            
+            <% if (course.videos && course.videos.length > 0) { %>
+              <% 
+                // Sort videos by lesson number for consistent calculation
+                const sortedVideos = [...course.videos].sort((a, b) => {
+                  const aNum = parseInt(a.title.match(/\d+/)) || 0;
+                  const bNum = parseInt(b.title.match(/\d+/)) || 0;
+                  return aNum - bNum;
+                });
+                const totalVideos = sortedVideos.length;
+                const watchedVideos = sortedVideos.filter(v => v.watched).length;
+                const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
+              %>
+              <div class="mb-4">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-xs font-medium text-gray-500">Progress</span>
+                  <span class="text-xs font-medium text-gray-500"><%= watchedVideos %>/<%= totalVideos %> (<%= watchedPercent %>%)</span>
+                </div>
+                <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div class="h-full bg-green-500" style="width: <%= watchedPercent %>%"></div>
+                </div>
               </div>
-              <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <div class="h-full bg-green-500" style="width: <%= watchedPercent %>%"></div>
-              </div>
-            </div>
-          <% } %>
-          
-          <a
-            href="/course/<%= course.name %>"
-            class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors duration-200"
-          >
-            <span>Start Learning</span>
-            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-          </a>
+            <% } %>
+            
+            <a
+              href="/course/<%= course.name %>"
+              class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors duration-200"
+            >
+              <span>Start Learning</span>
+              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+          </div>
         </div>
+      <% }); %>
+    <% } else { %>
+      <div class="col-span-full text-center p-8 bg-gray-50 rounded-xl">
+        <h3 class="text-xl font-medium text-gray-700 mb-2">No courses found</h3>
+        <p class="text-gray-500">Add videos to the public/videos directory to get started.</p>
       </div>
-    <% }) %>
+    <% } %>
   </div>
 </main>
 
+<script src="/js/connection-monitor.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', function() {
     // Initialize connection monitor
     const connectionMonitor = new ConnectionMonitor({
       checkInterval: 30000, // Check every 30 seconds
@@ -140,6 +148,7 @@
         }
       }
     }).start();
+    
     const syncButton = document.getElementById('syncButton');
     
     if (syncButton) {

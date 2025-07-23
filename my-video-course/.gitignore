@@ -1,4 +1,4 @@
 node_modules/
-public/
+public/videos/*
 .env
-public.text
+public/thumbnails/*

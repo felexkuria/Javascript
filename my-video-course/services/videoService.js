@@ -43,6 +43,11 @@ class VideoService {
 
   // Check if MongoDB is connected
   isMongoConnected() {
+    // Check if MongoDB URI is defined
+    const config = require('../config');
+    if (!config.mongodbUri) {
+      return false;
+    }
     try {
       // First check if we're in offline mode
       if (global.isOfflineMode === true) {

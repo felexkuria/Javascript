@@ -1,141 +1,157 @@
-<%- include('partials/header', {
-  title: `${courseName} Course`,
-  extraStyles: `
-    <style>
-      .video-card {
-        transition: transform 0.3s ease;
-      }
-      .video-card:hover {
-        transform: translateY(-5px);
-      }
-    </style>
-  `
-}) %>
+<%- include('partials/header', { title: `${courseName} Course`, extraStyles: `
+<style>
+  .video-card {
+    transition: transform 0.3s ease;
+  }
+  .video-card:hover {
+    transform: translateY(-5px);
+  }
+</style>
+` }) %>
 
 <!-- Main Content -->
 <main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
   <!-- Course View -->
   <h1 class="text-3xl font-bold text-gray-800 mb-2"><%= courseName %></h1>
-  
-  <% if (typeof watchedVideos !== 'undefined' && typeof totalVideos !== 'undefined') { %>
-    <div class="flex items-center mb-2">
-      <div class="flex justify-between w-full max-w-md">
-        <span class="text-sm font-medium text-gray-700">Course Progress</span>
-        <span class="text-sm font-medium text-gray-700"><%= watchedVideos %>/<%= totalVideos %> videos (<%= Math.round((watchedVideos / totalVideos) * 100) %>%)</span>
-      </div>
+
+  <% if (typeof watchedVideos !== 'undefined' && typeof totalVideos !==
+  'undefined') { %>
+  <div class="flex items-center mb-2">
+    <div class="flex justify-between w-full max-w-md">
+      <span class="text-sm font-medium text-gray-700">Course Progress</span>
+      <span class="text-sm font-medium text-gray-700"
+        ><%= watchedVideos %>/<%= totalVideos %> videos (<%=
+        Math.round((watchedVideos / totalVideos) * 100) %>%)</span
+      >
     </div>
-    <div class="h-2 bg-gray-200 rounded-full overflow-hidden w-full max-w-md mb-6">
-      <div class="h-full bg-green-500" style="width: <%= typeof watchedPercent !== 'undefined' ? watchedPercent : Math.round((watchedVideos / totalVideos) * 100) %>%"></div>
-    </div>
-  <% } %>
-  
-  <% if (typeof error !== 'undefined') { %>
-    <div class="text-center p-6 bg-red-50 text-red-700 rounded-xl shadow-sm">
-      <%= error %>
-    </div>
+  </div>
+  <div
+    class="h-2 bg-gray-200 rounded-full overflow-hidden w-full max-w-md mb-6"
+  >
+    <div
+      class="h-full bg-green-500"
+      style="width: <%= typeof watchedPercent !== 'undefined' ? watchedPercent : Math.round((watchedVideos / totalVideos) * 100) %>%"
+    ></div>
+  </div>
+  <% } %> <% if (typeof error !== 'undefined') { %>
+  <div class="text-center p-6 bg-red-50 text-red-700 rounded-xl shadow-sm">
+    <%= error %>
+  </div>
   <% } else { %>
-    <!-- Videos Section -->
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">Videos</h2>
-    <% if (videos.length === 0) { %>
-      <div class="text-center p-6 bg-red-50 text-red-700 rounded-xl shadow-sm mb-8">
-        No videos found for this course.
+  <!-- Videos Section -->
+  <h2 class="text-2xl font-bold text-gray-800 mb-4">Videos</h2>
+  <% if (videos.length === 0) { %>
+  <div class="text-center p-6 bg-red-50 text-red-700 rounded-xl shadow-sm mb-8">
+    No videos found for this course.
+  </div>
+  <% } else { %>
+  <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <% // Sort videos by title (assuming titles start with numbers) const
+    sortedVideos = videos.sort((a, b) => { const aNum =
+    parseInt(a.title.match(/\d+/)) || 0; const bNum =
+    parseInt(b.title.match(/\d+/)) || 0; return aNum - bNum; });
+    sortedVideos.forEach((video, index) => { %>
+    <li
+      class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+    >
+      <div class="relative">
+        <img
+          src="<%= video.thumbnailUrl || '/thumbnails/default.jpg' %>"
+          alt="<%= video.title %>"
+          class="w-full h-48 object-cover hover:opacity-90 transition-opacity duration-300"
+          onerror="this.onerror=null; this.src='/thumbnails/default.jpg';"
+        />
+        <div
+          class="absolute top-0 left-0 bg-indigo-500 text-white px-3 py-1 rounded-br-lg"
+        >
+          Lesson <%= index + 1 %>
+        </div>
+        <% if (video.watched) { %>
+        <div
+          class="absolute top-0 right-0 bg-green-500 text-white px-3 py-1 rounded-bl-lg"
+        >
+          ✅
+        </div>
+        <% } %>
       </div>
-    <% } else { %>
-      <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <% 
-        // Sort videos by title (assuming titles start with numbers)
-        const sortedVideos = videos.sort((a, b) => {
-          const aNum = parseInt(a.title.match(/\d+/)) || 0;
-          const bNum = parseInt(b.title.match(/\d+/)) || 0;
-          return aNum - bNum;
-        });
-        
-        sortedVideos.forEach((video, index) => { 
-        %>
-          <li class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div class="relative">
-              <img
-                src="https://static.wixstatic.com/media/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png/v1/fill/w_960,h_540,al_c/e7182f_ce51e32517d147c8a9eb08766c12f9fa~mv2.png"
-                alt="<%= video.title %>"
-                class="w-full h-48 object-cover hover:opacity-90 transition-opacity duration-300"
-              />
-              <div class="absolute top-0 left-0 bg-indigo-500 text-white px-3 py-1 rounded-br-lg">
-                Lesson <%= index + 1 %>
-              </div>
-              <% if (video.watched) { %>
-                <div class="absolute top-0 right-0 bg-green-500 text-white px-3 py-1 rounded-bl-lg">
-                  ✅
-                </div>
-              <% } %>
-            </div>
-            <div class="p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                <%= video.title %>
-                <% if (video.watched) { %>
-                  <span class="ml-2 text-green-500 text-sm">✅ Watched</span>
-                <% } %>
-              </h3>
-              <% if (video.videoUrl && video.videoUrl.endsWith('.pdf')) { %>
-                <a
-                  href="/pdf/<%= courseName %>/<%= encodeURIComponent(video.basename) %>"
-                  target="_blank"
-                  class="inline-flex items-center px-4 py-2 bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 transition-colors duration-200"
-                >
-                  <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"></path>
-                  </svg>
-                  View PDF
-                </a>
-              <% } else { %>
-                <a
-                  href="/videos/<%= courseName %>/<%= video._id %>"
-                  class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors duration-200"
-                >
-                  <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 12l-4-4h8l-4 4z"></path>
-                  </svg>
-                  Watch Lesson <%= index + 1 %>
-                </a>
-              <% } %>
-            </div>
-          </li>
-        <% }); %>
-      </ul>
-    <% } %>
-    
-    <!-- PDFs Section -->
-    <% if (typeof pdfs !== 'undefined' && pdfs.length > 0) { %>
-      <h2 class="text-2xl font-bold text-gray-800 mb-4">PDF Resources</h2>
-      <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <% pdfs.forEach((pdf, index) => { %>
-          <li class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div class="relative">
-              <div class="bg-red-100 h-48 flex items-center justify-center">
-                <svg class="w-24 h-24 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"></path>
-                </svg>
-              </div>
-            </div>
-            <div class="p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-3">
-                <%= pdf.name %>
-              </h3>
-              <a
-                href="/pdf/<%= pdf.path %>"
-                target="_blank"
-                class="inline-flex items-center px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors duration-200"
-              >
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"></path>
-                </svg>
-                View PDF
-              </a>
-            </div>
-          </li>
-        <% }); %>
-      </ul>
-    <% } %>
+      <div class="p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+          <%= video.title %> <% if (video.watched) { %>
+          <span class="ml-2 text-green-500 text-sm">✅ Watched</span>
+          <% } %>
+        </h3>
+        <% if (video.videoUrl && video.videoUrl.endsWith('.pdf')) { %>
+        <a
+          href="/pdf/<%= courseName %>/<%= encodeURIComponent(video.basename) %>"
+          target="_blank"
+          class="inline-flex items-center px-4 py-2 bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 transition-colors duration-200"
+        >
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"
+            ></path>
+          </svg>
+          View PDF
+        </a>
+        <% } else { %>
+        <a
+          href="/videos/<%= courseName %>/<%= video._id %>"
+          class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors duration-200"
+        >
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 12l-4-4h8l-4 4z"></path>
+          </svg>
+          Watch Lesson <%= index + 1 %>
+        </a>
+        <% } %>
+      </div>
+    </li>
+    <% }); %>
+  </ul>
   <% } %>
+
+  <!-- PDFs Section -->
+  <% if (typeof pdfs !== 'undefined' && pdfs.length > 0) { %>
+  <h2 class="text-2xl font-bold text-gray-800 mb-4">PDF Resources</h2>
+  <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <% pdfs.forEach((pdf, index) => { %>
+    <li
+      class="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+    >
+      <div class="relative">
+        <div class="bg-red-100 h-48 flex items-center justify-center">
+          <svg
+            class="w-24 h-24 text-red-500"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"
+            ></path>
+          </svg>
+        </div>
+      </div>
+      <div class="p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">
+          <%= pdf.name %>
+        </h3>
+        <a
+          href="/pdf/<%= pdf.path %>"
+          target="_blank"
+          class="inline-flex items-center px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors duration-200"
+        >
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"
+            ></path>
+          </svg>
+          View PDF
+        </a>
+      </div>
+    </li>
+    <% }); %>
+  </ul>
+  <% } %> <% } %>
 </main>
 
 <%- include('partials/footer') %>
