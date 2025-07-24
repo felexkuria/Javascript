@@ -1378,17 +1378,52 @@ app.post('/api/sync', async (req, res) => {
       }
     }
 
-    // Now try to sync
-    const syncResult = await videoService.syncWithMongoDB();
-    if (syncResult) {
-      res.status(200).json({ success: true, message: 'Sync completed successfully' });
-    } else {
-      res.status(200).json({
+    // Run sync-data.js as a child process to get the same results as terminal
+    const { spawn } = require('child_process');
+    console.log('Running sync-data.js as child process...');
+    
+    const syncProcess = spawn('node', ['sync-data.js'], {
+      cwd: __dirname,
+      stdio: 'pipe'
+    });
+    
+    let output = '';
+    let errorOutput = '';
+    
+    syncProcess.stdout.on('data', (data) => {
+      output += data.toString();
+      console.log(data.toString().trim());
+    });
+    
+    syncProcess.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+      console.error(data.toString().trim());
+    });
+    
+    syncProcess.on('close', (code) => {
+      if (code === 0) {
+        res.status(200).json({ 
+          success: true, 
+          message: 'Data sync completed successfully!',
+          output: output.trim()
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: errorOutput || 'Sync process failed',
+          message: 'Error occurred during sync'
+        });
+      }
+    });
+    
+    syncProcess.on('error', (err) => {
+      console.error('Failed to start sync process:', err);
+      res.status(500).json({
         success: false,
-        offline: true,
-        message: 'Currently in offline mode. Your progress is saved locally and will sync when online.'
+        error: err.message,
+        message: 'Failed to start sync process'
       });
-    }
+    });
   } catch (err) {
     console.error('Error syncing with MongoDB:', err);
     res.status(200).json({

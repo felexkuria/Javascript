@@ -10250,8 +10250,8 @@
       "description": "Description for 1. Introduction and How to use this Course.mp4",
       "section": null,
       "chapter": "1. Introduction",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-07-24T11:13:26.017Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/1. Introduction/1. Introduction and How to use this Course.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008ba9c.jpg"
     },
