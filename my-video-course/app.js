@@ -1163,15 +1163,37 @@ app.post('/api/mark-watched', async (req, res) => {
       return res.status(400).json({ error: "Invalid video ID" });
     }
 
-    // Mark video as watched using the service
-    // This will update both MongoDB (if connected) and localStorage
-    const success = await videoService.markVideoAsWatched(courseName, videoId);
-
-    if (!success) {
-      console.error(`Failed to mark video ${videoId} as watched in course ${courseName}`);
+    // Get the complete video data first
+    const video = await videoService.getVideoById(courseName, videoId);
+    if (!video) {
+      console.error(`Video ${videoId} not found in course ${courseName}`);
       return res.status(404).json({ error: "Video not found" });
     }
 
+    // Update localStorage directly while preserving all properties
+    const localStorage = videoService.getLocalStorage();
+    if (!localStorage[courseName]) {
+      localStorage[courseName] = [];
+    }
+
+    const videoIndex = localStorage[courseName].findIndex(v => 
+      v && v._id && v._id.toString() === videoId.toString()
+    );
+
+    if (videoIndex >= 0) {
+      // Update existing video while preserving all properties
+      localStorage[courseName][videoIndex].watched = true;
+      localStorage[courseName][videoIndex].watchedAt = new Date();
+    } else {
+      // Add complete video data
+      localStorage[courseName].push({
+        ...video,
+        watched: true,
+        watchedAt: new Date()
+      });
+    }
+
+    videoService.saveLocalStorage(localStorage);
     console.log(`Successfully marked video ${videoId} as watched in course ${courseName}`);
     res.status(200).json({ success: true });
   } catch (err) {
