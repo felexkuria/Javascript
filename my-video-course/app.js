@@ -215,7 +215,7 @@ const addVideoFiles = async () => {
     throw err;
   }
 };
- 
+
 //  addVideoFiles();
 // Import video service
 const videoService = require('./services/videoService');
@@ -232,35 +232,78 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
   try {
     const courseName = req.params.courseName;
     const videoId = req.params.videoId;
-    
+    const autoplay = req.query.autoplay === 'true';
+
     // Get all videos for the course
     let videos = await videoService.getVideosForCourse(courseName);
-    
+
     if (!videos || videos.length === 0) {
       return res.status(404).render('error', { message: 'Course not found or has no videos' });
     }
+
+    // Normalize lesson titles for consistency
+    videos.forEach(video => {
+      if (video.title) {
+        // Extract lesson number if it exists
+        const match = video.title.match(/(?:lesson|lession|leson)\s*(\d+)/i);
+        if (match) {
+          // Standardize to "Lesson X" format but keep original title for watched videos
+          const lessonNum = match[1];
+          video.displayTitle = `${video.title} (Lesson ${lessonNum})`;
+        } else {
+          video.displayTitle = video.title;
+        }
+      } else {
+        video.displayTitle = 'Untitled Video';
+      }
+    });
     
-    // Sort videos by lesson number
+    // Group videos by chapter
+    const videosByChapter = {};
+    videos.forEach(video => {
+      const chapter = video.chapter || 'Uncategorized';
+      if (!videosByChapter[chapter]) {
+        videosByChapter[chapter] = [];
+      }
+      videosByChapter[chapter].push(video);
+    });
+    
+    // Sort videos by lesson number with proper handling of double-digit numbers
     videos = videos.sort((a, b) => {
+      // First sort by chapter if different
+      if (a.chapter !== b.chapter) {
+        // If one has a chapter and the other doesn't, prioritize the one with chapter
+        if (!a.chapter) return 1;
+        if (!b.chapter) return -1;
+        return a.chapter.localeCompare(b.chapter);
+      }
+      
       // Extract numbers from titles
       const aMatch = a.title ? a.title.match(/\d+/) : null;
       const bMatch = b.title ? b.title.match(/\d+/) : null;
-      
-      const aNum = aMatch ? parseInt(aMatch[0]) : 0;
-      const bNum = bMatch ? parseInt(bMatch[0]) : 0;
+
+      // Convert to numbers and ensure proper comparison
+      const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+      const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+
+      // Log sorting for debugging
+      console.log(`Comparing: ${a.title} (${aNum}) vs ${b.title} (${bNum})`);
       
       return aNum - bNum;
     });
     
+    // Add chapter information to the template context
+    const chapters = Object.keys(videosByChapter).sort();
+
     // If no videoId is provided, show the first video
     let video;
     let videoIndex = 0;
-    
+
     if (videoId) {
       // Find the video by ID
       video = videos.find(v => v._id.toString() === videoId);
       videoIndex = videos.findIndex(v => v._id.toString() === videoId);
-      
+
       if (!video) {
         return res.status(404).render('error', { message: 'Video not found' });
       }
@@ -268,20 +311,26 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
       // Show the first video
       video = videos[0];
     }
-    
+
+    // Don't require videoUrl for watched videos
+    // Allow watched videos to be displayed even without a URL
+
+    // Create full video URL path
+    video.fullVideoUrl = `/videos/${courseName}/file/${video._id}`;
+
     // Calculate watched stats
     const watchedVideos = videos.filter(v => v.watched).length;
     const totalVideos = videos.length;
     const watchedPercent = Math.round((watchedVideos / totalVideos) * 100);
-    
+
     // Determine if this is the first or last video
     const isFirstVideo = videoIndex === 0;
     const isLastVideo = videoIndex === videos.length - 1;
-    
+
     // Get IDs for previous and next videos
     const prevVideoId = !isFirstVideo ? videos[videoIndex - 1]._id.toString() : null;
     const nextVideoId = !isLastVideo ? videos[videoIndex + 1]._id.toString() : null;
-    
+
     // Check if this is the last video in a chapter
     let isLastInChapter = false;
     if (!isLastVideo && video.chapter) {
@@ -290,10 +339,10 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
     } else if (isLastVideo && video.chapter) {
       isLastInChapter = true;
     }
-    
+
     // Get PDF resources if any
     const pdfs = [];
-    
+
     res.render('video', {
       video,
       courseName,
@@ -306,26 +355,29 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
       isLastInChapter,
       prevVideoId,
       nextVideoId,
-      pdfs
+      pdfs,
+      autoplay,
+      chapters,
+      videosByChapter
     });
   } catch (err) {
     console.error('Error rendering video page:', err);
     res.status(500).render('error', { message: 'Server error' });
   }
 });
-
+ 
 // API route for marking videos as watched
 app.post('/api/videos/:videoId/watch', async (req, res) => {
   try {
     const videoId = req.params.videoId;
     const courseName = req.body.courseName || req.query.courseName;
-    
+
     if (!videoId || !courseName) {
       return res.status(400).json({ success: false, message: 'Video ID and course name are required' });
     }
-    
+
     const result = await videoService.markVideoAsWatched(courseName, videoId);
-    
+
     if (result) {
       return res.json({ success: true, message: 'Video marked as watched' });
     } else {
@@ -376,8 +428,11 @@ app.get('/dashboard', async (req, res) => {
 
         // Sort videos by lesson number for consistent ordering
         const sortedVideos = [...courseVideos].sort((a, b) => {
-          const aNum = parseInt(a.title?.match(/\d+/)) || 0;
-          const bNum = parseInt(b.title?.match(/\d+/)) || 0;
+          // Extract numbers and ensure proper parsing of double-digit numbers
+          const aMatch = a.title?.match(/\d+/);
+          const bMatch = b.title?.match(/\d+/);
+          const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+          const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
           return aNum - bNum;
         });
 
@@ -397,8 +452,11 @@ app.get('/dashboard', async (req, res) => {
 
           // Sort videos by lesson number for consistent ordering
           const sortedVideos = [...videos].sort((a, b) => {
-            const aNum = parseInt(a.title?.match(/\d+/)) || 0;
-            const bNum = parseInt(b.title?.match(/\d+/)) || 0;
+            // Extract numbers and ensure proper parsing of double-digit numbers
+            const aMatch = a.title?.match(/\d+/);
+            const bMatch = b.title?.match(/\d+/);
+            const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+            const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
             return aNum - bNum;
           });
 
@@ -540,17 +598,29 @@ app.post('/videos/upload', async (req, res) => {
   }
 });
 
+// Configure multer for multiple file uploads
+const multiUpload = multer({ storage: storage }).fields([
+  { name: 'video', maxCount: 1 },
+  { name: 'captions', maxCount: 1 }
+]);
+
 // Direct file upload endpoint (fallback for when S3 is not available)
-app.post('/videos/upload-direct', upload.single('video'), async (req, res) => {
+app.post('/videos/upload-direct', multiUpload, async (req, res) => {
   try {
     console.log('Direct upload request received:', req.body);
     const { title, description, courseId } = req.body;
-    const videoFile = req.file;
+    const videoFile = req.files?.video?.[0];
+    const captionsFile = req.files?.captions?.[0];
 
     if (!videoFile) {
       console.error('No video file uploaded');
       return res.status(400).send('No video file uploaded');
     }
+    
+    console.log('Files uploaded:', { 
+      video: videoFile?.filename, 
+      captions: captionsFile?.filename 
+    });
 
     console.log('File uploaded successfully:', videoFile);
 
@@ -710,10 +780,11 @@ app.get('/course/:courseName', async (req, res) => {
 // Route to handle course videos listing
 app.get('/videos/:courseName', async (req, res) => {
   try {
-    const courseName = req.params.courseName;
-    
-    // Redirect to the course page
-    res.redirect(`/course/${courseName}`);
+    // Handle URL-encoded course names
+    const courseName = decodeURIComponent(req.params.courseName);
+
+    // Redirect to the course page - re-encode for the redirect
+    res.redirect(`/course/${encodeURIComponent(courseName)}`);
   } catch (err) {
     console.error('Error redirecting to course page:', err);
     res.status(500).render('error', { message: 'Server error' });
@@ -723,7 +794,9 @@ app.get('/videos/:courseName', async (req, res) => {
 // Route to serve video files dynamically
 app.get('/videos/:courseName/:id', async (req, res) => {
   try {
-    const { courseName, id } = req.params;
+    // Handle URL-encoded course names
+    const courseName = decodeURIComponent(req.params.courseName);
+    const id = req.params.id;
     console.log(`Fetching video: ${courseName}/${id}`);
 
     // Validate ObjectId
@@ -736,23 +809,37 @@ app.get('/videos/:courseName/:id', async (req, res) => {
     const video = await videoService.getVideoById(courseName, id);
     console.log('Video found:', video);
 
-    if (!video || !video.videoUrl) {
-      console.error('Video not found or has no URL');
+    if (!video) {
+      console.error('Video not found');
       return res.status(404).send('Video not found');
     }
+    
+    // Continue even if video has no URL - we'll handle this in the video.ejs template
 
-    const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
-    console.log("Serving video from:", videoPath);
+    // Check if video has a videoUrl property
+    if (!video.videoUrl) {
+      console.error(`Video ${id} has no videoUrl property`);
+      return res.status(404).send('Video URL not found');
+    }
+    
+    // Check if video has a videoUrl property before using it
+    if (!video.videoUrl) {
+      console.warn(`Video ${id} has no videoUrl property`);
+      // Skip file check and continue to render the page
+    } else {
+      const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
+      console.log("Serving video from:", videoPath);
 
-    if (!fs.existsSync(videoPath)) {
-      console.error(`Video file not found on disk: ${videoPath}`);
-      return res.status(404).send('Video file not found on disk');
+      if (!fs.existsSync(videoPath)) {
+        console.error(`Video file not found on disk: ${videoPath}`);
+        // Don't return error, just log it and continue
+      }
     }
 
     // Get course stats for progress bar
     const allVideos = await videoService.getVideosForCourse(courseName);
     const totalVideos = allVideos.length;
-    const watchedVideos = allVideos.filter(v => v.watched).length;
+    const watchedVideos = allVideos.filter(v => v && v.watched).length;
     const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
 
     // Find PDF files in the course directory
@@ -796,17 +883,57 @@ app.get('/videos/:courseName/:id', async (req, res) => {
       }
     }
 
+    // Group videos by chapter
+    const videosByChapter = {};
+    allVideos.forEach(video => {
+      const chapter = video.chapter || 'Uncategorized';
+      if (!videosByChapter[chapter]) {
+        videosByChapter[chapter] = [];
+      }
+      videosByChapter[chapter].push(video);
+    });
+    
     // Sort videos to determine if this is the last video
     const sortedVideos = allVideos.sort((a, b) => {
-      const aNum = parseInt(a.title.match(/\d+/)) || 0;
-      const bNum = parseInt(b.title.match(/\d+/)) || 0;
+      // First sort by chapter if different
+      if (a.chapter !== b.chapter) {
+        // If one has a chapter and the other doesn't, prioritize the one with chapter
+        if (!a.chapter) return 1;
+        if (!b.chapter) return -1;
+        return a.chapter.localeCompare(b.chapter);
+      }
+      
+      const aMatch = a.title ? a.title.match(/\d+/) : null;
+      const bMatch = b.title ? b.title.match(/\d+/) : null;
+      const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+      const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+      
+      // Log sorting for debugging
+      console.log(`Video order: ${a.title} (${aNum}) vs ${b.title} (${bNum})`);
+      
       return aNum - bNum;
     });
+    
+    // Add chapter information
+    const chapters = Object.keys(videosByChapter).sort();
 
     // Check if this is the first or last video
-    const currentIndex = sortedVideos.findIndex(v => v._id.toString() === id);
+    const currentIndex = sortedVideos.findIndex(v => v && v._id && v._id.toString() === id);
     const isFirstVideo = currentIndex === 0;
     const isLastVideo = currentIndex === sortedVideos.length - 1;
+
+    // Get previous and next video IDs
+    const prevVideoId = currentIndex > 0 ? sortedVideos[currentIndex - 1]._id.toString() : null;
+    const nextVideoId = currentIndex < sortedVideos.length - 1 ? sortedVideos[currentIndex + 1]._id.toString() : null;
+
+    // Check if this is the last video in a chapter
+    let isLastInChapter = false;
+    if (!isLastVideo && video.chapter) {
+      const nextVideo = sortedVideos[currentIndex + 1];
+      isLastInChapter = !nextVideo.chapter || nextVideo.chapter !== video.chapter;
+    } else if (isLastVideo && video.chapter) {
+      isLastInChapter = true;
+    }
 
     // Render the video view
     res.render('video', {
@@ -817,7 +944,12 @@ app.get('/videos/:courseName/:id', async (req, res) => {
       watchedPercent,
       isFirstVideo,
       isLastVideo,
-      pdfs: pdfFiles
+      isLastInChapter,
+      prevVideoId,
+      nextVideoId,
+      pdfs: pdfFiles,
+      chapters,
+      videosByChapter
     });
   } catch (err) {
     console.error('Error serving video:', err.stack);
@@ -828,7 +960,9 @@ app.get('/videos/:courseName/:id', async (req, res) => {
 // Route to serve the actual video file
 app.get('/videos/:courseName/file/:id', async (req, res) => {
   try {
-    const { courseName, id } = req.params;
+    // Handle URL-encoded course names
+    const courseName = decodeURIComponent(req.params.courseName);
+    const id = req.params.id;
     console.log(`Streaming video file: ${courseName}/${id}`);
 
     // Validate ObjectId
@@ -840,11 +974,30 @@ app.get('/videos/:courseName/file/:id', async (req, res) => {
     // Get video from service (will use localStorage if MongoDB is not available)
     const video = await videoService.getVideoById(courseName, id);
 
-    if (!video || !video.videoUrl) {
-      console.error('Video not found or has no URL');
-      return res.status(404).send('Video file not found');
+    if (!video) {
+      console.error('Video not found');
+      return res.status(404).send('Video not found');
+    }
+    
+    // Allow watched videos without URLs to be accessed
+    if (!video.videoUrl) {
+      console.warn(`Video ${id} has no URL but is being accessed`);
     }
 
+    // Check if video has a URL
+    if (!video.videoUrl) {
+      console.warn(`Video ${id} has no URL, sending placeholder video`);
+      // Send a placeholder video or error response
+      return res.status(200).sendFile(path.join(__dirname, 'public', 'placeholder.mp4'), (err) => {
+        if (err) {
+          // If placeholder doesn't exist, send a more helpful error
+          console.error('Placeholder video not found, sending error response');
+          return res.status(404).send('Video file not available in offline mode');
+        }
+      });
+    }
+    
+    // At this point we know video.videoUrl exists
     const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
     console.log("Streaming video from:", videoPath);
 
@@ -900,9 +1053,80 @@ app.get('/pdf/*', (req, res) => {
   });
 });
 
+// Import caption converter utility
+const captionConverter = require('./utils/captionConverter');
+
+// Route to serve caption files
+app.get('/captions/:courseName/:id', async (req, res) => {
+  try {
+    const courseName = decodeURIComponent(req.params.courseName);
+    const id = req.params.id;
+    console.log(`Fetching captions: ${courseName}/${id}`);
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.error(`Invalid ObjectId: ${id}`);
+      return res.status(400).send('Invalid video ID');
+    }
+
+    // Get video from service
+    const video = await videoService.getVideoById(courseName, id);
+    
+    if (!video) {
+      console.error('Video not found');
+      return res.status(404).send('Video not found');
+    }
+    
+    // Check if video has captions
+    if (!video.captionsUrl) {
+      console.warn(`Video ${id} has no captions`);
+      return res.status(404).send('No captions available for this video');
+    }
+    
+    // Serve the caption file
+    const captionPath = path.join(__dirname, 'public', 'videos', video.captionsUrl);
+    console.log("Serving captions from:", captionPath);
+    
+    if (!fs.existsSync(captionPath)) {
+      console.error(`Caption file not found on disk: ${captionPath}`);
+      return res.status(404).send('Caption file not found');
+    }
+    
+    // Check file extension
+    const ext = path.extname(captionPath).toLowerCase();
+    
+    // Set the content type for WebVTT
+    res.setHeader('Content-Type', 'text/vtt');
+    
+    if (ext === '.vtt') {
+      // Serve WebVTT file directly
+      res.sendFile(captionPath);
+    } else if (ext === '.srt') {
+      // Convert SRT to WebVTT
+      fs.readFile(captionPath, 'utf8', (err, data) => {
+        if (err) {
+          console.error(`Error reading SRT file: ${captionPath}`, err);
+          return res.status(500).send('Error reading caption file');
+        }
+        
+        // Convert SRT to WebVTT
+        const vttContent = captionConverter.srtToVtt(data);
+        res.send(vttContent);
+      });
+    } else {
+      console.error(`Unsupported caption format: ${ext}`);
+      return res.status(400).send('Unsupported caption format');
+    }
+  } catch (err) {
+    console.error('Error serving captions:', err.stack);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 // API endpoint for marking videos as watched
 app.post('/api/mark-watched', async (req, res) => {
-  const { videoId, courseName } = req.body;
+  const videoId = req.body.videoId;
+  const courseName = req.body.courseName ? decodeURIComponent(req.body.courseName) : '';
 
   try {
     console.log("API: Marking video as watched:", { videoId, courseName });
@@ -911,7 +1135,7 @@ app.post('/api/mark-watched', async (req, res) => {
       console.error("Missing videoId or courseName:", { videoId, courseName });
       return res.status(400).json({ error: "Video ID and course name are required" });
     }
-    
+
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
       console.error("Invalid video ID:", videoId);
       return res.status(400).json({ error: "Invalid video ID" });
@@ -935,7 +1159,10 @@ app.post('/api/mark-watched', async (req, res) => {
 });
 
 app.get('/api/next-video', async (req, res) => {
-  const { currentVideoId, courseName, direction } = req.query;
+  // Handle URL-encoded course names
+  const currentVideoId = req.query.currentVideoId;
+  const courseName = req.query.courseName ? decodeURIComponent(req.query.courseName) : '';
+  const direction = req.query.direction;
   const isPrev = direction === 'prev';
 
   try {
@@ -949,12 +1176,24 @@ app.get('/api/next-video', async (req, res) => {
     // Get videos from service (will use localStorage if MongoDB is not available)
     const videos = await videoService.getVideosForCourse(courseName);
 
-    // Sort videos by lesson number in title
+    // Sort videos by lesson number in title with proper handling of double-digit numbers
     const sortedVideos = videos.sort((a, b) => {
+      // First sort by chapter if different
+      if (a.chapter !== b.chapter) {
+        // If one has a chapter and the other doesn't, prioritize the one with chapter
+        if (!a.chapter) return 1;
+        if (!b.chapter) return -1;
+        return a.chapter.localeCompare(b.chapter);
+      }
+      
       const aMatch = a.title.match(/\d+/);
       const bMatch = b.title.match(/\d+/);
-      const aNum = aMatch ? parseInt(aMatch[0]) : 0;
-      const bNum = bMatch ? parseInt(bMatch[0]) : 0;
+      const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+      const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+      
+      // Log sorting for debugging
+      console.log(`API sorting: ${a.title} (${aNum}) vs ${b.title} (${bNum})`);
+      
       return aNum - bNum;
     });
 

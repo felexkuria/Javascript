@@ -113,8 +113,12 @@ class VideoService {
   getVideosFromLocalStorage(courseName) {
     const localStorage = this.getLocalStorage();
     const videos = localStorage[courseName] || [];
-    console.log(`Retrieved ${videos.length} videos from localStorage for course ${courseName}`);
-    return videos;
+    
+    // Filter out any undefined or invalid entries
+    const validVideos = videos.filter(v => v && typeof v === 'object');
+    
+    console.log(`Retrieved ${validVideos.length} videos from localStorage for course ${courseName}`);
+    return validVideos;
   }
 
   // Get a single video by ID
@@ -132,7 +136,13 @@ class VideoService {
         
         // Race the promises - use whichever resolves/rejects first
         const video = await Promise.race([queryPromise, timeoutPromise]);
-        return video;
+        
+        if (video) {
+          return video;
+        } else {
+          console.log(`Video ${videoId} not found in MongoDB, checking localStorage`);
+          return this.getVideoFromLocalStorage(courseName, videoId);
+        }
       } catch (err) {
         console.error(`Error fetching video from MongoDB:`, err);
         return this.getVideoFromLocalStorage(courseName, videoId);
@@ -145,7 +155,10 @@ class VideoService {
   // Get a single video from localStorage
   getVideoFromLocalStorage(courseName, videoId) {
     const videos = this.getVideosFromLocalStorage(courseName);
-    return videos.find(v => v._id.toString() === videoId);
+    const video = videos.find(v => v && v._id && v._id.toString() === videoId);
+    
+    // If video not found, return null instead of undefined
+    return video || null;
   }
 
   // Mark a video as watched
@@ -395,10 +408,16 @@ class VideoService {
     
     console.log(`Found ${videos.length} videos in filesystem for ${courseName}`);
     
-    // Sort videos by lesson number
+    // Sort videos by lesson number with proper handling of double-digit numbers
     videos.sort((a, b) => {
-      const aNum = parseInt(a.title.match(/\d+/)) || 0;
-      const bNum = parseInt(b.title.match(/\d+/)) || 0;
+      const aMatch = a.title.match(/\d+/);
+      const bMatch = b.title.match(/\d+/);
+      const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+      const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+      
+      // Log sorting for debugging
+      console.log(`Sorting videos: ${a.title} (${aNum}) vs ${b.title} (${bNum})`);
+      
       return aNum - bNum;
     });
     
