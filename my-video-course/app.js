@@ -258,7 +258,7 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
       }
     });
     
-    // Group videos by chapter
+    // Group videos by chapter and sort within each chapter
     const videosByChapter = {};
     videos.forEach(video => {
       const chapter = video.chapter || 'Uncategorized';
@@ -266,6 +266,17 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
         videosByChapter[chapter] = [];
       }
       videosByChapter[chapter].push(video);
+    });
+    
+    // Sort videos within each chapter by lesson number
+    Object.keys(videosByChapter).forEach(chapter => {
+      videosByChapter[chapter].sort((a, b) => {
+        const aMatch = a.title ? a.title.match(/\d+/) : null;
+        const bMatch = b.title ? b.title.match(/\d+/) : null;
+        const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+        const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+        return aNum - bNum;
+      });
     });
     
     // Sort videos by lesson number with proper handling of double-digit numbers
@@ -883,7 +894,7 @@ app.get('/videos/:courseName/:id', async (req, res) => {
       }
     }
 
-    // Group videos by chapter
+    // Group videos by chapter and sort within each chapter
     const videosByChapter = {};
     allVideos.forEach(video => {
       const chapter = video.chapter || 'Uncategorized';
@@ -891,6 +902,17 @@ app.get('/videos/:courseName/:id', async (req, res) => {
         videosByChapter[chapter] = [];
       }
       videosByChapter[chapter].push(video);
+    });
+    
+    // Sort videos within each chapter by lesson number
+    Object.keys(videosByChapter).forEach(chapter => {
+      videosByChapter[chapter].sort((a, b) => {
+        const aMatch = a.title ? a.title.match(/\d+/) : null;
+        const bMatch = b.title ? b.title.match(/\d+/) : null;
+        const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+        const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+        return aNum - bNum;
+      });
     });
     
     // Sort videos to determine if this is the last video

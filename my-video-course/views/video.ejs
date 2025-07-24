@@ -204,31 +204,55 @@ ${courseName}`, extraStyles: `
         <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
           Chapters
         </h2>
-        <div class="space-y-4">
-          <% chapters.forEach(chapter => { %>
-          <div>
-            <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <%= chapter %>
-            </h3>
-            <ul class="space-y-1 pl-4">
-              <% videosByChapter[chapter].forEach((chapterVideo, index) => { %>
-              <li>
-                <a
-                  href="/videos/<%= encodeURIComponent(courseName) %>/<%= chapterVideo._id %>"
-                  class="text-sm <%= chapterVideo._id.toString() === video._id.toString() ? 'text-indigo-600 font-medium' : 'text-gray-600 hover:text-indigo-600' %>"
-                >
-                  <%= (index + 1) %>. <%= chapterVideo.title %> <% if (chapterVideo.watched) { %>
-                  <i class="fas fa-check text-green-500 ml-1"></i>
+        <div class="space-y-2">
+          <% 
+          // Sort chapters by extracting numbers
+          const sortedChapters = chapters.sort((a, b) => {
+            const aMatch = a.match(/(\d+)/);
+            const bMatch = b.match(/(\d+)/);
+            if (!aMatch || !bMatch) return a.localeCompare(b);
+            return parseInt(aMatch[0], 10) - parseInt(bMatch[0], 10);
+          });
+          
+          sortedChapters.forEach(chapter => {
+            const chapterVideos = videosByChapter[chapter];
+            const watchedCount = chapterVideos.filter(v => v.watched).length;
+            const totalCount = chapterVideos.length;
+            const isCompleted = watchedCount === totalCount;
+          %>
+          <details class="border border-gray-200 rounded-lg">
+            <summary class="font-medium text-gray-700 dark:text-gray-300 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
+              <span class="flex items-center justify-between">
+                <span>
+                  <%= chapter %>
+                  <% if (isCompleted) { %>
+                    <i class="fas fa-check-circle text-green-500 ml-2"></i>
                   <% } %>
-                </a>
-              </li>
-              <% }); %>
-            </ul>
-          </div>
+                </span>
+                <span class="text-xs text-gray-500"><%= watchedCount %>/<%= totalCount %></span>
+              </span>
+            </summary>
+            <div class="p-3 pt-0">
+              <ul class="space-y-1">
+                <% chapterVideos.forEach((chapterVideo, index) => { %>
+                <li>
+                  <a
+                    href="/videos/<%= encodeURIComponent(courseName) %>/<%= chapterVideo._id %>"
+                    class="block text-sm p-2 rounded <%= chapterVideo._id.toString() === video._id.toString() ? 'bg-indigo-100 text-indigo-600 font-medium' : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50' %>"
+                  >
+                    <%= (index + 1) %>. <%= chapterVideo.title %>
+                    <% if (chapterVideo.watched) { %>
+                      <i class="fas fa-check text-green-500 ml-1"></i>
+                    <% } %>
+                  </a>
+                </li>
+                <% }); %>
+              </ul>
+            </div>
+          </details>
           <% }); %>
         </div>
-      </div>
-      <% } %>
+      </div>      <% } %>
 
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
         <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
@@ -401,10 +425,20 @@ ${courseName}`, extraStyles: `
     function navigateToNextVideo() {
       const isLastVideo = <%= isLastVideo ? 'true' : 'false' %>;
       const nextVideoId = '<%= typeof nextVideoId !== "undefined" ? nextVideoId : "" %>';
+      const isLastInChapter = <%= isLastInChapter ? 'true' : 'false' %>;
 
       if (!isLastVideo && nextVideoId) {
         const encodedCourseName = encodeURIComponent(courseName);
-        window.location.href = `/videos/${encodedCourseName}/${nextVideoId}`;
+        
+        // If this is the last video in a chapter, show a brief message
+        if (isLastInChapter) {
+          showKeyHint('Chapter Complete! Moving to next chapter...');
+          setTimeout(() => {
+            window.location.href = `/videos/${encodedCourseName}/${nextVideoId}`;
+          }, 1500);
+        } else {
+          window.location.href = `/videos/${encodedCourseName}/${nextVideoId}`;
+        }
       }
     }
 
