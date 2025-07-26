@@ -434,10 +434,10 @@ ${courseName}`, extraStyles: `
         if (isLastInChapter) {
           showKeyHint('Chapter Complete! Moving to next chapter...');
           setTimeout(() => {
-            window.location.href = `/videos/${encodedCourseName}/${nextVideoId}`;
+            window.location.href = `/videos/${encodedCourseName}/${nextVideoId}?autoplay=true`;
           }, 1500);
         } else {
-          window.location.href = `/videos/${encodedCourseName}/${nextVideoId}`;
+          window.location.href = `/videos/${encodedCourseName}/${nextVideoId}?autoplay=true`;
         }
       }
     }
@@ -455,7 +455,7 @@ ${courseName}`, extraStyles: `
       nextButton.addEventListener('click', function() {
         const encodedCourseName = encodeURIComponent(courseName);
         const nextId = '<%= typeof nextVideoId !== "undefined" ? nextVideoId : "" %>';
-        window.location.href = `/videos/${encodedCourseName}/${nextId}`;
+        window.location.href = `/videos/${encodedCourseName}/${nextId}?autoplay=true`;
       });
     }
 

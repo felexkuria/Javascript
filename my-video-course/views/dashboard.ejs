@@ -91,16 +91,17 @@
 <script src="/js/connection-monitor.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Initialize connection monitor
-    const connectionMonitor = new ConnectionMonitor({
-      checkInterval: 30000, // Check every 30 seconds
-      onOnline: async () => {
-        console.log('Connection restored! Syncing data...');
-        // Show reconnection message
-        const statusDiv = document.createElement('div');
-        statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
-        statusDiv.textContent = 'Connection restored! Syncing data...';
-        document.body.appendChild(statusDiv);
+    // Initialize connection monitor after 2 hours
+    setTimeout(() => {
+      const connectionMonitor = new ConnectionMonitor({
+        checkInterval: 30000, // Check every 30 seconds
+        onOnline: async () => {
+          console.log('Connection restored! Syncing data...');
+          // Show reconnection message
+          const statusDiv = document.createElement('div');
+          statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
+          statusDiv.textContent = 'Connection restored! Syncing data...';
+          document.body.appendChild(statusDiv);
         
         try {
           // Attempt to sync data
@@ -146,8 +147,8 @@
           offlineDiv.textContent = 'You are offline. Your progress will be saved locally.';
           document.body.appendChild(offlineDiv);
         }
-      }
-    }).start();
+      }).start();
+    }, 2 * 60 * 60 * 1000); // 2 hours in milliseconds
     
     const syncButton = document.getElementById('syncButton');
     
