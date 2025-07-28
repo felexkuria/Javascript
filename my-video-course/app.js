@@ -1435,6 +1435,119 @@ app.post('/api/sync', async (req, res) => {
   }
 });
 
+// Configure multer for local Whisper processing
+const whisperUpload = multer({
+  dest: path.join(__dirname, 'temp'),
+  limits: { fileSize: 500 * 1024 * 1024 } // 500MB limit
+});
+
+// API endpoint to process video with Whisper
+app.post('/api/process-whisper', whisperUpload.single('video'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No video file uploaded' });
+    }
+
+    const videoFile = req.file;
+    const { title } = req.body;
+    
+    // Create whisper and temp directories if they don't exist
+    const whisperDir = path.join(__dirname, 'public', 'whisper');
+    const tempDir = path.join(__dirname, 'temp');
+    if (!fs.existsSync(whisperDir)) {
+      fs.mkdirSync(whisperDir, { recursive: true });
+    }
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    const videoPath = videoFile.path;
+    const srtFileName = `${path.basename(videoFile.filename, path.extname(videoFile.filename))}.srt`;
+    const srtPath = path.join(whisperDir, srtFileName);
+
+    console.log(`Starting Whisper processing for: ${title}`);
+    
+    // Start Whisper process
+    const { spawn } = require('child_process');
+    const whisperProcess = spawn('whisper', [
+      videoPath,
+      '--model', 'base',
+      '--output_format', 'srt',
+      '--output_dir', whisperDir,
+      '--verbose', 'False'
+    ]);
+
+    let progress = 0;
+    let errorOutput = '';
+
+    whisperProcess.stderr.on('data', (data) => {
+      const output = data.toString();
+      errorOutput += output;
+      
+      // Parse progress from Whisper output
+      const progressMatch = output.match(/(\d+)%/);
+      if (progressMatch) {
+        progress = parseInt(progressMatch[1]);
+      }
+    });
+
+    whisperProcess.on('close', (code) => {
+      if (code === 0) {
+        // Whisper creates file with original name, rename to our format
+        const whisperOutput = path.join(whisperDir, `${path.basename(videoPath, path.extname(videoPath))}.srt`);
+        
+        if (fs.existsSync(whisperOutput)) {
+          fs.renameSync(whisperOutput, srtPath);
+          res.json({ 
+            success: true, 
+            message: 'Caption extraction completed!',
+            srtFile: `/whisper/${srtFileName}`,
+            downloadUrl: `/download-srt/${srtFileName}`
+          });
+        } else {
+          res.status(500).json({ error: 'Whisper output file not found' });
+        }
+      } else {
+        console.error(`Whisper failed with code ${code}: ${errorOutput}`);
+        res.status(500).json({ error: `Whisper extraction failed: ${errorOutput}` });
+      }
+      
+      // Clean up uploaded video file
+      if (fs.existsSync(videoPath)) {
+        fs.unlinkSync(videoPath);
+      }
+    });
+
+    whisperProcess.on('error', (err) => {
+      console.error('Failed to start Whisper:', err);
+      res.status(500).json({ error: 'Failed to start Whisper process' });
+    });
+
+  } catch (err) {
+    console.error('Error processing with Whisper:', err);
+    res.status(500).json({ error: 'Error processing video' });
+  }
+});
+
+// API endpoint to get Whisper progress
+app.get('/api/whisper-progress/:filename', (req, res) => {
+  // This would need to be implemented with a progress tracking system
+  // For now, return a simple response
+  res.json({ progress: 50, status: 'processing' });
+});
+
+// Route to download SRT files
+app.get('/download-srt/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, 'public', 'whisper', filename);
+  
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, filename);
+  } else {
+    res.status(404).send('SRT file not found');
+  }
+});
+
 //add code to get http://localhost:3000/profile 
 app.get('/profile', (req, res) => {
   res.render('profile');

@@ -84,6 +84,60 @@
         Upload Video
       </button>
     </form>
+    
+    <!-- Whisper Caption Extraction Section -->
+    <div class="mt-8 p-6 bg-gray-50 rounded-lg">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Extract Captions with Whisper</h2>
+      <form id="whisper-form" class="space-y-4">
+        <div>
+          <label for="whisper-title" class="block text-sm font-medium text-gray-700 mb-1">Video Title</label>
+          <input 
+            type="text" 
+            id="whisper-title"
+            placeholder="Enter video title" 
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+        </div>
+        
+        <div>
+          <label for="whisper-video" class="block text-sm font-medium text-gray-700 mb-1">Video File</label>
+          <input 
+            type="file" 
+            id="whisper-video"
+            accept="video/*"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+        </div>
+        
+        <button 
+          type="submit"
+          id="whisper-button"
+          class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        >
+          Extract Captions
+        </button>
+      </form>
+      
+      <!-- Whisper Progress -->
+      <div id="whisper-progress" class="hidden mt-4">
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+          <div id="whisper-progress-bar" class="bg-green-600 h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+        <p id="whisper-progress-text" class="text-sm text-gray-600 mt-1">Processing with Whisper...</p>
+      </div>
+      
+      <!-- Download Link -->
+      <div id="whisper-result" class="hidden mt-4">
+        <div class="p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+          <p class="font-medium">Caption extraction completed!</p>
+          <a id="download-link" href="#" class="inline-block mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+            Download SRT File
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -196,6 +250,67 @@
           form.action = '/videos/upload-direct';
           form.submit();
         }
+      });
+    }
+    
+    // Whisper form handling
+    const whisperForm = document.getElementById('whisper-form');
+    const whisperButton = document.getElementById('whisper-button');
+    const whisperProgress = document.getElementById('whisper-progress');
+    const whisperProgressBar = document.getElementById('whisper-progress-bar');
+    const whisperProgressText = document.getElementById('whisper-progress-text');
+    const whisperResult = document.getElementById('whisper-result');
+    const downloadLink = document.getElementById('download-link');
+    
+    if (whisperForm) {
+      whisperForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById('whisper-title').value;
+        const fileInput = document.getElementById('whisper-video');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+          alert('Please select a video file');
+          return;
+        }
+        
+        // Show progress
+        whisperProgress.classList.remove('hidden');
+        whisperResult.classList.add('hidden');
+        whisperButton.disabled = true;
+        whisperButton.textContent = 'Processing...';
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('video', file);
+        formData.append('title', title);
+        
+        // Start processing
+        fetch('/api/process-whisper', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            whisperProgress.classList.add('hidden');
+            whisperResult.classList.remove('hidden');
+            downloadLink.href = data.downloadUrl;
+            downloadLink.textContent = 'Download SRT File';
+          } else {
+            throw new Error(data.error || 'Processing failed');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error processing video: ' + error.message);
+          whisperProgress.classList.add('hidden');
+        })
+        .finally(() => {
+          whisperButton.disabled = false;
+          whisperButton.textContent = 'Extract Captions';
+        });
       });
     }
   });
