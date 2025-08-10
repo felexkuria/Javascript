@@ -1170,6 +1170,8 @@ app.post('/api/mark-watched', async (req, res) => {
       return res.status(404).json({ error: "Video not found" });
     }
 
+    const watchedAt = new Date();
+    
     // Update localStorage directly while preserving all properties
     const localStorage = videoService.getLocalStorage();
     if (!localStorage[courseName]) {
@@ -1183,13 +1185,13 @@ app.post('/api/mark-watched', async (req, res) => {
     if (videoIndex >= 0) {
       // Update existing video while preserving all properties
       localStorage[courseName][videoIndex].watched = true;
-      localStorage[courseName][videoIndex].watchedAt = new Date();
+      localStorage[courseName][videoIndex].watchedAt = watchedAt;
     } else {
       // Add complete video data
       localStorage[courseName].push({
         ...video,
         watched: true,
-        watchedAt: new Date()
+        watchedAt: watchedAt
       });
     }
 
@@ -1201,7 +1203,7 @@ app.post('/api/mark-watched', async (req, res) => {
         const courseCollection = mongoose.connection.collection(courseName);
         await courseCollection.updateOne(
           { _id: new ObjectId(videoId) },
-          { $set: { watched: true, watchedAt: new Date() } }
+          { $set: { watched: true, watchedAt: watchedAt } }
         );
       } catch (dbErr) {
         console.error('Error updating MongoDB:', dbErr);
@@ -1334,7 +1336,7 @@ app.get('/api/videos/localStorage', (req, res) => {
 app.post('/api/gamification/sync', async (req, res) => {
   try {
     const { achievements, userStats, streakData } = req.body;
-    const userId = 'default_user'; // In a real app, get from session/auth
+    const userId = 'default_user';
     
     if (mongoose.connection.readyState) {
       const collection = mongoose.connection.collection('gamification');
@@ -1349,6 +1351,32 @@ app.post('/api/gamification/sync', async (req, res) => {
   } catch (error) {
     console.error('Error syncing gamification data:', error);
     res.status(500).json({ error: 'Failed to sync gamification data' });
+  }
+});
+
+// API endpoint to get video watch dates for calendar
+app.get('/api/videos/watch-dates', (req, res) => {
+  try {
+    const localStorage = videoService.getLocalStorage();
+    const watchDates = [];
+    
+    Object.keys(localStorage).forEach(courseName => {
+      const videos = localStorage[courseName] || [];
+      videos.forEach(video => {
+        if (video && video.watched && video.watchedAt) {
+          watchDates.push({
+            date: new Date(video.watchedAt).toISOString().split('T')[0],
+            videoTitle: video.title,
+            courseName: courseName
+          });
+        }
+      });
+    });
+    
+    res.json(watchDates);
+  } catch (error) {
+    console.error('Error getting watch dates:', error);
+    res.status(500).json({ error: 'Failed to get watch dates' });
   }
 });
 

@@ -442,6 +442,12 @@ ${courseName}`, extraStyles: `
           // Sync with localStorage after marking as watched
           setTimeout(() => {
             window.gamificationSystem.syncWithLocalStorageVideos();
+            // Reload watch dates for calendar if on profile page
+            if (window.location.pathname === '/profile' && window.loadWatchDates) {
+              window.loadWatchDates().then(() => {
+                if (window.populateStreakCalendar) window.populateStreakCalendar();
+              });
+            }
           }, 500);
         }
       })

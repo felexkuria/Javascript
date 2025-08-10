@@ -182,30 +182,99 @@ class GamificationSystem {
         const localStorageData = await response.json();
         let totalWatchedVideos = 0;
         let coursesCompleted = 0;
+        const watchDates = new Set();
         
-        // Count watched videos across all courses
+        // Count watched videos and collect watch dates
         Object.keys(localStorageData).forEach(courseName => {
           const videos = localStorageData[courseName] || [];
-          const watchedInCourse = videos.filter(v => v && v.watched).length;
+          const watchedInCourse = videos.filter(v => {
+            if (v && v.watched) {
+              // Add watch date to streak data
+              if (v.watchedAt) {
+                const watchDate = new Date(v.watchedAt).toISOString().split('T')[0];
+                watchDates.add(watchDate);
+              }
+              return true;
+            }
+            return false;
+          }).length;
+          
           totalWatchedVideos += watchedInCourse;
           
-          // Check if course is completed (all videos watched)
           if (videos.length > 0 && watchedInCourse === videos.length) {
             coursesCompleted++;
           }
         });
         
+        // Update streak data with actual watch dates
+        this.streakData.streakDates = Array.from(watchDates).sort();
+        this.calculateStreakFromDates();
+        
         // Update user stats
         this.userStats.videosWatched = totalWatchedVideos;
         this.userStats.coursesCompleted = coursesCompleted;
         
-        // Save updated stats
         this.saveUserStats();
+        this.saveStreakData();
         this.syncWithMongoDB();
       }
     } catch (error) {
       console.warn('Failed to sync with localStorage videos:', error);
     }
+  }
+  
+  // Calculate streak from actual watch dates
+  calculateStreakFromDates() {
+    if (this.streakData.streakDates.length === 0) {
+      this.streakData.currentStreak = 0;
+      this.streakData.longestStreak = 0;
+      return;
+    }
+    
+    const sortedDates = this.streakData.streakDates.sort();
+    const today = new Date(Date.now()).toISOString().split('T')[0];
+    
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 1;
+    
+    // Calculate longest streak
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prevDate = new Date(sortedDates[i-1]);
+      const currDate = new Date(sortedDates[i]);
+      const dayDiff = (currDate - prevDate) / (24 * 60 * 60 * 1000);
+      
+      if (dayDiff === 1) {
+        tempStreak++;
+      } else {
+        longestStreak = Math.max(longestStreak, tempStreak);
+        tempStreak = 1;
+      }
+    }
+    longestStreak = Math.max(longestStreak, tempStreak);
+    
+    // Calculate current streak (from today backwards)
+    const lastWatchDate = sortedDates[sortedDates.length - 1];
+    const daysSinceLastWatch = (new Date(today) - new Date(lastWatchDate)) / (24 * 60 * 60 * 1000);
+    
+    if (daysSinceLastWatch <= 1) {
+      currentStreak = 1;
+      for (let i = sortedDates.length - 2; i >= 0; i--) {
+        const prevDate = new Date(sortedDates[i]);
+        const currDate = new Date(sortedDates[i + 1]);
+        const dayDiff = (currDate - prevDate) / (24 * 60 * 60 * 1000);
+        
+        if (dayDiff === 1) {
+          currentStreak++;
+        } else {
+          break;
+        }
+      }
+    }
+    
+    this.streakData.currentStreak = currentStreak;
+    this.streakData.longestStreak = longestStreak;
+    this.streakData.lastActiveDate = lastWatchDate;
   }
 
   // Award points with visual feedback
@@ -345,19 +414,16 @@ class GamificationSystem {
 
   // Update learning streak
   updateStreak() {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const today = new Date(Date.now()).toISOString().split('T')[0];
     const lastActive = this.streakData.lastActiveDate;
     
     if (lastActive !== today) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
       
       if (lastActive === yesterdayStr) {
-        // Continue streak
         this.streakData.currentStreak++;
       } else if (lastActive !== today) {
-        // Reset streak if more than a day gap
         this.streakData.currentStreak = 1;
       }
       
@@ -366,7 +432,6 @@ class GamificationSystem {
         this.streakData.streakDates.push(today);
       }
       
-      // Update longest streak
       if (this.streakData.currentStreak > this.streakData.longestStreak) {
         this.streakData.longestStreak = this.streakData.currentStreak;
       }
