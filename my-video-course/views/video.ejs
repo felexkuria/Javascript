@@ -230,7 +230,7 @@ ${courseName}`, extraStyles: `
       <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
         <h3 class="text-lg font-semibold text-gray-800 mb-3">📚 Test Your Knowledge</h3>
         <button 
-          onclick="window.quizSystem && window.quizSystem.startQuiz('general')"
+          id="quickQuizBtn"
           class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200 transform hover:scale-105"
         >
           Take Quick Quiz
@@ -369,6 +369,7 @@ ${courseName}`, extraStyles: `
     const prevButton = document.getElementById('prevButton');
     const nextButton = document.getElementById('nextButton');
     const keyHint = document.getElementById('keyHint');
+    const quickQuizBtn = document.getElementById('quickQuizBtn');
 
     // Check if autoplay parameter is present in URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -610,19 +611,92 @@ ${courseName}`, extraStyles: `
         }
       });
       
-      // Generate quiz from SRT content
+      // Generate quiz from SRT content or pre-generated
       async function generateSRTQuiz() {
         try {
           const response = await fetch(`/api/quiz/generate/${encodeURIComponent(courseName)}/${videoId}`);
           if (response.ok) {
             const data = await response.json();
             if (data.questions && data.questions.length > 0) {
-              window.quizSystem.startQuiz('srt', data.questions);
+              console.log(`Starting ${data.quizType} quiz for video: ${data.videoTitle}`);
+              window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
+            } else {
+              console.warn('No quiz questions available for this video');
             }
+          } else {
+            console.error('Failed to fetch quiz:', response.statusText);
           }
         } catch (error) {
-          console.error('Failed to generate SRT quiz:', error);
+          console.error('Failed to generate quiz:', error);
+          // Fallback to general quiz
+          if (window.quizSystem) {
+            window.quizSystem.startQuiz('general');
+          }
         }
+      }
+      
+      // Quick quiz button handler
+      if (quickQuizBtn) {
+        quickQuizBtn.addEventListener('click', async function() {
+          console.log('Quiz button clicked');
+          
+          if (!window.quizSystem) {
+            console.error('Quiz system not loaded');
+            alert('Quiz system is not available. Please refresh the page.');
+            return;
+          }
+          
+          console.log('Quiz system available, generating quiz...');
+          
+          // Determine quiz type based on course content
+          let quizType = 'general';
+          const courseNameLower = courseName.toLowerCase();
+          const videoTitle = '<%= video ? video.title.toLowerCase() : "" %>';
+          
+          if (courseNameLower.includes('davinci') || courseNameLower.includes('video') || 
+              videoTitle.includes('davinci') || videoTitle.includes('resolve') || 
+              videoTitle.includes('editing') || videoTitle.includes('color')) {
+            quizType = 'video_editing';
+          } else if (courseNameLower.includes('aws') || videoTitle.includes('aws')) {
+            quizType = 'aws';
+          } else if (courseNameLower.includes('devops') || videoTitle.includes('devops')) {
+            quizType = 'devops';
+          } else if (videoTitle.includes('programming') || videoTitle.includes('code')) {
+            quizType = 'programming';
+          }
+          
+          console.log(`Determined quiz type: ${quizType}`);
+          
+          try {
+            // Try to get video-specific quiz first
+            const quizUrl = `/api/quiz/generate/${encodeURIComponent(courseName)}/${videoId}`;
+            console.log('Fetching quiz from:', quizUrl);
+            
+            const response = await fetch(quizUrl);
+            console.log('Quiz API response status:', response.status);
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log('Quiz data received:', data);
+              
+              if (data.questions && data.questions.length > 0) {
+                console.log(`Starting ${data.quizType} quiz with ${data.questions.length} questions`);
+                window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
+                return;
+              } else {
+                console.warn('No questions in quiz data');
+              }
+            } else {
+              console.error('Quiz API failed with status:', response.status);
+            }
+          } catch (error) {
+            console.warn('Failed to get video-specific quiz:', error);
+          }
+          
+          // Fallback to determined quiz type
+          console.log(`Using fallback ${quizType} quiz`);
+          window.quizSystem.startQuiz(quizType);
+        });
       }
     }
   });

@@ -1663,31 +1663,66 @@ app.get('/download-srt/:filename', (req, res) => {
 // Import SRT quiz generator
 const srtQuizGenerator = require('./services/srtQuizGenerator');
 
-// API endpoint to generate quiz from video SRT
+// Import pre-generated quiz service
+const preGeneratedQuizService = require('./services/preGeneratedQuizzes');
+
+// API endpoint to generate quiz from video SRT or pre-generated
 app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
   try {
     const { courseName, videoId } = req.params;
+    console.log(`Quiz generation requested for course: ${courseName}, video: ${videoId}`);
     
     const video = await videoService.getVideoById(courseName, videoId);
     if (!video) {
+      console.error(`Video not found: ${videoId} in course ${courseName}`);
       return res.status(404).json({ error: 'Video not found' });
     }
     
-    const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
-    if (!fs.existsSync(videoPath)) {
-      return res.status(404).json({ error: 'Video file not found' });
+    console.log(`Video found: ${video.title}`);
+    let questions = [];
+    
+    // Try SRT-based quiz first
+    try {
+      if (video.videoUrl) {
+        const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
+        console.log(`Checking video path: ${videoPath}`);
+        
+        if (fs.existsSync(videoPath)) {
+          console.log('Video file exists, attempting SRT generation...');
+          const srtPath = await srtQuizGenerator.generateSRT(videoPath);
+          const srtContent = srtQuizGenerator.parseSRT(srtPath);
+          
+          if (srtContent && srtContent.length > 100) {
+            questions = srtQuizGenerator.generateQuestions(srtContent, video.title);
+            console.log(`Generated ${questions.length} SRT-based questions`);
+          } else {
+            console.log('SRT content too short or empty');
+          }
+        } else {
+          console.log('Video file does not exist on disk');
+        }
+      } else {
+        console.log('Video has no videoUrl property');
+      }
+    } catch (srtError) {
+      console.warn('SRT quiz generation failed:', srtError.message);
     }
     
-    const srtPath = await srtQuizGenerator.generateSRT(videoPath);
-    const srtContent = srtQuizGenerator.parseSRT(srtPath);
-    
-    if (!srtContent) {
-      return res.status(400).json({ error: 'Could not generate captions for quiz' });
+    // Fallback to pre-generated quiz if SRT failed or no content
+    if (questions.length === 0) {
+      console.log('Using pre-generated quiz as fallback');
+      questions = preGeneratedQuizService.getQuizForVideo(video.title, courseName);
+      console.log(`Generated ${questions.length} pre-generated questions`);
     }
     
-    const questions = srtQuizGenerator.generateQuestions(srtContent, video.title);
+    const quizType = questions.length > 0 && questions[0].id.startsWith('srt') ? 'srt' : 'pregenerated';
+    console.log(`Returning ${questions.length} questions of type: ${quizType}`);
     
-    res.json({ questions, videoTitle: video.title });
+    res.json({ 
+      questions, 
+      videoTitle: video.title,
+      quizType
+    });
   } catch (error) {
     console.error('Error generating quiz:', error);
     res.status(500).json({ error: 'Failed to generate quiz' });
@@ -1701,6 +1736,10 @@ app.get('/profile', (req, res) => {
 // Add code to get http://localhost:3000/settings
 app.get('/settings', (req, res) => {
   res.render('settings');
+});
+// Test quiz page
+app.get('/test-quiz', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test-quiz.html'));
 });
 // Start server
 app.listen(config.port, () => {

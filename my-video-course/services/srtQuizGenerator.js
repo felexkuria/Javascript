@@ -16,15 +16,18 @@ class SRTQuizGenerator {
     console.log(`Generating SRT for ${videoPath}`);
     
     return new Promise((resolve, reject) => {
+      // Try extracting existing subtitles first
       const ffmpegProcess = spawn('ffmpeg', [
         '-i', videoPath,
-        '-vn', '-an',
+        '-map', '0:s:0?',
         '-c:s', 'srt',
         srtPath
       ]);
       
+      let hasOutput = false;
+      
       ffmpegProcess.on('close', (code) => {
-        if (code === 0 && fs.existsSync(srtPath)) {
+        if (fs.existsSync(srtPath) && fs.statSync(srtPath).size > 0) {
           resolve(srtPath);
         } else {
           // Fallback to Whisper
@@ -35,6 +38,12 @@ class SRTQuizGenerator {
       ffmpegProcess.on('error', () => {
         this.generateWithWhisper(videoPath).then(resolve).catch(reject);
       });
+      
+      // Timeout after 30 seconds
+      setTimeout(() => {
+        ffmpegProcess.kill();
+        this.generateWithWhisper(videoPath).then(resolve).catch(reject);
+      }, 30000);
     });
   }
   
@@ -53,19 +62,37 @@ class SRTQuizGenerator {
         '--verbose', 'False'
       ]);
       
+      let errorOutput = '';
+      
+      whisperProcess.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+      
       whisperProcess.on('close', (code) => {
         if (code === 0) {
           const whisperOutput = path.join(videoDir, `${path.basename(videoPath, path.extname(videoPath))}.srt`);
           if (fs.existsSync(whisperOutput) && whisperOutput !== srtPath) {
             fs.renameSync(whisperOutput, srtPath);
           }
-          resolve(srtPath);
+          if (fs.existsSync(srtPath)) {
+            resolve(srtPath);
+          } else {
+            reject(new Error('Whisper output not found'));
+          }
         } else {
-          reject(new Error('Whisper failed'));
+          reject(new Error(`Whisper failed: ${errorOutput}`));
         }
       });
       
-      whisperProcess.on('error', reject);
+      whisperProcess.on('error', (err) => {
+        reject(new Error(`Whisper process error: ${err.message}`));
+      });
+      
+      // Timeout after 5 minutes
+      setTimeout(() => {
+        whisperProcess.kill();
+        reject(new Error('Whisper timeout'));
+      }, 300000);
     });
   }
   

@@ -41,6 +41,77 @@ class QuizSystem {
           explanation: 'JSX is a syntax extension for JavaScript that allows you to write HTML-like code in React.'
         }
       ],
+      'video_editing': [
+        {
+          id: 'video_1',
+          question: 'What is DaVinci Resolve primarily known for?',
+          options: ['Audio editing', 'Color grading and video editing', '3D animation', 'Web development'],
+          correct: 1,
+          explanation: 'DaVinci Resolve is renowned for its professional color grading capabilities and comprehensive video editing tools.'
+        },
+        {
+          id: 'video_2',
+          question: 'Which panel in DaVinci Resolve is used for color correction?',
+          options: ['Edit', 'Color', 'Fairlight', 'Deliver'],
+          correct: 1,
+          explanation: 'The Color panel in DaVinci Resolve is specifically designed for color correction and grading.'
+        },
+        {
+          id: 'video_3',
+          question: 'What does the term "timeline" refer to in video editing?',
+          options: ['Project duration', 'The sequence where clips are arranged', 'Export settings', 'Audio levels'],
+          correct: 1,
+          explanation: 'The timeline is where video and audio clips are arranged in sequence to create the final video.'
+        }
+      ],
+      'aws': [
+        {
+          id: 'aws_1',
+          question: 'What does S3 stand for in AWS?',
+          options: ['Simple Storage Service', 'Secure Storage System', 'Scalable Storage Solution', 'Standard Storage Service'],
+          correct: 0,
+          explanation: 'S3 stands for Simple Storage Service, AWS\'s object storage service.'
+        },
+        {
+          id: 'aws_2',
+          question: 'Which AWS service is used for serverless computing?',
+          options: ['EC2', 'Lambda', 'RDS', 'VPC'],
+          correct: 1,
+          explanation: 'AWS Lambda is the serverless computing service that runs code without managing servers.'
+        }
+      ],
+      'devops': [
+        {
+          id: 'devops_1',
+          question: 'What does CI/CD stand for?',
+          options: ['Continuous Integration/Continuous Deployment', 'Code Integration/Code Deployment', 'Central Integration/Central Deployment', 'Custom Integration/Custom Deployment'],
+          correct: 0,
+          explanation: 'CI/CD stands for Continuous Integration and Continuous Deployment.'
+        },
+        {
+          id: 'devops_2',
+          question: 'Which tool is commonly used for containerization?',
+          options: ['Jenkins', 'Docker', 'Ansible', 'Terraform'],
+          correct: 1,
+          explanation: 'Docker is the most popular containerization platform.'
+        }
+      ],
+      'programming': [
+        {
+          id: 'prog_1',
+          question: 'What is the purpose of version control?',
+          options: ['Track changes in code', 'Compile code', 'Debug applications', 'Deploy software'],
+          correct: 0,
+          explanation: 'Version control systems track changes in code over time and enable collaboration.'
+        },
+        {
+          id: 'prog_2',
+          question: 'Which of these is a NoSQL database?',
+          options: ['MySQL', 'PostgreSQL', 'MongoDB', 'SQLite'],
+          correct: 2,
+          explanation: 'MongoDB is a popular NoSQL document database.'
+        }
+      ],
       'general': [
         {
           id: 'gen_1',
@@ -123,11 +194,24 @@ class QuizSystem {
 
   // Start a quiz based on topic
   startQuiz(topic = 'general', customQuestions = null) {
-    const questions = customQuestions || this.quizData[topic] || this.quizData['general'];
+    let questions = customQuestions || this.quizData[topic];
     
+    // If no questions found for the topic, try general
     if (!questions || questions.length === 0) {
-      console.warn('No questions available for topic:', topic);
-      return;
+      console.warn('No questions available for topic:', topic, 'falling back to general');
+      questions = this.quizData['general'];
+    }
+    
+    // If still no questions, create a default one
+    if (!questions || questions.length === 0) {
+      console.warn('No general questions available, creating default');
+      questions = [{
+        id: 'default_1',
+        question: 'What is the most important aspect of learning?',
+        options: ['Practice and repetition', 'Reading only', 'Watching videos only', 'Taking notes only'],
+        correct: 0,
+        explanation: 'Practice and repetition are key to mastering any skill or subject.'
+      }];
     }
 
     this.currentQuiz = {
@@ -422,7 +506,13 @@ class QuizSystem {
 
 // Initialize quiz system when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-  window.quizSystem = new QuizSystem();
+  console.log('Initializing quiz system...');
+  try {
+    window.quizSystem = new QuizSystem();
+    console.log('Quiz system initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize quiz system:', error);
+  }
 });
 
 // Add quiz trigger to video completion
