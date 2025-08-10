@@ -14941,6 +14941,28 @@
       "watchedAt": "2025-08-10T20:06:48.596Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/10. Serverless/1. Introduction.mp4",
       "thumbnailUrl": "/thumbnails/6887b7961942634568953666.jpg"
+    },
+    {
+      "_id": "6887b79619426345689536dc",
+      "title": "14. Route 53 - Register Domain",
+      "description": "Description for 14. Route 53 - Register Domain.mp4",
+      "section": null,
+      "chapter": "2. Getting Started",
+      "watched": true,
+      "watchedAt": "2025-08-10T20:22:41.226Z",
+      "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/2. Getting Started/14. Route 53 - Register Domain.mp4",
+      "thumbnailUrl": "/thumbnails/6887b79619426345689536dc.jpg"
+    },
+    {
+      "_id": "6887b7961942634568953665",
+      "title": "4. Meet your instructor",
+      "description": "Description for 4. Meet your instructor.mp4",
+      "section": null,
+      "chapter": "1. Introduction",
+      "watched": true,
+      "watchedAt": "2025-08-10T20:24:05.620Z",
+      "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/1. Introduction/4. Meet your instructor.mp4",
+      "thumbnailUrl": "/thumbnails/6887b7961942634568953665.jpg"
     }
   ]
 }

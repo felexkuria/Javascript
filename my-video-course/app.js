@@ -1693,8 +1693,8 @@ app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
           const srtEntries = srtQuizGenerator.parseSRT(srtPath);
           
           if (srtEntries && srtEntries.length > 3) {
-            questions = srtQuizGenerator.generateQuestions(srtEntries, video.title);
-            console.log(`Generated ${questions.length} SRT-based questions`);
+            questions = await srtQuizGenerator.generateQuestions(srtEntries, video.title);
+            console.log(`Generated ${questions.length} AI-powered questions`);
           } else {
             console.log('SRT entries too few or empty');
           }

@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+const genAI = new GoogleGenerativeAI('AIzaSyAT7kcq2iej1djqwuDNetyLexUVL9ear68');
 
 class SRTQuizGenerator {
   // Generate SRT file using ffmpeg if it doesn't exist
@@ -114,21 +117,58 @@ class SRTQuizGenerator {
     }).filter(entry => entry && entry.text.length > 10);
   }
   
-  // Generate quiz questions from SRT entries
-  generateQuestions(srtEntries, videoTitle) {
+  // Generate quiz questions from SRT entries using AI
+  async generateQuestions(srtEntries, videoTitle) {
     if (!Array.isArray(srtEntries) || srtEntries.length === 0) return [];
     
+    try {
+      return await this.generateAIQuestions(srtEntries, videoTitle);
+    } catch (error) {
+      console.warn('AI generation failed, using fallback:', error.message);
+      return this.generateFallbackQuestions(srtEntries, videoTitle);
+    }
+  }
+  
+  // Generate questions using Google Gemini AI
+  async generateAIQuestions(srtEntries, videoTitle) {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const content = srtEntries.slice(0, 10).map(e => e.text).join(' ').substring(0, 2000);
+    
+    const prompt = `Create 5 unique quiz questions from this video transcript. Video title: "${videoTitle}"
+
+Transcript: "${content}"
+
+Return ONLY valid JSON array with this exact format:
+[{
+  "id": "ai_q1",
+  "question": "Question text?",
+  "options": ["Correct answer", "Wrong 1", "Wrong 2", "Wrong 3"],
+  "correct": 0,
+  "explanation": "Explanation text"
+}]`;
+    
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
+    
+    // Clean and parse JSON
+    const jsonMatch = response.match(/\[.*\]/s);
+    if (!jsonMatch) throw new Error('No JSON found in response');
+    
+    const questions = JSON.parse(jsonMatch[0]);
+    return questions.map((q, i) => ({ ...q, id: `ai_${this.hashString(videoTitle)}_${i}` }));
+  }
+  
+  // Fallback to hash-based questions
+  generateFallbackQuestions(srtEntries, videoTitle) {
     const questions = [];
     const videoHash = this.hashString(videoTitle);
     
-    // Select meaningful entries for questions
     const meaningfulEntries = srtEntries.filter(entry => 
       entry.text.length > 30 && 
-      !entry.text.match(/^[\[\(].*[\]\)]$/) && // Skip sound effects
+      !entry.text.match(/^[\[\(].*[\]\)]$/) && 
       entry.text.split(' ').length > 5
     );
     
-    // Use video-specific selection of entries to ensure unique questions
     const selectedEntries = this.selectUniqueEntries(meaningfulEntries, videoHash, 5);
     
     selectedEntries.forEach((entry, index) => {
@@ -274,6 +314,48 @@ class SRTQuizGenerator {
     const meaningfulWords = words.filter(word => 
       word.length > 3 && 
       !['this', 'that', 'with', 'from', 'they', 'have', 'will', 'been', 'were', 'when', 'what', 'where'].includes(word.toLowerCase())
+    );
+    return meaningfulWords.slice(0, 2).join(' ');
+  }
+  
+  // Hash string to create consistent unique identifiers
+  hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+  }
+  
+  // Select unique entries based on video hash
+  selectUniqueEntries(entries, videoHash, count) {
+    if (entries.length <= count) return entries;
+    
+    const hashNum = parseInt(videoHash, 36);
+    const selected = [];
+    const step = Math.floor(entries.length / count);
+    
+    for (let i = 0; i < count; i++) {
+      const index = (hashNum + i * step) % entries.length;
+      if (!selected.find(entry => entry.text === entries[index].text)) {
+        selected.push(entries[index]);
+      }
+    }
+    
+    while (selected.length < count && selected.length < entries.length) {
+      for (const entry of entries) {
+        if (!selected.find(sel => sel.text === entry.text)) {
+          selected.push(entry);
+          if (selected.length >= count) break;
+        }
+      }
+      break;
+    }
+    
+    return selected;
+  }(word.toLowerCase())
     );
     return meaningfulWords.slice(0, 2).join(' ');
   }
