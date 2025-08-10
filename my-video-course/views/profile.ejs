@@ -1,10 +1,187 @@
-<%- include('partials/header', { title: 'User Profile' }) %>
+<%- include('partials/header', { 
+  title: 'Learning Progress', 
+  extraStyles: `
+    <link rel="stylesheet" href="/css/gamification.css">
+  `
+}) %>
 
+<!-- Main Content -->
 <main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
-  <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">User Profile</h1>
-    <p class="text-gray-600">Profile page coming soon.</p>
+  <div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">Learning Progress</h1>
+        <p class="text-gray-600">Track your achievements and learning journey</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="level-badge">
+          <span class="user-level">1</span>
+        </div>
+        <div class="streak-counter">
+          <span class="streak-flame">🔥</span>
+          <span class="user-streak">0</span> day streak
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Dashboard -->
+    <div class="stats-dashboard">
+      <div class="stat-card">
+        <span class="stat-icon">🏆</span>
+        <div class="stat-value user-points">0</div>
+        <div class="stat-label">Total Points</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">📺</span>
+        <div class="stat-value" id="videos-watched">0</div>
+        <div class="stat-label">Videos Watched</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">📚</span>
+        <div class="stat-value" id="courses-completed">0</div>
+        <div class="stat-label">Courses Completed</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🎯</span>
+        <div class="stat-value" id="achievements-earned">0</div>
+        <div class="stat-label">Achievements</div>
+      </div>
+    </div>
+
+    <!-- Level Progress -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-semibold text-gray-800">Level Progress</h2>
+        <span class="text-sm text-gray-600">Level <span class="user-level">1</span></span>
+      </div>
+      <div class="animated-progress mb-2">
+        <div class="animated-progress-fill" id="level-progress" style="width: 0%"></div>
+      </div>
+      <div class="flex justify-between text-sm text-gray-600">
+        <span id="current-xp">0 XP</span>
+        <span id="next-level-xp">100 XP</span>
+      </div>
+    </div>
+
+    <!-- Achievements Section -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-6">Achievements</h2>
+      <div class="achievements-grid" id="achievements-container">
+        <!-- Achievements will be populated by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Learning Streak Calendar -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-6">Learning Streak</h2>
+      <div class="grid grid-cols-7 gap-2 mb-4">
+        <div class="text-center text-sm font-medium text-gray-600 py-2">Sun</div>
+        <div class="text-center text-sm font-medium text-gray-600 py-2">Mon</div>
+        <div class="text-center text-sm font-medium text-gray-600 py-2">Tue</div>
+        <div class="text-center text-sm font-medium text-gray-600 py-2">Wed</div>
+        <div class="text-center text-sm font-medium text-gray-600 py-2">Thu</div>
+        <div class="text-center text-sm font-medium text-gray-600 py-2">Fri</div>
+        <div class="text-center text-sm font-medium text-gray-600 py-2">Sat</div>
+      </div>
+      <div class="grid grid-cols-7 gap-2" id="streak-calendar">
+        <!-- Calendar will be populated by JavaScript -->
+      </div>
+      <div class="mt-4 flex items-center justify-between text-sm text-gray-600">
+        <span>Current Streak: <strong class="user-streak">0</strong> days</span>
+        <span>Longest Streak: <strong id="longest-streak">0</strong> days</span>
+      </div>
+    </div>
   </div>
 </main>
+
+<script src="/js/gamification.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Wait for gamification system to initialize
+  setTimeout(() => {
+    if (window.gamificationSystem) {
+      updateProfileDisplay();
+    }
+  }, 100);
+  
+  function updateProfileDisplay() {
+    const progress = window.gamificationSystem.getProgressSummary();
+    
+    // Update stats
+    document.getElementById('videos-watched').textContent = progress.videosWatched;
+    document.getElementById('courses-completed').textContent = progress.coursesCompleted;
+    document.getElementById('achievements-earned').textContent = `${progress.achievements}/${progress.totalAchievements}`;
+    
+    // Update level progress
+    const xpForNextLevel = progress.level * 100;
+    const currentXP = window.gamificationSystem.userStats.experiencePoints;
+    const progressPercent = (currentXP / xpForNextLevel) * 100;
+    
+    document.getElementById('level-progress').style.width = `${progressPercent}%`;
+    document.getElementById('current-xp').textContent = `${currentXP} XP`;
+    document.getElementById('next-level-xp').textContent = `${xpForNextLevel} XP`;
+    document.getElementById('longest-streak').textContent = progress.longestStreak;
+    
+    // Populate achievements
+    populateAchievements();
+    
+    // Populate streak calendar
+    populateStreakCalendar();
+  }
+  
+  function populateAchievements() {
+    const container = document.getElementById('achievements-container');
+    const definitions = window.gamificationSystem.getAchievementDefinitions();
+    const earned = window.gamificationSystem.achievements;
+    
+    container.innerHTML = '';
+    
+    Object.values(definitions).forEach(achievement => {
+      const isEarned = earned.includes(achievement.id);
+      const card = document.createElement('div');
+      card.className = `achievement-card ${isEarned ? 'earned' : 'locked'}`;
+      
+      card.innerHTML = `
+        <span class="achievement-card-icon">${achievement.icon}</span>
+        <div class="achievement-card-name">${achievement.name}</div>
+        <div class="achievement-card-description">${achievement.description}</div>
+        <div class="achievement-card-points">${achievement.points} points</div>
+      `;
+      
+      container.appendChild(card);
+    });
+  }
+  
+  function populateStreakCalendar() {
+    const calendar = document.getElementById('streak-calendar');
+    const streakDates = window.gamificationSystem.streakData.streakDates || [];
+    
+    // Generate last 35 days (5 weeks)
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 34);
+    
+    calendar.innerHTML = '';
+    
+    for (let i = 0; i < 35; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      
+      const dateString = date.toDateString();
+      const hasActivity = streakDates.includes(dateString);
+      
+      const dayElement = document.createElement('div');
+      dayElement.className = `w-8 h-8 rounded-sm flex items-center justify-center text-xs ${
+        hasActivity 
+          ? 'bg-green-500 text-white' 
+          : 'bg-gray-100 text-gray-400'
+      }`;
+      dayElement.textContent = date.getDate();
+      
+      calendar.appendChild(dayElement);
+    }
+  }
+});
+</script>
 
 <%- include('partials/footer') %>
