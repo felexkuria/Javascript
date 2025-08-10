@@ -2122,7 +2122,7 @@
       "section": null,
       "chapter": "1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)",
       "watched": true,
-      "watchedAt": "2025-08-10T19:30:09.826Z",
+      "watchedAt": "2025-08-10T21:23:18.114Z",
       "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)/5. How to Import Media from within the Cut Page.mp4",
       "thumbnailUrl": "/thumbnails/6887b83b19426345689539a1.jpg"
     },
@@ -2133,7 +2133,7 @@
       "section": null,
       "chapter": "1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)",
       "watched": true,
-      "watchedAt": "2025-08-10T19:33:56.619Z",
+      "watchedAt": "2025-08-10T21:31:10.718Z",
       "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)/6. How to Preview Your Media.mp4",
       "thumbnailUrl": "/thumbnails/6887b83b19426345689539a2.jpg"
     },
@@ -6628,7 +6628,7 @@
       "section": null,
       "chapter": "[TutsNode.com] - DevOps Bootcamp",
       "watched": true,
-      "watchedAt": "2025-08-10T20:15:11.258Z",
+      "watchedAt": "2025-08-10T21:21:00.334Z",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson3.mp4",
       "thumbnailUrl": "/thumbnails/6887b8811942634568953b9f.jpg"
     },
@@ -6664,6 +6664,17 @@
       "watchedAt": "2025-08-10T18:49:26.505Z",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson6.mp4",
       "thumbnailUrl": "/thumbnails/6887b8811942634568953bc0.jpg"
+    },
+    {
+      "_id": "6887b8811942634568953bd6",
+      "title": "lesson8",
+      "description": "Description for lesson8.mp4",
+      "section": null,
+      "chapter": "[TutsNode.com] - DevOps Bootcamp",
+      "watched": true,
+      "watchedAt": "2025-08-10T20:50:55.430Z",
+      "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson8.mp4",
+      "thumbnailUrl": "/thumbnails/6887b8811942634568953bd6.jpg"
     }
   ],
   "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]": [
@@ -14963,6 +14974,17 @@
       "watchedAt": "2025-08-10T20:24:05.620Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/1. Introduction/4. Meet your instructor.mp4",
       "thumbnailUrl": "/thumbnails/6887b7961942634568953665.jpg"
+    },
+    {
+      "_id": "6887b79619426345689536db",
+      "title": "13. Virtual Private Cloud Overview",
+      "description": "Description for 13. Virtual Private Cloud Overview.mp4",
+      "section": null,
+      "chapter": "2. Getting Started",
+      "watched": true,
+      "watchedAt": "2025-08-10T21:13:11.748Z",
+      "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/2. Getting Started/13. Virtual Private Cloud Overview.mp4",
+      "thumbnailUrl": "/thumbnails/6887b79619426345689536db.jpg"
     }
   ]
 }

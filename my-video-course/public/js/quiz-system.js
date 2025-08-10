@@ -350,17 +350,13 @@ class QuizSystem {
     // Add click handlers for options
     optionsContainer.addEventListener('change', () => {
       document.getElementById('quiz-next').disabled = false;
-      if (currentIndex === questions.length - 1) {
-        document.getElementById('quiz-submit').style.display = 'inline-block';
-        document.getElementById('quiz-next').style.display = 'none';
-      }
     });
 
     // Update navigation buttons
     document.getElementById('quiz-prev').disabled = currentIndex === 0;
     document.getElementById('quiz-next').disabled = true;
     document.getElementById('quiz-next').style.display = currentIndex === questions.length - 1 ? 'none' : 'inline-block';
-    document.getElementById('quiz-submit').style.display = currentIndex === questions.length - 1 ? 'none' : 'none';
+    document.getElementById('quiz-submit').style.display = currentIndex === questions.length - 1 ? 'inline-block' : 'none';
 
     // Hide explanation
     document.getElementById('quiz-explanation').style.display = 'none';
@@ -509,6 +505,7 @@ class QuizSystem {
         </div>
         <div class="quiz-results-actions">
           <button class="quiz-btn quiz-btn-primary" onclick="quizSystem.retakeQuiz()">Retake Quiz</button>
+          ${percentage < 80 ? '<button class="quiz-btn quiz-btn-warning" onclick="quizSystem.showReview()">Review Mistakes</button>' : ''}
           <button class="quiz-btn quiz-btn-secondary" onclick="quizSystem.closeQuiz()">Close</button>
         </div>
       </div>
@@ -544,16 +541,25 @@ class QuizSystem {
 
   // Save quiz completion data
   saveQuizCompletion(topic, score, percentage, timeTaken) {
-    const completions = JSON.parse(localStorage.getItem('quiz_completions') || '[]');
-    completions.push({
+    const completion = {
       topic,
       score,
       percentage,
       timeTaken,
       date: new Date().toISOString(),
-      questions: this.currentQuiz.questions.length
-    });
+      questions: this.currentQuiz.questions.length,
+      userAnswers: this.currentQuiz.userAnswers,
+      correctAnswers: this.currentQuiz.questions.map(q => q.correct)
+    };
+    
+    const completions = JSON.parse(localStorage.getItem('quiz_completions') || '[]');
+    completions.push(completion);
     localStorage.setItem('quiz_completions', JSON.stringify(completions));
+    
+    // Store latest result for this video
+    const videoResults = JSON.parse(localStorage.getItem('video_quiz_results') || '{}');
+    videoResults[topic] = completion;
+    localStorage.setItem('video_quiz_results', JSON.stringify(videoResults));
   }
 
   // Utility function to shuffle array
@@ -564,6 +570,53 @@ class QuizSystem {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+  }
+  
+  // Show review of incorrect answers
+  showReview() {
+    const resultsContainer = document.getElementById('quiz-results');
+    const incorrectAnswers = [];
+    
+    this.currentQuiz.questions.forEach((question, index) => {
+      const userAnswer = this.currentQuiz.userAnswers[index];
+      if (userAnswer !== question.correct) {
+        incorrectAnswers.push({
+          question: question.question,
+          userAnswer: question.options[userAnswer] || 'No answer',
+          correctAnswer: question.options[question.correct],
+          explanation: question.explanation
+        });
+      }
+    });
+    
+    let reviewHTML = `
+      <div class="quiz-review-content">
+        <h2>📚 Review Your Mistakes</h2>
+        <div class="review-items">
+    `;
+    
+    incorrectAnswers.forEach((item, index) => {
+      reviewHTML += `
+        <div class="review-item">
+          <h4>Question ${index + 1}:</h4>
+          <p class="review-question">${item.question}</p>
+          <p class="review-wrong">❌ Your answer: ${item.userAnswer}</p>
+          <p class="review-correct">✅ Correct answer: ${item.correctAnswer}</p>
+          <p class="review-explanation">💡 ${item.explanation}</p>
+        </div>
+      `;
+    });
+    
+    reviewHTML += `
+        </div>
+        <div class="review-actions">
+          <button class="quiz-btn quiz-btn-primary" onclick="quizSystem.retakeQuiz()">Retake Quiz</button>
+          <button class="quiz-btn quiz-btn-secondary" onclick="quizSystem.closeQuiz()">Close</button>
+        </div>
+      </div>
+    `;
+    
+    resultsContainer.innerHTML = reviewHTML;
   }
 
   // Get quiz statistics

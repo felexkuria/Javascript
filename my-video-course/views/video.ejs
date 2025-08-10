@@ -585,21 +585,16 @@ ${courseName}`, extraStyles: `
       videoPlayer.addEventListener('ended', function() {
         markVideoAsWatched();
         
-        // Trigger quiz opportunity (30% chance)
-        if (Math.random() < 0.3 && window.quizSystem) {
-          setTimeout(() => {
-            if (confirm('🎯 Want to test what you learned? Take a quick quiz!')) {
-              window.quizSystem.startQuiz('general');
-            } else {
-              navigateToNextVideo();
-            }
-          }, 1000);
-        } else {
-          // Always navigate to next video when current one ends
-          setTimeout(() => {
-            navigateToNextVideo();
-          }, 500);
-        }
+        // Always navigate to next video when current one ends
+        setTimeout(() => {
+          const isLastVideo = <%= isLastVideo ? 'true' : 'false' %>;
+          const nextVideoId = '<%= typeof nextVideoId !== "undefined" ? nextVideoId : "" %>';
+          
+          if (!isLastVideo && nextVideoId) {
+            const safeCourseName = encodeURIComponent(courseName);
+            window.location.href = `/videos/${safeCourseName}/${nextVideoId}?autoplay=true`;
+          }
+        }, 500);
       });
 
       // Mark video as watched when 90% is watched and trigger quiz
@@ -678,7 +673,7 @@ ${courseName}`, extraStyles: `
           console.log(`Determined quiz type: ${quizType}`);
           
           // Show loading state
-          quickQuizBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Generating Quiz...';
+          quickQuizBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> AI Generating Quiz...';
           quickQuizBtn.disabled = true;
           
           // Check if online before trying API
@@ -686,7 +681,7 @@ ${courseName}`, extraStyles: `
             try {
               const quizUrl = `/api/quiz/generate/${encodeURIComponent(courseName)}/${videoId}`;
               const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 5000);
+              const timeoutId = setTimeout(() => controller.abort(), 15000);
               
               const response = await fetch(quizUrl, { signal: controller.signal });
               clearTimeout(timeoutId);
@@ -697,6 +692,13 @@ ${courseName}`, extraStyles: `
                   window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
                   quickQuizBtn.innerHTML = 'Take Quick Quiz';
                   quickQuizBtn.disabled = false;
+                  return;
+                } else {
+                  // Auto-retry after 3 seconds
+                  quickQuizBtn.innerHTML = '⏳ AI Generating... Please wait';
+                  setTimeout(() => {
+                    quickQuizBtn.click();
+                  }, 3000);
                   return;
                 }
               }

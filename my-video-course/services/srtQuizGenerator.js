@@ -12,8 +12,23 @@ class SRTQuizGenerator {
     const videoName = path.basename(videoPath, path.extname(videoPath));
     const srtPath = path.join(videoDir, `${videoName}.srt`);
     
+    // Check if SRT already exists
     if (fs.existsSync(srtPath)) {
+      console.log(`Found existing SRT: ${srtPath}`);
       return srtPath;
+    }
+    
+    // Also check for SRT files in the same directory with similar names
+    try {
+      const files = fs.readdirSync(videoDir);
+      const srtFiles = files.filter(file => file.endsWith('.srt'));
+      if (srtFiles.length > 0) {
+        const matchingSrt = path.join(videoDir, srtFiles[0]);
+        console.log(`Found existing SRT file: ${matchingSrt}`);
+        return matchingSrt;
+      }
+    } catch (error) {
+      console.warn('Error checking for existing SRT files:', error.message);
     }
     
     console.log(`Generating SRT for ${videoPath}`);
@@ -124,38 +139,117 @@ class SRTQuizGenerator {
     try {
       return await this.generateAIQuestions(srtEntries, videoTitle);
     } catch (error) {
-      console.warn('AI generation failed, using fallback:', error.message);
-      return this.generateFallbackQuestions(srtEntries, videoTitle);
+      console.error('AI generation failed:', error.message);
+      throw error; // Don't fall back to old questions
     }
   }
   
   // Generate questions using Google Gemini AI
   async generateAIQuestions(srtEntries, videoTitle) {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const content = srtEntries.slice(0, 10).map(e => e.text).join(' ').substring(0, 2000);
+    // Check if quiz already exists in MongoDB
+    try {
+      const existingQuiz = await this.getStoredQuiz(videoTitle);
+      if (existingQuiz) {
+        console.log('Using cached quiz for:', videoTitle);
+        return existingQuiz.questions;
+      }
+    } catch (error) {
+      console.warn('Failed to check existing quiz:', error.message);
+    }
     
-    const prompt = `Create 5 unique quiz questions from this video transcript. Video title: "${videoTitle}"
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const content = srtEntries.slice(0, 15).map(e => e.text).join(' ').substring(0, 3000);
+    
+    const prompt = `You are a teacher creating quiz questions for active recall learning. Based on this video content, create 5 practical questions that test student understanding.
 
-Transcript: "${content}"
+Video: "${videoTitle}"
+Content: "${content}"
 
-Return ONLY valid JSON array with this exact format:
+Create questions that:
+- Test key concepts from the video
+- Use active recall method
+- Are specific to this video's content
+- Have realistic wrong answers
+
+Return ONLY this JSON format:
 [{
-  "id": "ai_q1",
-  "question": "Question text?",
-  "options": ["Correct answer", "Wrong 1", "Wrong 2", "Wrong 3"],
+  "question": "What specific technique was demonstrated?",
+  "options": ["Correct from video", "Plausible wrong", "Another wrong", "Third wrong"],
   "correct": 0,
-  "explanation": "Explanation text"
+  "explanation": "Brief explanation"
 }]`;
     
     const result = await model.generateContent(prompt);
     const response = result.response.text();
     
-    // Clean and parse JSON
     const jsonMatch = response.match(/\[.*\]/s);
     if (!jsonMatch) throw new Error('No JSON found in response');
     
     const questions = JSON.parse(jsonMatch[0]);
-    return questions.map((q, i) => ({ ...q, id: `ai_${this.hashString(videoTitle)}_${i}` }));
+    const finalQuestions = questions.map((q, i) => ({ ...q, id: `ai_${this.hashString(videoTitle)}_${i}` }));
+    
+    // Store quiz in MongoDB
+    try {
+      await this.storeQuiz(videoTitle, finalQuestions);
+    } catch (error) {
+      console.warn('Failed to store quiz:', error.message);
+    }
+    
+    return finalQuestions;
+  }
+  
+  // Store quiz in localStorage and sync with MongoDB
+  storeQuiz(videoTitle, questions) {
+    const quizData = JSON.parse(localStorage.getItem('video_quizzes') || '{}');
+    const quizEntry = {
+      questions,
+      createdAt: new Date().toISOString()
+    };
+    quizData[videoTitle] = quizEntry;
+    localStorage.setItem('video_quizzes', JSON.stringify(quizData));
+    
+    // Sync with MongoDB
+    this.syncQuizToMongoDB(videoTitle, quizEntry);
+  }
+  
+  // Sync quiz to MongoDB
+  async syncQuizToMongoDB(videoTitle, quizEntry) {
+    try {
+      await fetch('/api/quiz/store', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoTitle, ...quizEntry })
+      });
+    } catch (error) {
+      console.warn('Failed to sync quiz to MongoDB:', error);
+    }
+  }
+  
+  // Get stored quiz from localStorage or MongoDB
+  async getStoredQuiz(videoTitle) {
+    // Check localStorage first
+    const quizData = JSON.parse(localStorage.getItem('video_quizzes') || '{}');
+    if (quizData[videoTitle]) {
+      return quizData[videoTitle];
+    }
+    
+    // Fallback to MongoDB
+    try {
+      const response = await fetch(`/api/quiz/get/${encodeURIComponent(videoTitle)}`);
+      if (response.ok) {
+        const quiz = await response.json();
+        if (quiz) {
+          // Store in localStorage for future use
+          quizData[videoTitle] = quiz;
+          localStorage.setItem('video_quizzes', JSON.stringify(quizData));
+          return quiz;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to fetch quiz from MongoDB:', error);
+    }
+    
+    return null;
   }
   
   // Fallback to hash-based questions
@@ -344,50 +438,6 @@ Return ONLY valid JSON array with this exact format:
       }
     }
     
-    while (selected.length < count && selected.length < entries.length) {
-      for (const entry of entries) {
-        if (!selected.find(sel => sel.text === entry.text)) {
-          selected.push(entry);
-          if (selected.length >= count) break;
-        }
-      }
-      break;
-    }
-    
-    return selected;
-  }(word.toLowerCase())
-    );
-    return meaningfulWords.slice(0, 2).join(' ');
-  }
-  
-  // Hash string to create consistent unique identifiers
-  hashString(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash).toString(36);
-  }
-  
-  // Select unique entries based on video hash for consistent question generation
-  selectUniqueEntries(entries, videoHash, count) {
-    if (entries.length <= count) return entries;
-    
-    // Use hash to create deterministic selection
-    const hashNum = parseInt(videoHash, 36);
-    const selected = [];
-    const step = Math.floor(entries.length / count);
-    
-    for (let i = 0; i < count; i++) {
-      const index = (hashNum + i * step) % entries.length;
-      if (!selected.find(entry => entry.text === entries[index].text)) {
-        selected.push(entries[index]);
-      }
-    }
-    
-    // Fill remaining slots if duplicates were skipped
     while (selected.length < count && selected.length < entries.length) {
       for (const entry of entries) {
         if (!selected.find(sel => sel.text === entry.text)) {

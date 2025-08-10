@@ -1406,6 +1406,49 @@ app.get('/api/gamification/load', async (req, res) => {
   }
 });
 
+// API endpoints for quiz storage
+app.post('/api/quiz/store', async (req, res) => {
+  try {
+    const { videoTitle, questions, createdAt } = req.body;
+    
+    if (mongoose.connection.readyState) {
+      const collection = mongoose.connection.collection('video_quizzes');
+      await collection.updateOne(
+        { videoTitle },
+        { $set: { videoTitle, questions, createdAt, updatedAt: new Date() } },
+        { upsert: true }
+      );
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error storing quiz:', error);
+    res.status(500).json({ error: 'Failed to store quiz' });
+  }
+});
+
+app.get('/api/quiz/get/:videoTitle', async (req, res) => {
+  try {
+    const videoTitle = decodeURIComponent(req.params.videoTitle);
+    
+    if (mongoose.connection.readyState) {
+      const collection = mongoose.connection.collection('video_quizzes');
+      const quiz = await collection.findOne({ videoTitle });
+      
+      if (quiz) {
+        res.json({ questions: quiz.questions, createdAt: quiz.createdAt });
+      } else {
+        res.json(null);
+      }
+    } else {
+      res.json(null);
+    }
+  } catch (error) {
+    console.error('Error getting quiz:', error);
+    res.status(500).json({ error: 'Failed to get quiz' });
+  }
+});
+
 // API endpoint to force sync a specific video
 app.post('/api/force-sync-video', async (req, res) => {
   try {
@@ -1669,7 +1712,8 @@ const preGeneratedQuizService = require('./services/preGeneratedQuizzes');
 // API endpoint to generate quiz from video SRT or pre-generated
 app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
   try {
-    const { courseName, videoId } = req.params;
+    const courseName = decodeURIComponent(req.params.courseName);
+    const videoId = req.params.videoId;
     console.log(`Quiz generation requested for course: ${courseName}, video: ${videoId}`);
     
     const video = await videoService.getVideoById(courseName, videoId);
@@ -1689,14 +1733,18 @@ app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
         
         if (fs.existsSync(videoPath)) {
           console.log('Video file exists, attempting SRT generation...');
-          const srtPath = await srtQuizGenerator.generateSRT(videoPath);
-          const srtEntries = srtQuizGenerator.parseSRT(srtPath);
-          
-          if (srtEntries && srtEntries.length > 3) {
-            questions = await srtQuizGenerator.generateQuestions(srtEntries, video.title);
-            console.log(`Generated ${questions.length} AI-powered questions`);
-          } else {
-            console.log('SRT entries too few or empty');
+          try {
+            const srtPath = await srtQuizGenerator.generateSRT(videoPath);
+            const srtEntries = srtQuizGenerator.parseSRT(srtPath);
+            
+            if (srtEntries && srtEntries.length > 3) {
+              questions = await srtQuizGenerator.generateQuestions(srtEntries, video.title);
+              console.log(`Generated ${questions.length} AI-powered questions`);
+            } else {
+              console.log('SRT entries too few or empty');
+            }
+          } catch (srtGenError) {
+            console.error('SRT generation error:', srtGenError.message);
           }
         } else {
           console.log('Video file does not exist on disk');
@@ -1708,15 +1756,14 @@ app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
       console.warn('SRT quiz generation failed:', srtError.message);
     }
     
-    // Fallback to pre-generated quiz if SRT failed or no content
+    // Only use AI-generated questions, no fallback
     if (questions.length === 0) {
-      console.log('Using pre-generated quiz as fallback');
-      questions = preGeneratedQuizService.getQuizForVideo(video.title, courseName);
-      console.log(`Generated ${questions.length} pre-generated questions`);
+      console.log('No AI questions generated, returning empty');
+      return res.json({ questions: [], videoTitle: video.title, quizType: 'none' });
     }
     
-    const quizType = questions.length > 0 && questions[0].id.startsWith('srt') ? 'srt' : 'pregenerated';
-    console.log(`Returning ${questions.length} questions of type: ${quizType}`);
+    const quizType = questions.length > 0 && questions[0].id.startsWith('ai') ? 'ai' : 'unknown';
+    console.log(`Returning ${questions.length} AI questions`);
     
     res.json({ 
       questions, 
