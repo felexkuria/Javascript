@@ -1194,6 +1194,20 @@ app.post('/api/mark-watched', async (req, res) => {
     }
 
     videoService.saveLocalStorage(localStorage);
+    
+    // Update MongoDB if connected
+    if (mongoose.connection.readyState) {
+      try {
+        const courseCollection = mongoose.connection.collection(courseName);
+        await courseCollection.updateOne(
+          { _id: new ObjectId(videoId) },
+          { $set: { watched: true, watchedAt: new Date() } }
+        );
+      } catch (dbErr) {
+        console.error('Error updating MongoDB:', dbErr);
+      }
+    }
+    
     console.log(`Successfully marked video ${videoId} as watched in course ${courseName}`);
     res.status(200).json({ success: true });
   } catch (err) {
@@ -1292,6 +1306,76 @@ app.get('/api/connection-status', (req, res) => {
     online: !isOfflineMode,
     mongoConnected: mongoose.connection.readyState === 1
   });
+});
+
+// API endpoint to get localStorage video data
+app.get('/api/videos/localStorage', (req, res) => {
+  try {
+    const localStorage = videoService.getLocalStorage();
+    res.json(localStorage);
+  } catch (error) {
+    console.error('Error getting localStorage data:', error);
+    res.status(500).json({ error: 'Failed to get localStorage data' });
+  }
+});
+
+// API endpoint to get localStorage video data
+app.get('/api/videos/localStorage', (req, res) => {
+  try {
+    const localStorage = videoService.getLocalStorage();
+    res.json(localStorage);
+  } catch (error) {
+    console.error('Error getting localStorage data:', error);
+    res.status(500).json({ error: 'Failed to get localStorage data' });
+  }
+});
+
+// Gamification API endpoints
+app.post('/api/gamification/sync', async (req, res) => {
+  try {
+    const { achievements, userStats, streakData } = req.body;
+    const userId = 'default_user'; // In a real app, get from session/auth
+    
+    if (mongoose.connection.readyState) {
+      const collection = mongoose.connection.collection('gamification');
+      await collection.updateOne(
+        { userId },
+        { $set: { achievements, userStats, streakData, updatedAt: new Date() } },
+        { upsert: true }
+      );
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error syncing gamification data:', error);
+    res.status(500).json({ error: 'Failed to sync gamification data' });
+  }
+});
+
+app.get('/api/gamification/load', async (req, res) => {
+  try {
+    const userId = 'default_user';
+    
+    if (mongoose.connection.readyState) {
+      const collection = mongoose.connection.collection('gamification');
+      const data = await collection.findOne({ userId });
+      
+      if (data) {
+        res.json({
+          achievements: data.achievements || [],
+          userStats: data.userStats || {},
+          streakData: data.streakData || {}
+        });
+      } else {
+        res.json({});
+      }
+    } else {
+      res.json({});
+    }
+  } catch (error) {
+    console.error('Error loading gamification data:', error);
+    res.status(500).json({ error: 'Failed to load gamification data' });
+  }
 });
 
 // API endpoint to force sync a specific video
@@ -1545,6 +1629,40 @@ app.get('/download-srt/:filename', (req, res) => {
     res.download(filePath, filename);
   } else {
     res.status(404).send('SRT file not found');
+  }
+});
+
+// Import SRT quiz generator
+const srtQuizGenerator = require('./services/srtQuizGenerator');
+
+// API endpoint to generate quiz from video SRT
+app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
+  try {
+    const { courseName, videoId } = req.params;
+    
+    const video = await videoService.getVideoById(courseName, videoId);
+    if (!video) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+    
+    const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
+    if (!fs.existsSync(videoPath)) {
+      return res.status(404).json({ error: 'Video file not found' });
+    }
+    
+    const srtPath = await srtQuizGenerator.generateSRT(videoPath);
+    const srtContent = srtQuizGenerator.parseSRT(srtPath);
+    
+    if (!srtContent) {
+      return res.status(400).json({ error: 'Could not generate captions for quiz' });
+    }
+    
+    const questions = srtQuizGenerator.generateQuestions(srtContent, video.title);
+    
+    res.json({ questions, videoTitle: video.title });
+  } catch (error) {
+    console.error('Error generating quiz:', error);
+    res.status(500).json({ error: 'Failed to generate quiz' });
   }
 });
 

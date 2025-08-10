@@ -438,6 +438,11 @@ ${courseName}`, extraStyles: `
           });
           
           window.gamificationSystem.incrementDailyVideoCount();
+          
+          // Sync with localStorage after marking as watched
+          setTimeout(() => {
+            window.gamificationSystem.syncWithLocalStorageVideos();
+          }, 500);
         }
       })
       .catch(error => {
@@ -585,12 +590,34 @@ ${courseName}`, extraStyles: `
         }
       });
 
-      // Mark video as watched when 90% is watched
+      // Mark video as watched when 90% is watched and trigger quiz
+      let quizTriggered = false;
       videoPlayer.addEventListener('timeupdate', function() {
         if (videoPlayer.currentTime > videoPlayer.duration * 0.9) {
           markVideoAsWatched();
+          
+          // Trigger SRT-based quiz at 90%
+          if (!quizTriggered && window.quizSystem) {
+            quizTriggered = true;
+            generateSRTQuiz();
+          }
         }
       });
+      
+      // Generate quiz from SRT content
+      async function generateSRTQuiz() {
+        try {
+          const response = await fetch(`/api/quiz/generate/${encodeURIComponent(courseName)}/${videoId}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.questions && data.questions.length > 0) {
+              window.quizSystem.startQuiz('srt', data.questions);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to generate SRT quiz:', error);
+        }
+      }
     }
   });
 </script>

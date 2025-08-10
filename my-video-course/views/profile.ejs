@@ -73,7 +73,22 @@
 
     <!-- Learning Streak Calendar -->
     <div class="bg-white rounded-xl shadow-lg p-6">
-      <h2 class="text-2xl font-semibold text-gray-800 mb-6">Learning Streak</h2>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-semibold text-gray-800">Learning Streak</h2>
+        <div class="flex items-center gap-2">
+          <button id="prev-month" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <span id="calendar-month" class="font-medium text-gray-700 min-w-[120px] text-center"></span>
+          <button id="next-month" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
       <div class="grid grid-cols-7 gap-2 mb-4">
         <div class="text-center text-sm font-medium text-gray-600 py-2">Sun</div>
         <div class="text-center text-sm font-medium text-gray-600 py-2">Mon</div>
@@ -98,29 +113,71 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // Wait for gamification system to initialize
-  setTimeout(() => {
+  let retryCount = 0;
+  const maxRetries = 10;
+  
+  function tryUpdateProfile() {
     if (window.gamificationSystem) {
       updateProfileDisplay();
+    } else if (retryCount < maxRetries) {
+      retryCount++;
+      setTimeout(tryUpdateProfile, 500);
+    } else {
+      console.error('Gamification system failed to load after', maxRetries, 'attempts');
+      // Show fallback data
+      showFallbackData();
     }
-  }, 100);
+  }
+  
+  function showFallbackData() {
+    const elements = {
+      'videos-watched': '0',
+      'courses-completed': '0', 
+      'achievements-earned': '0/8',
+      'current-xp': '0 XP',
+      'next-level-xp': '100 XP',
+      'longest-streak': '0'
+    };
+    
+    Object.entries(elements).forEach(([id, value]) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    });
+  }
+  
+  tryUpdateProfile();
   
   function updateProfileDisplay() {
+    if (!window.gamificationSystem) {
+      console.warn('Gamification system not loaded yet');
+      return;
+    }
+    
     const progress = window.gamificationSystem.getProgressSummary();
     
-    // Update stats
-    document.getElementById('videos-watched').textContent = progress.videosWatched;
-    document.getElementById('courses-completed').textContent = progress.coursesCompleted;
-    document.getElementById('achievements-earned').textContent = `${progress.achievements}/${progress.totalAchievements}`;
+    // Update stats with null checks
+    const videosWatchedEl = document.getElementById('videos-watched');
+    const coursesCompletedEl = document.getElementById('courses-completed');
+    const achievementsEarnedEl = document.getElementById('achievements-earned');
+    
+    if (videosWatchedEl) videosWatchedEl.textContent = progress.videosWatched || 0;
+    if (coursesCompletedEl) coursesCompletedEl.textContent = progress.coursesCompleted || 0;
+    if (achievementsEarnedEl) achievementsEarnedEl.textContent = `${progress.achievements || 0}/${progress.totalAchievements || 0}`;
     
     // Update level progress
-    const xpForNextLevel = progress.level * 100;
-    const currentXP = window.gamificationSystem.userStats.experiencePoints;
+    const xpForNextLevel = (progress.level || 1) * 100;
+    const currentXP = window.gamificationSystem.userStats?.experiencePoints || 0;
     const progressPercent = (currentXP / xpForNextLevel) * 100;
     
-    document.getElementById('level-progress').style.width = `${progressPercent}%`;
-    document.getElementById('current-xp').textContent = `${currentXP} XP`;
-    document.getElementById('next-level-xp').textContent = `${xpForNextLevel} XP`;
-    document.getElementById('longest-streak').textContent = progress.longestStreak;
+    const levelProgressEl = document.getElementById('level-progress');
+    const currentXpEl = document.getElementById('current-xp');
+    const nextLevelXpEl = document.getElementById('next-level-xp');
+    const longestStreakEl = document.getElementById('longest-streak');
+    
+    if (levelProgressEl) levelProgressEl.style.width = `${progressPercent}%`;
+    if (currentXpEl) currentXpEl.textContent = `${currentXP} XP`;
+    if (nextLevelXpEl) nextLevelXpEl.textContent = `${xpForNextLevel} XP`;
+    if (longestStreakEl) longestStreakEl.textContent = progress.longestStreak || 0;
     
     // Populate achievements
     populateAchievements();
@@ -131,8 +188,10 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function populateAchievements() {
     const container = document.getElementById('achievements-container');
+    if (!container || !window.gamificationSystem) return;
+    
     const definitions = window.gamificationSystem.getAchievementDefinitions();
-    const earned = window.gamificationSystem.achievements;
+    const earned = window.gamificationSystem.achievements || [];
     
     container.innerHTML = '';
     
@@ -152,35 +211,70 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
+  let currentCalendarDate = new Date();
+  
   function populateStreakCalendar() {
     const calendar = document.getElementById('streak-calendar');
-    const streakDates = window.gamificationSystem.streakData.streakDates || [];
+    const monthLabel = document.getElementById('calendar-month');
     
-    // Generate last 35 days (5 weeks)
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - 34);
+    if (!calendar || !monthLabel || !window.gamificationSystem) return;
+    
+    const streakDates = window.gamificationSystem.streakData?.streakDates || [];
+    
+    // Set month label
+    monthLabel.textContent = currentCalendarDate.toLocaleDateString('en-US', { 
+      month: 'long', 
+      year: 'numeric' 
+    });
+    
+    // Get first day of month and number of days
+    const firstDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
+    const lastDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
     
     calendar.innerHTML = '';
     
-    for (let i = 0; i < 35; i++) {
+    // Generate 42 days (6 weeks)
+    for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       
-      const dateString = date.toDateString();
+      const dateString = date.toISOString().split('T')[0];
       const hasActivity = streakDates.includes(dateString);
+      const isCurrentMonth = date.getMonth() === currentCalendarDate.getMonth();
+      const isToday = dateString === new Date().toISOString().split('T')[0];
       
       const dayElement = document.createElement('div');
-      dayElement.className = `w-8 h-8 rounded-sm flex items-center justify-center text-xs ${
+      dayElement.className = `w-8 h-8 rounded-sm flex items-center justify-center text-xs transition-colors ${
         hasActivity 
           ? 'bg-green-500 text-white' 
-          : 'bg-gray-100 text-gray-400'
+          : isCurrentMonth 
+            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+            : 'bg-gray-50 text-gray-400'
+      } ${
+        isToday ? 'ring-2 ring-blue-500' : ''
       }`;
       dayElement.textContent = date.getDate();
+      
+      if (hasActivity) {
+        dayElement.title = `Learning activity on ${date.toLocaleDateString()}`;
+      }
       
       calendar.appendChild(dayElement);
     }
   }
+  
+  // Calendar navigation
+  document.getElementById('prev-month').addEventListener('click', () => {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+    populateStreakCalendar();
+  });
+  
+  document.getElementById('next-month').addEventListener('click', () => {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+    populateStreakCalendar();
+  });
 });
 </script>
 

@@ -81,8 +81,13 @@ class GamificationSystem {
   initializeSystem() {
     this.createFloatingPointsContainer();
     this.createAchievementNotification();
-    this.updateProgressDisplay();
-    this.checkTimeBasedAchievements();
+    this.loadFromMongoDB().then(() => {
+      this.updateProgressDisplay();
+      this.checkTimeBasedAchievements();
+    });
+    
+    // Also sync immediately with localStorage
+    setTimeout(() => this.syncWithLocalStorageVideos(), 1000);
   }
 
   // Load user achievements from localStorage
@@ -128,6 +133,79 @@ class GamificationSystem {
   // Save streak data
   saveStreakData() {
     localStorage.setItem('learning_streak', JSON.stringify(this.streakData));
+  }
+
+  // Sync gamification data with MongoDB
+  async syncWithMongoDB() {
+    try {
+      const response = await fetch('/api/gamification/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          achievements: this.achievements,
+          userStats: this.userStats,
+          streakData: this.streakData
+        })
+      });
+      if (response.ok) {
+        console.log('Gamification data synced with MongoDB');
+      }
+    } catch (error) {
+      console.warn('Failed to sync gamification data:', error);
+    }
+  }
+
+  // Load gamification data from MongoDB
+  async loadFromMongoDB() {
+    try {
+      const response = await fetch('/api/gamification/load');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.achievements) this.achievements = data.achievements;
+        if (data.userStats) this.userStats = data.userStats;
+        if (data.streakData) this.streakData = data.streakData;
+        
+        // Sync with localStorage video data
+        await this.syncWithLocalStorageVideos();
+        this.updateProgressDisplay();
+      }
+    } catch (error) {
+      console.warn('Failed to load gamification data from MongoDB:', error);
+    }
+  }
+
+  // Sync gamification stats with localStorage video data
+  async syncWithLocalStorageVideos() {
+    try {
+      const response = await fetch('/api/videos/localStorage');
+      if (response.ok) {
+        const localStorageData = await response.json();
+        let totalWatchedVideos = 0;
+        let coursesCompleted = 0;
+        
+        // Count watched videos across all courses
+        Object.keys(localStorageData).forEach(courseName => {
+          const videos = localStorageData[courseName] || [];
+          const watchedInCourse = videos.filter(v => v && v.watched).length;
+          totalWatchedVideos += watchedInCourse;
+          
+          // Check if course is completed (all videos watched)
+          if (videos.length > 0 && watchedInCourse === videos.length) {
+            coursesCompleted++;
+          }
+        });
+        
+        // Update user stats
+        this.userStats.videosWatched = totalWatchedVideos;
+        this.userStats.coursesCompleted = coursesCompleted;
+        
+        // Save updated stats
+        this.saveUserStats();
+        this.syncWithMongoDB();
+      }
+    } catch (error) {
+      console.warn('Failed to sync with localStorage videos:', error);
+    }
   }
 
   // Award points with visual feedback
@@ -267,14 +345,15 @@ class GamificationSystem {
 
   // Update learning streak
   updateStreak() {
-    const today = new Date().toDateString();
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     const lastActive = this.streakData.lastActiveDate;
     
     if (lastActive !== today) {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
       
-      if (lastActive === yesterday.toDateString()) {
+      if (lastActive === yesterdayStr) {
         // Continue streak
         this.streakData.currentStreak++;
       } else if (lastActive !== today) {
@@ -283,7 +362,9 @@ class GamificationSystem {
       }
       
       this.streakData.lastActiveDate = today;
-      this.streakData.streakDates.push(today);
+      if (!this.streakData.streakDates.includes(today)) {
+        this.streakData.streakDates.push(today);
+      }
       
       // Update longest streak
       if (this.streakData.currentStreak > this.streakData.longestStreak) {
@@ -291,6 +372,7 @@ class GamificationSystem {
       }
       
       this.saveStreakData();
+      this.syncWithMongoDB();
       this.checkAchievement('streak_warrior');
     }
   }

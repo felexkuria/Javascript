@@ -195,6 +195,9 @@ class VideoService {
       }
     }
     
+    // Trigger gamification sync after video watch
+    this.triggerGamificationSync(courseName, videoId);
+    
     // Update localStorage
     const localStorage = this.getLocalStorage();
     if (!localStorage[courseName]) {
@@ -259,6 +262,16 @@ class VideoService {
     }
     
     return success;
+  }
+  
+  // Trigger gamification system sync
+  async triggerGamificationSync(courseName, videoId) {
+    try {
+      // This will be called by the client-side gamification system
+      console.log(`Video watch event for gamification: ${courseName}/${videoId}`);
+    } catch (err) {
+      console.error('Error triggering gamification sync:', err);
+    }
   }
 
   // Sync localStorage with MongoDB when connection is available
