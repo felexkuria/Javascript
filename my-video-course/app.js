@@ -195,7 +195,7 @@ const addVideoFiles = async () => {
           try {
             const videoPath = path.join(videoDir, video.videoUrl);
             const thumbnailUrl = await thumbnailGenerator.generateThumbnail(videoPath, video._id);
-            console.log(`Generated thumbnail for video ${video.title}: ${thumbnailUrl}`);
+            console.log(`Generated  thumbnail for video ${video.title}: ${thumbnailUrl}`);
 
             // Update video document with thumbnail URL
             await courseCollection.updateOne(
@@ -206,7 +206,7 @@ const addVideoFiles = async () => {
             console.error(`Error generating thumbnail for video ${video.title}:`, thumbErr);
           }
         }
-      } else {
+      } else { 
         console.log(`No videos found for course: ${courseFolder}`);
       }
     }

@@ -13485,8 +13485,8 @@
       "description": "Description for 1. Introduction.mp4",
       "section": null,
       "chapter": "4. Elastic Load Balancing and Auto Scaling",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-10T08:22:09.736Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/4. Elastic Load Balancing and Auto Scaling/1. Introduction.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bbc1.jpg"
     },
@@ -13606,8 +13606,8 @@
       "description": "Description for 2. Amazon S3 and IAM Roles Overview.mp4",
       "section": null,
       "chapter": "4. Elastic Load Balancing and Auto Scaling",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-10T08:34:12.612Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/4. Elastic Load Balancing and Auto Scaling/2. Amazon S3 and IAM Roles Overview.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bbcc.jpg"
     },
@@ -13672,8 +13672,8 @@
       "description": "Description for 3. Elastic Load Balancing Concepts.mp4",
       "section": null,
       "chapter": "4. Elastic Load Balancing and Auto Scaling",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-10T08:53:21.695Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/4. Elastic Load Balancing and Auto Scaling/3. Elastic Load Balancing Concepts.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bbd2.jpg"
     },
@@ -13683,8 +13683,8 @@
       "description": "Description for 4. Network Load Balancer.mp4",
       "section": null,
       "chapter": "4. Elastic Load Balancing and Auto Scaling",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-10T10:00:47.484Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/4. Elastic Load Balancing and Auto Scaling/4. Network Load Balancer.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bbd3.jpg"
     },
@@ -13694,8 +13694,8 @@
       "description": "Description for 5. Application Load Balancer - Path-Based Routing.mp4",
       "section": null,
       "chapter": "4. Elastic Load Balancing and Auto Scaling",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-10T10:10:42.435Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/4. Elastic Load Balancing and Auto Scaling/5. Application Load Balancer - Path-Based Routing.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bbd4.jpg"
     },
@@ -13705,8 +13705,8 @@
       "description": "Description for 6. Application Load Balancer - Host-Based Routing.mp4",
       "section": null,
       "chapter": "4. Elastic Load Balancing and Auto Scaling",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-10T10:15:47.555Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/4. Elastic Load Balancing and Auto Scaling/6. Application Load Balancer - Host-Based Routing.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bbd5.jpg"
     },
@@ -13716,8 +13716,8 @@
       "description": "Description for 7. EC2 Auto Scaling Overview.mp4",
       "section": null,
       "chapter": "4. Elastic Load Balancing and Auto Scaling",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-10T10:17:57.305Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/4. Elastic Load Balancing and Auto Scaling/7. EC2 Auto Scaling Overview.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bbd6.jpg"
     },
@@ -13727,8 +13727,8 @@
       "description": "Description for 8. EC2 Auto Scaling Group with ALB.mp4",
       "section": null,
       "chapter": "4. Elastic Load Balancing and Auto Scaling",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-10T10:27:43.710Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/4. Elastic Load Balancing and Auto Scaling/8. EC2 Auto Scaling Group with ALB.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bbd7.jpg"
     },
@@ -14486,8 +14486,8 @@
       "description": "Description for 13. Amazon EFS Overview.mp4",
       "section": null,
       "chapter": "8. Amazon Block and File Storage",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-09T15:34:43.439Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/8. Amazon Block and File Storage/13. Amazon EFS Overview.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bc1c.jpg"
     },
@@ -14497,8 +14497,8 @@
       "description": "Description for 14. Create and mount EFS File System.mp4",
       "section": null,
       "chapter": "8. Amazon Block and File Storage",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-09T15:38:54.212Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/8. Amazon Block and File Storage/14. Create and mount EFS File System.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bc1d.jpg"
     },
@@ -14508,8 +14508,8 @@
       "description": "Description for 15. Amazon FSx for Windows File Server and Lustre.mp4",
       "section": null,
       "chapter": "8. Amazon Block and File Storage",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-09T15:42:49.572Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/8. Amazon Block and File Storage/15. Amazon FSx for Windows File Server and Lustre.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bc1e.jpg"
     },
@@ -14519,8 +14519,8 @@
       "description": "Description for 16. AWS Storage Gateway.mp4",
       "section": null,
       "chapter": "8. Amazon Block and File Storage",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-09T15:46:40.545Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/8. Amazon Block and File Storage/16. AWS Storage Gateway.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bc1f.jpg"
     },
@@ -14530,8 +14530,8 @@
       "description": "Description for 17. Exam Cram - EBS.mp4",
       "section": null,
       "chapter": "8. Amazon Block and File Storage",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-09T15:50:04.930Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/8. Amazon Block and File Storage/17. Exam Cram - EBS.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bc20.jpg"
     },
@@ -14563,8 +14563,8 @@
       "description": "Description for 2. EBS and EFS Overview.mp4",
       "section": null,
       "chapter": "8. Amazon Block and File Storage",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-09T15:23:07.382Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/8. Amazon Block and File Storage/2. EBS and EFS Overview.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bc23.jpg"
     },
@@ -14574,8 +14574,8 @@
       "description": "Description for 3. EBS vs Instance Store.mp4",
       "section": null,
       "chapter": "8. Amazon Block and File Storage",
-      "watched": false,
-      "watchedAt": null,
+      "watched": true,
+      "watchedAt": "2025-08-09T15:26:04.258Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/8. Amazon Block and File Storage/3. EBS vs Instance Store.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bc24.jpg"
     },
@@ -14754,6 +14754,28 @@
       "watchedAt": null,
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/9. Containers/9. Upload Image to Amazon ECR and create task on AWS Fargate.mp4",
       "thumbnailUrl": "/thumbnails/6881f13600e81acf0008bc34.jpg"
+    },
+    {
+      "_id": "6887b79619426345689537de",
+      "title": "1. Introduction",
+      "description": "Description for 1. Introduction.mp4",
+      "section": null,
+      "chapter": "8. Amazon Block and File Storage",
+      "watched": true,
+      "watchedAt": "2025-08-09T15:17:48.405Z",
+      "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/8. Amazon Block and File Storage/1. Introduction.mp4",
+      "thumbnailUrl": "/thumbnails/6887b79619426345689537de.jpg"
+    },
+    {
+      "_id": "6887b7961942634568953787",
+      "title": "1. Introduction",
+      "description": "Description for 1. Introduction.mp4",
+      "section": null,
+      "chapter": "4. Elastic Load Balancing and Auto Scaling",
+      "watched": true,
+      "watchedAt": "2025-08-10T04:52:03.844Z",
+      "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/4. Elastic Load Balancing and Auto Scaling/1. Introduction.mp4",
+      "thumbnailUrl": "/thumbnails/6887b7961942634568953787.jpg"
     }
   ]
 }
