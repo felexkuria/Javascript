@@ -46,36 +46,18 @@ class VideoService {
 
   // Check if MongoDB is connected
   isMongoConnected() {
-    // Check if MongoDB URI is defined
     const config = require('../config');
     if (!config.mongodbUri) {
-      console.log('MongoDB URI is not defined in config');
       return false;
     }
+    
     try {
-      // First check if we're in offline mode
-      if (global.isOfflineMode === true) {
-        console.log('System is in offline mode');
-        return false;
+      const isConnected = mongoose.connection.readyState === 1;
+      if (!isConnected && mongoose.connection.readyState === 0) {
+        console.log('MongoDB connecting...');
       }
-      
-      // Check if connection is ready and has a valid client
-      const isConnected = mongoose.connection.readyState === 1 && 
-                         mongoose.connection.client && 
-                         mongoose.connection.client.topology;
-      
-      // If not connected, set offline mode
-      if (!isConnected) {
-        console.log('MongoDB connection is not ready, setting offline mode');
-        global.isOfflineMode = true;
-      } else {
-        console.log('MongoDB is connected');
-      }
-      
       return isConnected;
     } catch (err) {
-      console.error('Error checking MongoDB connection:', err);
-      global.isOfflineMode = true;
       return false;
     }
   }
@@ -157,7 +139,11 @@ class VideoService {
     const videos = this.getVideosFromLocalStorage(courseName);
     const video = videos.find(v => v && v._id && v._id.toString() === videoId);
     
-    // If video not found, return null instead of undefined
+    if (!video) {
+      console.log(`Video ${videoId} not found in localStorage for course ${courseName}`);
+      console.log(`Available videos: ${videos.length}`);
+    }
+    
     return video || null;
   }
 

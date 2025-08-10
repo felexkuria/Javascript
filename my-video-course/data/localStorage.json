@@ -2114,6 +2114,72 @@
       "watchedAt": null,
       "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/9. Transforms & Motion in the Edit Page/9. Your Assignment Create an  Intro for your movie.mp4",
       "thumbnailUrl": "/thumbnails/6881f1b000e81acf0008bed9.jpg"
+    },
+    {
+      "_id": "6887b83b19426345689539a1",
+      "title": "5. How to Import Media from within the Cut Page",
+      "description": "Description for 5. How to Import Media from within the Cut Page.mp4",
+      "section": null,
+      "chapter": "1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)",
+      "watched": true,
+      "watchedAt": "2025-08-10T19:30:09.826Z",
+      "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)/5. How to Import Media from within the Cut Page.mp4",
+      "thumbnailUrl": "/thumbnails/6887b83b19426345689539a1.jpg"
+    },
+    {
+      "_id": "6887b83b19426345689539a2",
+      "title": "6. How to Preview Your Media",
+      "description": "Description for 6. How to Preview Your Media.mp4",
+      "section": null,
+      "chapter": "1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)",
+      "watched": true,
+      "watchedAt": "2025-08-10T19:33:56.619Z",
+      "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)/6. How to Preview Your Media.mp4",
+      "thumbnailUrl": "/thumbnails/6887b83b19426345689539a2.jpg"
+    },
+    {
+      "_id": "6887b83b19426345689539f6",
+      "title": "1. Fast Preview the Timeline",
+      "description": "Description for 1. Fast Preview the Timeline.mp4",
+      "section": null,
+      "chapter": "2. More Editing techniques in the Cut Page (Resolve 16)",
+      "watched": true,
+      "watchedAt": "2025-08-10T19:39:22.810Z",
+      "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/2. More Editing techniques in the Cut Page (Resolve 16)/1. Fast Preview the Timeline.mp4",
+      "thumbnailUrl": "/thumbnails/6887b83b19426345689539f6.jpg"
+    },
+    {
+      "_id": "6887b83b19426345689539a6",
+      "title": "1. All about text, graphics and Fusion Text",
+      "description": "Description for 1. All about text, graphics and Fusion Text.mp4",
+      "section": null,
+      "chapter": "10. Text & Fusion Titles & Lower 3rd - Create, Customize and Animate",
+      "watched": true,
+      "watchedAt": "2025-08-10T19:42:59.205Z",
+      "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/10. Text & Fusion Titles & Lower 3rd - Create, Customize and Animate/1. All about text, graphics and Fusion Text.mp4",
+      "thumbnailUrl": "/thumbnails/6887b83b19426345689539a6.jpg"
+    },
+    {
+      "_id": "6887b83b19426345689539ae",
+      "title": "3. Single and Multiple Line Rich Text Formatting",
+      "description": "Description for 3. Single and Multiple Line Rich Text Formatting.mp4",
+      "section": null,
+      "chapter": "10. Text & Fusion Titles & Lower 3rd - Create, Customize and Animate",
+      "watched": true,
+      "watchedAt": "2025-08-10T19:48:58.758Z",
+      "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/10. Text & Fusion Titles & Lower 3rd - Create, Customize and Animate/3. Single and Multiple Line Rich Text Formatting.mp4",
+      "thumbnailUrl": "/thumbnails/6887b83b19426345689539ae.jpg"
+    },
+    {
+      "_id": "6887b83b19426345689539af",
+      "title": "4. How to Animate Text from the Video Tab",
+      "description": "Description for 4. How to Animate Text from the Video Tab.mp4",
+      "section": null,
+      "chapter": "10. Text & Fusion Titles & Lower 3rd - Create, Customize and Animate",
+      "watched": true,
+      "watchedAt": "2025-08-10T20:00:22.218Z",
+      "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/10. Text & Fusion Titles & Lower 3rd - Create, Customize and Animate/4. How to Animate Text from the Video Tab.mp4",
+      "thumbnailUrl": "/thumbnails/6887b83b19426345689539af.jpg"
     }
   ],
   "dev-ops-bootcamp_202201": [
@@ -6562,9 +6628,42 @@
       "section": null,
       "chapter": "[TutsNode.com] - DevOps Bootcamp",
       "watched": true,
-      "watchedAt": "2025-08-10T17:26:25.330Z",
+      "watchedAt": "2025-08-10T20:15:11.258Z",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson3.mp4",
       "thumbnailUrl": "/thumbnails/6887b8811942634568953b9f.jpg"
+    },
+    {
+      "_id": "6887b8811942634568953baa",
+      "title": "lesson4",
+      "description": "Description for lesson4.mp4",
+      "section": null,
+      "chapter": "[TutsNode.com] - DevOps Bootcamp",
+      "watched": true,
+      "watchedAt": "2025-08-10T18:04:09.375Z",
+      "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson4.mp4",
+      "thumbnailUrl": "/thumbnails/6887b8811942634568953baa.jpg"
+    },
+    {
+      "_id": "6887b8811942634568953bb5",
+      "title": "lesson5",
+      "description": "Description for lesson5.mp4",
+      "section": null,
+      "chapter": "[TutsNode.com] - DevOps Bootcamp",
+      "watched": true,
+      "watchedAt": "2025-08-10T17:42:22.888Z",
+      "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson5.mp4",
+      "thumbnailUrl": "/thumbnails/6887b8811942634568953bb5.jpg"
+    },
+    {
+      "_id": "6887b8811942634568953bc0",
+      "title": "lesson6",
+      "description": "Description for lesson6.mp4",
+      "section": null,
+      "chapter": "[TutsNode.com] - DevOps Bootcamp",
+      "watched": true,
+      "watchedAt": "2025-08-10T18:49:26.505Z",
+      "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson6.mp4",
+      "thumbnailUrl": "/thumbnails/6887b8811942634568953bc0.jpg"
     }
   ],
   "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]": [
@@ -6655,8 +6754,8 @@
       "description": "Video: 1. AWS Migration and Transfer Overview.mp4",
       "section": "18. Migration and Transfer Services",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/18. Migration and Transfer Services/1. AWS Migration and Transfer Overview.mp4",
-      "watched": false,
-      "watchedAt": null
+      "watched": true,
+      "watchedAt": "2025-08-10T17:29:35.923Z"
     },
     {
       "_id": "68818334ae509a80bf9ba1f1",
@@ -14809,6 +14908,39 @@
       "watchedAt": "2025-08-10T16:51:48.295Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/1. Introduction/2. SAA-C02 Exam Guide.mp4",
       "thumbnailUrl": "/thumbnails/6887b7961942634568953663.jpg"
+    },
+    {
+      "_id": "6887b796194263456895379e",
+      "title": "9. ASG Scaling Policies",
+      "description": "Description for 9. ASG Scaling Policies.mp4",
+      "section": null,
+      "chapter": "4. Elastic Load Balancing and Auto Scaling",
+      "watched": true,
+      "watchedAt": "2025-08-10T19:23:18.499Z",
+      "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/4. Elastic Load Balancing and Auto Scaling/9. ASG Scaling Policies.mp4",
+      "thumbnailUrl": "/thumbnails/6887b796194263456895379e.jpg"
+    },
+    {
+      "_id": "6887b7961942634568953664",
+      "title": "3. Help and Support",
+      "description": "Description for 3. Help and Support.mp4",
+      "section": null,
+      "chapter": "1. Introduction",
+      "watched": true,
+      "watchedAt": "2025-08-10T20:03:54.176Z",
+      "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/1. Introduction/3. Help and Support.mp4",
+      "thumbnailUrl": "/thumbnails/6887b7961942634568953664.jpg"
+    },
+    {
+      "_id": "6887b7961942634568953666",
+      "title": "1. Introduction",
+      "description": "Description for 1. Introduction.mp4",
+      "section": null,
+      "chapter": "10. Serverless",
+      "watched": true,
+      "watchedAt": "2025-08-10T20:06:48.596Z",
+      "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/10. Serverless/1. Introduction.mp4",
+      "thumbnailUrl": "/thumbnails/6887b7961942634568953666.jpg"
     }
   ]
 }

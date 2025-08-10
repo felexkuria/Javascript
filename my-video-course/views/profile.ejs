@@ -14,6 +14,9 @@
         <p class="text-gray-600">Track your achievements and learning journey</p>
       </div>
       <div class="flex items-center gap-4">
+        <button id="refresh-stats" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm">
+          <i class="fas fa-sync-alt mr-1"></i> Refresh Stats
+        </button>
         <div class="level-badge">
           <span class="user-level">1</span>
         </div>
@@ -124,7 +127,6 @@ document.addEventListener('DOMContentLoaded', function() {
       setTimeout(tryUpdateProfile, 500);
     } else {
       console.error('Gamification system failed to load after', maxRetries, 'attempts');
-      // Show fallback data
       showFallbackData();
     }
   }
@@ -147,23 +149,33 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Load watch dates first, then update profile
   loadWatchDates().then(() => {
-    tryUpdateProfile();
+    // Force gamification system to sync with localStorage first
+    if (window.gamificationSystem) {
+      window.gamificationSystem.syncWithLocalStorageVideos().then(() => {
+        updateProfileDisplay();
+      });
+    } else {
+      updateProfileDisplay();
+    }
   });
   
-  function updateProfileDisplay() {
+  async function updateProfileDisplay() {
     if (!window.gamificationSystem) {
       console.warn('Gamification system not loaded yet');
       return;
     }
     
-    const progress = window.gamificationSystem.getProgressSummary();
+    const progress = await window.gamificationSystem.getProgressSummary();
     
     // Update stats with null checks
     const videosWatchedEl = document.getElementById('videos-watched');
     const coursesCompletedEl = document.getElementById('courses-completed');
     const achievementsEarnedEl = document.getElementById('achievements-earned');
     
-    if (videosWatchedEl) videosWatchedEl.textContent = progress.videosWatched || 0;
+    if (videosWatchedEl) {
+      console.log('Updating videos watched display:', progress.videosWatched);
+      videosWatchedEl.textContent = progress.videosWatched || 0;
+    }
     if (coursesCompletedEl) coursesCompletedEl.textContent = progress.coursesCompleted || 0;
     if (achievementsEarnedEl) achievementsEarnedEl.textContent = `${progress.achievements || 0}/${progress.totalAchievements || 0}`;
     
@@ -302,6 +314,19 @@ document.addEventListener('DOMContentLoaded', function() {
       currentCalendarDate = new Date(Date.now());
       populateStreakCalendar();
     }
+  });
+  
+  // Refresh stats button
+  document.getElementById('refresh-stats').addEventListener('click', async function() {
+    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing...';
+    
+    if (window.gamificationSystem) {
+      await window.gamificationSystem.syncWithLocalStorageVideos();
+      await loadWatchDates();
+      updateProfileDisplay();
+    }
+    
+    this.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Refresh Stats';
   });
 });
 </script>

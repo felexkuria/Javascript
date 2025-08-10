@@ -133,9 +133,10 @@ class PreGeneratedQuizService {
     
     const questions = preGeneratedQuizzes[category] || preGeneratedQuizzes['general'];
     
-    // Return 3 random questions
+    // Return questions based on video length (more questions for longer videos)
     const shuffled = [...questions].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 3);
+    const questionCount = Math.min(questions.length, Math.max(3, Math.floor(questions.length * 0.8)));
+    return shuffled.slice(0, questionCount);
   }
   
   // Get all available categories

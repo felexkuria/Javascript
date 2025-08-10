@@ -96,38 +96,54 @@ class SRTQuizGenerator {
     });
   }
   
-  // Parse SRT content
+  // Parse SRT content with timestamps
   parseSRT(srtPath) {
-    if (!fs.existsSync(srtPath)) return '';
+    if (!fs.existsSync(srtPath)) return [];
     
     const content = fs.readFileSync(srtPath, 'utf8');
-    return content.replace(/\d+\n\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}\n/g, ' ')
-                 .replace(/\n+/g, ' ')
-                 .trim();
+    const entries = content.split(/\n\s*\n/).filter(entry => entry.trim());
+    
+    return entries.map(entry => {
+      const lines = entry.trim().split('\n');
+      if (lines.length >= 3) {
+        const timestamp = lines[1];
+        const text = lines.slice(2).join(' ').trim();
+        return { timestamp, text };
+      }
+      return null;
+    }).filter(entry => entry && entry.text.length > 10);
   }
   
-  // Generate quiz questions from SRT content
-  generateQuestions(srtContent, videoTitle) {
-    const sentences = srtContent.split(/[.!?]+/).filter(s => s.trim().length > 20);
+  // Generate quiz questions from SRT entries
+  generateQuestions(srtEntries, videoTitle) {
+    if (!Array.isArray(srtEntries) || srtEntries.length === 0) return [];
+    
     const questions = [];
+    const videoHash = this.hashString(videoTitle);
     
-    // Generate different types of questions
-    const questionTypes = [
-      this.generateFillInBlank,
-      this.generateMultipleChoice,
-      this.generateTrueFalse
-    ];
+    // Select meaningful entries for questions
+    const meaningfulEntries = srtEntries.filter(entry => 
+      entry.text.length > 30 && 
+      !entry.text.match(/^[\[\(].*[\]\)]$/) && // Skip sound effects
+      entry.text.split(' ').length > 5
+    );
     
-    for (let i = 0; i < Math.min(5, sentences.length); i++) {
-      const sentence = sentences[i].trim();
-      if (sentence.length > 30) {
-        const questionType = questionTypes[i % questionTypes.length];
-        const question = questionType.call(this, sentence, videoTitle);
-        if (question) questions.push(question);
-      }
-    }
+    // Use video-specific selection of entries to ensure unique questions
+    const selectedEntries = this.selectUniqueEntries(meaningfulEntries, videoHash, 5);
     
-    return questions.slice(0, 3); // Return max 3 questions
+    selectedEntries.forEach((entry, index) => {
+      const questionTypes = [
+        this.generateTimestampQuestion,
+        this.generateContentQuestion,
+        this.generateSequenceQuestion
+      ];
+      
+      const questionType = questionTypes[index % questionTypes.length];
+      const question = questionType.call(this, entry, videoTitle, index, videoHash);
+      if (question) questions.push(question);
+    });
+    
+    return questions;
   }
   
   // Generate fill-in-the-blank question
@@ -156,17 +172,22 @@ class SRTQuizGenerator {
     if (concepts.length === 0) return null;
     
     const concept = concepts[0];
+    const actualContent = sentence.trim();
+    const wrongOptions = [
+      'This was not discussed in the video',
+      'The opposite was mentioned', 
+      'This topic was briefly touched upon'
+    ];
+    
     return {
-      id: `mc_${Date.now()}_${Math.random()}`,
+      id: `srt_mc_${Date.now()}`,
       question: `According to the video, what was mentioned about "${concept}"?`,
       options: [
-        sentence.substring(0, 50) + '...',
-        'This was not discussed in the video',
-        'The opposite was mentioned',
-        'This topic was briefly touched upon'
+        actualContent.length > 80 ? actualContent.substring(0, 77) + '...' : actualContent,
+        ...wrongOptions
       ],
       correct: 0,
-      explanation: `This information was directly mentioned in the video content.`
+      explanation: `The video specifically mentioned: "${actualContent}"`
     };
   }
   
@@ -191,15 +212,111 @@ class SRTQuizGenerator {
     return concepts.slice(0, 3);
   }
   
-  // Generate wrong answer
-  generateWrongAnswer(correctWord) {
-    const alternatives = [
-      correctWord + 's',
-      'not ' + correctWord,
-      correctWord.substring(0, -1),
-      correctWord.replace(/[aeiou]/g, 'x')
-    ];
-    return alternatives[Math.floor(Math.random() * alternatives.length)];
+  // Generate timestamp-based question
+  generateTimestampQuestion(entry, videoTitle, index, videoHash) {
+    const timeMatch = entry.timestamp.match(/\d{2}:\d{2}:\d{2},\d{3}/);
+    if (!timeMatch) return null;
+    
+    const timestamp = timeMatch[0].replace(',', '.');
+    const uniqueId = `srt_time_${videoHash}_${index}`;
+    
+    return {
+      id: uniqueId,
+      question: `According to the video, what was mentioned around "${timestamp}"?`,
+      options: [
+        entry.text,
+        'This was not discussed in the video',
+        'The opposite was mentioned',
+        'This topic was briefly touched upon'
+      ],
+      correct: 0,
+      explanation: `At ${timestamp}, the video specifically mentioned: "${entry.text}"`
+    };
+  }
+  
+  // Generate content-based question
+  generateContentQuestion(entry, videoTitle, index, videoHash) {
+    const keyPhrase = this.extractKeyPhrase(entry.text);
+    if (!keyPhrase) return null;
+    
+    const uniqueId = `srt_content_${videoHash}_${index}`;
+    
+    return {
+      id: uniqueId,
+      question: `What did the video say about "${keyPhrase}"?`,
+      options: [
+        entry.text,
+        'This concept was not covered',
+        'The video mentioned the opposite',
+        'This was only briefly mentioned'
+      ],
+      correct: 0,
+      explanation: `The video explained: "${entry.text}"`
+    };
+  }
+  
+  // Generate sequence question
+  generateSequenceQuestion(entry, videoTitle, index, videoHash) {
+    const uniqueId = `srt_sequence_${videoHash}_${index}`;
+    
+    return {
+      id: uniqueId,
+      question: `True or False: The video stated "${entry.text.substring(0, 60)}..."`,
+      options: ['True', 'False'],
+      correct: 0,
+      explanation: `This statement was directly mentioned in the video.`
+    };
+  }
+  
+  // Extract key phrase from text
+  extractKeyPhrase(text) {
+    const words = text.split(' ');
+    const meaningfulWords = words.filter(word => 
+      word.length > 3 && 
+      !['this', 'that', 'with', 'from', 'they', 'have', 'will', 'been', 'were', 'when', 'what', 'where'].includes(word.toLowerCase())
+    );
+    return meaningfulWords.slice(0, 2).join(' ');
+  }
+  
+  // Hash string to create consistent unique identifiers
+  hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(36);
+  }
+  
+  // Select unique entries based on video hash for consistent question generation
+  selectUniqueEntries(entries, videoHash, count) {
+    if (entries.length <= count) return entries;
+    
+    // Use hash to create deterministic selection
+    const hashNum = parseInt(videoHash, 36);
+    const selected = [];
+    const step = Math.floor(entries.length / count);
+    
+    for (let i = 0; i < count; i++) {
+      const index = (hashNum + i * step) % entries.length;
+      if (!selected.find(entry => entry.text === entries[index].text)) {
+        selected.push(entries[index]);
+      }
+    }
+    
+    // Fill remaining slots if duplicates were skipped
+    while (selected.length < count && selected.length < entries.length) {
+      for (const entry of entries) {
+        if (!selected.find(sel => sel.text === entry.text)) {
+          selected.push(entry);
+          if (selected.length >= count) break;
+        }
+      }
+      break;
+    }
+    
+    return selected;
   }
 }
 

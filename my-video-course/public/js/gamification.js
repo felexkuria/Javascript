@@ -73,6 +73,30 @@ class GamificationSystem {
         icon: '🐦',
         points: 25,
         type: 'time'
+      },
+      'quiz_master': {
+        id: 'quiz_master',
+        name: 'Quiz Master',
+        description: 'Complete 10 quizzes',
+        icon: '🧠',
+        points: 100,
+        type: 'quiz'
+      },
+      'perfect_score': {
+        id: 'perfect_score',
+        name: 'Perfect Score',
+        description: 'Get 100% on a quiz',
+        icon: '💯',
+        points: 75,
+        type: 'quiz'
+      },
+      'speed_learner': {
+        id: 'speed_learner',
+        name: 'Speed Learner',
+        description: 'Complete quiz in under 2 minutes',
+        icon: '⚡',
+        points: 50,
+        type: 'quiz'
       }
     };
   }
@@ -187,8 +211,10 @@ class GamificationSystem {
         // Count watched videos and collect watch dates
         Object.keys(localStorageData).forEach(courseName => {
           const videos = localStorageData[courseName] || [];
+          console.log(`Course ${courseName}: ${videos.length} total videos`);
+          
           const watchedInCourse = videos.filter(v => {
-            if (v && v.watched) {
+            if (v && v.watched === true) {
               // Add watch date to streak data
               if (v.watchedAt) {
                 const watchDate = new Date(v.watchedAt).toISOString().split('T')[0];
@@ -199,6 +225,7 @@ class GamificationSystem {
             return false;
           }).length;
           
+          console.log(`Course ${courseName}: ${watchedInCourse} watched videos`);
           totalWatchedVideos += watchedInCourse;
           
           if (videos.length > 0 && watchedInCourse === videos.length) {
@@ -206,13 +233,20 @@ class GamificationSystem {
           }
         });
         
+        console.log(`Total watched videos across all courses: ${totalWatchedVideos}`);
+        
         // Update streak data with actual watch dates
         this.streakData.streakDates = Array.from(watchDates).sort();
         this.calculateStreakFromDates();
         
-        // Update user stats
-        this.userStats.videosWatched = totalWatchedVideos;
+        // Force recount from localStorage to ensure accuracy
+        const actualWatchedCount = this.countWatchedVideosFromLocalStorage();
+        
+        // Update user stats with accurate count
+        this.userStats.videosWatched = actualWatchedCount;
         this.userStats.coursesCompleted = coursesCompleted;
+        
+        console.log(`Updated video count: ${actualWatchedCount} watched videos`);
         
         this.saveUserStats();
         this.saveStreakData();
@@ -362,6 +396,16 @@ class GamificationSystem {
         break;
       case 'early_bird':
         shouldAward = new Date().getHours() <= 7;
+        break;
+      case 'quiz_master':
+        const quizCompletions = JSON.parse(localStorage.getItem('quiz_completions') || '[]');
+        shouldAward = quizCompletions.length >= 10;
+        break;
+      case 'perfect_score':
+        shouldAward = customData.perfectScore === true;
+        break;
+      case 'speed_learner':
+        shouldAward = customData.timeTaken && customData.timeTaken < 120;
         break;
     }
 
@@ -588,12 +632,40 @@ class GamificationSystem {
     }
   }
 
+  // Count watched videos directly from localStorage API
+  async countWatchedVideosFromLocalStorage() {
+    try {
+      const response = await fetch('/api/videos/localStorage');
+      if (response.ok) {
+        const localStorageData = await response.json();
+        let totalWatched = 0;
+        
+        Object.keys(localStorageData).forEach(courseName => {
+          const videos = localStorageData[courseName] || [];
+          const watchedCount = videos.filter(v => v && v.watched === true).length;
+          console.log(`${courseName}: ${watchedCount} watched videos`);
+          totalWatched += watchedCount;
+        });
+        
+        console.log(`Total watched videos from localStorage: ${totalWatched}`);
+        return totalWatched;
+      }
+      return this.userStats.videosWatched || 0;
+    } catch (error) {
+      console.error('Error counting watched videos:', error);
+      return this.userStats.videosWatched || 0;
+    }
+  }
+  
   // Get user progress summary
-  getProgressSummary() {
+  async getProgressSummary() {
+    // Always get fresh count from localStorage
+    const actualWatchedCount = await this.countWatchedVideosFromLocalStorage();
+    
     return {
       level: this.userStats.currentLevel,
       points: this.userStats.totalPoints,
-      videosWatched: this.userStats.videosWatched,
+      videosWatched: actualWatchedCount,
       coursesCompleted: this.userStats.coursesCompleted,
       currentStreak: this.streakData.currentStreak,
       longestStreak: this.streakData.longestStreak,

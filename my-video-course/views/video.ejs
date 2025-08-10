@@ -495,16 +495,17 @@ ${courseName}`, extraStyles: `
       const isLastInChapter = <%= isLastInChapter ? 'true' : 'false' %>;
 
       if (!isLastVideo && nextVideoId) {
-        const encodedCourseName = encodeURIComponent(courseName);
+        // Use the same courseName variable that's already defined
+        const safeCourseName = encodeURIComponent(courseName);
         
         // If this is the last video in a chapter, show a brief message
         if (isLastInChapter) {
           showKeyHint('Chapter Complete! Moving to next chapter...');
           setTimeout(() => {
-            window.location.href = `/videos/${encodedCourseName}/${nextVideoId}?autoplay=true`;
+            window.location.href = `/videos/${safeCourseName}/${nextVideoId}?autoplay=true`;
           }, 1500);
         } else {
-          window.location.href = `/videos/${encodedCourseName}/${nextVideoId}?autoplay=true`;
+          window.location.href = `/videos/${safeCourseName}/${nextVideoId}?autoplay=true`;
         }
       }
     }
@@ -512,17 +513,21 @@ ${courseName}`, extraStyles: `
     // Navigation buttons
     if (prevButton) {
       prevButton.addEventListener('click', function() {
-        const encodedCourseName = encodeURIComponent(courseName);
+        const safeCourseName = encodeURIComponent(courseName);
         const prevId = '<%= typeof prevVideoId !== "undefined" ? prevVideoId : "" %>';
-        window.location.href = `/videos/${encodedCourseName}/${prevId}`;
+        if (prevId) {
+          window.location.href = `/videos/${safeCourseName}/${prevId}`;
+        }
       });
     }
 
     if (nextButton) {
       nextButton.addEventListener('click', function() {
-        const encodedCourseName = encodeURIComponent(courseName);
+        const safeCourseName = encodeURIComponent(courseName);
         const nextId = '<%= typeof nextVideoId !== "undefined" ? nextVideoId : "" %>';
-        window.location.href = `/videos/${encodedCourseName}/${nextId}?autoplay=true`;
+        if (nextId) {
+          window.location.href = `/videos/${safeCourseName}/${nextId}?autoplay=true`;
+        }
       });
     }
 
@@ -599,15 +604,20 @@ ${courseName}`, extraStyles: `
 
       // Mark video as watched when 90% is watched and trigger quiz
       let quizTriggered = false;
+      let watchedMarked = false;
       videoPlayer.addEventListener('timeupdate', function() {
-        if (videoPlayer.currentTime > videoPlayer.duration * 0.9) {
+        const watchPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+        
+        if (watchPercent >= 90 && !watchedMarked) {
           markVideoAsWatched();
-          
-          // Trigger SRT-based quiz at 90%
-          if (!quizTriggered && window.quizSystem) {
-            quizTriggered = true;
+          watchedMarked = true;
+        }
+        
+        if (watchPercent >= 90 && !quizTriggered && window.quizSystem) {
+          quizTriggered = true;
+          setTimeout(() => {
             generateSRTQuiz();
-          }
+          }, 1000);
         }
       });
       
@@ -667,35 +677,41 @@ ${courseName}`, extraStyles: `
           
           console.log(`Determined quiz type: ${quizType}`);
           
-          try {
-            // Try to get video-specific quiz first
-            const quizUrl = `/api/quiz/generate/${encodeURIComponent(courseName)}/${videoId}`;
-            console.log('Fetching quiz from:', quizUrl);
-            
-            const response = await fetch(quizUrl);
-            console.log('Quiz API response status:', response.status);
-            
-            if (response.ok) {
-              const data = await response.json();
-              console.log('Quiz data received:', data);
+          // Show loading state
+          quickQuizBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Generating Quiz...';
+          quickQuizBtn.disabled = true;
+          
+          // Check if online before trying API
+          if (navigator.onLine) {
+            try {
+              const quizUrl = `/api/quiz/generate/${encodeURIComponent(courseName)}/${videoId}`;
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 5000);
               
-              if (data.questions && data.questions.length > 0) {
-                console.log(`Starting ${data.quizType} quiz with ${data.questions.length} questions`);
-                window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
-                return;
-              } else {
-                console.warn('No questions in quiz data');
+              const response = await fetch(quizUrl, { signal: controller.signal });
+              clearTimeout(timeoutId);
+              
+              if (response.ok) {
+                const data = await response.json();
+                if (data.questions && data.questions.length > 0) {
+                  window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
+                  quickQuizBtn.innerHTML = 'Take Quick Quiz';
+                  quickQuizBtn.disabled = false;
+                  return;
+                }
               }
-            } else {
-              console.error('Quiz API failed with status:', response.status);
+            } catch (error) {
+              console.warn('API quiz failed, using offline quiz');
             }
-          } catch (error) {
-            console.warn('Failed to get video-specific quiz:', error);
           }
           
           // Fallback to determined quiz type
           console.log(`Using fallback ${quizType} quiz`);
           window.quizSystem.startQuiz(quizType);
+          
+          // Reset button state
+          quickQuizBtn.innerHTML = 'Take Quick Quiz';
+          quickQuizBtn.disabled = false;
         });
       }
     }

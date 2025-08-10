@@ -230,7 +230,7 @@ app.set('view engine', 'ejs');
 // Course video route
 app.get('/course/:courseName/video/:videoId?', async (req, res) => {
   try {
-    const courseName = req.params.courseName;
+    const courseName = decodeURIComponent(req.params.courseName);
     const videoId = req.params.videoId;
     const autoplay = req.query.autoplay === 'true';
 
@@ -1690,13 +1690,13 @@ app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
         if (fs.existsSync(videoPath)) {
           console.log('Video file exists, attempting SRT generation...');
           const srtPath = await srtQuizGenerator.generateSRT(videoPath);
-          const srtContent = srtQuizGenerator.parseSRT(srtPath);
+          const srtEntries = srtQuizGenerator.parseSRT(srtPath);
           
-          if (srtContent && srtContent.length > 100) {
-            questions = srtQuizGenerator.generateQuestions(srtContent, video.title);
+          if (srtEntries && srtEntries.length > 3) {
+            questions = srtQuizGenerator.generateQuestions(srtEntries, video.title);
             console.log(`Generated ${questions.length} SRT-based questions`);
           } else {
-            console.log('SRT content too short or empty');
+            console.log('SRT entries too few or empty');
           }
         } else {
           console.log('Video file does not exist on disk');

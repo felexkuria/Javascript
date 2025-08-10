@@ -44,72 +44,128 @@ class QuizSystem {
       'video_editing': [
         {
           id: 'video_1',
-          question: 'What is DaVinci Resolve primarily known for?',
-          options: ['Audio editing', 'Color grading and video editing', '3D animation', 'Web development'],
+          question: 'In DaVinci Resolve, which color space is recommended for HDR content delivery?',
+          options: ['Rec. 709', 'Rec. 2020', 'sRGB', 'Adobe RGB'],
           correct: 1,
-          explanation: 'DaVinci Resolve is renowned for its professional color grading capabilities and comprehensive video editing tools.'
+          explanation: 'Rec. 2020 is the standard color space for HDR content, offering wider color gamut than Rec. 709.'
         },
         {
           id: 'video_2',
-          question: 'Which panel in DaVinci Resolve is used for color correction?',
-          options: ['Edit', 'Color', 'Fairlight', 'Deliver'],
-          correct: 1,
-          explanation: 'The Color panel in DaVinci Resolve is specifically designed for color correction and grading.'
+          question: 'What is the primary difference between primary and secondary color correction?',
+          options: ['Primary affects entire image, secondary affects specific areas', 'Primary is for exposure, secondary for saturation', 'Primary uses wheels, secondary uses curves', 'No difference, just different tools'],
+          correct: 0,
+          explanation: 'Primary color correction affects the entire image globally, while secondary correction targets specific color ranges or areas.'
         },
         {
           id: 'video_3',
-          question: 'What does the term "timeline" refer to in video editing?',
-          options: ['Project duration', 'The sequence where clips are arranged', 'Export settings', 'Audio levels'],
+          question: 'Which DaVinci Resolve feature allows real-time collaboration between multiple editors?',
+          options: ['Proxy Media', 'Collaborative Workflow', 'Project Manager', 'Shared Timeline'],
           correct: 1,
-          explanation: 'The timeline is where video and audio clips are arranged in sequence to create the final video.'
+          explanation: 'DaVinci Resolve\'s Collaborative Workflow feature enables multiple users to work on the same project simultaneously.'
+        },
+        {
+          id: 'video_4',
+          question: 'What is the recommended bit depth for professional color grading workflows?',
+          options: ['8-bit', '10-bit', '12-bit', '16-bit'],
+          correct: 2,
+          explanation: '12-bit provides sufficient color information for professional grading while maintaining reasonable file sizes.'
+        },
+        {
+          id: 'video_5',
+          question: 'In the Fairlight audio page, what does the term "bus" refer to?',
+          options: ['Audio input device', 'Signal routing pathway', 'Audio effect', 'Recording format'],
+          correct: 1,
+          explanation: 'A bus is a signal routing pathway that combines multiple audio sources for processing or output.'
         }
       ],
       'aws': [
         {
           id: 'aws_1',
-          question: 'What does S3 stand for in AWS?',
-          options: ['Simple Storage Service', 'Secure Storage System', 'Scalable Storage Solution', 'Standard Storage Service'],
-          correct: 0,
-          explanation: 'S3 stands for Simple Storage Service, AWS\'s object storage service.'
+          question: 'Which S3 storage class provides the lowest cost for long-term archival with retrieval times of 12+ hours?',
+          options: ['S3 Standard-IA', 'S3 Glacier', 'S3 Glacier Deep Archive', 'S3 One Zone-IA'],
+          correct: 2,
+          explanation: 'S3 Glacier Deep Archive offers the lowest cost storage for long-term retention with retrieval times of 12+ hours.'
         },
         {
           id: 'aws_2',
-          question: 'Which AWS service is used for serverless computing?',
-          options: ['EC2', 'Lambda', 'RDS', 'VPC'],
+          question: 'What is the maximum execution duration for AWS Lambda functions?',
+          options: ['5 minutes', '15 minutes', '30 minutes', '1 hour'],
           correct: 1,
-          explanation: 'AWS Lambda is the serverless computing service that runs code without managing servers.'
+          explanation: 'AWS Lambda functions have a maximum execution duration of 15 minutes (900 seconds).'
+        },
+        {
+          id: 'aws_3',
+          question: 'Which AWS service provides a managed NoSQL database with single-digit millisecond latency?',
+          options: ['RDS', 'DynamoDB', 'ElastiCache', 'DocumentDB'],
+          correct: 1,
+          explanation: 'DynamoDB is AWS\'s managed NoSQL database service designed for single-digit millisecond latency at any scale.'
+        },
+        {
+          id: 'aws_4',
+          question: 'In AWS VPC, what is the purpose of a NAT Gateway?',
+          options: ['Load balancing', 'DNS resolution', 'Outbound internet access for private subnets', 'VPN connectivity'],
+          correct: 2,
+          explanation: 'NAT Gateway enables instances in private subnets to access the internet for outbound connections while remaining private.'
         }
       ],
       'devops': [
         {
           id: 'devops_1',
-          question: 'What does CI/CD stand for?',
-          options: ['Continuous Integration/Continuous Deployment', 'Code Integration/Code Deployment', 'Central Integration/Central Deployment', 'Custom Integration/Custom Deployment'],
-          correct: 0,
-          explanation: 'CI/CD stands for Continuous Integration and Continuous Deployment.'
+          question: 'In Kubernetes, what is the primary purpose of a Service mesh like Istio?',
+          options: ['Container orchestration', 'Service-to-service communication and security', 'Image registry management', 'Node scaling'],
+          correct: 1,
+          explanation: 'Service mesh provides secure service-to-service communication, traffic management, and observability in microservices architectures.'
         },
         {
           id: 'devops_2',
-          question: 'Which tool is commonly used for containerization?',
-          options: ['Jenkins', 'Docker', 'Ansible', 'Terraform'],
+          question: 'Which Docker instruction should be used to minimize image layers and reduce build time?',
+          options: ['Multiple RUN commands', 'Single RUN with && operators', 'COPY for each file', 'Multiple FROM statements'],
           correct: 1,
-          explanation: 'Docker is the most popular containerization platform.'
+          explanation: 'Combining commands with && in a single RUN instruction reduces layers and optimizes image size and build time.'
+        },
+        {
+          id: 'devops_3',
+          question: 'In GitOps, what is the primary principle for deployment management?',
+          options: ['Manual deployment approval', 'Git repository as single source of truth', 'Direct kubectl commands', 'SSH-based deployments'],
+          correct: 1,
+          explanation: 'GitOps uses Git repositories as the single source of truth for declarative infrastructure and application deployment.'
+        },
+        {
+          id: 'devops_4',
+          question: 'What is the main advantage of using Terraform over imperative infrastructure tools?',
+          options: ['Faster execution', 'Declarative state management', 'Better error handling', 'Simpler syntax'],
+          correct: 1,
+          explanation: 'Terraform\'s declarative approach manages desired state, automatically determining what changes are needed to reach that state.'
         }
       ],
       'programming': [
         {
           id: 'prog_1',
-          question: 'What is the purpose of version control?',
-          options: ['Track changes in code', 'Compile code', 'Debug applications', 'Deploy software'],
-          correct: 0,
-          explanation: 'Version control systems track changes in code over time and enable collaboration.'
+          question: 'In microservices architecture, what pattern helps prevent cascading failures?',
+          options: ['Singleton Pattern', 'Circuit Breaker Pattern', 'Observer Pattern', 'Factory Pattern'],
+          correct: 1,
+          explanation: 'Circuit Breaker pattern prevents cascading failures by stopping calls to failing services and providing fallback responses.'
         },
         {
           id: 'prog_2',
-          question: 'Which of these is a NoSQL database?',
-          options: ['MySQL', 'PostgreSQL', 'MongoDB', 'SQLite'],
-          correct: 2,
-          explanation: 'MongoDB is a popular NoSQL document database.'
+          question: 'Which database consistency model provides the strongest guarantees?',
+          options: ['Eventual Consistency', 'Strong Consistency', 'Weak Consistency', 'Causal Consistency'],
+          correct: 1,
+          explanation: 'Strong consistency ensures all nodes see the same data simultaneously, providing the strongest consistency guarantees.'
+        },
+        {
+          id: 'prog_3',
+          question: 'In REST API design, which HTTP method should be idempotent?',
+          options: ['POST', 'PUT', 'PATCH', 'All methods'],
+          correct: 1,
+          explanation: 'PUT should be idempotent, meaning multiple identical requests should have the same effect as a single request.'
+        },
+        {
+          id: 'prog_4',
+          question: 'What is the time complexity of searching in a balanced binary search tree?',
+          options: ['O(1)', 'O(log n)', 'O(n)', 'O(n log n)'],
+          correct: 1,
+          explanation: 'Balanced BST search has O(log n) time complexity due to the tree\'s height being logarithmic to the number of nodes.'
         }
       ],
       'general': [
@@ -214,9 +270,10 @@ class QuizSystem {
       }];
     }
 
+    const questionCount = Math.min(questions.length, Math.max(5, Math.floor(questions.length * 0.8)));
     this.currentQuiz = {
       topic: topic,
-      questions: this.shuffleArray([...questions]).slice(0, 5), // Max 5 questions
+      questions: this.shuffleArray([...questions]).slice(0, questionCount),
       currentIndex: 0,
       userAnswers: [],
       startTime: Date.now(),
@@ -232,6 +289,13 @@ class QuizSystem {
     const modal = document.getElementById('quiz-modal');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    
+    // Pause video if playing
+    const video = document.querySelector('video');
+    if (video && !video.paused) {
+      video.pause();
+      this.videoPausedForQuiz = true;
+    }
   }
 
   // Close quiz modal
@@ -239,6 +303,16 @@ class QuizSystem {
     const modal = document.getElementById('quiz-modal');
     modal.style.display = 'none';
     document.body.style.overflow = 'auto';
+    
+    // Resume video if it was paused for quiz
+    if (this.videoPausedForQuiz) {
+      const video = document.querySelector('video');
+      if (video) {
+        video.play().catch(() => {});
+      }
+      this.videoPausedForQuiz = false;
+    }
+    
     this.currentQuiz = null;
   }
 
@@ -368,14 +442,18 @@ class QuizSystem {
     // Show results
     this.showResults(score, percentage, timeTaken, points);
 
-    // Award gamification points
+    // Award gamification points and check achievements
     if (window.gamificationSystem) {
       window.gamificationSystem.awardPoints(points, `Quiz: ${percentage}%`);
       
       // Check for quiz-related achievements
       if (percentage === 100) {
-        window.gamificationSystem.checkAchievement('perfect_quiz', { perfectScore: true });
+        window.gamificationSystem.checkAchievement('perfect_score', { perfectScore: true });
       }
+      if (timeTaken < 120) {
+        window.gamificationSystem.checkAchievement('speed_learner', { timeTaken });
+      }
+      window.gamificationSystem.checkAchievement('quiz_master');
     }
 
     // Save quiz completion
@@ -441,8 +519,26 @@ class QuizSystem {
   retakeQuiz() {
     if (this.currentQuiz) {
       const topic = this.currentQuiz.topic;
-      this.closeQuiz();
-      setTimeout(() => this.startQuiz(topic), 100);
+      const questions = [...this.currentQuiz.questions];
+      
+      // Completely restart the quiz
+      this.currentQuiz = {
+        topic: topic,
+        questions: questions,
+        currentIndex: 0,
+        userAnswers: [],
+        startTime: Date.now(),
+        score: 0
+      };
+      
+      // Show quiz body and hide results
+      const quizBody = document.querySelector('.quiz-body');
+      const resultsContainer = document.getElementById('quiz-results');
+      quizBody.style.display = 'block';
+      resultsContainer.style.display = 'none';
+      
+      // Display first question
+      this.displayQuestion();
     }
   }
 
