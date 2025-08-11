@@ -1037,6 +1037,18 @@ app.get('/videos/:courseName/file/:id', async (req, res) => {
 
     // Stream the video file
     res.sendFile(videoPath);
+    
+    // Start SRT generation in background if not exists
+    const videoName = path.basename(videoPath, path.extname(videoPath));
+    const srtPath = path.join(path.dirname(videoPath), `${videoName}.srt`);
+    
+    if (!fs.existsSync(srtPath)) {
+      console.log(`Starting background SRT generation for: ${videoName}`);
+      const srtQuizGenerator = require('../services/srtQuizGenerator');
+      srtQuizGenerator.generateSRT(videoPath).catch(error => {
+        console.warn(`Background SRT generation failed for ${videoName}:`, error.message);
+      });
+    }
   } catch (err) {
     console.error('Error streaming video:', err.stack);
     res.status(500).send('Internal Server Error');

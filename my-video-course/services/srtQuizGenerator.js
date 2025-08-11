@@ -18,15 +18,24 @@ class SRTQuizGenerator {
       return srtPath;
     }
     
-    // Also check for SRT files in the same directory with similar names
+    // Check for matching SRT file with same name
     try {
       const files = fs.readdirSync(videoDir);
       const srtFiles = files.filter(file => file.endsWith('.srt'));
-      if (srtFiles.length > 0) {
-        const matchingSrt = path.join(videoDir, srtFiles[0]);
-        console.log(`Found existing SRT file: ${matchingSrt}`);
+      
+      // First try to find exact match
+      const exactMatch = srtFiles.find(file => 
+        path.basename(file, '.srt') === videoName
+      );
+      
+      if (exactMatch) {
+        const matchingSrt = path.join(videoDir, exactMatch);
+        console.log(`Found matching SRT file: ${matchingSrt}`);
         return matchingSrt;
       }
+      
+      // If no exact match, don't use any SRT to avoid wrong content
+      console.log(`No matching SRT found for ${videoName}`);
     } catch (error) {
       console.warn('Error checking for existing SRT files:', error.message);
     }

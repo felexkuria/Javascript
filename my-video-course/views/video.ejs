@@ -495,20 +495,27 @@ ${courseName}`, extraStyles: `
       const isLastInChapter = <%= isLastInChapter ? 'true' : 'false' %>;
 
       if (!isLastVideo && nextVideoId) {
-        // Get current URL path and replace video ID
-        const currentPath = window.location.pathname;
-        const pathParts = currentPath.split('/');
-        pathParts[pathParts.length - 1] = nextVideoId;
-        const nextUrl = pathParts.join('/') + '?autoplay=true';
-        
-        // If this is the last video in a chapter, show a brief message
-        if (isLastInChapter) {
-          showKeyHint('Chapter Complete! Moving to next chapter...');
-          setTimeout(() => {
+        try {
+          // Get current URL path and replace video ID
+          const currentPath = window.location.pathname;
+          const pathParts = currentPath.split('/');
+          pathParts[pathParts.length - 1] = nextVideoId;
+          const nextUrl = pathParts.join('/') + '?autoplay=true';
+          
+          // If this is the last video in a chapter, show a brief message
+          if (isLastInChapter) {
+            showKeyHint('Chapter Complete! Moving to next chapter...');
+            setTimeout(() => {
+              window.location.href = nextUrl;
+            }, 1500);
+          } else {
             window.location.href = nextUrl;
-          }, 1500);
-        } else {
-          window.location.href = nextUrl;
+          }
+        } catch (error) {
+          console.error('URL construction error:', error);
+          // Simple fallback
+          const safeCourseName = encodeURIComponent(courseName);
+          window.location.href = `/videos/${safeCourseName}/${nextVideoId}?autoplay=true`;
         }
       }
     }
@@ -587,17 +594,6 @@ ${courseName}`, extraStyles: `
       // Mark video as watched when it ends
       videoPlayer.addEventListener('ended', function() {
         markVideoAsWatched();
-        
-        // Always navigate to next video when current one ends
-        setTimeout(() => {
-          const isLastVideo = <%= isLastVideo ? 'true' : 'false' %>;
-          const nextVideoId = '<%= typeof nextVideoId !== "undefined" ? nextVideoId : "" %>';
-          
-          if (!isLastVideo && nextVideoId) {
-            const safeCourseName = encodeURIComponent(courseName);
-            window.location.href = `/videos/${safeCourseName}/${nextVideoId}?autoplay=true`;
-          }
-        }, 500);
       });
 
       // Mark video as watched when 90% is watched and trigger quiz
