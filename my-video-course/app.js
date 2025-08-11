@@ -1038,16 +1038,29 @@ app.get('/videos/:courseName/file/:id', async (req, res) => {
     // Stream the video file
     res.sendFile(videoPath);
     
-    // Start SRT generation in background if not exists
+    // Start SRT generation in background if not exists and not already processing
     const videoName = path.basename(videoPath, path.extname(videoPath));
     const srtPath = path.join(path.dirname(videoPath), `${videoName}.srt`);
     
-    if (!fs.existsSync(srtPath)) {
+    if (!fs.existsSync(srtPath) && !srtGenerationProgress.has(videoName)) {
       console.log(`Starting background SRT generation for: ${videoName}`);
-      const srtQuizGenerator = require('../services/srtQuizGenerator');
-      srtQuizGenerator.generateSRT(videoPath).catch(error => {
-        console.warn(`Background SRT generation failed for ${videoName}:`, error.message);
-      });
+      srtGenerationProgress.set(videoName, { status: 'processing', progress: 0 });
+      
+      const srtQuizGenerator = require('./services/srtQuizGenerator');
+      srtQuizGenerator.generateSRT(videoPath)
+        .then(() => {
+          console.log(`Background SRT generation completed for: ${videoName}`);
+          srtGenerationProgress.set(videoName, { status: 'completed', progress: 100 });
+          setTimeout(() => srtGenerationProgress.delete(videoName), 60000); // Clean up after 1 minute
+        })
+        .catch(error => {
+          console.warn(`Background SRT generation failed for ${videoName}:`, error.message);
+          srtGenerationProgress.set(videoName, { status: 'failed', progress: 0 });
+          setTimeout(() => srtGenerationProgress.delete(videoName), 60000); // Clean up after 1 minute
+        });
+    } else if (srtGenerationProgress.has(videoName)) {
+      const progress = srtGenerationProgress.get(videoName);
+      console.log(`SRT generation for ${videoName} already ${progress.status} (${progress.progress}%)`);
     }
   } catch (err) {
     console.error('Error streaming video:', err.stack);
@@ -1645,7 +1658,7 @@ app.post('/api/process-whisper', whisperUpload.single('video'), async (req, res)
     const { spawn } = require('child_process');
     const whisperProcess = spawn('whisper', [
       videoPath,
-      '--model', 'base',
+      '--model', 'large-v3-turbo',
       '--output_format', 'srt',
       '--output_dir', whisperDir,
       '--verbose', 'False'
@@ -1700,6 +1713,21 @@ app.post('/api/process-whisper', whisperUpload.single('video'), async (req, res)
   } catch (err) {
     console.error('Error processing with Whisper:', err);
     res.status(500).json({ error: 'Error processing video' });
+  }
+});
+
+// API endpoint to get SRT generation progress
+app.get('/api/srt-progress/:videoName', (req, res) => {
+  const videoName = req.params.videoName;
+  const progress = srtGenerationProgress.get(videoName);
+  
+  if (progress) {
+    res.json(progress);
+  } else {
+    // Check if SRT file exists
+    const videoDir = path.join(__dirname, 'public', 'videos');
+    // This is a simplified check - in practice you'd need the full path
+    res.json({ status: 'not_started', progress: 0 });
   }
 });
 
@@ -1807,6 +1835,10 @@ app.get('/settings', (req, res) => {
 app.get('/test-quiz', (req, res) => {
   res.sendFile(path.join(__dirname, 'test-quiz.html'));
 });
+// Track SRT generation progress
+const srtGenerationProgress = new Map();
+global.srtGenerationProgress = srtGenerationProgress;
+
 // Start server
 app.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);

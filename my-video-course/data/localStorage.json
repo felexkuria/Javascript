@@ -15040,6 +15040,17 @@
       "watchedAt": "2025-08-10T21:13:11.748Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/2. Getting Started/13. Virtual Private Cloud Overview.mp4",
       "thumbnailUrl": "/thumbnails/6887b79619426345689536db.jpg"
+    },
+    {
+      "_id": "6887b7961942634568953772",
+      "title": "1. Introduction",
+      "description": "Description for 1. Introduction.mp4",
+      "section": null,
+      "chapter": "3. Elastic Compute Cloud (EC2)",
+      "watched": true,
+      "watchedAt": "2025-08-11T11:51:12.168Z",
+      "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/3. Elastic Compute Cloud (EC2)/1. Introduction.mp4",
+      "thumbnailUrl": "/thumbnails/6887b7961942634568953772.jpg"
     }
   ]
 }

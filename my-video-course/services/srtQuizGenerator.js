@@ -92,7 +92,16 @@ class SRTQuizGenerator {
       let errorOutput = '';
       
       whisperProcess.stderr.on('data', (data) => {
-        errorOutput += data.toString();
+        const output = data.toString();
+        errorOutput += output;
+        
+        // Parse progress and update global tracking
+        const progressMatch = output.match(/(\d+)%/);
+        if (progressMatch && global.srtGenerationProgress) {
+          const progress = parseInt(progressMatch[1]);
+          global.srtGenerationProgress.set(videoName, { status: 'processing', progress });
+          console.log(`SRT generation progress for ${videoName}: ${progress}%`);
+        }
       });
       
       whisperProcess.on('close', (code) => {
