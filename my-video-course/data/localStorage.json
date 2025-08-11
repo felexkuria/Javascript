@@ -2133,7 +2133,7 @@
       "section": null,
       "chapter": "1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)",
       "watched": true,
-      "watchedAt": "2025-08-10T21:31:10.718Z",
+      "watchedAt": "2025-08-10T21:38:58.863Z",
       "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)/6. How to Preview Your Media.mp4",
       "thumbnailUrl": "/thumbnails/6887b83b19426345689539a2.jpg"
     },
@@ -6675,6 +6675,39 @@
       "watchedAt": "2025-08-10T20:50:55.430Z",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson8.mp4",
       "thumbnailUrl": "/thumbnails/6887b8811942634568953bd6.jpg"
+    },
+    {
+      "_id": "6887b8811942634568953b3f",
+      "title": "lesson14",
+      "description": "Description for lesson14.mp4",
+      "section": null,
+      "chapter": "[TutsNode.com] - DevOps Bootcamp",
+      "watched": true,
+      "watchedAt": "2025-08-10T21:45:18.615Z",
+      "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson14.mp4",
+      "thumbnailUrl": "/thumbnails/6887b8811942634568953b3f.jpg"
+    },
+    {
+      "_id": "6887b8811942634568953b12",
+      "title": "lesson1",
+      "description": "Description for lesson1.mp4",
+      "section": null,
+      "chapter": "[TutsNode.com] - DevOps Bootcamp",
+      "watched": true,
+      "watchedAt": "2025-08-11T10:13:30.795Z",
+      "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson1.mp4",
+      "thumbnailUrl": "/thumbnails/6887b8811942634568953b12.jpg"
+    },
+    {
+      "_id": "6887b8811942634568953b81",
+      "title": "lesson2",
+      "description": "Description for lesson2.mp4",
+      "section": null,
+      "chapter": "[TutsNode.com] - DevOps Bootcamp",
+      "watched": true,
+      "watchedAt": "2025-08-11T10:55:47.995Z",
+      "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson2.mp4",
+      "thumbnailUrl": "/thumbnails/6887b8811942634568953b81.jpg"
     }
   ],
   "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]": [

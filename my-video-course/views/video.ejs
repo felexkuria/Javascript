@@ -495,17 +495,20 @@ ${courseName}`, extraStyles: `
       const isLastInChapter = <%= isLastInChapter ? 'true' : 'false' %>;
 
       if (!isLastVideo && nextVideoId) {
-        // Use the same courseName variable that's already defined
-        const safeCourseName = encodeURIComponent(courseName);
+        // Get current URL path and replace video ID
+        const currentPath = window.location.pathname;
+        const pathParts = currentPath.split('/');
+        pathParts[pathParts.length - 1] = nextVideoId;
+        const nextUrl = pathParts.join('/') + '?autoplay=true';
         
         // If this is the last video in a chapter, show a brief message
         if (isLastInChapter) {
           showKeyHint('Chapter Complete! Moving to next chapter...');
           setTimeout(() => {
-            window.location.href = `/videos/${safeCourseName}/${nextVideoId}?autoplay=true`;
+            window.location.href = nextUrl;
           }, 1500);
         } else {
-          window.location.href = `/videos/${safeCourseName}/${nextVideoId}?autoplay=true`;
+          window.location.href = nextUrl;
         }
       }
     }

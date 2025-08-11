@@ -806,9 +806,16 @@ app.get('/videos/:courseName', async (req, res) => {
 app.get('/videos/:courseName/:id', async (req, res) => {
   try {
     // Handle URL-encoded course names
-    const courseName = decodeURIComponent(req.params.courseName);
+    let courseName = decodeURIComponent(req.params.courseName);
     const id = req.params.id;
     console.log(`Fetching video: ${courseName}/${id}`);
+    
+    // Handle double encoding issues
+    try {
+      courseName = decodeURIComponent(courseName);
+    } catch (e) {
+      // Already decoded
+    }
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {

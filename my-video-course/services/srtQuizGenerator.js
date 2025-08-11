@@ -154,7 +154,7 @@ class SRTQuizGenerator {
         return existingQuiz.questions;
       }
     } catch (error) {
-      console.warn('Failed to check existing quiz:', error.message);
+      // Silently fail
     }
     
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -192,7 +192,7 @@ Return ONLY this JSON format:
     try {
       await this.storeQuiz(videoTitle, finalQuestions);
     } catch (error) {
-      console.warn('Failed to store quiz:', error.message);
+      // Silently fail
     }
     
     return finalQuestions;
