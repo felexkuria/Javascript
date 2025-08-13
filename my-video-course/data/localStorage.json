@@ -15074,5 +15074,655 @@
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/3. Elastic Compute Cloud (EC2)/1. Introduction.mp4",
       "thumbnailUrl": "/thumbnails/6887b7961942634568953772.jpg"
     }
+  ],
+  "HashiCorp Certified Terraform Associate - Hands-On Labs": [
+    {
+      "_id": "689c6f095cc8e3547ecc2f7a",
+      "title": "001 Course Introduction",
+      "description": "Video: 001 Course Introduction.mp4",
+      "section": "01 - Course Introduction",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/01 - Course Introduction/001 Course Introduction.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f7b",
+      "title": "001 What is Infrastructure as Code",
+      "description": "Video: 001 What is Infrastructure as Code.mp4",
+      "section": "02 - Understand Infrastructure as Code (IaC) Concepts",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/02 - Understand Infrastructure as Code (IaC) Concepts/001 What is Infrastructure as Code.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f7d",
+      "title": "001 Terraform Purpose",
+      "description": "Video: 001 Terraform Purpose.mp4",
+      "section": "03 - Understand Terraform's purpose (vs other IaC)",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/03 - Understand Terraform's purpose (vs other IaC)/001 Terraform Purpose.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f7f",
+      "title": "001 Terraform Basics",
+      "description": "Video: 001 Terraform Basics.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/001 Terraform Basics.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f90",
+      "title": "001 Auto Formatting Terraform Code",
+      "description": "Video: 001 Auto Formatting Terraform Code.mp4",
+      "section": "05 - Use the Terraform CLI (outside of core workflow)",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/05 - Use the Terraform CLI (outside of core workflow)/001 Auto Formatting Terraform Code.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f96",
+      "title": "001 Terraform Modules",
+      "description": "Video: 001 Terraform Modules.mp4",
+      "section": "06 - Interact with Terraform Modules",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/06 - Interact with Terraform Modules/001 Terraform Modules.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f9c",
+      "title": "001 Understanding the Terraform Workflow",
+      "description": "Video: 001 Understanding the Terraform Workflow.mp4",
+      "section": "07 - Navigate Terraform Workflow",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/07 - Navigate Terraform Workflow/001 Understanding the Terraform Workflow.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fa2",
+      "title": "001 Terraform State - Default Local Backend",
+      "description": "Video: 001 Terraform State - Default Local Backend.mp4",
+      "section": "08 - Implement and Maintain State",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/08 - Implement and Maintain State/001 Terraform State - Default Local Backend.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fab",
+      "title": "001 Local Variables",
+      "description": "Video: 001 Local Variables.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/001 Local Variables.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fb6",
+      "title": "001 Terraform Cloud - Getting Started",
+      "description": "Video: 001 Terraform Cloud - Getting Started.mp4",
+      "section": "10 - Understand Terraform Cloud and Enterprise Capabilities",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/10 - Understand Terraform Cloud and Enterprise Capabilities/001 Terraform Cloud - Getting Started.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fbe",
+      "title": "001 Extending Terraform - Non-Cloud Providers",
+      "description": "Video: 001 Extending Terraform - Non-Cloud Providers.mp4",
+      "section": "11 - Additional Terraform Labs",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/11 - Additional Terraform Labs/001 Extending Terraform - Non-Cloud Providers.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fc1",
+      "title": "001 Exam Tips",
+      "description": "Video: 001 Exam Tips.mp4",
+      "section": "12 - Exam Tips - Terraform Associate",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/12 - Exam Tips - Terraform Associate/001 Exam Tips.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f7c",
+      "title": "002 Benefits of Infrastructure as Code",
+      "description": "Video: 002 Benefits of Infrastructure as Code.mp4",
+      "section": "02 - Understand Infrastructure as Code (IaC) Concepts",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/02 - Understand Infrastructure as Code (IaC) Concepts/002 Benefits of Infrastructure as Code.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f7e",
+      "title": "002 Benefits of Terraform State",
+      "description": "Video: 002 Benefits of Terraform State.mp4",
+      "section": "03 - Understand Terraform's purpose (vs other IaC)",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/03 - Understand Terraform's purpose (vs other IaC)/002 Benefits of Terraform State.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f80",
+      "title": "002 HashiCorp Configuration Language (HCL)",
+      "description": "Video: 002 HashiCorp Configuration Language (HCL).mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/002 HashiCorp Configuration Language (HCL).mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f91",
+      "title": "002 Replace Resources using Terraform Taint",
+      "description": "Video: 002 Replace Resources using Terraform Taint.mp4",
+      "section": "05 - Use the Terraform CLI (outside of core workflow)",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/05 - Use the Terraform CLI (outside of core workflow)/002 Replace Resources using Terraform Taint.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f97",
+      "title": "002 Terraform Module - Sources",
+      "description": "Video: 002 Terraform Module - Sources.mp4",
+      "section": "06 - Interact with Terraform Modules",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/06 - Interact with Terraform Modules/002 Terraform Module - Sources.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f9d",
+      "title": "002 Initializing Terraform with the terraform init command",
+      "description": "Video: 002 Initializing Terraform with the terraform init command.mp4",
+      "section": "07 - Navigate Terraform Workflow",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/07 - Navigate Terraform Workflow/002 Initializing Terraform with the terraform init command.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fa3",
+      "title": "002 Terraform State Locking",
+      "description": "Video: 002 Terraform State Locking.mp4",
+      "section": "08 - Implement and Maintain State",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/08 - Implement and Maintain State/002 Terraform State Locking.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fac",
+      "title": "002 Input Variables",
+      "description": "Video: 002 Input Variables.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/002 Input Variables.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fb7",
+      "title": "002 Terraform Cloud - Remote State",
+      "description": "Video: 002 Terraform Cloud - Remote State.mp4",
+      "section": "10 - Understand Terraform Cloud and Enterprise Capabilities",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/10 - Understand Terraform Cloud and Enterprise Capabilities/002 Terraform Cloud - Remote State.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fbf",
+      "title": "002 Terraform Auto Complete",
+      "description": "Video: 002 Terraform Auto Complete.mp4",
+      "section": "11 - Additional Terraform Labs",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/11 - Additional Terraform Labs/002 Terraform Auto Complete.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f81",
+      "title": "003 Terraform Plug-in Based Architecture",
+      "description": "Video: 003 Terraform Plug-in Based Architecture.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/003 Terraform Plug-in Based Architecture.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f92",
+      "title": "003 Terraform Import",
+      "description": "Video: 003 Terraform Import.mp4",
+      "section": "05 - Use the Terraform CLI (outside of core workflow)",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/05 - Use the Terraform CLI (outside of core workflow)/003 Terraform Import.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f98",
+      "title": "003 Terraform Modules - Inputs and Outputs",
+      "description": "Video: 003 Terraform Modules - Inputs and Outputs.mp4",
+      "section": "06 - Interact with Terraform Modules",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/06 - Interact with Terraform Modules/003 Terraform Modules - Inputs and Outputs.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f9e",
+      "title": "003 Validating Terraform Configuration with terraform validate",
+      "description": "Video: 003 Validating Terraform Configuration with terraform validate.mp4",
+      "section": "07 - Navigate Terraform Workflow",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/07 - Navigate Terraform Workflow/003 Validating Terraform Configuration with terraform validate.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fa4",
+      "title": "003 Terraform State - Backend Storage",
+      "description": "Video: 003 Terraform State - Backend Storage.mp4",
+      "section": "08 - Implement and Maintain State",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/08 - Implement and Maintain State/003 Terraform State - Backend Storage.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fad",
+      "title": "003 Terraform Outputs",
+      "description": "Video: 003 Terraform Outputs.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/003 Terraform Outputs.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fb8",
+      "title": "003 Terraform Cloud - Workspaces",
+      "description": "Video: 003 Terraform Cloud - Workspaces.mp4",
+      "section": "10 - Understand Terraform Cloud and Enterprise Capabilities",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/10 - Understand Terraform Cloud and Enterprise Capabilities/003 Terraform Cloud - Workspaces.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fc0",
+      "title": "003 AWS Multi-Region Provider Aliasing",
+      "description": "Video: 003 AWS Multi-Region Provider Aliasing.mp4",
+      "section": "11 - Additional Terraform Labs",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/11 - Additional Terraform Labs/003 AWS Multi-Region Provider Aliasing.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f82",
+      "title": "004 Terraform Providers Block",
+      "description": "Video: 004 Terraform Providers Block.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/004 Terraform Providers Block.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f93",
+      "title": "004 Terraform Workspaces - OSS",
+      "description": "Video: 004 Terraform Workspaces - OSS.mp4",
+      "section": "05 - Use the Terraform CLI (outside of core workflow)",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/05 - Use the Terraform CLI (outside of core workflow)/004 Terraform Workspaces - OSS.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f99",
+      "title": "004 Terraform Modules - Scope",
+      "description": "Video: 004 Terraform Modules - Scope.mp4",
+      "section": "06 - Interact with Terraform Modules",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/06 - Interact with Terraform Modules/004 Terraform Modules - Scope.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f9f",
+      "title": "004 Generate and Review an Execution Plan with terraform plan",
+      "description": "Video: 004 Generate and Review an Execution Plan with terraform plan.mp4",
+      "section": "07 - Navigate Terraform Workflow",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/07 - Navigate Terraform Workflow/004 Generate and Review an Execution Plan with terraform plan.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fa5",
+      "title": "004 Terraform State - Backend Authentication",
+      "description": "Video: 004 Terraform State - Backend Authentication.mp4",
+      "section": "08 - Implement and Maintain State",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/08 - Implement and Maintain State/004 Terraform State - Backend Authentication.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fae",
+      "title": "004 Variable Validation and Suppression",
+      "description": "Video: 004 Variable Validation and Suppression.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/004 Variable Validation and Suppression.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fb9",
+      "title": "004 Terraform Cloud - Secure Variables",
+      "description": "Video: 004 Terraform Cloud - Secure Variables.mp4",
+      "section": "10 - Understand Terraform Cloud and Enterprise Capabilities",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/10 - Understand Terraform Cloud and Enterprise Capabilities/004 Terraform Cloud - Secure Variables.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f83",
+      "title": "005 Terraform Resource Block",
+      "description": "Video: 005 Terraform Resource Block.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/005 Terraform Resource Block.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f94",
+      "title": "005 Terraform State CLI",
+      "description": "Video: 005 Terraform State CLI.mp4",
+      "section": "05 - Use the Terraform CLI (outside of core workflow)",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/05 - Use the Terraform CLI (outside of core workflow)/005 Terraform State CLI.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f9a",
+      "title": "005 Terraform Modules - Public Module Registry",
+      "description": "Video: 005 Terraform Modules - Public Module Registry.mp4",
+      "section": "06 - Interact with Terraform Modules",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/06 - Interact with Terraform Modules/005 Terraform Modules - Public Module Registry.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fa0",
+      "title": "005 Execute changes to Infrastructure with terraform apply",
+      "description": "Video: 005 Execute changes to Infrastructure with terraform apply.mp4",
+      "section": "07 - Navigate Terraform Workflow",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/07 - Navigate Terraform Workflow/005 Execute changes to Infrastructure with terraform apply.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fa6",
+      "title": "005 Terraform Remote State - Enhanced Backend",
+      "description": "Video: 005 Terraform Remote State - Enhanced Backend.mp4",
+      "section": "08 - Implement and Maintain State",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/08 - Implement and Maintain State/005 Terraform Remote State - Enhanced Backend.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2faf",
+      "title": "005 Secure Secrets in Terraform Code",
+      "description": "Video: 005 Secure Secrets in Terraform Code.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/005 Secure Secrets in Terraform Code.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fba",
+      "title": "005 Terraform Cloud - Version Control Integration",
+      "description": "Video: 005 Terraform Cloud - Version Control Integration.mp4",
+      "section": "10 - Understand Terraform Cloud and Enterprise Capabilities",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/10 - Understand Terraform Cloud and Enterprise Capabilities/005 Terraform Cloud - Version Control Integration.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f84",
+      "title": "006 Terraform Input Variables Block",
+      "description": "Video: 006 Terraform Input Variables Block.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/006 Terraform Input Variables Block.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f95",
+      "title": "006 Debugging Terraform",
+      "description": "Video: 006 Debugging Terraform.mp4",
+      "section": "05 - Use the Terraform CLI (outside of core workflow)",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/05 - Use the Terraform CLI (outside of core workflow)/006 Debugging Terraform.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f9b",
+      "title": "006 Terraform Modules - Versioning",
+      "description": "Video: 006 Terraform Modules - Versioning.mp4",
+      "section": "06 - Interact with Terraform Modules",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/06 - Interact with Terraform Modules/006 Terraform Modules - Versioning.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fa1",
+      "title": "006 Delete Resources using the terraform destroy command",
+      "description": "Video: 006 Delete Resources using the terraform destroy command.mp4",
+      "section": "07 - Navigate Terraform Workflow",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/07 - Navigate Terraform Workflow/006 Delete Resources using the terraform destroy command.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fa7",
+      "title": "006 Terraform State Migration",
+      "description": "Video: 006 Terraform State Migration.mp4",
+      "section": "08 - Implement and Maintain State",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/08 - Implement and Maintain State/006 Terraform State Migration.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fb0",
+      "title": "006 Variable Collection and Structure Types",
+      "description": "Video: 006 Variable Collection and Structure Types.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/006 Variable Collection and Structure Types.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fbb",
+      "title": "006 Terraform Cloud - Private Module Registry",
+      "description": "Video: 006 Terraform Cloud - Private Module Registry.mp4",
+      "section": "10 - Understand Terraform Cloud and Enterprise Capabilities",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/10 - Understand Terraform Cloud and Enterprise Capabilities/006 Terraform Cloud - Private Module Registry.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f85",
+      "title": "007 Terraform Local Variable Block",
+      "description": "Video: 007 Terraform Local Variable Block.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/007 Terraform Local Variable Block.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fa8",
+      "title": "007 Terraform State Refresh",
+      "description": "Video: 007 Terraform State Refresh.mp4",
+      "section": "08 - Implement and Maintain State",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/08 - Implement and Maintain State/007 Terraform State Refresh.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fb1",
+      "title": "007 Working with Data Blocks",
+      "description": "Video: 007 Working with Data Blocks.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/007 Working with Data Blocks.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fbc",
+      "title": "007 Terraform Cloud - Sentinel Policy",
+      "description": "Video: 007 Terraform Cloud - Sentinel Policy.mp4",
+      "section": "10 - Understand Terraform Cloud and Enterprise Capabilities",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/10 - Understand Terraform Cloud and Enterprise Capabilities/007 Terraform Cloud - Sentinel Policy.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f86",
+      "title": "008 Terraform Data Block",
+      "description": "Video: 008 Terraform Data Block.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/008 Terraform Data Block.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fa9",
+      "title": "008 Terraform Backend Configuration",
+      "description": "Video: 008 Terraform Backend Configuration.mp4",
+      "section": "08 - Implement and Maintain State",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/08 - Implement and Maintain State/008 Terraform Backend Configuration.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fb2",
+      "title": "008 Terraform Built-In Functions",
+      "description": "Video: 008 Terraform Built-In Functions.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/008 Terraform Built-In Functions.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fbd",
+      "title": "008 Terraform Cloud - VCS Workflow",
+      "description": "Video: 008 Terraform Cloud - VCS Workflow.mp4",
+      "section": "10 - Understand Terraform Cloud and Enterprise Capabilities",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/10 - Understand Terraform Cloud and Enterprise Capabilities/008 Terraform Cloud - VCS Workflow.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f87",
+      "title": "009 Terraform Configuration Block",
+      "description": "Video: 009 Terraform Configuration Block.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/009 Terraform Configuration Block.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2faa",
+      "title": "009 Sensitive Data in Terraform State",
+      "description": "Video: 009 Sensitive Data in Terraform State.mp4",
+      "section": "08 - Implement and Maintain State",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/08 - Implement and Maintain State/009 Sensitive Data in Terraform State.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fb3",
+      "title": "009 Dynamic Blocks",
+      "description": "Video: 009 Dynamic Blocks.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/009 Dynamic Blocks.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f88",
+      "title": "010 Terraform Module Block",
+      "description": "Video: 010 Terraform Module Block.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/010 Terraform Module Block.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fb4",
+      "title": "010 Terraform Graph",
+      "description": "Video: 010 Terraform Graph.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/010 Terraform Graph.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f89",
+      "title": "011 Terraform Output Block",
+      "description": "Video: 011 Terraform Output Block.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/011 Terraform Output Block.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2fb5",
+      "title": "011 Terraform Resource Lifecycles",
+      "description": "Video: 011 Terraform Resource Lifecycles.mp4",
+      "section": "09 - Read, Generate, and Modify Configuration",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/09 - Read, Generate, and Modify Configuration/011 Terraform Resource Lifecycles.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f8a",
+      "title": "012 Commenting Terraform Code",
+      "description": "Video: 012 Commenting Terraform Code.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/012 Commenting Terraform Code.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f8b",
+      "title": "013 Terraform Provider Installation and Versioning",
+      "description": "Video: 013 Terraform Provider Installation and Versioning.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/013 Terraform Provider Installation and Versioning.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f8c",
+      "title": "014 Using Multiple Terraform Providers",
+      "description": "Video: 014 Using Multiple Terraform Providers.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/014 Using Multiple Terraform Providers.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f8d",
+      "title": "015 Generating an SSH Key using the Terraform TLS Provider",
+      "description": "Video: 015 Generating an SSH Key using the Terraform TLS Provider.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/015 Generating an SSH Key using the Terraform TLS Provider.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f8e",
+      "title": "016 Fetch, Version, and Upgrade Terraform Providers",
+      "description": "Video: 016 Fetch, Version, and Upgrade Terraform Providers.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/016 Fetch, Version, and Upgrade Terraform Providers.mp4",
+      "watched": false,
+      "watchedAt": null
+    },
+    {
+      "_id": "689c6f095cc8e3547ecc2f8f",
+      "title": "017 Terraform Provisoners",
+      "description": "Video: 017 Terraform Provisoners.mp4",
+      "section": "04 - Understand Terraform Basics",
+      "videoUrl": "HashiCorp Certified Terraform Associate - Hands-On Labs/[TutsNode.com] - HashiCorp Certified Terraform Associate - Hands-On Lab/04 - Understand Terraform Basics/017 Terraform Provisoners.mp4",
+      "watched": false,
+      "watchedAt": null
+    }
   ]
 }

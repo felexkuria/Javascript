@@ -2153,7 +2153,7 @@ app.post('/api/video/todos/update', async (req, res) => {
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
-    
+     
     let todoProgress = {};
     if (fs.existsSync(todoDataPath)) {
       todoProgress = JSON.parse(fs.readFileSync(todoDataPath, 'utf8'));
