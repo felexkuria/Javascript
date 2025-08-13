@@ -1265,6 +1265,11 @@ ${courseName}`, extraStyles: `
           track.default = true;
           videoPlayer.appendChild(track);
           
+          // Force track to show immediately
+          track.addEventListener('load', () => {
+            track.track.mode = 'showing';
+          });
+          
           // Enable CC button
           const ccButton = document.createElement('button');
           ccButton.innerHTML = '🔤 CC';
@@ -1289,13 +1294,15 @@ ${courseName}`, extraStyles: `
             if (textTracks.length > 0) {
               const textTrack = textTracks[textTracks.length - 1];
               if (textTrack.mode === 'showing') {
-                textTrack.mode = 'hidden';
+                textTrack.mode = 'disabled';
                 ccButton.style.opacity = '0.7';
                 ccButton.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                ccButton.textContent = '🔤 CC';
               } else {
                 textTrack.mode = 'showing';
                 ccButton.style.opacity = '1';
                 ccButton.style.backgroundColor = 'rgba(59, 130, 246, 0.8)';
+                ccButton.textContent = '🔤 CC ON';
               }
             }
           };
@@ -1387,6 +1394,20 @@ ${courseName}`, extraStyles: `
       
       // Fix captions display
       videoPlayer.addEventListener('loadedmetadata', function() {
+        const tracks = videoPlayer.textTracks;
+        for (let i = 0; i < tracks.length; i++) {
+          tracks[i].mode = 'showing';
+        }
+        // Force captions to show
+        setTimeout(() => {
+          for (let i = 0; i < tracks.length; i++) {
+            tracks[i].mode = 'showing';
+          }
+        }, 1000);
+      });
+      
+      // Enable captions when video starts playing
+      videoPlayer.addEventListener('play', function() {
         const tracks = videoPlayer.textTracks;
         for (let i = 0; i < tracks.length; i++) {
           tracks[i].mode = 'showing';
@@ -1498,10 +1519,23 @@ ${courseName}`, extraStyles: `
       // Generate quiz from SRT content or pre-generated
       async function generateSRTQuiz() {
         try {
+          // Check localStorage cache first
+          const cacheKey = `quiz_${courseName}_${videoId}`;
+          const cachedQuiz = localStorage.getItem(cacheKey);
+          
+          if (cachedQuiz) {
+            const data = JSON.parse(cachedQuiz);
+            console.log('Using cached quiz for video:', data.videoTitle);
+            window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
+            return;
+          }
+          
           const response = await fetch(`/api/quiz/generate/${encodeURIComponent(courseName)}/${videoId}`);
           if (response.ok) {
             const data = await response.json();
             if (data.questions && data.questions.length > 0) {
+              // Cache the quiz
+              localStorage.setItem(cacheKey, JSON.stringify(data));
               console.log(`Starting ${data.quizType} quiz for video: ${data.videoTitle}`);
               window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
             } else {
@@ -1581,6 +1615,19 @@ ${courseName}`, extraStyles: `
           this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> AI Generating Quiz...';
           this.disabled = true;
           
+          // Check localStorage cache first
+          const cacheKey = `quiz_${courseName}_${videoId}`;
+          const cachedQuiz = localStorage.getItem(cacheKey);
+          
+          if (cachedQuiz) {
+            const data = JSON.parse(cachedQuiz);
+            console.log('Using cached quiz for video:', data.videoTitle);
+            window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
+            this.innerHTML = originalText;
+            this.disabled = false;
+            return;
+          }
+          
           // Check if online before trying API
           if (navigator.onLine) {
             try {
@@ -1594,6 +1641,8 @@ ${courseName}`, extraStyles: `
               if (response.ok) {
                 const data = await response.json();
                 if (data.questions && data.questions.length > 0) {
+                  // Cache the quiz
+                  localStorage.setItem(cacheKey, JSON.stringify(data));
                   console.log(`Starting AI quiz with ${data.questions.length} questions`);
                   window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
                   this.innerHTML = originalText;
