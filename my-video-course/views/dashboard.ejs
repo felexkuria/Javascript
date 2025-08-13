@@ -64,8 +64,8 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-3 truncate" title="<%= course.name %>">
               <%= course.name %>
             </h2>
-            <p class="text-gray-600 mb-3 truncate">
-              Learn  <%= course.name %>.
+            <p class="course-description text-gray-600 mb-3 text-sm leading-relaxed" style="height: 60px; overflow: hidden;">
+              Loading course description...
             </p>
             
             <% if (course.videos && course.videos.length > 0) { %>
@@ -116,6 +116,25 @@
 <script src="/js/gamification.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Load AI-generated course descriptions
+    const courseCards = document.querySelectorAll('.course-description');
+    courseCards.forEach((desc, index) => {
+      const courseName = desc.closest('.group').querySelector('h2').textContent.trim();
+      fetch(`/api/course/description/${encodeURIComponent(courseName)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.description) {
+            desc.textContent = data.description;
+          } else {
+            desc.textContent = `Comprehensive training course covering ${courseName} concepts and practical applications.`;
+          }
+        })
+        .catch(error => {
+          console.warn('Failed to load description for', courseName);
+          desc.textContent = `Learn ${courseName} through hands-on exercises and practical examples.`;
+        });
+    });
+    
     // Initialize connection monitor after 2 hours
     setTimeout(() => {
       const connectionMonitor = new ConnectionMonitor({

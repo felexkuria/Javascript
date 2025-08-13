@@ -1,0 +1,181 @@
+{
+  "lesson1": {
+    "summary": "This DevOps bootcamp provides comprehensive training on DevOps concepts and tools, equipping participants with the skills to automate software development and deployment processes.  The curriculum includes theoretical video lessons, practical demos, and hands-on exercises, culminating in the ability to build a complete DevOps pipeline.",
+    "keyTopics": [
+      "DevOps Concepts",
+      "DevOps Tools",
+      "Software Automation",
+      "Pipeline Building",
+      "Hands-on Exercises",
+      "Practical Demos",
+      "Community Support"
+    ]
+  },
+  "lesson3": {
+    "summary": "This module provides a comprehensive introduction to version control using Git, crucial for DevOps engineers.  It covers core Git concepts, commands, best practices, branch management, and conflict resolution through hands-on demonstrations and practical examples.",
+    "keyTopics": [
+      "Git Basics",
+      "Version Control Systems",
+      "Git Commands",
+      "Branching and Merging",
+      "Resolving Merge Conflicts",
+      "Git Best Practices",
+      "GitLab Integration"
+    ]
+  },
+  "lesson2": {
+    "summary": "This video explains the various roles and responsibilities within software development, focusing on how different teams and processes contribute to the overall lifecycle.  Using Facebook as an example, it illustrates the collaboration between developers, testers (including automated testing), and other IT roles to create and maintain a complex application.",
+    "keyTopics": [
+      "Software Development Lifecycle (SDLC)",
+      "Roles in Software Development (Developer, Tester, DevOps)",
+      "Software Testing (Manual and Automated)",
+      "DevOps Engineering",
+      "Collaboration in Software Development",
+      "IT Processes and Roles",
+      "Example: Facebook Application Development"
+    ]
+  },
+  "1. Introduction and How to use this Course": {
+    "summary": "This course prepares students for the AWS Certified Solutions Architect Associate exam using a hands-on, incremental learning approach.  It covers fundamental concepts, builds practical skills through architectural exercises, and provides supplementary materials like downloadable ebooks and cheat sheets.",
+    "keyTopics": [
+      "AWS Certified Solutions Architect Associate Exam Prep",
+      "Hands-on AWS Training",
+      "Incremental Learning Methodology",
+      "Identity and Access Management (IAM)",
+      "Free Tier AWS Account Setup",
+      "Course Structure and Resources",
+      "Exam Cram Sessions"
+    ]
+  },
+  "2. SAA-C02 Exam Guide": {
+    "summary": "This video provides a guide to the AWS Certified Solutions Architect - Associate (SAA-C02) exam.  It covers the exam format, including question types, time limits, and scoring, and details the four key domains: designing resilient, high-performing, secure, and cost-optimized architectures. The speaker emphasizes hands-on experience as crucial for exam success.",
+    "keyTopics": [
+      "SAA-C02 Exam Format and Structure",
+      "Designing Resilient Architectures",
+      "Designing High-Performing Architectures",
+      "Designing Secure Architectures",
+      "Designing Cost-Optimized Architectures",
+      "AWS SAA-C02 Exam Preparation Strategies",
+      "AWS Whitepapers and Recommended Resources"
+    ]
+  },
+  "3. Help and Support": {
+    "summary": "This video provides guidance on obtaining help and support throughout the course.  It details how to troubleshoot Udemy platform issues, hands-on labs, and suggests utilizing a Q&A forum, Google searches, a Slack workspace, and leaving course ratings and reviews.",
+    "keyTopics": [
+      "Troubleshooting Udemy Platform Issues",
+      "Resolving Hands-on Lab Problems",
+      "Utilizing the Q&A Forum",
+      "Leveraging Google Search and AWS Documentation",
+      "Seeking Assistance in the Slack Workspace",
+      "Leaving Course Ratings and Reviews"
+    ]
+  },
+  "4. Meet your instructor": {
+    "summary": "The instructor introduces themselves, sharing their background in IT and passion for teaching, and encourages students to connect via LinkedIn, Facebook, YouTube, and Slack.  They highlight opportunities to share achievements and engage with a community of learners.",
+    "keyTopics": [
+      "Instructor Background and Expertise",
+      "Connecting with the Instructor",
+      "Student Success Stories",
+      "AWS Certification",
+      "IT Career Development",
+      "Online Learning Community",
+      "Free Educational Resources"
+    ]
+  },
+  "1. Introduction": {
+    "summary": "This video section provides comprehensive, hands-on coverage of Amazon S3 and CloudFront for the AWS Certified Solutions Architect Associate exam.  It delves into the details of S3 functionality and its common integration with CloudFront, a content delivery network.",
+    "keyTopics": [
+      "Amazon S3",
+      "CloudFront",
+      "Content Delivery Network (CDN)",
+      "AWS Certified Solutions Architect Associate Exam Preparation",
+      "Hands-on AWS Training",
+      "S3 and CloudFront Integration",
+      "Caching Strategies"
+    ]
+  },
+  "1. How to Download your Free Copy of DaVinci Resolve 16 or 17 Beta": {
+    "summary": "This video tutorial guides viewers on how to download the free version of DaVinci Resolve 17.  It emphasizes downloading the free version for compatibility with the course and highlights the ease of installation. The video concludes with a preview of upcoming video editing lessons.",
+    "keyTopics": [
+      "DaVinci Resolve 17 Free Download",
+      "DaVinci Resolve Installation Guide",
+      "Video Editing Tutorial",
+      "DaVinci Resolve for Beginners",
+      "Free Video Editing Software",
+      "Software Download Process",
+      "Post-Production Workflow"
+    ]
+  },
+  "5. How to Import Media from within the Cut Page": {
+    "summary": "This video tutorial demonstrates two methods for importing media into DaVinci Resolve's Cut Page.  It compares importing individual files versus importing entire folders, highlighting the organizational benefits of the latter approach. The tutorial emphasizes using the 'Import Media Folder' option for better project management.",
+    "keyTopics": [
+      "DaVinci Resolve Cut Page",
+      "Media Import Techniques",
+      "Organizing Media in DaVinci Resolve",
+      "Import Media vs. Import Media Folder",
+      "Efficient Workflow in Video Editing",
+      "Using Shortcuts in DaVinci Resolve",
+      "Project Settings and Media Import"
+    ]
+  },
+  "6. How to Preview Your Media": {
+    "summary": "This video tutorial demonstrates different methods for previewing media files within a specific software application.  It covers various preview modes, including thumbnail, step, and detailed views, along with options for fast preview and sequential playback of multiple videos.",
+    "keyTopics": [
+      "Video Preview Techniques",
+      "Media File Organization",
+      "Fast Video Review",
+      "Software Tutorial",
+      "Video Editing Workflow",
+      "Media Playback Options",
+      "Video File Metadata"
+    ]
+  },
+  "lesson4": {
+    "summary": "This lesson explains version control using Git, highlighting its importance in collaborative software development.  It covers how Git manages code changes, handles merge conflicts, and allows for reverting to previous versions, emphasizing the best practice of continuous integration to prevent major issues.",
+    "keyTopics": [
+      "Version Control with Git",
+      "Collaborative Code Development",
+      "Merge Conflicts and Resolution",
+      "Continuous Integration",
+      "Code Repository Management",
+      "Reverting Changes",
+      "Importance of Commit Messages"
+    ]
+  },
+  "lesson97": {
+    "summary": "This video introduces Kubernetes, a tool for managing complex containerized applications, explaining its architecture and functionality.  The course covers fundamental concepts, practical installation and usage with MiniKube and kubectl, and progresses to advanced topics like namespaces, services, ingress, and Helm.",
+    "keyTopics": [
+      "Kubernetes Fundamentals",
+      "Kubernetes Architecture",
+      "MiniKube and kubectl Installation",
+      "Kubernetes YAML Configuration",
+      "Deploying Applications in Kubernetes",
+      "Kubernetes Services & Ingress",
+      "Helm Package Manager"
+    ]
+  },
+  "lesson98": {
+    "summary": "This video explains Kubernetes, an open-source container orchestration framework, detailing its function in managing large numbers of containers across diverse environments.  It highlights Kubernetes' solutions to challenges posed by microservices and container management, focusing on its provision of high availability, scalability, and disaster recovery.",
+    "keyTopics": [
+      "Kubernetes Definition and Functionality",
+      "Container Orchestration",
+      "Microservices and Containerization",
+      "High Availability and Scalability",
+      "Disaster Recovery with Kubernetes",
+      "Managing Containers across Multiple Environments",
+      "Open Source Container Technologies"
+    ]
+  },
+  "lesson99": {
+    "summary": "This video explains Kubernetes components by demonstrating a simple JavaScript application deployment.  It covers core concepts like pods (abstractions over containers), services (providing stable IP addresses), and the distinction between internal and external services for application accessibility.",
+    "keyTopics": [
+      "Kubernetes Pods",
+      "Kubernetes Services (Internal & External)",
+      "Container Orchestration with Kubernetes",
+      "Kubernetes Networking",
+      "Ephemeral vs. Stable Components in Kubernetes",
+      "Deploying Applications on Kubernetes",
+      "Docker Container Integration with Kubernetes"
+    ]
+  }
+}

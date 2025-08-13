@@ -1048,15 +1048,35 @@ app.get('/videos/:courseName/file/:id', async (req, res) => {
       
       const srtQuizGenerator = require('./services/srtQuizGenerator');
       srtQuizGenerator.generateSRT(videoPath)
-        .then(() => {
+        .then(async (srtPath) => {
           console.log(`Background SRT generation completed for: ${videoName}`);
           srtGenerationProgress.set(videoName, { status: 'completed', progress: 100 });
-          setTimeout(() => srtGenerationProgress.delete(videoName), 60000); // Clean up after 1 minute
+          
+          // Generate summary and topics after SRT completion
+          try {
+            const srtEntries = srtQuizGenerator.parseSRT(srtPath);
+            if (srtEntries && srtEntries.length > 3) {
+              const summaryData = await srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoName);
+              console.log(`Generated summary and topics for: ${videoName}`);
+              
+              // Store summary data
+              const dataDir = path.join(__dirname, 'data');
+              if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
+              const summaryPath = path.join(dataDir, 'video_summaries.json');
+              const summaries = fs.existsSync(summaryPath) ? JSON.parse(fs.readFileSync(summaryPath, 'utf8')) : {};
+              summaries[videoName] = summaryData;
+              fs.writeFileSync(summaryPath, JSON.stringify(summaries, null, 2));
+            }
+          } catch (summaryError) {
+            console.warn(`Summary generation failed for ${videoName}:`, summaryError.message);
+          }
+          
+          setTimeout(() => srtGenerationProgress.delete(videoName), 60000);
         })
         .catch(error => {
           console.warn(`Background SRT generation failed for ${videoName}:`, error.message);
           srtGenerationProgress.set(videoName, { status: 'failed', progress: 0 });
-          setTimeout(() => srtGenerationProgress.delete(videoName), 60000); // Clean up after 1 minute
+          setTimeout(() => srtGenerationProgress.delete(videoName), 60000);
         });
     } else if (srtGenerationProgress.has(videoName)) {
       const progress = srtGenerationProgress.get(videoName);
@@ -1644,7 +1664,7 @@ app.post('/api/process-whisper', whisperUpload.single('video'), async (req, res)
     if (!fs.existsSync(whisperDir)) {
       fs.mkdirSync(whisperDir, { recursive: true });
     }
-    if (!fs.existsSync(tempDir)) {
+    if (!fs.existsSync(tempDir)) { 
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
@@ -1756,6 +1776,10 @@ const srtQuizGenerator = require('./services/srtQuizGenerator');
 // Import pre-generated quiz service
 const preGeneratedQuizService = require('./services/preGeneratedQuizzes');
 
+// Import PDF todo extractor and knowledge service
+const pdfTodoExtractor = require('./services/pdfTodoExtractor');
+const pdfKnowledgeService = require('./services/pdfKnowledgeService');
+
 // API endpoint to generate quiz from video SRT or pre-generated
 app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
   try {
@@ -1820,6 +1844,300 @@ app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
   } catch (error) {
     console.error('Error generating quiz:', error);
     res.status(500).json({ error: 'Failed to generate quiz' });
+  }
+});
+
+// API endpoint to get video summary and topics
+app.get('/api/video/summary/:videoName', async (req, res) => {
+  try {
+    const videoName = req.params.videoName;
+    const summaryPath = path.join(__dirname, 'data', 'video_summaries.json');
+    
+    // Check if summary already exists
+    if (fs.existsSync(summaryPath)) {
+      const summaries = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+      if (summaries[videoName]) {
+        return res.json(summaries[videoName]);
+      }
+    }
+    
+    // If no summary exists, try to generate it from existing SRT
+    const videoDir = path.join(__dirname, 'public', 'videos');
+    const courseFolders = fs.readdirSync(videoDir).filter(folder => 
+      fs.statSync(path.join(videoDir, folder)).isDirectory()
+    );
+    
+    let srtPath = null;
+    for (const courseFolder of courseFolders) {
+      const coursePath = path.join(videoDir, courseFolder);
+      const findSrt = (dir) => {
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+          const filePath = path.join(dir, file);
+          if (fs.statSync(filePath).isDirectory()) {
+            const result = findSrt(filePath);
+            if (result) return result;
+          } else if (file === `${videoName}.srt`) {
+            return filePath;
+          }
+        }
+        return null;
+      };
+      srtPath = findSrt(coursePath);
+      if (srtPath) break;
+    }
+    
+    if (srtPath && fs.existsSync(srtPath)) {
+      console.log(`Generating summary for existing SRT: ${videoName}`);
+      const srtQuizGenerator = require('./services/srtQuizGenerator');
+      const srtEntries = srtQuizGenerator.parseSRT(srtPath);
+      
+      if (srtEntries && srtEntries.length > 3) {
+        const summaryData = await srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoName);
+        
+        // Store the generated summary
+        const dataDir = path.join(__dirname, 'data');
+        if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
+        const summaries = fs.existsSync(summaryPath) ? JSON.parse(fs.readFileSync(summaryPath, 'utf8')) : {};
+        summaries[videoName] = summaryData;
+        fs.writeFileSync(summaryPath, JSON.stringify(summaries, null, 2));
+        
+        console.log(`Generated and stored summary for: ${videoName}`);
+        return res.json(summaryData);
+      }
+    }
+    
+    res.json({ summary: null, keyTopics: [] });
+  } catch (error) {
+    console.error('Error getting video summary:', error);
+    res.status(500).json({ error: 'Failed to get video summary' });
+  }
+});
+
+// API endpoint to get todos for a video (enhanced with PDF extraction)
+app.get('/api/video/todos/:courseName/:videoTitle', async (req, res) => {
+  try {
+    const courseName = decodeURIComponent(req.params.courseName);
+    const videoTitle = decodeURIComponent(req.params.videoTitle);
+    
+    console.log(`Getting todos for video: ${videoTitle} in course: ${courseName}`);
+    
+    // Try PDF-based todos first, fallback to template-based
+    let todos;
+    try {
+      todos = await pdfKnowledgeService.getTodosForVideo(videoTitle, courseName);
+      console.log(`Found ${todos.length} todo categories from PDFs`);
+    } catch (pdfError) {
+      console.warn('PDF todo extraction failed, using fallback:', pdfError.message);
+      todos = pdfTodoExtractor.getTodosForVideo(videoTitle, courseName);
+    }
+    
+    res.json({ todos, videoTitle, courseName });
+  } catch (error) {
+    console.error('Error getting video todos:', error);
+    res.status(500).json({ error: 'Failed to get video todos' });
+  }
+});
+
+// API endpoint to update todo completion status
+app.post('/api/video/todos/update', async (req, res) => {
+  try {
+    const { videoTitle, courseName, todoId, completed } = req.body;
+    
+    // Store todo completion in localStorage-like structure
+    const todoDataPath = path.join(__dirname, 'data', 'todo_progress.json');
+    const dataDir = path.join(__dirname, 'data');
+    
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    
+    let todoProgress = {};
+    if (fs.existsSync(todoDataPath)) {
+      todoProgress = JSON.parse(fs.readFileSync(todoDataPath, 'utf8'));
+    }
+    
+    const key = `${courseName}_${videoTitle}`;
+    if (!todoProgress[key]) {
+      todoProgress[key] = {};
+    }
+    
+    todoProgress[key][todoId] = {
+      completed,
+      completedAt: completed ? new Date().toISOString() : null
+    };
+    
+    fs.writeFileSync(todoDataPath, JSON.stringify(todoProgress, null, 2));
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating todo:', error);
+    res.status(500).json({ error: 'Failed to update todo' });
+  }
+});
+
+// API endpoint to get todo progress
+app.get('/api/video/todos/progress/:courseName/:videoTitle', async (req, res) => {
+  try {
+    const courseName = decodeURIComponent(req.params.courseName);
+    const videoTitle = decodeURIComponent(req.params.videoTitle);
+    
+    const todoDataPath = path.join(__dirname, 'data', 'todo_progress.json');
+    
+    if (!fs.existsSync(todoDataPath)) {
+      return res.json({ progress: {} });
+    }
+    
+    const todoProgress = JSON.parse(fs.readFileSync(todoDataPath, 'utf8'));
+    const key = `${courseName}_${videoTitle}`;
+    
+    res.json({ progress: todoProgress[key] || {} });
+  } catch (error) {
+    console.error('Error getting todo progress:', error);
+    res.status(500).json({ error: 'Failed to get todo progress' });
+  }
+});
+
+// API endpoint to generate course description using Gemini AI
+app.get('/api/course/description/:courseName', async (req, res) => {
+  try {
+    const courseName = decodeURIComponent(req.params.courseName);
+    const summaryPath = path.join(__dirname, 'data', 'video_summaries.json');
+    
+    if (!fs.existsSync(summaryPath)) {
+      return res.json({ description: null });
+    }
+    
+    const summaries = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+    const courseVideos = Object.entries(summaries).filter(([videoName, data]) => {
+      // Match videos that might belong to this course
+      return videoName.toLowerCase().includes(courseName.toLowerCase().split(' ')[0]) ||
+             videoName.startsWith('lesson') ||
+             videoName.includes('Introduction');
+    });
+    
+    if (courseVideos.length === 0) {
+      return res.json({ description: null });
+    }
+    
+    // Generate course description using Gemini AI
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI('AIzaSyAT7kcq2iej1djqwuDNetyLexUVL9ear68');
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const videoSummaries = courseVideos.map(([name, data]) => data.summary).join(' ');
+    const allTopics = [...new Set(courseVideos.flatMap(([name, data]) => data.keyTopics))];
+    
+    const prompt = `Based on these video summaries from a course called "${courseName}", create a compelling 2-3 sentence course description:
+
+Video summaries: ${videoSummaries.substring(0, 2000)}
+
+Key topics covered: ${allTopics.slice(0, 10).join(', ')}
+
+Return only the course description, no extra text.`;
+    
+    const result = await model.generateContent(prompt);
+    const description = result.response.text().trim();
+    
+    res.json({ description });
+  } catch (error) {
+    console.error('Error generating course description:', error);
+    res.json({ description: null });
+  }
+});
+
+// Chatbot route
+app.get('/chatbot', (req, res) => {
+  res.render('chatbot');
+});
+
+// Simple offline chatbot responses
+function getOfflineResponse(message, courseName, videoTitle) {
+  const msg = message.toLowerCase();
+  
+  if (msg.includes('docker')) {
+    return "Indeed! Docker is fantastic for containerization! Think of containers like shipping containers - they package your application with everything it needs to run consistently anywhere. Start with 'docker run hello-world' to test your setup, then try containerizing a simple app. The beauty is in the isolation and portability! 🐳";
+  }
+  
+  if (msg.includes('git')) {
+    return "Ah, Git! The version control system that's absolutely essential for any developer. Think of it like a time machine for your code - you can go back to any previous version, create parallel universes (branches), and merge them back together. Start with 'git init', 'git add', and 'git commit' - these are your bread and butter! 📚";
+  }
+  
+  if (msg.includes('aws') || msg.includes('cloud')) {
+    return "Indeed! AWS is like having a massive data center at your fingertips! Start with EC2 (virtual servers) and S3 (storage) - they're the foundation. Remember, the cloud is just someone else's computer, but with incredible scalability and reliability. Always check your billing dashboard though! ☁️";
+  }
+  
+  if (msg.includes('kubernetes') || msg.includes('k8s')) {
+    return "Kubernetes! The orchestrator of containers! Think of it as a conductor leading an orchestra of containers. It handles scaling, healing, and managing your containerized applications. Start with pods (the smallest unit), then services, and deployments. It's complex but incredibly powerful! 🎼";
+  }
+  
+  if (msg.includes('jenkins') || msg.includes('ci/cd')) {
+    return "CI/CD with Jenkins is like having a robot assistant that builds and deploys your code automatically! Every time you push code, Jenkins can run tests, build your application, and deploy it. Think of it as an assembly line for software - automation is key to DevOps success! 🤖";
+  }
+  
+  if (msg.includes('terraform')) {
+    return "Terraform! Infrastructure as Code at its finest! Instead of clicking through AWS console, you write code that describes your infrastructure. It's like having a blueprint for your entire cloud setup. 'terraform plan' shows you what will change, 'terraform apply' makes it happen. Reproducible infrastructure! 🏗️";
+  }
+  
+  return `Indeed! That's a thoughtful question about ${videoTitle || 'this topic'}! While I'm running in offline mode right now, I encourage you to break down the problem step by step. \n\nIn DevOps, we always start with the fundamentals and build up. Don't be afraid to experiment in a safe environment - that's how we learn best! \n\nKeep exploring and asking great questions like this one! 🚀`;
+}
+
+// Chatbot API endpoint with offline fallback
+app.post('/api/chatbot', async (req, res) => {
+  try {
+    const { message, courseName, videoTitle } = req.body;
+    console.log(`Chatbot request: ${message} for course: ${courseName}, video: ${videoTitle}`);
+    
+    if (!message || message.trim().length === 0) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+    
+    // Try AI response first, fallback to offline if quota exceeded
+    try {
+      const summaryPath = path.join(__dirname, 'data', 'video_summaries.json');
+      let courseKnowledge = '';
+      
+      if (fs.existsSync(summaryPath)) {
+        const summaries = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+        courseKnowledge = Object.entries(summaries).map(([video, data]) => 
+          `Video: ${video}\nSummary: ${data.summary}\nTopics: ${data.keyTopics.join(', ')}\n`
+        ).join('\n');
+      }
+      
+      let pdfKnowledge = '';
+      try {
+        if (courseName) {
+          pdfKnowledge = await pdfKnowledgeService.getAllPDFKnowledge(courseName);
+        }
+      } catch (pdfError) {
+        console.warn('Failed to load PDF knowledge:', pdfError.message);
+      }
+      
+      const { GoogleGenerativeAI } = require('@google/generative-ai');
+      const genAI = new GoogleGenerativeAI('AIzaSyAT7kcq2iej1djqwuDNetyLexUVL9ear68');
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      const contextInfo = courseKnowledge || pdfKnowledge ? 
+        `\n\nCourse Knowledge:\n${courseKnowledge.substring(0, 2000)}\n\nPDF Knowledge:\n${pdfKnowledge.substring(0, 2000)}` :
+        '\n\nNote: No specific course content available, provide general educational guidance.';
+      
+      const prompt = `You are a course teaching assistant with the enthusiastic, clear, and engaging teaching style of David J. Malan from Harvard's CS50. You should explain concepts in his characteristic way:\n\n- Use analogies and real-world examples\n- Break down complex concepts into simple parts\n- Be enthusiastic and encouraging\n- Use "Indeed!" and "This is CS50!" style expressions when appropriate\n- Make learning fun and accessible\n- Reference specific course content when relevant\n- Keep responses concise but informative (2-3 paragraphs max)\n- For DevOps topics, provide practical, hands-on guidance${contextInfo}\n\nStudent Question: ${message}\n\nRespond as David J. Malan would, providing accurate, engaging explanations:`;
+      
+      const result = await model.generateContent(prompt);
+      const response = result.response.text();
+      
+      res.json({ response });
+      
+    } catch (aiError) {
+      console.warn('AI API failed, using offline response:', aiError.message);
+      const offlineResponse = getOfflineResponse(message, courseName, videoTitle);
+      res.json({ response: offlineResponse });
+    }
+    
+  } catch (error) {
+    console.error('Chatbot error:', error);
+    const fallbackResponse = getOfflineResponse(message, courseName, videoTitle);
+    res.json({ response: fallbackResponse });
   }
 });
 

@@ -1,0 +1,146 @@
+<%- include('partials/header', { 
+  title: 'Course Chatbot',
+  extraStyles: `
+    <style>
+      .chat-container { height: calc(100vh - 200px); }
+      .message { animation: fadeIn 0.3s ease-in; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      .typing-indicator { animation: pulse 1.5s infinite; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+  `
+}) %>
+
+<main class="flex-grow px-4 py-8 md:px-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
+        <h1 class="text-2xl font-bold mb-2">🤖 Course Assistant</h1>
+        <p class="text-blue-100">Ask me anything about your video courses! I'll explain concepts like David J. Malan from CS50.</p>
+      </div>
+      
+      <div id="chatContainer" class="chat-container overflow-y-auto p-6 bg-gray-50">
+        <div class="message mb-4">
+          <div class="flex items-start">
+            <div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+              🤖
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow-sm max-w-3xl">
+              <p class="text-gray-800">Hello! I'm your course assistant. I have knowledge from all your video courses and can explain concepts in an engaging, David J. Malan style. Try asking me:</p>
+              <ul class="mt-2 text-sm text-gray-600">
+                <li>• "Explain Git like David J. Malan"</li>
+                <li>• "What is Kubernetes in simple terms?"</li>
+                <li>• "How does DevOps work?"</li>
+                <li>• "Explain AWS architecture"</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="border-t bg-white p-4">
+        <div class="flex gap-3">
+          <input 
+            type="text" 
+            id="messageInput" 
+            placeholder="Ask me about any concept from your courses..."
+            class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button 
+            id="sendButton"
+            class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const chatContainer = document.getElementById('chatContainer');
+  const messageInput = document.getElementById('messageInput');
+  const sendButton = document.getElementById('sendButton');
+  
+  function addMessage(content, isUser = false) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message mb-4';
+    
+    messageDiv.innerHTML = `
+      <div class="flex items-start ${isUser ? 'justify-end' : ''}">
+        ${!isUser ? '<div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">🤖</div>' : ''}
+        <div class="${isUser ? 'bg-blue-500 text-white ml-12' : 'bg-white text-gray-800'} rounded-lg p-4 shadow-sm max-w-3xl">
+          ${content}
+        </div>
+        ${isUser ? '<div class="bg-gray-400 text-white rounded-full w-8 h-8 flex items-center justify-center ml-3 flex-shrink-0">👤</div>' : ''}
+      </div>
+    `;
+    
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+  
+  function showTyping() {
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'typing';
+    typingDiv.className = 'message mb-4';
+    typingDiv.innerHTML = `
+      <div class="flex items-start">
+        <div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">🤖</div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <div class="typing-indicator text-gray-500">Thinking like David J. Malan...</div>
+        </div>
+      </div>
+    `;
+    chatContainer.appendChild(typingDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+  
+  function hideTyping() {
+    const typing = document.getElementById('typing');
+    if (typing) typing.remove();
+  }
+  
+  async function sendMessage() {
+    const message = messageInput.value.trim();
+    if (!message) return;
+    
+    addMessage(message, true);
+    messageInput.value = '';
+    sendButton.disabled = true;
+    
+    showTyping();
+    
+    try {
+      const response = await fetch('/api/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+      
+      const data = await response.json();
+      hideTyping();
+      
+      if (data.response) {
+        addMessage(data.response.replace(/\n/g, '<br>'));
+      } else {
+        addMessage('Sorry, I encountered an error. Please try again.');
+      }
+    } catch (error) {
+      hideTyping();
+      addMessage('Sorry, I\'m having trouble connecting. Please try again.');
+    }
+    
+    sendButton.disabled = false;
+  }
+  
+  sendButton.addEventListener('click', sendMessage);
+  messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+});
+</script>
+
+<%- include('partials/footer') %>

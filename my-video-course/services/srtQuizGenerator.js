@@ -203,7 +203,9 @@ Return ONLY this JSON format:
     const jsonMatch = response.match(/\[.*\]/s);
     if (!jsonMatch) throw new Error('No JSON found in response');
     
-    const questions = JSON.parse(jsonMatch[0]);
+    // Clean up malformed JSON (remove trailing commas)
+    const cleanJson = jsonMatch[0].replace(/,\s*([}\]])/g, '$1');
+    const questions = JSON.parse(cleanJson);
     const finalQuestions = questions.map((q, i) => ({ ...q, id: `ai_${this.hashString(videoTitle)}_${i}` }));
     
     // Store quiz in MongoDB
@@ -214,6 +216,35 @@ Return ONLY this JSON format:
     }
     
     return finalQuestions;
+  }
+  
+  // Generate summary and key topics from SRT
+  async generateSummaryAndTopics(srtEntries, videoTitle) {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const content = srtEntries.map(e => e.text).join(' ').substring(0, 4000);
+    
+    const prompt = `Analyze this video transcript and provide:
+1. A concise summary (2-3 sentences)
+2. Key topics for content repurposing (5-7 topics)
+
+Video: "${videoTitle}"
+Transcript: "${content}"
+
+Return ONLY this JSON format:
+{
+  "summary": "Brief 2-3 sentence summary of the video content",
+  "keyTopics": ["Topic 1", "Topic 2", "Topic 3", "Topic 4", "Topic 5"]
+}`;
+    
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
+    
+    const jsonMatch = response.match(/\{.*\}/s);
+    if (!jsonMatch) throw new Error('No JSON found in response');
+    
+    // Clean up malformed JSON (remove trailing commas)
+    const cleanJson = jsonMatch[0].replace(/,\s*([}\]])/g, '$1');
+    return JSON.parse(cleanJson);
   }
   
   // Store quiz in localStorage and sync with MongoDB

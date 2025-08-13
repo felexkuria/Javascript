@@ -6730,6 +6730,17 @@
       "watchedAt": "2025-08-11T11:42:30.456Z",
       "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson98.mp4",
       "thumbnailUrl": "/thumbnails/6887b8811942634568953bea.jpg"
+    },
+    {
+      "_id": "6887b8811942634568953beb",
+      "title": "lesson99",
+      "description": "Description for lesson99.mp4",
+      "section": null,
+      "chapter": "[TutsNode.com] - DevOps Bootcamp",
+      "watched": true,
+      "watchedAt": "2025-08-11T18:13:49.518Z",
+      "videoUrl": "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson99.mp4",
+      "thumbnailUrl": "/thumbnails/6887b8811942634568953beb.jpg"
     }
   ],
   "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]": [
