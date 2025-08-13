@@ -237,5 +237,35 @@
       "Git History and Log",
       "Git vs. SVN"
     ]
+  },
+  "001 Extending Terraform - Non-Cloud Providers": {
+    "summary": "This lab demonstrates extending Terraform's functionality beyond cloud providers by using non-cloud providers.  It focuses on the practical application of the random password generator and SSH key generator providers.  The lab guides users through creating a new Terraform configuration, initializing the environment, and applying the configuration to generate random values.",
+    "keyTopics": [
+      "Terraform Extensions",
+      "Non-Cloud Providers",
+      "Random Password Generator",
+      "SSH Key Generator",
+      "Terraform Configuration"
+    ]
+  },
+  "7. Instance Metadata": {
+    "summary": "This lab demonstrates how to access and utilize instance metadata, data about a running instance used for configuration and management.  It uses the curl command to retrieve information such as public hostname, IP address, and instance ID from the metadata URL (169.254.169.254/latest/metadata/).  The lab showcases how to drill down into specific metadata categories for detailed instance information.",
+    "keyTopics": [
+      "Instance Metadata",
+      "Instance Metadata URL (169.254.169.254/latest/metadata/)",
+      "Retrieving Instance Information (hostname, IP, ID)",
+      "curl command",
+      "Amazon Linux 2 AMI"
+    ]
+  },
+  "001 Auto Formatting Terraform Code": {
+    "summary": "This lab demonstrates the Terraform `fmt` command, a crucial tool for automatically formatting Terraform code.  The command corrects inconsistencies in code style, such as misaligned equals signs and improper indentation, ensuring readability and maintainability.  It's especially useful after copying code from other sources, before committing to source control, or sharing with collaborators.",
+    "keyTopics": [
+      "Terraform Formatting",
+      "Terraform fmt command",
+      "Code Style",
+      "Auto-formatting",
+      "Source Control Integration"
+    ]
   }
 }

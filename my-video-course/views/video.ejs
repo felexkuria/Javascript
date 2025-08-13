@@ -318,6 +318,62 @@ ${courseName}`, extraStyles: `
     </div>
 
     <div class="lg:col-span-1">
+      <% if (typeof chapters !== 'undefined' && chapters.length > 0) { %>
+      <div class="glass-sidebar rounded-2xl p-6 mb-6">
+        <h2 class="text-xl font-semibold text-white mb-4">
+          📚 Chapters
+        </h2>
+        <div class="space-y-2">
+          <% 
+          // Sort chapters by extracting numbers
+          const sortedChapters = chapters.sort((a, b) => {
+            const aMatch = a.match(/(\d+)/);
+            const bMatch = b.match(/(\d+)/);
+            if (!aMatch || !bMatch) return a.localeCompare(b);
+            return parseInt(aMatch[0], 10) - parseInt(bMatch[0], 10);
+          });
+          
+          sortedChapters.forEach(chapter => {
+            const chapterVideos = videosByChapter[chapter];
+            const watchedCount = chapterVideos.filter(v => v.watched).length;
+            const totalCount = chapterVideos.length;
+            const isCompleted = watchedCount === totalCount;
+          %>
+          <details class="border border-gray-200 rounded-lg">
+            <summary class="font-medium text-gray-700 dark:text-gray-300 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
+              <span class="flex items-center justify-between">
+                <span>
+                  <%= chapter %>
+                  <% if (isCompleted) { %>
+                    <i class="fas fa-check-circle text-green-500 ml-2"></i>
+                  <% } %>
+                </span>
+                <span class="text-xs text-gray-500"><%= watchedCount %>/<%= totalCount %></span>
+              </span>
+            </summary>
+            <div class="p-3 pt-0">
+              <ul class="space-y-1">
+                <% chapterVideos.forEach((chapterVideo, index) => { %>
+                <li>
+                  <a
+                    href="/videos/<%= encodeURIComponent(courseName) %>/<%= chapterVideo._id %>"
+                    class="block text-sm p-2 rounded <%= chapterVideo._id.toString() === video._id.toString() ? 'bg-indigo-100 text-indigo-600 font-medium' : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50' %>"
+                  >
+                    <%= (index + 1) %>. <%= chapterVideo.title %>
+                    <% if (chapterVideo.watched) { %>
+                      <i class="fas fa-check text-green-500 ml-1"></i>
+                    <% } %>
+                  </a>
+                </li>
+                <% }); %>
+              </ul>
+            </div>
+          </details>
+          <% }); %>
+        </div>
+      </div>
+      <% } %>
+      
       <!-- Gamification Sidebar -->
       <div class="gamification-sidebar">
         <h3 class="text-lg font-semibold mb-4">🎮 Your Progress</h3>
@@ -342,8 +398,6 @@ ${courseName}`, extraStyles: `
           View Full Progress
         </a>
       </div>
-      
-
       
       <!-- Quick Quiz Button -->
       <div class="glass-sidebar rounded-2xl p-6 mb-6">
@@ -412,60 +466,7 @@ ${courseName}`, extraStyles: `
         </div>
       </div>
       
-      <% if (typeof chapters !== 'undefined' && chapters.length > 0) { %>
-      <div class="glass-sidebar rounded-2xl p-6 mb-6">
-        <h2 class="text-xl font-semibold text-white mb-4">
-          📚 Chapters
-        </h2>
-        <div class="space-y-2">
-          <% 
-          // Sort chapters by extracting numbers
-          const sortedChapters = chapters.sort((a, b) => {
-            const aMatch = a.match(/(\d+)/);
-            const bMatch = b.match(/(\d+)/);
-            if (!aMatch || !bMatch) return a.localeCompare(b);
-            return parseInt(aMatch[0], 10) - parseInt(bMatch[0], 10);
-          });
-          
-          sortedChapters.forEach(chapter => {
-            const chapterVideos = videosByChapter[chapter];
-            const watchedCount = chapterVideos.filter(v => v.watched).length;
-            const totalCount = chapterVideos.length;
-            const isCompleted = watchedCount === totalCount;
-          %>
-          <details class="border border-gray-200 rounded-lg">
-            <summary class="font-medium text-gray-700 dark:text-gray-300 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
-              <span class="flex items-center justify-between">
-                <span>
-                  <%= chapter %>
-                  <% if (isCompleted) { %>
-                    <i class="fas fa-check-circle text-green-500 ml-2"></i>
-                  <% } %>
-                </span>
-                <span class="text-xs text-gray-500"><%= watchedCount %>/<%= totalCount %></span>
-              </span>
-            </summary>
-            <div class="p-3 pt-0">
-              <ul class="space-y-1">
-                <% chapterVideos.forEach((chapterVideo, index) => { %>
-                <li>
-                  <a
-                    href="/videos/<%= encodeURIComponent(courseName) %>/<%= chapterVideo._id %>"
-                    class="block text-sm p-2 rounded <%= chapterVideo._id.toString() === video._id.toString() ? 'bg-indigo-100 text-indigo-600 font-medium' : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50' %>"
-                  >
-                    <%= (index + 1) %>. <%= chapterVideo.title %>
-                    <% if (chapterVideo.watched) { %>
-                      <i class="fas fa-check text-green-500 ml-1"></i>
-                    <% } %>
-                  </a>
-                </li>
-                <% }); %>
-              </ul>
-            </div>
-          </details>
-          <% }); %>
-        </div>
-      </div>      <% } %>
+
 
       <div class="glass-sidebar rounded-2xl p-6 mb-6">
         <h2 class="text-xl font-semibold text-white mb-4">
@@ -1364,49 +1365,79 @@ ${courseName}`, extraStyles: `
     if (videoPlayer) {
       checkForSubtitles();
       monitorSRTProgress();
+      
+      // Fix captions display
+      videoPlayer.addEventListener('loadedmetadata', function() {
+        const tracks = videoPlayer.textTracks;
+        for (let i = 0; i < tracks.length; i++) {
+          tracks[i].mode = 'showing';
+        }
+      });
       document.addEventListener('keydown', function(e) {
-        // Only handle shortcuts if not typing in an input
-        if (document.activeElement.tagName === 'INPUT' ||
-            document.activeElement.tagName === 'TEXTAREA') {
+        // Only handle shortcuts if not typing in an input and video is ready
+        if (!videoPlayer || videoPlayer.readyState < 2 ||
+            document.activeElement.tagName === 'INPUT' ||
+            document.activeElement.tagName === 'TEXTAREA' ||
+            document.activeElement.isContentEditable) {
           return;
         }
 
-        switch(e.key.toLowerCase()) {
+        const key = e.key.toLowerCase();
+        if (['f', 'j', 'k', 'l'].includes(key) || e.code === 'Space') {
+          e.preventDefault();
+        }
+
+        switch(key) {
           case 'f':
-            if (document.fullscreenElement) {
-              document.exitFullscreen();
-            } else {
-              videoPlayer.requestFullscreen();
-            }
-            showKeyHint('Fullscreen');
-            if (window.gamificationSystem) {
-              window.gamificationSystem.onKeyboardShortcut('F - Fullscreen');
+            try {
+              if (document.fullscreenElement) {
+                document.exitFullscreen();
+                showKeyHint('Exit Fullscreen');
+              } else {
+                videoPlayer.requestFullscreen();
+                showKeyHint('Fullscreen');
+              }
+              if (window.gamificationSystem) {
+                window.gamificationSystem.onKeyboardShortcut('F - Fullscreen');
+              }
+            } catch (err) {
+              console.warn('Fullscreen error:', err);
             }
             break;
           case 'j':
-            videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 15);
-            showKeyHint('⏪ -15s');
-            if (window.gamificationSystem) {
-              window.gamificationSystem.onKeyboardShortcut('J - Rewind');
+            if (videoPlayer.duration) {
+              videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
+              showKeyHint('⏪ -10s');
+              if (window.gamificationSystem) {
+                window.gamificationSystem.onKeyboardShortcut('J - Rewind');
+              }
             }
             break;
           case 'k':
-            if (videoPlayer.paused) {
-              videoPlayer.play();
-              showKeyHint('▶️ Play');
-            } else {
-              videoPlayer.pause();
-              showKeyHint('⏸️ Pause');
-            }
-            if (window.gamificationSystem) {
-              window.gamificationSystem.onKeyboardShortcut('K - Play/Pause');
+          case ' ':
+            try {
+              if (videoPlayer.paused) {
+                videoPlayer.play().then(() => {
+                  showKeyHint('▶️ Play');
+                }).catch(err => console.warn('Play error:', err));
+              } else {
+                videoPlayer.pause();
+                showKeyHint('⏸️ Pause');
+              }
+              if (window.gamificationSystem) {
+                window.gamificationSystem.onKeyboardShortcut('K - Play/Pause');
+              }
+            } catch (err) {
+              console.warn('Play/pause error:', err);
             }
             break;
           case 'l':
-            videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 15);
-            showKeyHint('⏩ +15s');
-            if (window.gamificationSystem) {
-              window.gamificationSystem.onKeyboardShortcut('L - Forward');
+            if (videoPlayer.duration) {
+              videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 10);
+              showKeyHint('⏩ +10s');
+              if (window.gamificationSystem) {
+                window.gamificationSystem.onKeyboardShortcut('L - Forward');
+              }
             }
             break;
         }
@@ -1420,7 +1451,16 @@ ${courseName}`, extraStyles: `
       // Mark video as watched when 90% is watched and trigger quiz
       let quizTriggered = false;
       let watchedMarked = false;
+      let lastUpdateTime = 0;
+      
       videoPlayer.addEventListener('timeupdate', function() {
+        // Throttle updates for performance
+        const now = Date.now();
+        if (now - lastUpdateTime < 1000) return;
+        lastUpdateTime = now;
+        
+        if (!videoPlayer.duration || videoPlayer.duration === 0) return;
+        
         const watchPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
         
         if (watchPercent >= 90 && !watchedMarked) {
@@ -1467,8 +1507,24 @@ ${courseName}`, extraStyles: `
           
           if (!window.quizSystem) {
             console.error('Quiz system not loaded');
-            alert('Quiz system is not available. Please refresh the page.');
-            return;
+            
+            // Try to load quiz system dynamically
+            try {
+              const script = document.createElement('script');
+              script.src = '/js/quiz-system.js';
+              script.onload = () => {
+                console.log('Quiz system loaded dynamically');
+                setTimeout(() => this.click(), 100);
+              };
+              script.onerror = () => {
+                alert('Quiz system failed to load. Please refresh the page.');
+              };
+              document.head.appendChild(script);
+              return;
+            } catch (err) {
+              alert('Quiz system is not available. Please refresh the page.');
+              return;
+            }
           }
           
           console.log('Quiz system available, generating quiz...');
@@ -1478,7 +1534,10 @@ ${courseName}`, extraStyles: `
           const courseNameLower = courseName.toLowerCase();
           const videoTitle = '<%= video ? video.title.toLowerCase() : "" %>';
           
-          if (courseNameLower.includes('davinci') || courseNameLower.includes('video') || 
+          if (courseNameLower.includes('terraform') || videoTitle.includes('terraform') ||
+              courseNameLower.includes('hashicorp') || videoTitle.includes('hashicorp')) {
+            quizType = 'terraform';
+          } else if (courseNameLower.includes('davinci') || courseNameLower.includes('video') || 
               videoTitle.includes('davinci') || videoTitle.includes('resolve') || 
               videoTitle.includes('editing') || videoTitle.includes('color')) {
             quizType = 'video_editing';
@@ -1499,8 +1558,9 @@ ${courseName}`, extraStyles: `
           }
           
           // Show loading state
-          quickQuizBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> AI Generating Quiz...';
-          quickQuizBtn.disabled = true;
+          const originalText = this.innerHTML;
+          this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> AI Generating Quiz...';
+          this.disabled = true;
           
           // Check if online before trying API
           if (navigator.onLine) {
@@ -1515,17 +1575,13 @@ ${courseName}`, extraStyles: `
               if (response.ok) {
                 const data = await response.json();
                 if (data.questions && data.questions.length > 0) {
+                  console.log(`Starting AI quiz with ${data.questions.length} questions`);
                   window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
-                  quickQuizBtn.innerHTML = 'Take Quick Quiz';
-                  quickQuizBtn.disabled = false;
+                  this.innerHTML = originalText;
+                  this.disabled = false;
                   return;
                 } else {
-                  // Auto-retry after 3 seconds
-                  quickQuizBtn.innerHTML = '⏳ AI Generating... Please wait';
-                  setTimeout(() => {
-                    quickQuizBtn.click();
-                  }, 3000);
-                  return;
+                  console.log('No AI questions returned, using fallback');
                 }
               }
             } catch (error) {
@@ -1538,8 +1594,8 @@ ${courseName}`, extraStyles: `
           window.quizSystem.startQuiz(quizType);
           
           // Reset button state
-          quickQuizBtn.innerHTML = 'Take Quick Quiz';
-          quickQuizBtn.disabled = false;
+          this.innerHTML = originalText;
+          this.disabled = false;
         });
       }
     }

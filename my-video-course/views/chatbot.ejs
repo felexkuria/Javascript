@@ -39,7 +39,7 @@
       </div>
       
       <div class="border-t bg-white p-4">
-        <div class="flex gap-3">
+        <div class="flex gap-3 mb-2">
           <input 
             type="text" 
             id="messageInput" 
@@ -53,6 +53,14 @@
             Send
           </button>
         </div>
+        <div class="flex justify-end">
+          <button 
+            id="clearHistoryButton"
+            class="text-xs text-gray-500 hover:text-red-500 transition-colors"
+          >
+            Clear Chat History
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -64,7 +72,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const messageInput = document.getElementById('messageInput');
   const sendButton = document.getElementById('sendButton');
   
-  function addMessage(content, isUser = false) {
+  // Load chat history from localStorage
+  let chatHistory = JSON.parse(localStorage.getItem('chatbot_history') || '[]');
+  
+  function addMessage(content, isUser = false, saveToHistory = true) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message mb-4';
     
@@ -80,6 +91,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     chatContainer.appendChild(messageDiv);
     chatContainer.scrollTop = chatContainer.scrollHeight;
+    
+    // Save to history
+    if (saveToHistory) {
+      chatHistory.push({ content, isUser, timestamp: Date.now() });
+      localStorage.setItem('chatbot_history', JSON.stringify(chatHistory));
+    }
+  }
+  
+  // Load existing chat history
+  function loadChatHistory() {
+    // Clear welcome message if history exists
+    if (chatHistory.length > 0) {
+      chatContainer.innerHTML = '';
+      chatHistory.forEach(msg => {
+        addMessage(msg.content, msg.isUser, false);
+      });
+    }
   }
   
   function showTyping() {
@@ -135,6 +163,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     sendButton.disabled = false;
   }
+  
+  // Load chat history on page load
+  loadChatHistory();
   
   sendButton.addEventListener('click', sendMessage);
   messageInput.addEventListener('keypress', (e) => {

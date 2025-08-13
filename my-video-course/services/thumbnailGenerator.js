@@ -47,22 +47,34 @@ class ThumbnailGenerator {
         throw new Error(`Video file not found: ${videoPath}`);
       }
 
-      // Create thumbnail filename
-      const thumbnailFilename = `${videoId}.jpg`;
+      // Create thumbnail filename with video name
+      const videoName = path.basename(videoPath, path.extname(videoPath));
+      const thumbnailFilename = `${videoId}_${videoName}.jpg`;
       const thumbnailPath = path.join(this.thumbnailsDir, thumbnailFilename);
       
       // Check if thumbnail already exists
       if (fs.existsSync(thumbnailPath)) {
+        console.log(`Thumbnail already exists: ${thumbnailFilename}`);
         return `/thumbnails/${thumbnailFilename}`;
       }
       
-      // Generate thumbnail using ffmpeg
-      const command = `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=480:-1" "${thumbnailPath}" -y`;
+      // Generate thumbnail using ffmpeg with better error handling
+      const command = `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=480:-1" "${thumbnailPath}" -y -loglevel error`;
       
-      await execPromise(command);
+      try {
+        await execPromise(command, { timeout: 30000 }); // 30 second timeout
+      } catch (execError) {
+        // Handle EPIPE and other ffmpeg errors
+        if (execError.code === 'EPIPE' || execError.signal === 'SIGPIPE') {
+          console.warn('EPIPE error in ffmpeg, but thumbnail may have been generated');
+        } else {
+          throw execError;
+        }
+      }
       
       // Check if thumbnail was created
       if (fs.existsSync(thumbnailPath)) {
+        console.log(`Successfully generated thumbnail: ${thumbnailFilename}`);
         return `/thumbnails/${thumbnailFilename}`;
       } else {
         throw new Error('Failed to generate thumbnail');

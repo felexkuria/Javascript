@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Management - Admin</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .admin-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            color: white;
+        }
+        
+        .admin-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+        
+        .admin-subtitle {
+            opacity: 0.8;
+            margin: 0;
+        }
+        
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        
+        .admin-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            color: white;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sync-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            padding: 12px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        
+        .sync-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .sync-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .status-text {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin: 8px 0;
+        }
+        
+        .log-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        
+        .log-entry {
+            margin: 4px 0;
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">🎬 Video Management System</h1>
+            <p class="admin-subtitle">Process videos, generate thumbnails, and sync metadata</p>
+        </div>
+        
+        <div class="admin-grid">
+            <div class="admin-card">
+                <h2 class="card-title">📁 Video Processing</h2>
+                <button class="sync-btn" onclick="startVideoSync()">
+                    🔄 Process All Videos
+                </button>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="syncProgress"></div>
+                </div>
+                <div class="status-text" id="syncStatus">Ready to process videos</div>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalVideos">-</span>
+                        <span class="stat-label">Total Videos</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="processedVideos">-</span>
+                        <span class="stat-label">Processed</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="admin-card">
+                <h2 class="card-title">📊 System Status</h2>
+                <div class="status-text">
+                    <strong>MongoDB:</strong> <span id="mongoStatus">Checking...</span><br>
+                    <strong>Storage:</strong> <span id="storageStatus">Ready</span><br>
+                    <strong>Last Sync:</strong> <span id="lastSync">Never</span>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalCourses">-</span>
+                        <span class="stat-label">Courses</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="thumbnailCount">-</span>
+                        <span class="stat-label">Thumbnails</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="admin-card" style="grid-column: 1 / -1;">
+                <h2 class="card-title">📝 Processing Log</h2>
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry">System ready. Click "Process All Videos" to start.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isProcessing = false;
+        
+        async function startVideoSync() {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            const btn = document.querySelector('.sync-btn');
+            const progress = document.getElementById('syncProgress');
+            const status = document.getElementById('syncStatus');
+            
+            btn.disabled = true;
+            btn.textContent = '🔄 Processing...';
+            status.textContent = 'Starting video processing...';
+            
+            addLog('🚀 Starting video processing...');
+            
+            try {
+                const response = await fetch('/api/videos/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    progress.style.width = '100%';
+                    status.textContent = 'Processing completed successfully!';
+                    addLog('✅ Video processing completed successfully');
+                    updateStats();
+                } else {
+                    throw new Error(result.message || 'Processing failed');
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+                status.textContent = `Error: ${error.message}`;
+                progress.style.width = '0%';
+            } finally {
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = '🔄 Process All Videos';
+                
+                setTimeout(() => {
+                    progress.style.width = '0%';
+                    status.textContent = 'Ready to process videos';
+                }, 3000);
+            }
+        }
+        
+        function addLog(message) {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        async function updateStats() {
+            try {
+                const response = await fetch('/api/videos/localStorage');
+                const data = await response.json();
+                
+                let totalVideos = 0;
+                let totalCourses = Object.keys(data).length;
+                
+                Object.values(data).forEach(videos => {
+                    totalVideos += videos.length;
+                });
+                
+                document.getElementById('totalVideos').textContent = totalVideos;
+                document.getElementById('totalCourses').textContent = totalCourses;
+                document.getElementById('processedVideos').textContent = totalVideos;
+                document.getElementById('lastSync').textContent = new Date().toLocaleString();
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+        
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch('/api/connection-status');
+                const status = await response.json();
+                
+                document.getElementById('mongoStatus').textContent = 
+                    status.mongoConnected ? '✅ Connected' : '⚠️ Offline Mode';
+            } catch (error) {
+                document.getElementById('mongoStatus').textContent = '❌ Error';
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStats();
+            checkSystemStatus();
+            
+            // Update stats every 30 seconds
+            setInterval(updateStats, 30000);
+        });
+    </script>
+</body>
+</html>

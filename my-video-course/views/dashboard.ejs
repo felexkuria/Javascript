@@ -64,12 +64,20 @@
             </div>
           </div>
         </div>
-        <button id="syncButton" class="px-6 py-3 bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm text-white rounded-2xl hover:bg-opacity-30 transition-all duration-300 flex items-center border border-white border-opacity-30 hover:transform hover:translateY(-2px)">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-          </svg>
-          Sync Database
-        </button>
+        <div class="flex gap-3">
+          <button id="syncButton" class="px-6 py-3 bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm text-white rounded-2xl hover:bg-opacity-30 transition-all duration-300 flex items-center border border-white border-opacity-30 hover:transform hover:translateY(-2px)">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Sync Database
+          </button>
+          <button id="fixAllThumbnailsButton" class="px-6 py-3 bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm text-white rounded-2xl hover:bg-opacity-30 transition-all duration-300 flex items-center border border-white border-opacity-30 hover:transform hover:translateY(-2px)">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Fix Thumbnails
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -142,23 +150,59 @@
 <script src="/js/gamification.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Load AI-generated course descriptions
+    // Load AI-generated course descriptions with better error handling
     const courseCards = document.querySelectorAll('.course-description');
-    courseCards.forEach((desc, index) => {
+    courseCards.forEach(async (desc, index) => {
       const courseName = desc.closest('.group').querySelector('h2').textContent.trim();
-      fetch(`/api/course/description/${encodeURIComponent(courseName)}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.description) {
-            desc.textContent = data.description;
-          } else {
-            desc.textContent = `Comprehensive training course covering ${courseName} concepts and practical applications.`;
+      desc.textContent = 'Loading description...';
+      
+      try {
+        console.log(`Loading description for: ${courseName}`);
+        
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch(`/api/course/description/${encodeURIComponent(courseName)}`, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           }
-        })
-        .catch(error => {
-          console.warn('Failed to load description for', courseName);
-          desc.textContent = `Learn ${courseName} through hands-on exercises and practical examples.`;
         });
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data && data.description && data.description.trim()) {
+            desc.textContent = data.description;
+            console.log(`AI description loaded for: ${courseName}`);
+          } else {
+            console.warn(`Empty or invalid description for: ${courseName}`);
+            throw new Error('Empty description returned');
+          }
+        } else {
+          console.warn(`HTTP error ${response.status} for: ${courseName}`);
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (error) {
+        console.warn(`Description failed for ${courseName}:`, error.message);
+        
+        // Enhanced fallback based on course name with Jonas Schmedtmann style
+        const courseNameLower = courseName.toLowerCase();
+        if (courseNameLower.includes('davinci') || courseNameLower.includes('video')) {
+          desc.textContent = 'Master professional video editing with DaVinci Resolve. Learn color grading, audio editing, visual effects, and advanced editing techniques through hands-on projects that will transform you into a video editing expert.';
+        } else if (courseNameLower.includes('aws')) {
+          desc.textContent = 'The complete AWS cloud computing masterclass! Build scalable, secure cloud solutions with hands-on labs covering EC2, S3, Lambda, and more. Perfect for beginners and professionals alike.';
+        } else if (courseNameLower.includes('devops') || courseNameLower.includes('bootcamp')) {
+          desc.textContent = 'The ultimate DevOps bootcamp! Master CI/CD pipelines, Docker, Kubernetes, infrastructure as code, and automation. Build real-world projects and become a DevOps engineer.';
+        } else if (courseNameLower.includes('terraform')) {
+          desc.textContent = 'Master Infrastructure as Code with Terraform! Learn to provision and manage cloud resources declaratively across AWS, Azure, and GCP with hands-on labs and real projects.';
+        } else {
+          desc.textContent = `The complete ${courseName} course! Master essential skills through practical exercises, real-world projects, and expert guidance. Perfect for all skill levels.`;
+        }
+      }
     });
     
     // Initialize connection monitor after 2 hours
@@ -221,6 +265,70 @@
     }, 2 * 60 * 60 * 1000); // 2 hours in milliseconds
     
     const syncButton = document.getElementById('syncButton');
+    const fixAllThumbnailsButton = document.getElementById('fixAllThumbnailsButton');
+    
+    // Fix all thumbnails button
+    if (fixAllThumbnailsButton) {
+      fixAllThumbnailsButton.addEventListener('click', async () => {
+        fixAllThumbnailsButton.disabled = true;
+        fixAllThumbnailsButton.innerHTML = '<svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Fixing...';
+        
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'fixed bottom-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded';
+        statusDiv.id = 'thumbnailStatus';
+        statusDiv.textContent = 'Fixing thumbnails for all courses...';
+        document.body.appendChild(statusDiv);
+        
+        try {
+          const courses = document.querySelectorAll('.course-description');
+          let totalFixed = 0;
+          
+          for (const desc of courses) {
+            const courseName = desc.closest('.group').querySelector('h2').textContent.trim();
+            
+            try {
+              const response = await fetch(`/api/thumbnails/fix/${encodeURIComponent(courseName)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+              });
+              
+              const data = await response.json();
+              if (data.success) {
+                totalFixed += data.fixedCount;
+                statusDiv.textContent = `Fixed ${totalFixed} thumbnails so far...`;
+              }
+            } catch (err) {
+              console.warn(`Failed to fix thumbnails for ${courseName}:`, err);
+            }
+          }
+          
+          statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
+          statusDiv.textContent = `Fixed ${totalFixed} thumbnail references across all courses!`;
+          
+          setTimeout(() => {
+            if (document.body.contains(statusDiv)) {
+              document.body.removeChild(statusDiv);
+            }
+            if (totalFixed > 0) {
+              location.reload();
+            }
+          }, 3000);
+          
+        } catch (error) {
+          statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+          statusDiv.textContent = 'Error fixing thumbnails: ' + error.message;
+          
+          setTimeout(() => {
+            if (document.body.contains(statusDiv)) {
+              document.body.removeChild(statusDiv);
+            }
+          }, 5000);
+        } finally {
+          fixAllThumbnailsButton.disabled = false;
+          fixAllThumbnailsButton.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Fix Thumbnails';
+        }
+      });
+    }
     
     if (syncButton) {
       syncButton.addEventListener('click', async () => {

@@ -74,11 +74,19 @@
       videosByChapter[chapter].push(video);
     });
 
-    // Sort videos within each chapter
+    // Sort videos within each chapter with better numerical parsing
     Object.keys(videosByChapter).forEach(chapter => {
       videosByChapter[chapter].sort((a, b) => {
-        const aNum = parseInt(a.title.match(/\d+/)) || 0;
-        const bNum = parseInt(b.title.match(/\d+/)) || 0;
+        // Extract all numbers from title and use the first one
+        const aMatch = a.title.match(/\d+/);
+        const bMatch = b.title.match(/\d+/);
+        const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+        const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+        
+        // If numbers are the same, sort alphabetically
+        if (aNum === bNum) {
+          return a.title.localeCompare(b.title);
+        }
         return aNum - bNum;
       });
     });
@@ -86,10 +94,16 @@
     // Sort chapters numerically and flatten sorted videos back into single array
     const sortedVideos = Object.keys(videosByChapter)
       .sort((a, b) => {
+        // Handle chapter sorting with better number extraction
         const aMatch = a.match(/\d+/);
         const bMatch = b.match(/\d+/);
-        const aNum = aMatch ? parseInt(aMatch[0]) : 0;
-        const bNum = bMatch ? parseInt(bMatch[0]) : 0;
+        const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+        const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+        
+        // If numbers are the same, sort alphabetically
+        if (aNum === bNum) {
+          return a.localeCompare(b);
+        }
         return aNum - bNum;
       })
       .flatMap(chapter => videosByChapter[chapter]);
@@ -103,19 +117,29 @@
         chapterCount++;
     %>
         <li class="col-span-full">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4"><%= chapterCount %>. <%= video.chapter || 'Uncategorized' %></h2>
+          <h2 class="text-2xl font-bold text-gray-800 mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <%= video.chapter || 'Uncategorized' %>
+          </h2>
         </li>
     <% } %>
     <li
       class="glass-card video-card rounded-2xl overflow-hidden"
     >
       <div class="relative">
+        <% if (video.thumbnailUrl) { %>
         <img
-          src="<%= video.thumbnailUrl || '/thumbnails/default.jpg' %>"
+          src="<%= video.thumbnailUrl %>"
           alt="<%= video.title %>"
           class="w-full h-48 object-cover hover:opacity-90 transition-opacity duration-300"
-          onerror="this.onerror=null; this.src='/thumbnails/default.jpg';"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
         />
+        <% } %>
+        <div class="w-full h-48 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white <%= video.thumbnailUrl ? 'hidden' : 'flex' %>">
+          <div class="text-center">
+            <i class="fas fa-play-circle text-4xl mb-2"></i>
+            <p class="text-sm font-medium">Video Lesson</p>
+          </div>
+        </div>
         <div
           class="absolute top-0 left-0 bg-indigo-500 text-white px-3 py-1 rounded-br-lg"
         >

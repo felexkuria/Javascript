@@ -11,26 +11,26 @@ class AIService {
     this.novaEndpoint = process.env.NOVA_ENDPOINT || 'https://nova-lite-v1.us-east-1.amazonaws.com/v1/chat/completions';
   }
 
-  // Main AI generation method with failover
+  // Main AI generation method with Nova first, Gemini failover
   async generateContent(prompt, options = {}) {
     try {
-      // Try Gemini first
-      console.log('Attempting Gemini AI...');
-      const result = await this.geminiModel.generateContent(prompt);
-      const response = result.response.text();
-      console.log('Gemini AI successful');
+      // Try Amazon Nova first
+      console.log('Attempting Amazon Nova AI...');
+      const response = await this.callNovaAPI(prompt, options);
+      console.log('Amazon Nova successful');
       return response;
-    } catch (geminiError) {
-      console.warn('Gemini AI failed:', geminiError.message);
+    } catch (novaError) {
+      console.warn('Amazon Nova failed:', novaError.message);
       
       try {
-        // Fallback to Amazon Nova
-        console.log('Falling back to Amazon Nova...');
-        const response = await this.callNovaAPI(prompt, options);
-        console.log('Amazon Nova successful');
+        // Fallback to Gemini
+        console.log('Falling back to Gemini...');
+        const result = await this.geminiModel.generateContent(prompt);
+        const response = result.response.text();
+        console.log('Gemini AI successful');
         return response;
-      } catch (novaError) {
-        console.error('Both AI services failed:', { gemini: geminiError.message, nova: novaError.message });
+      } catch (geminiError) {
+        console.error('Both AI services failed:', { nova: novaError.message, gemini: geminiError.message });
         throw new Error('All AI services unavailable');
       }
     }

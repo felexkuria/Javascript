@@ -1,0 +1,45 @@
+{
+  "default_user": {
+    "_id": "689c6bdf333eb821fbe8ec54",
+    "userId": "default_user",
+    "achievements": [
+      "first_video",
+      "speed_demon",
+      "night_owl",
+      "perfect_score",
+      "speed_learner",
+      "quiz_master",
+      "early_bird",
+      "keyboard_ninja"
+    ],
+    "streakData": {
+      "currentStreak": 1,
+      "longestStreak": 3,
+      "lastActiveDate": "2025-08-13",
+      "streakDates": [
+        "2025-07-24",
+        "2025-07-25",
+        "2025-07-26",
+        "2025-07-28",
+        "2025-08-09",
+        "2025-08-10",
+        "2025-08-11",
+        "2025-08-13"
+      ]
+    },
+    "updatedAt": "2025-08-13T20:00:25.839Z",
+    "userStats": {
+      "totalPoints": 2596,
+      "videosWatched": {},
+      "coursesCompleted": 0,
+      "keyboardShortcutsUsed": 16,
+      "currentLevel": 7,
+      "experiencePoints": 496
+    },
+    "stats": {
+      "videosWatched": {},
+      "coursesCompleted": 0
+    },
+    "streak": 1
+  }
+}
