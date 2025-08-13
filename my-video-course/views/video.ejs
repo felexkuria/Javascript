@@ -53,19 +53,21 @@ ${courseName}`, extraStyles: `
   }
   
   body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
     min-height: 100vh;
+    color: #f8fafc;
   }
   .glass-card {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
   }
   .glass-sidebar {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(15px);
+    border: 2px solid rgba(148, 163, 184, 0.3);
+    color: #f1f5f9;
   }
   
   /* Chatbot Styles */
@@ -163,7 +165,7 @@ ${courseName}`, extraStyles: `
           <div class="mb-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center">
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
+                <h1 class="text-3xl font-bold text-gray-900 leading-tight">
                   <%= video ? (video.title) : 'Video Not Found' %>
                 </h1>
                 <% if (video && video.watched) { %>
@@ -183,7 +185,7 @@ ${courseName}`, extraStyles: `
                 <i class="fas fa-sync-alt mr-1"></i> Force Sync
               </button>
             </div>
-            <p class="text-gray-600 dark:text-gray-400 mt-2">
+            <p class="text-gray-700 text-lg mt-3 leading-relaxed">
               <%= video ? video.description : 'No description available' %>
             </p>
           </div>
@@ -320,7 +322,7 @@ ${courseName}`, extraStyles: `
     <div class="lg:col-span-1">
       <% if (typeof chapters !== 'undefined' && chapters.length > 0) { %>
       <div class="glass-sidebar rounded-2xl p-6 mb-6">
-        <h2 class="text-xl font-semibold text-white mb-4">
+        <h2 class="text-2xl font-bold text-white mb-6 border-b border-white/20 pb-2">
           📚 Chapters
         </h2>
         <div class="space-y-2">
@@ -376,7 +378,7 @@ ${courseName}`, extraStyles: `
       
       <!-- Gamification Sidebar -->
       <div class="gamification-sidebar">
-        <h3 class="text-lg font-semibold mb-4">🎮 Your Progress</h3>
+        <h3 class="text-xl font-bold text-white mb-6 border-b border-white/20 pb-2">🎮 Your Progress</h3>
         <div class="flex items-center justify-between mb-3">
           <span class="text-sm">Level</span>
           <div class="level-badge" style="width: 35px; height: 35px; font-size: 0.9rem;">
@@ -537,6 +539,7 @@ ${courseName}`, extraStyles: `
 <script src="/js/connection-monitor.js"></script>
 <script src="/js/gamification.js"></script>
 <script src="/js/quiz-system.js"></script>
+<script src="/js/ai-integration.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const videoPlayer = document.getElementById('videoPlayer');
@@ -692,6 +695,9 @@ ${courseName}`, extraStyles: `
     // Load todos for this video
     loadVideoTodos();
     
+    // Initialize AI service status
+    checkAIServiceStatus();
+    
     // Refresh todos button
     const refreshTodosBtn = document.getElementById('refreshTodos');
     if (refreshTodosBtn) {
@@ -775,6 +781,19 @@ ${courseName}`, extraStyles: `
         todoSearchInput.style.display = 'block';
       }
     }, 1000);
+    
+    // Check AI service status
+    async function checkAIServiceStatus() {
+      try {
+        const response = await fetch('/api/ai/status');
+        if (response.ok) {
+          const data = await response.json();
+          console.log('AI Service Status:', data.status);
+        }
+      } catch (error) {
+        console.log('AI service check failed:', error.message);
+      }
+    }
     
     // Load todos for video
     async function loadVideoTodos() {

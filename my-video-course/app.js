@@ -419,7 +419,8 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
       pdfs,
       autoplay,
       chapters,
-      videosByChapter
+      videosByChapter,
+      aiEnabled: true
     });
   } catch (err) {
     console.error('Error rendering video page:', err);
@@ -857,7 +858,8 @@ app.get('/course/:courseName', async (req, res) => {
       pdfs: pdfFiles,
       totalVideos,
       watchedVideos,
-      watchedPercent
+      watchedPercent,
+      aiEnabled: true
     });
   } catch (err) {
     console.error('Error fetching course data:', err);
@@ -1054,7 +1056,8 @@ app.get('/videos/:courseName/:id', async (req, res) => {
       nextVideoId,
       pdfs: pdfFiles,
       chapters,
-      videosByChapter
+      videosByChapter,
+      aiEnabled: true
     });
   } catch (err) {
     console.error('Error serving video:', err.stack);
@@ -2549,6 +2552,30 @@ app.get('/api/video/todos/progress/:courseName/:videoTitle', async (req, res) =>
   } catch (error) {
     console.error('Error getting todo progress:', error);
     res.status(500).json({ error: 'Failed to get todo progress' });
+  }
+});
+
+// API endpoint to check AI service status
+app.get('/api/ai/status', async (req, res) => {
+  try {
+    const aiService = require('./services/aiService');
+    const testPrompt = 'Test AI service availability';
+    await aiService.generateContent(testPrompt);
+    res.json({ status: 'available', service: 'AI service operational' });
+  } catch (error) {
+    res.json({ status: 'unavailable', error: error.message });
+  }
+});
+
+// API endpoint for AI content generation
+app.post('/api/ai/generate', async (req, res) => {
+  try {
+    const { prompt, ...options } = req.body;
+    const aiService = require('./services/aiService');
+    const result = await aiService.generateContent(prompt, options);
+    res.json({ success: true, content: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
