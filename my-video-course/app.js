@@ -2063,6 +2063,10 @@ function getOfflineResponse(message, courseName, videoTitle) {
     return "Ah, Git! The version control system that's absolutely essential for any developer. Think of it like a time machine for your code - you can go back to any previous version, create parallel universes (branches), and merge them back together. Start with 'git init', 'git add', and 'git commit' - these are your bread and butter! 📚";
   }
   
+  if (msg.includes('vpc') || msg.includes('virtual private cloud')) {
+    return "Indeed! A VPC (Virtual Private Cloud) is like having your own private section of the AWS cloud! Think of it as your own isolated network where you can launch AWS resources securely. It's like having a private office building in a massive business complex - you control who gets in and how rooms connect to each other. You define IP address ranges, create subnets, and configure route tables. Essential for any serious AWS architecture! 🏢";
+  }
+  
   if (msg.includes('aws') || msg.includes('cloud')) {
     return "Indeed! AWS is like having a massive data center at your fingertips! Start with EC2 (virtual servers) and S3 (storage) - they're the foundation. Remember, the cloud is just someone else's computer, but with incredible scalability and reliability. Always check your billing dashboard though! ☁️";
   }
@@ -2130,6 +2134,7 @@ app.post('/api/chatbot', async (req, res) => {
       
     } catch (aiError) {
       console.warn('AI API failed, using offline response:', aiError.message);
+      // Handle both quota exceeded and overloaded model scenarios
       const offlineResponse = getOfflineResponse(message, courseName, videoTitle);
       res.json({ response: offlineResponse });
     }
