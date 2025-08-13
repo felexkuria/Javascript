@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beautiful Modern Quiz Demo</title>
+    <link rel="stylesheet" href="/css/quiz-system.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .demo-container {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+        
+        .demo-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .demo-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+        
+        .demo-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .demo-btn {
+            padding: 16px 32px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .demo-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .features {
+            margin-top: 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+        }
+        
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: left;
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+        
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .feature-desc {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 class="demo-title">🎯 Beautiful Quiz System</h1>
+        <p class="demo-subtitle">Experience the modern, interactive quiz interface</p>
+        
+        <div class="demo-buttons">
+            <button class="demo-btn" onclick="startDevOpsQuiz()">DevOps Quiz</button>
+            <button class="demo-btn" onclick="startVideoEditingQuiz()">Video Editing Quiz</button>
+            <button class="demo-btn" onclick="startAWSQuiz()">AWS Quiz</button>
+            <button class="demo-btn" onclick="startProgrammingQuiz()">Programming Quiz</button>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">✨</div>
+                <div class="feature-title">Glassmorphism Design</div>
+                <div class="feature-desc">Modern glass-like effects with backdrop blur and transparency</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎭</div>
+                <div class="feature-title">Smooth Animations</div>
+                <div class="feature-desc">Fluid transitions and micro-interactions for better UX</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <div class="feature-title">Responsive Design</div>
+                <div class="feature-desc">Perfect experience across all devices and screen sizes</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎨</div>
+                <div class="feature-title">Beautiful Gradients</div>
+                <div class="feature-desc">Eye-catching color schemes and visual hierarchy</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/quiz-system.js"></script>
+    <script>
+        function startDevOpsQuiz() {
+            if (window.quizSystem) {
+                window.quizSystem.startQuiz('devops');
+            }
+        }
+        
+        function startVideoEditingQuiz() {
+            if (window.quizSystem) {
+                window.quizSystem.startQuiz('video_editing');
+            }
+        }
+        
+        function startAWSQuiz() {
+            if (window.quizSystem) {
+                window.quizSystem.startQuiz('aws');
+            }
+        }
+        
+        function startProgrammingQuiz() {
+            if (window.quizSystem) {
+                window.quizSystem.startQuiz('programming');
+            }
+        }
+    </script>
+</body>
+</html>

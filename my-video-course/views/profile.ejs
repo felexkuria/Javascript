@@ -2,27 +2,47 @@
   title: 'Learning Progress', 
   extraStyles: `
     <link rel="stylesheet" href="/css/gamification.css">
+    <style>
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+      .glass-header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+    </style>
   `
 }) %>
 
 <!-- Main Content -->
 <main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
   <div class="max-w-6xl mx-auto">
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <h1 class="text-4xl font-bold text-gray-800 mb-2">Learning Progress</h1>
-        <p class="text-gray-600">Track your achievements and learning journey</p>
-      </div>
-      <div class="flex items-center gap-4">
-        <button id="refresh-stats" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm">
-          <i class="fas fa-sync-alt mr-1"></i> Refresh Stats
-        </button>
-        <div class="level-badge">
-          <span class="user-level">1</span>
+    <div class="glass-header rounded-2xl p-8 mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-5xl font-bold text-white mb-4">🏆 Learning Progress</h1>
+          <p class="text-xl text-white opacity-90">Track your achievements and learning journey</p>
         </div>
-        <div class="streak-counter">
-          <span class="streak-flame">🔥</span>
-          <span class="user-streak">0</span> day streak
+        <div class="flex items-center gap-4">
+          <button id="refresh-stats" class="px-4 py-2 bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm text-white rounded-xl hover:bg-opacity-30 transition-all duration-300 border border-white border-opacity-30">
+            <i class="fas fa-sync-alt mr-2"></i> Refresh Stats
+          </button>
+          <div class="level-badge" style="background: linear-gradient(135deg, #10b981, #059669); width: 50px; height: 50px;">
+            <span class="user-level">1</span>
+          </div>
+          <div class="bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm rounded-xl px-4 py-2 border border-white border-opacity-30">
+            <span class="text-2xl">🔥</span>
+            <span class="user-streak text-white font-bold text-lg ml-2">0</span>
+            <span class="text-white opacity-80 text-sm block">day streak</span>
+          </div>
         </div>
       </div>
     </div>
@@ -52,7 +72,7 @@
     </div>
 
     <!-- Level Progress -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+    <div class="glass-card rounded-2xl p-8 mb-8">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-2xl font-semibold text-gray-800">Level Progress</h2>
         <span class="text-sm text-gray-600">Level <span class="user-level">1</span></span>
@@ -67,7 +87,7 @@
     </div>
 
     <!-- Achievements Section -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+    <div class="glass-card rounded-2xl p-8 mb-8">
       <h2 class="text-2xl font-semibold text-gray-800 mb-6">Achievements</h2>
       <div class="achievements-grid" id="achievements-container">
         <!-- Achievements will be populated by JavaScript -->
@@ -75,7 +95,7 @@
     </div>
 
     <!-- Learning Streak Calendar -->
-    <div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="glass-card rounded-2xl p-8">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-semibold text-gray-800">Learning Streak</h2>
         <div class="flex items-center gap-2">

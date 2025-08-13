@@ -1130,6 +1130,45 @@ app.get('/pdf/*', (req, res) => {
 // Import caption converter utility
 const captionConverter = require('./utils/captionConverter');
 
+// Route to serve SRT subtitle files
+app.get('/subtitles/:courseName/:videoTitle.srt', async (req, res) => {
+  try {
+    const courseName = decodeURIComponent(req.params.courseName);
+    const videoTitle = decodeURIComponent(req.params.videoTitle);
+    
+    // Find SRT file in course directory
+    const courseDir = path.join(__dirname, 'public', 'videos', courseName);
+    let srtPath = null;
+    
+    const findSrt = (dir) => {
+      if (!fs.existsSync(dir)) return null;
+      const files = fs.readdirSync(dir);
+      for (const file of files) {
+        const filePath = path.join(dir, file);
+        if (fs.statSync(filePath).isDirectory()) {
+          const result = findSrt(filePath);
+          if (result) return result;
+        } else if (file === `${videoTitle}.srt`) {
+          return filePath;
+        }
+      }
+      return null;
+    };
+    
+    srtPath = findSrt(courseDir);
+    
+    if (srtPath && fs.existsSync(srtPath)) {
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.sendFile(srtPath);
+    } else {
+      res.status(404).send('Subtitle file not found');
+    }
+  } catch (error) {
+    console.error('Error serving subtitle:', error);
+    res.status(500).send('Error serving subtitle');
+  }
+});
+
 // Route to serve caption files
 app.get('/captions/:courseName/:id', async (req, res) => {
   try {
@@ -1744,10 +1783,116 @@ app.get('/api/srt-progress/:videoName', (req, res) => {
   if (progress) {
     res.json(progress);
   } else {
-    // Check if SRT file exists
+    // Check if SRT file exists across all courses
     const videoDir = path.join(__dirname, 'public', 'videos');
-    // This is a simplified check - in practice you'd need the full path
-    res.json({ status: 'not_started', progress: 0 });
+    let srtExists = false;
+    
+    try {
+      const courseFolders = fs.readdirSync(videoDir).filter(folder => 
+        fs.statSync(path.join(videoDir, folder)).isDirectory()
+      );
+      
+      for (const courseFolder of courseFolders) {
+        const findSrt = (dir) => {
+          if (!fs.existsSync(dir)) return false;
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const filePath = path.join(dir, file);
+            if (fs.statSync(filePath).isDirectory()) {
+              if (findSrt(filePath)) return true;
+            } else if (file === `${videoName}.srt`) {
+              return true;
+            }
+          }
+          return false;
+        };
+        
+        if (findSrt(path.join(videoDir, courseFolder))) {
+          srtExists = true;
+          break;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking SRT files:', error);
+    }
+    
+    res.json({ 
+      status: srtExists ? 'completed' : 'not_started', 
+      progress: srtExists ? 100 : 0 
+    });
+  }
+});
+
+// API endpoint to generate SRT for any video
+app.post('/api/generate-srt', async (req, res) => {
+  try {
+    const { videoTitle, courseName, videoId } = req.body;
+    
+    if (!videoTitle || !courseName) {
+      return res.status(400).json({ error: 'Missing required parameters' });
+    }
+    
+    // Get video from service
+    const video = await videoService.getVideoById(courseName, videoId);
+    if (!video || !video.videoUrl) {
+      return res.status(404).json({ error: 'Video not found or no video URL' });
+    }
+    
+    const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
+    if (!fs.existsSync(videoPath)) {
+      return res.status(404).json({ error: 'Video file not found on disk' });
+    }
+    
+    // Check if already processing
+    if (srtGenerationProgress.has(videoTitle)) {
+      return res.json({ message: 'SRT generation already in progress', status: 'processing' });
+    }
+    
+    // Start SRT generation
+    console.log(`Starting SRT generation for: ${videoTitle}`);
+    srtGenerationProgress.set(videoTitle, { status: 'processing', progress: 0 });
+    
+    // Import SRT generator
+    const srtQuizGenerator = require('./services/srtQuizGenerator');
+    
+    // Generate SRT in background
+    srtQuizGenerator.generateSRT(videoPath)
+      .then(async (srtPath) => {
+        console.log(`SRT generation completed for: ${videoTitle}`);
+        srtGenerationProgress.set(videoTitle, { status: 'completed', progress: 100 });
+        
+        // Generate summary and topics after SRT completion
+        try {
+          const srtEntries = srtQuizGenerator.parseSRT(srtPath);
+          if (srtEntries && srtEntries.length > 3) {
+            const summaryData = await srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoTitle);
+            console.log(`Generated summary and topics for: ${videoTitle}`);
+            
+            // Store summary data
+            const dataDir = path.join(__dirname, 'data');
+            if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
+            const summaryPath = path.join(dataDir, 'video_summaries.json');
+            const summaries = fs.existsSync(summaryPath) ? JSON.parse(fs.readFileSync(summaryPath, 'utf8')) : {};
+            summaries[videoTitle] = summaryData;
+            fs.writeFileSync(summaryPath, JSON.stringify(summaries, null, 2));
+          }
+        } catch (summaryError) {
+          console.warn(`Summary generation failed for ${videoTitle}:`, summaryError.message);
+        }
+        
+        // Clean up progress after 60 seconds
+        setTimeout(() => srtGenerationProgress.delete(videoTitle), 60000);
+      })
+      .catch(error => {
+        console.error(`SRT generation failed for ${videoTitle}:`, error.message);
+        srtGenerationProgress.set(videoTitle, { status: 'failed', progress: 0 });
+        setTimeout(() => srtGenerationProgress.delete(videoTitle), 60000);
+      });
+    
+    res.json({ message: 'SRT generation started', status: 'processing' });
+  } catch (error) {
+    console.error('Error starting SRT generation:', error);
+    res.status(500).json({ error: 'Failed to start SRT generation' });
   }
 });
 
@@ -1914,28 +2059,85 @@ app.get('/api/video/summary/:videoName', async (req, res) => {
   }
 });
 
-// API endpoint to get todos for a video (enhanced with PDF extraction)
+// API endpoint to get todos for a video (AI-powered with SRT and PDF extraction)
 app.get('/api/video/todos/:courseName/:videoTitle', async (req, res) => {
   try {
     const courseName = decodeURIComponent(req.params.courseName);
     const videoTitle = decodeURIComponent(req.params.videoTitle);
     
-    console.log(`Getting todos for video: ${videoTitle} in course: ${courseName}`);
+    console.log(`Getting AI-powered todos for video: ${videoTitle} in course: ${courseName}`);
     
-    // Try PDF-based todos first, fallback to template-based
+    // Import AI todo extractor
+    const aiTodoExtractor = require('./services/aiTodoExtractor');
+    
     let todos;
     try {
-      todos = await pdfKnowledgeService.getTodosForVideo(videoTitle, courseName);
-      console.log(`Found ${todos.length} todo categories from PDFs`);
-    } catch (pdfError) {
-      console.warn('PDF todo extraction failed, using fallback:', pdfError.message);
-      todos = pdfTodoExtractor.getTodosForVideo(videoTitle, courseName);
+      // Use AI extraction from SRT and PDF content
+      todos = await aiTodoExtractor.getTodosForVideo(videoTitle, courseName);
+      console.log(`Generated ${todos.length} AI-powered todo categories`);
+      
+      // If AI extraction fails or returns empty, fallback to PDF extraction
+      if (!todos || todos.length === 0) {
+        console.log('AI extraction returned empty, trying PDF extraction...');
+        todos = await pdfKnowledgeService.getTodosForVideo(videoTitle, courseName);
+      }
+      
+      // Final fallback to template-based
+      if (!todos || todos.length === 0) {
+        console.log('PDF extraction failed, using template fallback...');
+        todos = pdfTodoExtractor.getTodosForVideo(videoTitle, courseName);
+      }
+      
+    } catch (aiError) {
+      console.warn('AI todo extraction failed:', aiError.message);
+      
+      // Fallback to PDF extraction
+      try {
+        todos = await pdfKnowledgeService.getTodosForVideo(videoTitle, courseName);
+      } catch (pdfError) {
+        console.warn('PDF extraction also failed, using template fallback');
+        todos = pdfTodoExtractor.getTodosForVideo(videoTitle, courseName);
+      }
     }
     
-    res.json({ todos, videoTitle, courseName });
+    res.json({ todos, videoTitle, courseName, source: 'ai-powered' });
   } catch (error) {
     console.error('Error getting video todos:', error);
     res.status(500).json({ error: 'Failed to get video todos' });
+  }
+});
+
+// API endpoint to generate AI todos manually
+app.post('/api/video/todos/generate', async (req, res) => {
+  try {
+    const { videoTitle, courseName } = req.body;
+    
+    if (!videoTitle || !courseName) {
+      return res.status(400).json({ error: 'Missing videoTitle or courseName' });
+    }
+    
+    console.log(`Manually generating AI todos for: ${videoTitle}`);
+    
+    const aiTodoExtractor = require('./services/aiTodoExtractor');
+    
+    // Clear cache to force fresh generation
+    const cacheKey = `${courseName}_${videoTitle}`;
+    if (aiTodoExtractor.cache.has(cacheKey)) {
+      aiTodoExtractor.cache.delete(cacheKey);
+    }
+    
+    // Generate fresh AI todos
+    const todos = await aiTodoExtractor.getTodosForVideo(videoTitle, courseName);
+    
+    res.json({ 
+      success: true, 
+      todos, 
+      message: 'AI todos generated successfully',
+      source: 'ai-fresh'
+    });
+  } catch (error) {
+    console.error('Error generating AI todos:', error);
+    res.status(500).json({ error: 'Failed to generate AI todos' });
   }
 });
 
@@ -2020,24 +2222,13 @@ app.get('/api/course/description/:courseName', async (req, res) => {
       return res.json({ description: null });
     }
     
-    // Generate course description using Gemini AI
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI('AIzaSyAT7kcq2iej1djqwuDNetyLexUVL9ear68');
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Generate course description using AI with failover
+    const aiService = require('./services/aiService');
     
     const videoSummaries = courseVideos.map(([name, data]) => data.summary).join(' ');
     const allTopics = [...new Set(courseVideos.flatMap(([name, data]) => data.keyTopics))];
     
-    const prompt = `Based on these video summaries from a course called "${courseName}", create a compelling 2-3 sentence course description:
-
-Video summaries: ${videoSummaries.substring(0, 2000)}
-
-Key topics covered: ${allTopics.slice(0, 10).join(', ')}
-
-Return only the course description, no extra text.`;
-    
-    const result = await model.generateContent(prompt);
-    const description = result.response.text().trim();
+    const description = await aiService.generateCourseDescription(videoSummaries, allTopics, courseName);
     
     res.json({ description });
   } catch (error) {
@@ -2096,7 +2287,7 @@ app.post('/api/chatbot', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
     
-    // Try AI response first, fallback to offline if quota exceeded
+    // Try AI response with failover
     try {
       const summaryPath = path.join(__dirname, 'data', 'video_summaries.json');
       let courseKnowledge = '';
@@ -2117,24 +2308,16 @@ app.post('/api/chatbot', async (req, res) => {
         console.warn('Failed to load PDF knowledge:', pdfError.message);
       }
       
-      const { GoogleGenerativeAI } = require('@google/generative-ai');
-      const genAI = new GoogleGenerativeAI('AIzaSyAT7kcq2iej1djqwuDNetyLexUVL9ear68');
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
+      const aiService = require('./services/aiService');
       const contextInfo = courseKnowledge || pdfKnowledge ? 
         `\n\nCourse Knowledge:\n${courseKnowledge.substring(0, 2000)}\n\nPDF Knowledge:\n${pdfKnowledge.substring(0, 2000)}` :
-        '\n\nNote: No specific course content available, provide general educational guidance.';
+        '';
       
-      const prompt = `You are a course teaching assistant with the enthusiastic, clear, and engaging teaching style of David J. Malan from Harvard's CS50. You should explain concepts in his characteristic way:\n\n- Use analogies and real-world examples\n- Break down complex concepts into simple parts\n- Be enthusiastic and encouraging\n- Use "Indeed!" and "This is CS50!" style expressions when appropriate\n- Make learning fun and accessible\n- Reference specific course content when relevant\n- Keep responses concise but informative (2-3 paragraphs max)\n- For DevOps topics, provide practical, hands-on guidance${contextInfo}\n\nStudent Question: ${message}\n\nRespond as David J. Malan would, providing accurate, engaging explanations:`;
-      
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
-      
+      const response = await aiService.generateChatResponse(message, contextInfo);
       res.json({ response });
       
     } catch (aiError) {
-      console.warn('AI API failed, using offline response:', aiError.message);
-      // Handle both quota exceeded and overloaded model scenarios
+      console.warn('All AI services failed, using offline response:', aiError.message);
       const offlineResponse = getOfflineResponse(message, courseName, videoTitle);
       res.json({ response: offlineResponse });
     }

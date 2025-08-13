@@ -1,9 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-const genAI = new GoogleGenerativeAI('AIzaSyAT7kcq2iej1djqwuDNetyLexUVL9ear68');
+const aiService = require('./aiService');
 
 class SRTQuizGenerator {
   // Generate SRT file using ffmpeg if it doesn't exist
@@ -162,7 +160,7 @@ class SRTQuizGenerator {
     }
   }
   
-  // Generate questions using Google Gemini AI
+  // Generate questions using AI with failover
   async generateAIQuestions(srtEntries, videoTitle) {
     // Check if quiz already exists in MongoDB
     try {
@@ -175,30 +173,8 @@ class SRTQuizGenerator {
       // Silently fail
     }
     
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const content = srtEntries.slice(0, 15).map(e => e.text).join(' ').substring(0, 3000);
-    
-    const prompt = `You are a teacher creating quiz questions for active recall learning. Based on this video content, create 5 practical questions that test student understanding.
-
-Video: "${videoTitle}"
-Content: "${content}"
-
-Create questions that:
-- Test key concepts from the video
-- Use active recall method
-- Are specific to this video's content
-- Have realistic wrong answers
-
-Return ONLY this JSON format:
-[{
-  "question": "What specific technique was demonstrated?",
-  "options": ["Correct from video", "Plausible wrong", "Another wrong", "Third wrong"],
-  "correct": 0,
-  "explanation": "Brief explanation"
-}]`;
-    
-    const result = await model.generateContent(prompt);
-    const response = result.response.text();
+    const content = srtEntries.slice(0, 15).map(e => e.text).join(' ');
+    const response = await aiService.generateQuizQuestions(content, videoTitle);
     
     const jsonMatch = response.match(/\[.*\]/s);
     if (!jsonMatch) throw new Error('No JSON found in response');
@@ -220,24 +196,8 @@ Return ONLY this JSON format:
   
   // Generate summary and key topics from SRT
   async generateSummaryAndTopics(srtEntries, videoTitle) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const content = srtEntries.map(e => e.text).join(' ').substring(0, 4000);
-    
-    const prompt = `Analyze this video transcript and provide:
-1. A concise summary (2-3 sentences)
-2. Key topics for content repurposing (5-7 topics)
-
-Video: "${videoTitle}"
-Transcript: "${content}"
-
-Return ONLY this JSON format:
-{
-  "summary": "Brief 2-3 sentence summary of the video content",
-  "keyTopics": ["Topic 1", "Topic 2", "Topic 3", "Topic 4", "Topic 5"]
-}`;
-    
-    const result = await model.generateContent(prompt);
-    const response = result.response.text();
+    const content = srtEntries.map(e => e.text).join(' ');
+    const response = await aiService.generateSummaryAndTopics(content, videoTitle);
     
     const jsonMatch = response.match(/\{.*\}/s);
     if (!jsonMatch) throw new Error('No JSON found in response');

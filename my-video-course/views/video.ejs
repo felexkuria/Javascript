@@ -52,10 +52,27 @@ ${courseName}`, extraStyles: `
     opacity: 1;
   }
   
+  body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+  }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+  .glass-sidebar {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
   /* Chatbot Styles */
   #chatContainer {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border: 1px solid #cbd5e0;
+    background: rgba(248, 250, 252, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(203, 213, 224, 0.5);
   }
   
   #chatContainer::-webkit-scrollbar {
@@ -140,7 +157,7 @@ ${courseName}`, extraStyles: `
   <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
     <div class="lg:col-span-3">
       <div
-        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
+        class="glass-card rounded-2xl overflow-hidden"
       >
         <div class="p-6">
           <div class="mb-4">
@@ -187,7 +204,9 @@ ${courseName}`, extraStyles: `
                   src="/captions/<%= courseName %>/<%= video._id %>"
                   default
                 />
-                <% } %> Your browser does not support the video tag.
+                <% } %>
+
+                Your browser does not support the video tag.
               </video>
             </div>
             <% if (video.captionsUrl) { %>
@@ -254,19 +273,28 @@ ${courseName}`, extraStyles: `
               <div id="keyTopics" class="flex flex-wrap gap-2"></div>
             </div>
 
-            <div class="flex justify-between items-center">
-              <button
-                id="markWatchedButton"
-                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-              >
-                <i class="fas fa-check mr-1"></i> Mark as Watched
-              </button>
+            <div class="flex justify-between items-center flex-wrap gap-4">
+              <div class="flex gap-3">
+                <button
+                  id="markWatchedButton"
+                  class="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+                >
+                  <i class="fas fa-check mr-2"></i> Mark as Watched
+                </button>
+                
+                <button
+                  id="generateSRTButton"
+                  class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+                >
+                  <i class="fas fa-closed-captioning mr-2"></i> Generate Subtitles
+                </button>
+              </div>
 
               <a
                 href="/course/<%= courseName %>"
-                class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors"
+                class="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
               >
-                <i class="fas fa-arrow-left mr-1"></i> Back to Course
+                <i class="fas fa-arrow-left mr-2"></i> Back to Course
               </a>
             </div>
             <% } else { %>
@@ -318,8 +346,8 @@ ${courseName}`, extraStyles: `
 
       
       <!-- Quick Quiz Button -->
-      <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">📚 Test Your Knowledge</h3>
+      <div class="glass-sidebar rounded-2xl p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-3">📚 Test Your Knowledge</h3>
         <button 
           id="quickQuizBtn"
           class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200 transform hover:scale-105"
@@ -329,20 +357,30 @@ ${courseName}`, extraStyles: `
       </div>
 
       <!-- Todo List from PDFs -->
-      <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">📋 Video Todos</h3>
+      <div class="glass-sidebar rounded-2xl p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-3">🤖 AI-Powered Todos</h3>
         <div id="todoContainer" class="max-h-64 overflow-y-auto">
-          <div class="text-sm text-gray-500 text-center py-4" id="todoLoading">
-            Loading todos from course PDFs...
+          <div class="text-sm text-white text-center py-4" id="todoLoading">
+            <div class="flex items-center justify-center mb-2">
+              <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              <span>AI analyzing video & PDFs...</span>
+            </div>
+            <div class="text-xs opacity-75">Extracting actionable tasks from content</div>
           </div>
         </div>
-        <div class="mt-4 pt-4 border-t">
+        <div class="mt-4 pt-4 border-t border-white border-opacity-20">
           <div class="flex justify-between items-center mb-2">
-            <span class="text-sm font-medium text-gray-700" id="todoProgress">0/0 completed</span>
-            <span class="text-xs text-gray-500" id="todoTime">
+            <span class="text-sm font-medium text-white" id="todoProgress">0/0 completed</span>
+            <button id="refreshTodos" class="text-xs text-white opacity-75 hover:opacity-100 transition-opacity px-2 py-1 rounded bg-white bg-opacity-10 hover:bg-opacity-20">
+              <i class="fas fa-sync-alt mr-1"></i> Refresh AI
+            </button>
+          </div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs text-white opacity-75" id="todoTime">
               <i class="fas fa-clock mr-1"></i>
               Est. time: 0 min
             </span>
+            <span class="text-xs text-white opacity-60" id="todoSource">AI-powered</span>
           </div>
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div id="todoProgressBar" class="todo-progress h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -351,8 +389,8 @@ ${courseName}`, extraStyles: `
       </div>
 
       <!-- Course Chatbot -->
-      <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
-        <h3 class="text-lg font-semibold text-gray-800 mb-3">🤖 Course Assistant</h3>
+      <div class="glass-sidebar rounded-2xl p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-3">🤖 Course Assistant</h3>
         <div id="chatContainer" class="h-64 border rounded-lg p-3 mb-3 overflow-y-auto bg-gray-50">
           <div class="text-sm text-gray-500 text-center py-4">
             Ask me anything about this course! I'll explain it like David J. Malan would.
@@ -375,9 +413,9 @@ ${courseName}`, extraStyles: `
       </div>
       
       <% if (typeof chapters !== 'undefined' && chapters.length > 0) { %>
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-          Chapters
+      <div class="glass-sidebar rounded-2xl p-6 mb-6">
+        <h2 class="text-xl font-semibold text-white mb-4">
+          📚 Chapters
         </h2>
         <div class="space-y-2">
           <% 
@@ -429,9 +467,9 @@ ${courseName}`, extraStyles: `
         </div>
       </div>      <% } %>
 
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-          Keyboard Shortcuts
+      <div class="glass-sidebar rounded-2xl p-6 mb-6">
+        <h2 class="text-xl font-semibold text-white mb-4">
+          ⌨️ Keyboard Shortcuts
         </h2>
         <ul class="space-y-2 text-sm text-gray-600">
           <li class="flex justify-between">
@@ -462,9 +500,9 @@ ${courseName}`, extraStyles: `
       </div>
 
       <% if (typeof pdfs !== 'undefined' && pdfs.length > 0) { %>
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-          <i class="fas fa-file-pdf text-red-500 mr-2"></i> PDF Resources
+      <div class="glass-sidebar rounded-2xl p-6">
+        <h2 class="text-xl font-semibold text-white mb-4">
+          <i class="fas fa-file-pdf text-red-400 mr-2"></i> PDF Resources
         </h2>
         <ul class="space-y-2">
           <% pdfs.forEach((pdf, index) => { %>
@@ -652,6 +690,65 @@ ${courseName}`, extraStyles: `
     
     // Load todos for this video
     loadVideoTodos();
+    
+    // Refresh todos button
+    const refreshTodosBtn = document.getElementById('refreshTodos');
+    if (refreshTodosBtn) {
+      refreshTodosBtn.addEventListener('click', async function() {
+        const videoTitle = '<%= video ? video.title : "" %>';
+        const courseName = '<%= courseName %>';
+        
+        if (!videoTitle || !courseName) return;
+        
+        // Update button state
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Generating...';
+        
+        // Show loading state
+        todoContainer.innerHTML = `
+          <div class="text-sm text-white text-center py-4">
+            <div class="flex items-center justify-center mb-2">
+              <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              <span>AI re-analyzing content...</span>
+            </div>
+            <div class="text-xs opacity-75">Generating fresh actionable tasks</div>
+          </div>
+        `;
+        
+        try {
+          const response = await fetch('/api/video/todos/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoTitle, courseName })
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.todos && data.todos.length > 0) {
+              renderTodos(data.todos);
+              loadTodoProgress();
+              
+              // Update source indicator
+              const todoSource = document.getElementById('todoSource');
+              if (todoSource) {
+                todoSource.textContent = 'AI-fresh';
+              }
+            } else {
+              todoContainer.innerHTML = '<div class="text-sm text-white opacity-75 text-center py-4">No AI todos generated</div>';
+            }
+          } else {
+            throw new Error('Failed to generate AI todos');
+          }
+        } catch (error) {
+          console.error('Error refreshing todos:', error);
+          todoContainer.innerHTML = '<div class="text-sm text-red-300 text-center py-4">Failed to generate AI todos</div>';
+        } finally {
+          // Reset button
+          this.disabled = false;
+          this.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Refresh AI';
+        }
+      });
+    }
     
     // Add todo search functionality
     const todoSearchInput = document.createElement('input');
@@ -1015,6 +1112,57 @@ ${courseName}`, extraStyles: `
     if (markWatchedButton) {
       markWatchedButton.addEventListener('click', markVideoAsWatched);
     }
+    
+    // Generate SRT button
+    const generateSRTButton = document.getElementById('generateSRTButton');
+    if (generateSRTButton) {
+      generateSRTButton.addEventListener('click', async function() {
+        const videoTitle = '<%= video ? video.title : "" %>';
+        if (!videoTitle) return;
+        
+        // Update button state
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+        
+        // Show progress indicator
+        const progressIndicator = document.getElementById('srt-progress');
+        if (progressIndicator) {
+          progressIndicator.style.display = 'block';
+          progressIndicator.innerHTML = '🎬 Starting subtitle generation...';
+        }
+        
+        try {
+          // Trigger SRT generation
+          const response = await fetch('/api/generate-srt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              videoTitle,
+              courseName: '<%= courseName %>',
+              videoId: '<%= video ? video._id : "" %>'
+            })
+          });
+          
+          if (response.ok) {
+            // Start monitoring progress
+            monitorSRTProgress();
+          } else {
+            throw new Error('Failed to start SRT generation');
+          }
+        } catch (error) {
+          console.error('SRT generation error:', error);
+          if (progressIndicator) {
+            progressIndicator.innerHTML = '⚠ Failed to start generation';
+            progressIndicator.className = progressIndicator.className.replace('bg-blue-500', 'bg-red-500');
+            setTimeout(() => progressIndicator.style.display = 'none', 3000);
+          }
+        } finally {
+          // Reset button
+          this.disabled = false;
+          this.innerHTML = '<i class="fas fa-closed-captioning mr-2"></i> Generate Subtitles';
+        }
+      });
+    }
 
     // Function to navigate to next video
     function navigateToNextVideo() {
@@ -1069,8 +1217,153 @@ ${courseName}`, extraStyles: `
       });
     }
 
-    // Video player keyboard shortcuts
+    // Check for SRT subtitle file and enable CC
+    const checkForSubtitles = async () => {
+      try {
+        const videoTitle = '<%= video ? video.title : "" %>';
+        const courseName = '<%= courseName %>';
+        
+        // Try to load SRT file based on video title
+        const srtUrl = `/subtitles/${encodeURIComponent(courseName)}/${encodeURIComponent(videoTitle)}.srt`;
+        const response = await fetch(srtUrl);
+        
+        if (response.ok) {
+          console.log('SRT file found, converting to WebVTT');
+          const srtContent = await response.text();
+          const vttContent = convertSRTtoVTT(srtContent);
+          
+          // Create blob URL for WebVTT content
+          const blob = new Blob([vttContent], { type: 'text/vtt' });
+          const vttUrl = URL.createObjectURL(blob);
+          
+          // Add track to video
+          const track = document.createElement('track');
+          track.kind = 'subtitles';
+          track.label = 'English';
+          track.srclang = 'en';
+          track.src = vttUrl;
+          track.default = true;
+          videoPlayer.appendChild(track);
+          
+          // Enable CC button
+          const ccButton = document.createElement('button');
+          ccButton.innerHTML = '🔤 CC';
+          ccButton.className = 'absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm hover:bg-opacity-70 transition-opacity z-10';
+          ccButton.style.opacity = '0.7';
+          
+          // Add SRT generation progress indicator
+          const srtProgress = document.createElement('div');
+          srtProgress.id = 'srt-progress';
+          srtProgress.className = 'absolute top-2 left-2 bg-blue-500 bg-opacity-90 text-white px-3 py-1 rounded-lg text-xs font-medium backdrop-filter backdrop-blur-sm border border-white border-opacity-20';
+          srtProgress.style.display = 'none';
+          srtProgress.innerHTML = '🎬 Generating subtitles... 0%';
+          
+          const videoContainer = document.querySelector('.video-container');
+          if (videoContainer) {
+            videoContainer.style.position = 'relative';
+            videoContainer.appendChild(srtProgress);
+          }
+          
+          ccButton.onclick = () => {
+            const textTracks = videoPlayer.textTracks;
+            if (textTracks.length > 0) {
+              const textTrack = textTracks[textTracks.length - 1];
+              if (textTrack.mode === 'showing') {
+                textTrack.mode = 'hidden';
+                ccButton.style.opacity = '0.7';
+                ccButton.style.backgroundColor = 'rgba(0,0,0,0.5)';
+              } else {
+                textTrack.mode = 'showing';
+                ccButton.style.opacity = '1';
+                ccButton.style.backgroundColor = 'rgba(59, 130, 246, 0.8)';
+              }
+            }
+          };
+          
+          const videoContainer = document.querySelector('.video-container');
+          if (videoContainer) {
+            videoContainer.style.position = 'relative';
+            videoContainer.appendChild(ccButton);
+          }
+        }
+      } catch (error) {
+        console.log('No SRT file found or error checking:', error.message);
+      }
+    };
+    
+    // Convert SRT to WebVTT format
+    function convertSRTtoVTT(srtContent) {
+      let vtt = 'WEBVTT\n\n';
+      const lines = srtContent.split('\n');
+      let i = 0;
+      
+      while (i < lines.length) {
+        // Skip sequence number
+        if (lines[i].match(/^\d+$/)) {
+          i++;
+          
+          // Get timestamp line
+          if (i < lines.length && lines[i].includes('-->')) {
+            const timeLine = lines[i].replace(/,/g, '.');
+            vtt += timeLine + '\n';
+            i++;
+            
+            // Get subtitle text
+            let subtitleText = '';
+            while (i < lines.length && lines[i].trim() !== '') {
+              subtitleText += lines[i] + '\n';
+              i++;
+            }
+            vtt += subtitleText + '\n';
+          }
+        }
+        i++;
+      }
+      
+      return vtt;
+    }
+    
+    // Monitor SRT generation progress
+    const monitorSRTProgress = async () => {
+      const videoTitle = '<%= video ? video.title : "" %>';
+      if (!videoTitle) return;
+      
+      const progressIndicator = document.getElementById('srt-progress');
+      if (!progressIndicator) return;
+      
+      try {
+        const response = await fetch(`/api/srt-progress/${encodeURIComponent(videoTitle)}`);
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.status === 'processing') {
+            progressIndicator.style.display = 'block';
+            progressIndicator.innerHTML = `🎬 Generating subtitles... ${data.progress}%`;
+            
+            // Continue monitoring
+            setTimeout(monitorSRTProgress, 2000);
+          } else if (data.status === 'completed') {
+            progressIndicator.innerHTML = '✓ Subtitles ready!';
+            setTimeout(() => {
+              progressIndicator.style.display = 'none';
+              // Refresh to load new subtitles
+              checkForSubtitles();
+            }, 2000);
+          } else if (data.status === 'failed') {
+            progressIndicator.innerHTML = '⚠ Subtitle generation failed';
+            progressIndicator.className = progressIndicator.className.replace('bg-blue-500', 'bg-red-500');
+            setTimeout(() => progressIndicator.style.display = 'none', 3000);
+          }
+        }
+      } catch (error) {
+        console.log('SRT progress check failed:', error.message);
+      }
+    };
+    
+    // Check for subtitles when video loads
     if (videoPlayer) {
+      checkForSubtitles();
+      monitorSRTProgress();
       document.addEventListener('keydown', function(e) {
         // Only handle shortcuts if not typing in an input
         if (document.activeElement.tagName === 'INPUT' ||

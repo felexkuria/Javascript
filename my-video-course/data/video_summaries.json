@@ -189,5 +189,53 @@
       "Java Database Connectivity (JDBC)",
       "MySQL Database Integration"
     ]
+  },
+  "lesson21": {
+    "summary": "The video explores various database types, explaining their functionalities and appropriate use cases.  It covers key-value databases (like Redis and Memcached), wide-column databases (such as Cassandra), and document-oriented databases (including MongoDB), highlighting their strengths and limitations for different applications.",
+    "keyTopics": [
+      "Key-Value Databases",
+      "Wide-Column Databases",
+      "Document-Oriented Databases",
+      "Database Selection for Applications",
+      "Data Modeling and Schema",
+      "Real-time Data Processing",
+      "Caching Strategies"
+    ]
+  },
+  "lesson7": {
+    "summary": "This video tutorial explains the three stages of file changes in Git: working directory, staging area, and local repository.  It demonstrates using `git status` to check file status, `git add` to stage changes, and `git commit` to save changes to the local repository, highlighting the ability to selectively stage files for committing.",
+    "keyTopics": [
+      "Git File Status",
+      "Working Directory",
+      "Staging Area",
+      "Git Add Command",
+      "Git Commit Command",
+      "Untracked Files",
+      "Selective Staging"
+    ]
+  },
+  "lesson6": {
+    "summary": "The video explains remote Git repositories, focusing on GitHub and GitLab as popular platforms.  It details creating public and private repositories on these platforms, highlighting the user interface and functionalities.  The video also covers setting up a local Git client to interact with the remote repository.",
+    "keyTopics": [
+      "Remote Git Repositories (GitHub, GitLab, Bitbucket)",
+      "Public vs. Private Repositories",
+      "Creating and Managing Repositories",
+      "Git Client Installation and Usage",
+      "GitLab and GitHub User Interface",
+      "Connecting Local and Remote Repositories",
+      "Continuous Integration"
+    ]
+  },
+  "lesson5": {
+    "summary": "The video explains Git, the leading version control system, and its components.  It details the interaction between the remote repository (where code lives), the local repository (for local changes), and the Git client (used to manage and push/pull changes).  The video also covers the staging area, where changes are prepared before committing.",
+    "keyTopics": [
+      "Introduction to Git",
+      "Remote vs. Local Git Repositories",
+      "Git Workflow (Pulling, Staging, Committing, Pushing)",
+      "Understanding the Git Staging Area",
+      "Git Client (UI vs. Command Line)",
+      "Git History and Log",
+      "Git vs. SVN"
+    ]
   }
 }

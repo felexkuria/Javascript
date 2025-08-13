@@ -196,8 +196,8 @@ class QuizSystem {
     modal.innerHTML = `
       <div class="quiz-modal-content">
         <div class="quiz-header">
-          <h2 class="quiz-title">📚 Quick Quiz</h2>
-          <button class="quiz-close" onclick="quizSystem.closeQuiz()">&times;</button>
+          <h2 class="quiz-title">🎯 Interactive Quiz</h2>
+          <button class="quiz-close" onclick="quizSystem.closeQuiz()" title="Close Quiz">✕</button>
         </div>
         <div class="quiz-body">
           <div class="quiz-progress">
@@ -323,43 +323,78 @@ class QuizSystem {
     const { questions, currentIndex } = this.currentQuiz;
     const question = questions[currentIndex];
 
-    // Update progress
-    const progressPercent = ((currentIndex + 1) / questions.length) * 100;
-    document.getElementById('quiz-progress').style.width = `${progressPercent}%`;
-    document.getElementById('quiz-progress-text').textContent = `Question ${currentIndex + 1} of ${questions.length}`;
+    // Add fade animation
+    const questionEl = document.getElementById('quiz-question');
+    const optionsEl = document.getElementById('quiz-options');
+    
+    questionEl.style.opacity = '0';
+    optionsEl.style.opacity = '0';
+    
+    setTimeout(() => {
+      // Update progress with animation
+      const progressPercent = ((currentIndex + 1) / questions.length) * 100;
+      document.getElementById('quiz-progress').style.width = `${progressPercent}%`;
+      document.getElementById('quiz-progress-text').textContent = `Question ${currentIndex + 1} of ${questions.length}`;
 
-    // Display question
-    document.getElementById('quiz-question').innerHTML = `
-      <h3>${question.question}</h3>
-    `;
-
-    // Display options
-    const optionsContainer = document.getElementById('quiz-options');
-    optionsContainer.innerHTML = '';
-
-    question.options.forEach((option, index) => {
-      const optionElement = document.createElement('div');
-      optionElement.className = 'quiz-option';
-      optionElement.innerHTML = `
-        <input type="radio" id="option_${index}" name="quiz_answer" value="${index}">
-        <label for="option_${index}">${option}</label>
+      // Display question with animation
+      questionEl.innerHTML = `
+        <h3>${question.question}</h3>
       `;
-      optionsContainer.appendChild(optionElement);
-    });
+      questionEl.style.opacity = '1';
+      questionEl.style.transition = 'opacity 0.5s ease';
 
-    // Add click handlers for options
-    optionsContainer.addEventListener('change', () => {
-      document.getElementById('quiz-next').disabled = false;
-    });
+      // Display options with staggered animation
+      const optionsContainer = document.getElementById('quiz-options');
+      optionsContainer.innerHTML = '';
 
-    // Update navigation buttons
-    document.getElementById('quiz-prev').disabled = currentIndex === 0;
-    document.getElementById('quiz-next').disabled = true;
-    document.getElementById('quiz-next').style.display = currentIndex === questions.length - 1 ? 'none' : 'inline-block';
-    document.getElementById('quiz-submit').style.display = currentIndex === questions.length - 1 ? 'inline-block' : 'none';
+      question.options.forEach((option, index) => {
+        const optionElement = document.createElement('div');
+        optionElement.className = 'quiz-option';
+        optionElement.style.opacity = '0';
+        optionElement.style.transform = 'translateY(20px)';
+        optionElement.innerHTML = `
+          <input type="radio" id="option_${index}" name="quiz_answer" value="${index}">
+          <label for="option_${index}">${option}</label>
+        `;
+        optionsContainer.appendChild(optionElement);
+        
+        // Staggered animation
+        setTimeout(() => {
+          optionElement.style.opacity = '1';
+          optionElement.style.transform = 'translateY(0)';
+          optionElement.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+        }, index * 100);
+      });
 
-    // Hide explanation
-    document.getElementById('quiz-explanation').style.display = 'none';
+      // Add click handlers for options with feedback
+      optionsContainer.addEventListener('change', (e) => {
+        document.getElementById('quiz-next').disabled = false;
+        
+        // Add selection feedback
+        const selectedOption = e.target.closest('.quiz-option');
+        if (selectedOption) {
+          selectedOption.style.transform = 'scale(1.02)';
+          setTimeout(() => {
+            selectedOption.style.transform = 'scale(1)';
+          }, 200);
+        }
+      });
+
+      // Update navigation buttons
+      document.getElementById('quiz-prev').disabled = currentIndex === 0;
+      document.getElementById('quiz-next').disabled = true;
+      document.getElementById('quiz-next').style.display = currentIndex === questions.length - 1 ? 'none' : 'inline-block';
+      document.getElementById('quiz-submit').style.display = currentIndex === questions.length - 1 ? 'inline-block' : 'none';
+
+      // Hide explanation
+      document.getElementById('quiz-explanation').style.display = 'none';
+      
+      // Fade in options container
+      setTimeout(() => {
+        optionsEl.style.opacity = '1';
+        optionsEl.style.transition = 'opacity 0.5s ease';
+      }, 200);
+    }, 100);
   }
 
   // Go to next question
@@ -450,6 +485,14 @@ class QuizSystem {
         window.gamificationSystem.checkAchievement('speed_learner', { timeTaken });
       }
       window.gamificationSystem.checkAchievement('quiz_master');
+      
+      // Force sync to ensure points are saved
+      window.gamificationSystem.syncWithServer();
+      
+      // Update profile display if on profile page
+      if (window.location.pathname === '/profile' && window.updateProfileDisplay) {
+        setTimeout(() => window.updateProfileDisplay(), 500);
+      }
     }
 
     // Save quiz completion

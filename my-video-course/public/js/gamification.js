@@ -179,6 +179,11 @@ class GamificationSystem {
     }
   }
 
+  // Alias for syncWithMongoDB for compatibility
+  async syncWithServer() {
+    return this.syncWithMongoDB();
+  }
+
   // Load gamification data from MongoDB
   async loadFromMongoDB() {
     try {

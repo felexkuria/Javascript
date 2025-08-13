@@ -1,57 +1,83 @@
 <%- include('partials/header', { 
   title: 'Video Dashboard',
-  extraStyles: `<link rel="stylesheet" href="/css/gamification.css">`
+  extraStyles: `
+    <link rel="stylesheet" href="/css/gamification.css">
+    <style>
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+      .glass-header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+    </style>
+  `
 }) %>
 
 <!-- Main Content -->
 <main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
-  <div class="flex justify-between items-center mb-8">
-    <div>
-      <h1 class="text-4xl font-bold text-gray-800">
-        Available Courses
-      </h1>
-      <% if (typeof offlineMode !== 'undefined' && offlineMode) { %>
-        <div class="mt-2 flex items-center text-sm text-amber-600">
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-          </svg>
-          <span>Offline Mode - Your progress is saved locally</span>
-        </div>
-      <% } %>
-    </div>
-    <div class="flex items-center gap-4">
-      <!-- Gamification Stats -->
-      <div class="flex items-center gap-4 bg-white rounded-lg px-4 py-2 shadow-md">
-        <div class="flex items-center gap-2">
-          <div class="level-badge" style="width: 35px; height: 35px; font-size: 0.9rem;">
-            <span class="user-level">1</span>
+  <div class="glass-header rounded-2xl p-8 mb-8">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-5xl font-bold text-white mb-4">
+          🎓 Learning Dashboard
+        </h1>
+        <p class="text-xl text-white opacity-90 mb-2">Discover amazing courses and track your progress</p>
+        <% if (typeof offlineMode !== 'undefined' && offlineMode) { %>
+          <div class="flex items-center text-amber-200 bg-amber-500 bg-opacity-20 px-4 py-2 rounded-lg backdrop-filter backdrop-blur-sm">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <span>Offline Mode - Your progress is saved locally</span>
           </div>
-          <span class="text-sm font-medium text-gray-600">Level</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-lg">🏆</span>
-          <span class="font-bold user-points text-gray-800">0</span>
-          <span class="text-sm text-gray-600">pts</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-lg">🔥</span>
-          <span class="font-bold user-streak text-gray-800">0</span>
-          <span class="text-sm text-gray-600">day streak</span>
-        </div>
+        <% } %>
       </div>
-      <button id="syncButton" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-        </svg>
-        Sync with Database
-      </button>
+      <div class="flex items-center gap-4">
+        <!-- Gamification Stats -->
+        <div class="flex items-center gap-6 bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm rounded-2xl px-6 py-4 border border-white border-opacity-30">
+          <div class="flex items-center gap-3">
+            <div class="level-badge" style="width: 40px; height: 40px; font-size: 1rem; background: linear-gradient(135deg, #10b981, #059669);">
+              <span class="user-level">1</span>
+            </div>
+            <span class="text-sm font-semibold text-white">Level</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🏆</span>
+            <div>
+              <span class="font-bold user-points text-white text-lg">0</span>
+              <span class="text-sm text-white opacity-80 block">points</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🔥</span>
+            <div>
+              <span class="font-bold user-streak text-white text-lg">0</span>
+              <span class="text-sm text-white opacity-80 block">day streak</span>
+            </div>
+          </div>
+        </div>
+        <button id="syncButton" class="px-6 py-3 bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm text-white rounded-2xl hover:bg-opacity-30 transition-all duration-300 flex items-center border border-white border-opacity-30 hover:transform hover:translateY(-2px)">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Sync Database
+        </button>
+      </div>
     </div>
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
     <% if (courses && courses.length > 0) { %>
       <% courses.forEach(course => { %>
-        <div class="group bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
+        <div class="group glass-card rounded-2xl overflow-hidden transform hover:-translate-y-2 transition-all duration-500 hover:shadow-2xl">
           <div class="relative">
             <img
               src="https://uploads.teachablecdn.com/attachments/e2FDxVHOSIKe60ZmL6ki_Teachable+Course+Thumbnail.png"
@@ -93,7 +119,7 @@
             
             <a
               href="/course/<%= course.name %>"
-              class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors duration-200"
+              class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
               <span>Start Learning</span>
               <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

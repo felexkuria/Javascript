@@ -2180,6 +2180,17 @@
       "watchedAt": "2025-08-10T20:00:22.218Z",
       "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/10. Text & Fusion Titles & Lower 3rd - Create, Customize and Animate/4. How to Animate Text from the Video Tab.mp4",
       "thumbnailUrl": "/thumbnails/6887b83b19426345689539af.jpg"
+    },
+    {
+      "_id": "6887b83b1942634568953996",
+      "title": "1. How to Download your Free Copy of DaVinci Resolve 16 or 17 Beta",
+      "description": "Description for 1. How to Download your Free Copy of DaVinci Resolve 16 or 17 Beta.mp4",
+      "section": null,
+      "chapter": "1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)",
+      "watched": true,
+      "watchedAt": "2025-08-13T09:55:26.851Z",
+      "videoUrl": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced/1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)/1. How to Download your Free Copy of DaVinci Resolve 16 or 17 Beta.mp4",
+      "thumbnailUrl": "/thumbnails/6887b83b1942634568953996.jpg"
     }
   ],
   "dev-ops-bootcamp_202201": [
@@ -14971,7 +14982,7 @@
       "section": null,
       "chapter": "1. Introduction",
       "watched": true,
-      "watchedAt": "2025-08-10T16:49:08.646Z",
+      "watchedAt": "2025-08-13T08:07:41.086Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/1. Introduction/1. Introduction and How to use this Course.mp4",
       "thumbnailUrl": "/thumbnails/6887b7961942634568953662.jpg"
     },
@@ -14982,7 +14993,7 @@
       "section": null,
       "chapter": "1. Introduction",
       "watched": true,
-      "watchedAt": "2025-08-10T16:51:48.295Z",
+      "watchedAt": "2025-08-13T08:11:52.212Z",
       "videoUrl": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/[TutsNode.com] - AWS Certified Solutions Architect Associate - 2021 [SAA-C02]/1. Introduction/2. SAA-C02 Exam Guide.mp4",
       "thumbnailUrl": "/thumbnails/6887b7961942634568953663.jpg"
     },
