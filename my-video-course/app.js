@@ -2902,14 +2902,20 @@ app.post('/api/chatbot', async (req, res) => {
       const context = courseName ? `Course: ${courseName}${videoTitle ? `, Video: ${videoTitle}` : ''}` : '';
       const aiResponse = await aiService.generateChatResponse(message, context);
       console.log('AI response generated successfully');
-      res.json({ response: aiResponse });
+      res.json({ 
+        response: aiResponse,
+        aiModel: 'Amazon Nova Pro'
+      });
       return;
     } catch (aiError) {
       console.warn('AI service failed:', aiError.message);
       // Fall back to offline response
       const offlineResponse = getOfflineResponse(message, courseName, videoTitle);
       console.log('Using offline fallback response');
-      res.json({ response: offlineResponse });
+      res.json({ 
+        response: offlineResponse,
+        aiModel: 'Offline Assistant'
+      });
     }
 
   } catch (error) {

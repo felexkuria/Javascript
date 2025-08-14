@@ -475,6 +475,7 @@ class QuizSystem {
 
     // Award gamification points and check achievements
     if (window.gamificationSystem) {
+      console.log(`Awarding ${points} points for quiz completion (${percentage}%)`);
       window.gamificationSystem.awardPoints(points, `Quiz: ${percentage}%`);
       
       // Check for quiz-related achievements
@@ -487,7 +488,10 @@ class QuizSystem {
       window.gamificationSystem.checkAchievement('quiz_master');
       
       // Force sync to ensure points are saved
-      window.gamificationSystem.syncWithServer();
+      window.gamificationSystem.syncWithMongoDB();
+      
+      // Update UI immediately
+      window.gamificationSystem.updateProgressDisplay();
       
       // Update profile display if on profile page
       if (window.location.pathname === '/profile' && window.updateProfileDisplay) {

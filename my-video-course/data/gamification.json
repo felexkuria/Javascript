@@ -10,7 +10,8 @@
       "speed_learner",
       "quiz_master",
       "early_bird",
-      "keyboard_ninja"
+      "keyboard_ninja",
+      "chapter_master"
     ],
     "streakData": {
       "currentStreak": 1,
@@ -27,7 +28,7 @@
         "2025-08-13"
       ]
     },
-    "updatedAt": "2025-08-14T06:21:51.974Z",
+    "updatedAt": "2025-08-14T06:55:59.513Z",
     "userStats": {
       "totalPoints": 2596,
       "videosWatched": {},
@@ -37,8 +38,11 @@
       "experiencePoints": 496
     },
     "stats": {
-      "videosWatched": 25,
-      "coursesCompleted": 0
+      "videosWatched": 26,
+      "coursesCompleted": 0,
+      "keyboardShortcutsUsed": null,
+      "totalPoints": 80,
+      "experiencePoints": 80
     },
     "streak": 2
   }

@@ -150,18 +150,28 @@
 <script src="/js/gamification.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Load AI-generated course descriptions with better error handling
+    // Load AI-generated course descriptions with localStorage caching
     const courseCards = document.querySelectorAll('.course-description');
     courseCards.forEach(async (desc, index) => {
       const courseName = desc.closest('.group').querySelector('h2').textContent.trim();
-      desc.textContent = 'Loading description...';
+      const cacheKey = `course_description_${courseName}`;
+      
+      // Check localStorage cache first
+      const cachedDescription = localStorage.getItem(cacheKey);
+      if (cachedDescription) {
+        desc.textContent = cachedDescription;
+        console.log(`Using cached description for: ${courseName}`);
+        return;
+      }
+      
+      desc.textContent = 'Generating AI description...';
       
       try {
-        console.log(`Loading description for: ${courseName}`);
+        console.log(`Generating AI description for: ${courseName}`);
         
         // Add timeout to prevent hanging
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
         
         const response = await fetch(`/api/course/description/${encodeURIComponent(courseName)}`, {
           signal: controller.signal,
@@ -177,7 +187,9 @@
           
           if (data && data.description && data.description.trim()) {
             desc.textContent = data.description;
-            console.log(`AI description loaded for: ${courseName}`);
+            // Cache the AI-generated description
+            localStorage.setItem(cacheKey, data.description);
+            console.log(`AI description generated and cached for: ${courseName}`);
           } else {
             console.warn(`Empty or invalid description for: ${courseName}`);
             throw new Error('Empty description returned');
@@ -202,6 +214,14 @@
         } else {
           desc.textContent = `The complete ${courseName} course! Master essential skills through practical exercises, real-world projects, and expert guidance. Perfect for all skill levels.`;
         }
+        
+        // Cache the fallback description to avoid repeated attempts
+        localStorage.setItem(cacheKey, desc.textContent);
+        console.log(`Fallback description cached for: ${courseName}`);
+        
+        // Cache the fallback description to avoid repeated attempts
+        localStorage.setItem(cacheKey, desc.textContent);
+        console.log(`Fallback description cached for: ${courseName}`);
       }
     });
     

@@ -287,5 +287,15 @@
       "Improved Scalability with IaC",
       "IaC as Versioned Code and Documentation"
     ]
+  },
+  "001 Exam Tips": {
+    "summary": "This section provides exam tips for the HashiCorp Certified Terraform Associate exam, including details about the exam format, proctoring, registration process, and preparation strategies.",
+    "keyTopics": [
+      "exam format",
+      "proctoring",
+      "registration process",
+      "preparation strategies",
+      "exam objectives"
+    ]
   }
 }

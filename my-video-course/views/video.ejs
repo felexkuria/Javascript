@@ -151,6 +151,49 @@ ${courseName}`, extraStyles: `
   .todo-progress {
     background: linear-gradient(90deg, #10b981 0%, #059669 100%);
   }
+  
+  /* Floating Chatbot Styles */
+  #floatingChatbot {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  #chatbotToggle {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  #chatbotWindow {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Improved visibility */
+  .glass-sidebar h2, .glass-sidebar h3 {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  
+  .glass-sidebar .text-white {
+    color: #f8fafc !important;
+  }
+  
+  .glass-sidebar .text-gray-600 {
+    color: #e2e8f0 !important;
+  }
 </style>
 ` }) %>
 
@@ -429,29 +472,7 @@ ${courseName}`, extraStyles: `
         </div>
       </div>
 
-      <!-- Course Chatbot -->
-      <div class="glass-sidebar rounded-2xl p-6 mb-6">
-        <h3 class="text-lg font-semibold text-white mb-3">🤖 Course Assistant</h3>
-        <div id="chatContainer" class="h-64 border rounded-lg p-3 mb-3 overflow-y-auto bg-gray-50">
-          <div class="text-sm text-gray-500 text-center py-4">
-            Ask me anything about this course! I'll explain it like David J. Malan would.
-          </div>
-        </div>
-        <div class="flex gap-2">
-          <input 
-            type="text" 
-            id="chatInput" 
-            placeholder="Ask about the course..."
-            class="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-          <button 
-            id="sendChatBtn"
-            class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            <i class="fas fa-paper-plane"></i>
-          </button>
-        </div>
-      </div>
+
       
 
 
@@ -459,28 +480,28 @@ ${courseName}`, extraStyles: `
         <h2 class="text-xl font-semibold text-white mb-4">
           ⌨️ Keyboard Shortcuts
         </h2>
-        <ul class="space-y-2 text-sm text-gray-600">
+        <ul class="space-y-2 text-sm text-white">
           <li class="flex justify-between">
-            <span class="font-medium">F</span>
+            <span class="font-medium text-yellow-300">F</span>
             <span>Toggle fullscreen</span>
           </li>
           <li class="flex justify-between">
-            <span class="font-medium">J</span>
+            <span class="font-medium text-yellow-300">J</span>
             <span>Rewind 15 seconds</span>
           </li>
           <li class="flex justify-between">
-            <span class="font-medium">K</span>
+            <span class="font-medium text-yellow-300">K</span>
             <span>Play/Pause</span>
           </li>
           <li class="flex justify-between">
-            <span class="font-medium">L</span>
+            <span class="font-medium text-yellow-300">L</span>
             <span>Forward 15 seconds</span>
           </li>
         </ul>
         <div class="mt-4">
           <a
             href="/course/<%= courseName %>"
-            class="block py-2 px-4 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-lg text-center"
+            class="block py-2 px-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-center transition-colors"
           >
             <i class="fas fa-arrow-left mr-2"></i> Back to Course
           </a>
@@ -521,6 +542,49 @@ ${courseName}`, extraStyles: `
 <!-- Key hint element -->
 <div id="keyHint" class="key-hint"></div>
 
+<!-- Floating Chatbot -->
+<div id="floatingChatbot" class="fixed bottom-6 right-6 z-50">
+  <div id="chatbotToggle" class="w-16 h-16 bg-blue-500 hover:bg-blue-600 rounded-full shadow-lg cursor-pointer flex items-center justify-center transition-all duration-300 hover:scale-110">
+    <i class="fas fa-robot text-white text-xl"></i>
+  </div>
+  
+  <div id="chatbotWindow" class="absolute bottom-20 right-0 w-80 h-96 bg-white rounded-2xl shadow-2xl border border-gray-200 hidden">
+    <div class="bg-blue-500 text-white p-4 rounded-t-2xl flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-robot"></i>
+        <span class="font-semibold">Course Assistant</span>
+      </div>
+      <button id="closeChatbot" class="text-white hover:text-gray-200">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div id="chatContainer" class="h-64 p-3 overflow-y-auto bg-gray-50">
+      <div class="text-sm text-gray-500 text-center py-4">
+        Ask me anything about this course! I'll explain it like David J. Malan would.
+      </div>
+    </div>
+    
+    <div class="p-3 border-t bg-white rounded-b-2xl">
+      <div class="flex gap-2">
+        <input 
+          type="text" 
+          id="chatInput" 
+          placeholder="Ask about the course..."
+          class="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+        <button 
+          id="sendChatBtn"
+          class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/confetti.min.js"></script>
 <script src="/js/gamification.js"></script>
 <script src="/js/quiz-system.js"></script>
 <script src="/js/ai-integration.js"></script>
@@ -572,13 +636,13 @@ ${courseName}`, extraStyles: `
       }
       
       chatHistory.forEach(msg => {
-        addMessageToChat(msg.message, msg.isUser, false);
+        addMessageToChat(msg.message, msg.isUser, false, msg.aiModel);
       });
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
     
     // Add message to chat
-    function addMessageToChat(message, isUser, saveToHistory = true) {
+    function addMessageToChat(message, isUser, saveToHistory = true, aiModel = null) {
       const messageDiv = document.createElement('div');
       messageDiv.className = `chat-message mb-3 ${isUser ? 'text-right' : 'text-left'}`;
       
@@ -592,8 +656,13 @@ ${courseName}`, extraStyles: `
       // Handle line breaks and bold text in messages
       let formattedMessage = message.replace(/\n/g, '<br>');
       formattedMessage = formattedMessage.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
-      bubble.innerHTML = formattedMessage;
       
+      // Add AI model indicator for bot messages
+      if (!isUser && aiModel) {
+        formattedMessage += `<div class="text-xs text-gray-500 mt-1 opacity-75">via ${aiModel}</div>`;
+      }
+      
+      bubble.innerHTML = formattedMessage;
       messageDiv.appendChild(bubble);
       
       if (chatContainer.children.length === 1 && (chatContainer.children[0].textContent.includes('Ask me anything') || chatContainer.children[0].textContent.includes('course assistant'))) {
@@ -604,7 +673,7 @@ ${courseName}`, extraStyles: `
       chatContainer.scrollTop = chatContainer.scrollHeight;
       
       if (saveToHistory) {
-        chatHistory.push({ message, isUser, timestamp: Date.now() });
+        chatHistory.push({ message, isUser, timestamp: Date.now(), aiModel });
         localStorage.setItem(`chat_${courseName}_${videoId}`, JSON.stringify(chatHistory));
       }
     }
@@ -644,7 +713,8 @@ ${courseName}`, extraStyles: `
         
         if (response.ok) {
           const data = await response.json();
-          addMessageToChat(data.response, false);
+          const aiModel = data.aiModel || 'AI Assistant';
+          addMessageToChat(data.response, false, true, aiModel);
         } else {
           addMessageToChat('Sorry, I\'m having trouble right now. Please try again later.', false);
         }
@@ -672,6 +742,23 @@ ${courseName}`, extraStyles: `
         if (e.key === 'Enter') {
           sendChatMessage();
         }
+      });
+    }
+    
+    // Floating chatbot functionality
+    const chatbotToggle = document.getElementById('chatbotToggle');
+    const chatbotWindow = document.getElementById('chatbotWindow');
+    const closeChatbot = document.getElementById('closeChatbot');
+    
+    if (chatbotToggle) {
+      chatbotToggle.addEventListener('click', () => {
+        chatbotWindow.classList.toggle('hidden');
+      });
+    }
+    
+    if (closeChatbot) {
+      closeChatbot.addEventListener('click', () => {
+        chatbotWindow.classList.add('hidden');
       });
     }
     
@@ -811,14 +898,59 @@ ${courseName}`, extraStyles: `
           return;
         }
         
+        // Check localStorage first
+        const cacheKey = `todos_${courseName}_${videoTitle}`;
+        const cachedTodos = localStorage.getItem(cacheKey);
+        
+        if (cachedTodos) {
+          const todos = JSON.parse(cachedTodos);
+          renderTodos(todos);
+          loadTodoProgress();
+          return;
+        }
+        
         const response = await fetch(`/api/video/todos/${encodeURIComponent(courseName)}/${encodeURIComponent(videoTitle)}`);
         const data = await response.json();
         
         if (data.todos && data.todos.length > 0) {
+          // Store in localStorage
+          localStorage.setItem(cacheKey, JSON.stringify(data.todos));
           renderTodos(data.todos);
           loadTodoProgress();
         } else {
-          todoLoading.textContent = 'No todos found for this video';
+          // Generate AI todos if none exist
+          todoLoading.innerHTML = `
+            <div class="flex items-center justify-center mb-2">
+              <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              <span>AI generating todos...</span>
+            </div>
+            <div class="text-xs opacity-75">Creating actionable tasks from video content</div>
+          `;
+          
+          try {
+            const generateResponse = await fetch('/api/video/todos/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ videoTitle, courseName })
+            });
+            
+            if (generateResponse.ok) {
+              const generatedData = await generateResponse.json();
+              if (generatedData.todos && generatedData.todos.length > 0) {
+                // Store generated todos
+                localStorage.setItem(cacheKey, JSON.stringify(generatedData.todos));
+                renderTodos(generatedData.todos);
+                loadTodoProgress();
+              } else {
+                todoLoading.textContent = 'No todos available for this video';
+              }
+            } else {
+              todoLoading.textContent = 'Failed to generate AI todos';
+            }
+          } catch (aiError) {
+            console.error('AI todo generation failed:', aiError);
+            todoLoading.textContent = 'AI service unavailable';
+          }
         }
       } catch (error) {
         console.error('Error loading todos:', error);
@@ -1089,6 +1221,55 @@ ${courseName}`, extraStyles: `
           });
           
           window.gamificationSystem.incrementDailyVideoCount();
+          
+          // Show confetti for completions
+          if (isLastVideo) {
+            // Course completed!
+            setTimeout(() => {
+              if (typeof confetti !== 'undefined') {
+                confetti({
+                  particleCount: 200,
+                  spread: 100,
+                  origin: { y: 0.6 },
+                  colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+                });
+                
+                // Show completion message
+                const completionMsg = document.createElement('div');
+                completionMsg.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-8 py-6 rounded-2xl shadow-2xl z-50 text-center animate-bounce';
+                completionMsg.innerHTML = `
+                  <div class="text-4xl mb-2">🎉</div>
+                  <div class="text-xl font-bold mb-2">Course Completed!</div>
+                  <div class="text-sm">Congratulations on finishing ${courseName}!</div>
+                `;
+                document.body.appendChild(completionMsg);
+                setTimeout(() => completionMsg.remove(), 5000);
+              }
+            }, 1000);
+          } else if (isLastInChapter) {
+            // Chapter completed!
+            setTimeout(() => {
+              if (typeof confetti !== 'undefined') {
+                confetti({
+                  particleCount: 100,
+                  spread: 70,
+                  origin: { y: 0.7 },
+                  colors: ['#4ECDC4', '#45B7D1', '#96CEB4']
+                });
+                
+                // Show chapter completion message
+                const chapterMsg = document.createElement('div');
+                chapterMsg.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 text-center';
+                chapterMsg.innerHTML = `
+                  <div class="text-2xl mb-2">📚</div>
+                  <div class="font-bold mb-1">Chapter Complete!</div>
+                  <div class="text-sm">Great progress!</div>
+                `;
+                document.body.appendChild(chapterMsg);
+                setTimeout(() => chapterMsg.remove(), 3000);
+              }
+            }, 500);
+          }
           
           // Sync with localStorage after marking as watched
           setTimeout(() => {
@@ -1430,6 +1611,7 @@ ${courseName}`, extraStyles: `
               }
               if (window.gamificationSystem) {
                 window.gamificationSystem.onKeyboardShortcut('F - Fullscreen');
+                window.gamificationSystem.awardPoints(2, 'Keyboard Shortcut');
               }
             } catch (err) {
               console.warn('Fullscreen error:', err);
@@ -1441,6 +1623,7 @@ ${courseName}`, extraStyles: `
               showKeyHint('⏪ -10s');
               if (window.gamificationSystem) {
                 window.gamificationSystem.onKeyboardShortcut('J - Rewind');
+                window.gamificationSystem.awardPoints(1, 'Keyboard Shortcut');
               }
             }
             break;
@@ -1457,6 +1640,7 @@ ${courseName}`, extraStyles: `
               }
               if (window.gamificationSystem) {
                 window.gamificationSystem.onKeyboardShortcut('K - Play/Pause');
+                window.gamificationSystem.awardPoints(1, 'Keyboard Shortcut');
               }
             } catch (err) {
               console.warn('Play/pause error:', err);
@@ -1468,6 +1652,7 @@ ${courseName}`, extraStyles: `
               showKeyHint('⏩ +10s');
               if (window.gamificationSystem) {
                 window.gamificationSystem.onKeyboardShortcut('L - Forward');
+                window.gamificationSystem.awardPoints(1, 'Keyboard Shortcut');
               }
             }
             break;
@@ -1619,33 +1804,35 @@ ${courseName}`, extraStyles: `
             return;
           }
           
-          // Check if online before trying API
-          if (navigator.onLine) {
-            try {
-              const quizUrl = `/api/quiz/generate/${encodeURIComponent(courseName)}/${videoId}`;
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 15000);
-              
-              const response = await fetch(quizUrl, { signal: controller.signal });
-              clearTimeout(timeoutId);
-              
-              if (response.ok) {
-                const data = await response.json();
-                if (data.questions && data.questions.length > 0) {
-                  // Cache the quiz
-                  localStorage.setItem(cacheKey, JSON.stringify(data));
-                  console.log(`Starting AI quiz with ${data.questions.length} questions`);
-                  window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
-                  this.innerHTML = originalText;
-                  this.disabled = false;
-                  return;
-                } else {
-                  console.log('No AI questions returned, using fallback');
-                }
+          // Try to generate AI quiz
+          try {
+            const quizUrl = `/api/quiz/generate/${encodeURIComponent(courseName)}/${videoId}`;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            
+            const response = await fetch(quizUrl, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.questions && data.questions.length > 0) {
+                // Cache the AI-generated quiz
+                const quizData = {
+                  ...data,
+                  aiGenerated: true,
+                  aiModel: data.aiModel || 'AI Assistant',
+                  generatedAt: Date.now()
+                };
+                localStorage.setItem(cacheKey, JSON.stringify(quizData));
+                console.log(`Starting AI quiz with ${data.questions.length} questions via ${data.aiModel}`);
+                window.quizSystem.startQuiz(data.quizType || 'video', data.questions);
+                this.innerHTML = originalText;
+                this.disabled = false;
+                return;
               }
-            } catch (error) {
-              console.warn('API quiz failed, using offline quiz');
             }
+          } catch (error) {
+            console.warn('AI quiz generation failed:', error);
           }
           
           // Fallback to determined quiz type
