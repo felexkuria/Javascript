@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
 
 class AIService {
   constructor() {
@@ -6,9 +7,14 @@ class AIService {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     this.geminiModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
-    // Amazon Nova setup
-    this.novaApiKey = process.env.NOVA_API_KEY;
-    this.novaEndpoint = process.env.NOVA_ENDPOINT || 'https://nova-lite-v1.us-east-1.amazonaws.com/v1/chat/completions';
+    // Amazon Nova setup via AWS Bedrock
+    this.bedrockClient = new BedrockRuntimeClient({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
   }
 
   // Main AI generation method with Nova first, Gemini failover
@@ -36,33 +42,27 @@ class AIService {
     }
   }
 
-  // Amazon Nova API call
+  // Amazon Nova API call via AWS Bedrock Runtime
   async callNovaAPI(prompt, options = {}) {
-    const response = await fetch(this.novaEndpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.novaApiKey}`,
-        'Content-Type': 'application/json'
-      },
+    const input = {
+      modelId: "us.amazon.nova-pro-v1:0",
+      contentType: "application/json",
+      accept: "application/json",
       body: JSON.stringify({
-        model: 'amazon.nova-lite-v1:0',
         messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: "user", content: [{ text: prompt }] }
         ],
-        max_tokens: options.maxTokens || 2000,
-        temperature: options.temperature || 0.7
-      })
-    });
+        inferenceConfig: {
+          maxTokens: options.maxTokens || 2000,
+          temperature: options.temperature || 0.7
+        }
+      }),
+    };
 
-    if (!response.ok) {
-      throw new Error(`Nova API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    const command = new InvokeModelCommand(input);
+    const response = await this.bedrockClient.send(command);
+    const json = JSON.parse(new TextDecoder().decode(response.body));
+    return json.output.message.content[0].text;
   }
 
   // Specialized methods for different use cases

@@ -3,20 +3,29 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.864.0",
     "@google/generative-ai": "^0.24.1",
     "aws-sdk": "^2.1692.0",
+    "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
+    "csurf": "^1.11.0",
     "debug": "^4.3.5",
     "dotenv": "^16.6.1",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
+    "express-rate-limit": "^6.7.0",
+    "express-timeout-handler": "^2.2.2",
+    "helmet": "^7.0.0",
     "iconv-lite": "^0.6.3",
+    "isomorphic-dompurify": "^2.0.0",
+    "jsonwebtoken": "^9.0.0",
     "mongodb": "^6.17.0",
     "mongoose": "^8.4.1",
     "multer": "^2.0.0",
@@ -24,14 +33,7 @@
     "my-video-course": "file:",
     "path": "^0.12.7",
     "pdf-parse": "^1.1.1",
-    "helmet": "^7.0.0",
-    "csurf": "^1.11.0",
-    "express-rate-limit": "^6.7.0",
-    "jsonwebtoken": "^9.0.0",
-    "bcrypt": "^5.1.0",
     "validator": "^13.9.0",
-    "isomorphic-dompurify": "^2.0.0",
-    "winston": "^3.8.0",
-    "express-timeout-handler": "^2.2.2"
+    "winston": "^3.8.0"
   }
 }
