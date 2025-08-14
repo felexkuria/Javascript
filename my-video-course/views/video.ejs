@@ -194,20 +194,10 @@ ${courseName}`, extraStyles: `
             <% if (video && video !== null && video !== undefined) { %>
             <div class="video-container mb-4">
               <video id="videoPlayer" controls class="w-full">
-                <source
-                  src="/videos/<%= courseName %>/file/<%= video._id %>"
-                  type="video/mp4"
-                />
+                <source src="/videos/<%= courseName %>/file/<%= video._id %>" type="video/mp4" />
                 <% if (video.captionsUrl) { %>
-                <track
-                  label="English"
-                  kind="subtitles"
-                  srclang="en"
-                  src="/captions/<%= courseName %>/<%= video._id %>"
-                  default
-                />
+                <track label="English" kind="subtitles" srclang="en" src="/captions/<%= courseName %>/<%= video._id %>" default />
                 <% } %>
-
                 Your browser does not support the video tag.
               </video>
             </div>
@@ -235,17 +225,12 @@ ${courseName}`, extraStyles: `
             <div class="flex justify-between items-center mb-4">
               <div class="flex space-x-2">
                 <% if (!isFirstVideo) { %>
-                <button
-                  id="prevButton"
-                  class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                >
+                <button id="prevButton" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">
                   <i class="fas fa-step-backward mr-1"></i> Previous
                 </button>
-                <% } %> <% if (!isLastVideo) { %>
-                <button
-                  id="nextButton"
-                  class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                >
+                <% } %>
+                <% if (!isLastVideo) { %>
+                <button id="nextButton" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">
                   Next <i class="fas fa-step-forward ml-1"></i>
                 </button>
                 <% } %>
@@ -536,7 +521,6 @@ ${courseName}`, extraStyles: `
 <!-- Key hint element -->
 <div id="keyHint" class="key-hint"></div>
 
-<script src="/js/connection-monitor.js"></script>
 <script src="/js/gamification.js"></script>
 <script src="/js/quiz-system.js"></script>
 <script src="/js/ai-integration.js"></script>
@@ -605,8 +589,10 @@ ${courseName}`, extraStyles: `
           : 'bg-white border shadow-sm text-gray-800 rounded-bl-sm'
       }`;
       
-      // Handle line breaks in messages
-      bubble.innerHTML = message.replace(/\n/g, '<br>');
+      // Handle line breaks and bold text in messages
+      let formattedMessage = message.replace(/\n/g, '<br>');
+      formattedMessage = formattedMessage.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
+      bubble.innerHTML = formattedMessage;
       
       messageDiv.appendChild(bubble);
       
@@ -694,6 +680,25 @@ ${courseName}`, extraStyles: `
     
     // Load todos for this video
     loadVideoTodos();
+    
+    // Navigation buttons (reuse existing declarations)
+    if (prevButton) {
+      prevButton.addEventListener('click', function() {
+        const prevId = '<%= typeof prevVideoId !== "undefined" ? prevVideoId : "" %>';
+        if (prevId) {
+          window.location.href = `/videos/${encodeURIComponent(courseName)}/${prevId}`;
+        }
+      });
+    }
+
+    if (nextButton) {
+      nextButton.addEventListener('click', function() {
+        const nextId = '<%= typeof nextVideoId !== "undefined" ? nextVideoId : "" %>';
+        if (nextId) {
+          window.location.href = `/videos/${encodeURIComponent(courseName)}/${nextId}?autoplay=true`;
+        }
+      });
+    }
     
     // Initialize AI service status
     checkAIServiceStatus();
@@ -1184,58 +1189,44 @@ ${courseName}`, extraStyles: `
       });
     }
 
-    // Function to navigate to next video
+    // Function to navigate to next video with error logging
     function navigateToNextVideo() {
-      const isLastVideo = <%= isLastVideo ? 'true' : 'false' %>;
-      const nextVideoId = '<%= typeof nextVideoId !== "undefined" ? nextVideoId : "" %>';
-      const isLastInChapter = <%= isLastInChapter ? 'true' : 'false' %>;
+      try {
+        const isLastVideo = <%= typeof isLastVideo !== "undefined" ? isLastVideo : false %>;
+        const nextVideoId = '<%= typeof nextVideoId !== "undefined" ? nextVideoId : "" %>';
+        const isLastInChapter = <%= typeof isLastInChapter !== "undefined" ? isLastInChapter : false %>;
+        
+        console.log('Auto-navigate:', { isLastVideo, nextVideoId, isLastInChapter });
 
-      if (!isLastVideo && nextVideoId) {
-        try {
-          // Get current URL path and replace video ID
-          const currentPath = window.location.pathname;
-          const pathParts = currentPath.split('/');
-          pathParts[pathParts.length - 1] = nextVideoId;
-          const nextUrl = pathParts.join('/') + '?autoplay=true';
-          
-          // If this is the last video in a chapter, show a brief message
-          if (isLastInChapter) {
-            showKeyHint('Chapter Complete! Moving to next chapter...');
-            setTimeout(() => {
+        if (!isLastVideo && nextVideoId) {
+          try {
+            const nextUrl = `/videos/${encodeURIComponent(courseName)}/${nextVideoId}?autoplay=true`;
+            
+            console.log('Auto-navigation URL:', nextUrl);
+            
+            if (isLastInChapter) {
+              showKeyHint('Chapter Complete! Moving to next chapter...');
+              setTimeout(() => {
+                window.location.href = nextUrl;
+              }, 1500);
+            } else {
               window.location.href = nextUrl;
-            }, 1500);
-          } else {
-            window.location.href = nextUrl;
+            }
+          } catch (error) {
+            console.error('URL construction error:', error);
+            const fallbackUrl = `/videos/${encodeURIComponent(courseName)}/${nextVideoId}?autoplay=true`;
+            console.log('Fallback URL:', fallbackUrl);
+            window.location.href = fallbackUrl;
           }
-        } catch (error) {
-          console.error('URL construction error:', error);
-          // Simple fallback
-          const safeCourseName = encodeURIComponent(courseName);
-          window.location.href = `/videos/${safeCourseName}/${nextVideoId}?autoplay=true`;
+        } else {
+          console.log('Auto-navigation blocked');
         }
+      } catch (error) {
+        console.error('navigateToNextVideo error:', error);
       }
     }
 
-    // Navigation buttons
-    if (prevButton) {
-      prevButton.addEventListener('click', function() {
-        const safeCourseName = encodeURIComponent(courseName);
-        const prevId = '<%= typeof prevVideoId !== "undefined" ? prevVideoId : "" %>';
-        if (prevId) {
-          window.location.href = `/videos/${safeCourseName}/${prevId}`;
-        }
-      });
-    }
-
-    if (nextButton) {
-      nextButton.addEventListener('click', function() {
-        const safeCourseName = encodeURIComponent(courseName);
-        const nextId = '<%= typeof nextVideoId !== "undefined" ? nextVideoId : "" %>';
-        if (nextId) {
-          window.location.href = `/videos/${safeCourseName}/${nextId}?autoplay=true`;
-        }
-      });
-    }
+    // Navigation is now handled in components
 
     // Check for SRT subtitle file and enable CC
     const checkForSubtitles = async () => {
@@ -1283,7 +1274,7 @@ ${courseName}`, extraStyles: `
           srtProgress.style.display = 'none';
           srtProgress.innerHTML = '🎬 Generating subtitles... 0%';
           
-          const videoContainer = document.querySelector('.video-container');
+          videoContainer = document.querySelector('.video-container');
           if (videoContainer) {
             videoContainer.style.position = 'relative';
             videoContainer.appendChild(srtProgress);
@@ -1307,7 +1298,7 @@ ${courseName}`, extraStyles: `
             }
           };
           
-          const videoContainer = document.querySelector('.video-container');
+          let videoContainer = document.querySelector('.video-container');
           if (videoContainer) {
             videoContainer.style.position = 'relative';
             videoContainer.appendChild(ccButton);

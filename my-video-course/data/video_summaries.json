@@ -267,5 +267,25 @@
       "Auto-formatting",
       "Source Control Integration"
     ]
+  },
+  "001 Course Introduction": {
+    "summary": "This course provides a 100% hands-on approach to learning HashiCorp Terraform, preparing students for the HashiCorp Certified Terraform Associate exam.  It features over 70 labs, practice questions, study tips, and follows the exam objectives sequentially.  Each lab includes downloadable PDFs, code examples, and instructor insights based on real-world experience.",
+    "keyTopics": [
+      "HashiCorp Terraform",
+      "HashiCorp Certified Terraform Associate Certification",
+      "Hands-on Labs",
+      "Exam Preparation",
+      "Practical Application"
+    ]
+  },
+  "001 What is Infrastructure as Code": {
+    "summary": "This introductory lab explains Infrastructure as Code (IaC), defining it as a method to manage and version infrastructure configurations (like AWS, Azure, or VMware settings) as code.  Instead of manual configuration, IaC codifies these actions, improving collaboration, scalability, and application development. This allows for version control, automated deployments and acts as live documentation.",
+    "keyTopics": [
+      "Infrastructure as Code (IaC)",
+      "Benefits of IaC",
+      "Collaboration with IaC",
+      "Improved Scalability with IaC",
+      "IaC as Versioned Code and Documentation"
+    ]
   }
 }

@@ -259,7 +259,7 @@ const thumbnailGenerator = require('./services/thumbnailGenerator');
 const videoManager = require('./services/videoManager');
 const gamificationManager = require('./services/gamificationManager');
 
-// View engine setup 
+// View engine setup  
 app.set('view engine', 'ejs');
 
 
@@ -388,9 +388,9 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
     const isFirstVideo = videoIndex === 0;
     const isLastVideo = videoIndex === videos.length - 1;
 
-    // Get IDs for previous and next videos
-    const prevVideoId = !isFirstVideo ? videos[videoIndex - 1]._id.toString() : null;
-    const nextVideoId = !isLastVideo ? videos[videoIndex + 1]._id.toString() : null;
+    // Get IDs for previous and next videos from stored navigation or calculate
+    const prevVideoId = video.prevVideoId || (!isFirstVideo ? videos[videoIndex - 1]._id.toString() : null);
+    const nextVideoId = video.nextVideoId || (!isLastVideo ? videos[videoIndex + 1]._id.toString() : null);
 
     // Check if this is the last video in a chapter
     let isLastInChapter = false;
@@ -1029,9 +1029,9 @@ app.get('/videos/:courseName/:id', async (req, res) => {
     const isFirstVideo = currentIndex === 0;
     const isLastVideo = currentIndex === sortedVideos.length - 1;
 
-    // Get previous and next video IDs
-    const prevVideoId = currentIndex > 0 ? sortedVideos[currentIndex - 1]._id.toString() : null;
-    const nextVideoId = currentIndex < sortedVideos.length - 1 ? sortedVideos[currentIndex + 1]._id.toString() : null;
+    // Get previous and next video IDs from stored navigation or calculate
+    const prevVideoId = video.prevVideoId || (currentIndex > 0 ? sortedVideos[currentIndex - 1]._id.toString() : null);
+    const nextVideoId = video.nextVideoId || (currentIndex < sortedVideos.length - 1 ? sortedVideos[currentIndex + 1]._id.toString() : null);
 
     // Check if this is the last video in a chapter
     let isLastInChapter = false;

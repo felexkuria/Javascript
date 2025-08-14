@@ -215,7 +215,12 @@ class GamificationSystem {
         
         // Count watched videos and collect watch dates
         Object.keys(localStorageData).forEach(courseName => {
-          const videos = localStorageData[courseName] || [];
+          const courseData = localStorageData[courseName];
+          const videos = courseData?.videos || [];
+          if (!Array.isArray(videos)) {
+            console.warn(`Course ${courseName}: videos is not an array:`, videos);
+            return;
+          }
           console.log(`Course ${courseName}: ${videos.length} total videos`);
           
           const watchedInCourse = videos.filter(v => {
@@ -245,7 +250,7 @@ class GamificationSystem {
         this.calculateStreakFromDates();
         
         // Force recount from localStorage to ensure accuracy
-        const actualWatchedCount = this.countWatchedVideosFromLocalStorage();
+        const actualWatchedCount = await this.countWatchedVideosFromLocalStorage();
         
         // Update user stats with accurate count
         this.userStats.videosWatched = actualWatchedCount;
@@ -578,19 +583,20 @@ class GamificationSystem {
     // Update points display
     const pointsElements = document.querySelectorAll('.user-points');
     pointsElements.forEach(el => {
-      el.textContent = this.userStats.totalPoints.toLocaleString();
+      const points = this.userStats.totalPoints || 0;
+      el.textContent = points.toLocaleString();
     });
     
     // Update level display
     const levelElements = document.querySelectorAll('.user-level');
     levelElements.forEach(el => {
-      el.textContent = this.userStats.currentLevel;
+      el.textContent = this.userStats.currentLevel || 1;
     });
     
     // Update streak display
     const streakElements = document.querySelectorAll('.user-streak');
     streakElements.forEach(el => {
-      el.textContent = this.streakData.currentStreak;
+      el.textContent = this.streakData.currentStreak || 0;
     });
   }
 
@@ -646,7 +652,12 @@ class GamificationSystem {
         let totalWatched = 0;
         
         Object.keys(localStorageData).forEach(courseName => {
-          const videos = localStorageData[courseName] || [];
+          const courseData = localStorageData[courseName];
+          const videos = courseData?.videos || [];
+          if (!Array.isArray(videos)) {
+            console.warn(`Course ${courseName}: videos is not an array:`, videos);
+            return;
+          }
           const watchedCount = videos.filter(v => v && v.watched === true).length;
           console.log(`${courseName}: ${watchedCount} watched videos`);
           totalWatched += watchedCount;
