@@ -1,10 +1,24 @@
 <%- include('partials/header', { title: 'Course Chatbot', extraStyles: `
 <style>
+  body {
+    background-color: #1a202c; /* Dark background */
+    color: #e2e8f0; /* Light text */
+  }
   .chat-container {
     height: calc(100vh - 200px);
+    background-color: #2d3748; /* Darker background for chat */
   }
   .message {
     animation: fadeIn 0.3s ease-in;
+  }
+  .message .bg-white {
+    background-color: #4a5568; /* Darker message background */
+  }
+  .message .text-gray-800 {
+    color: #e2e8f0; /* Light text for messages */
+  }
+  .typing-indicator {
+    animation: pulse 1.5s infinite;
   }
   @keyframes fadeIn {
     from {
@@ -15,9 +29,6 @@
       opacity: 1;
       transform: translateY(0);
     }
-  }
-  .typing-indicator {
-    animation: pulse 1.5s infinite;
   }
   @keyframes pulse {
     0%,
@@ -33,7 +44,7 @@
 
 <main class="flex-grow px-4 py-8 md:px-8">
   <div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
       <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
         <h1 class="text-2xl font-bold mb-2">🤖 Course Assistant</h1>
         <p class="text-blue-100">
@@ -44,7 +55,7 @@
 
       <div
         id="chatContainer"
-        class="chat-container overflow-y-auto p-6 bg-gray-50"
+        class="chat-container overflow-y-auto p-6"
       >
         <div class="message mb-4">
           <div class="flex items-start">
@@ -53,30 +64,39 @@
             >
               🤖
             </div>
-            <div class="bg-white rounded-lg p-4 shadow-sm max-w-3xl">
-              <p class="text-gray-800">
+            <div class="bg-gray-700 rounded-lg p-4 shadow-sm max-w-3xl">
+              <p class="text-gray-300">
                 Hello! I'm your course assistant. I have knowledge from all your
                 video courses and can explain concepts in an engaging, David J.
                 Malan style. Try asking me:
               </p>
-              <ul class="mt-2 text-sm text-gray-600">
+              <ul class="mt-2 text-sm text-gray-400">
                 <li>• "Explain Git like David J. Malan"</li>
                 <li>• "What is Kubernetes in simple terms?"</li>
                 <li>• "How does DevOps work?"</li>
                 <li>• "Explain AWS architecture"</li>
+              </ul>
+              <p class="text-gray-300 mt-4">
+                Additionally, I can help you manage your tasks. Here's a sample of what you can do:
+              </p>
+              <ul class="mt-2 text-sm text-gray-400">
+                <li>• "Add 'Complete project report' to my todos"</li>
+                <li>• "Show me my todos"</li>
+                <li>• "Mark 'Complete project report' as done"</li>
+                <li>• "Clear all completed todos"</li>
               </ul>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="border-t bg-white p-4">
+      <div class="border-t bg-gray-800 p-4">
         <div class="flex gap-3 mb-2">
           <input
             type="text"
             id="messageInput"
             placeholder="Ask me about any concept from your courses..."
-            class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="flex-1 border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             id="sendButton"
@@ -88,7 +108,7 @@
         <div class="flex justify-end">
           <button
             id="clearHistoryButton"
-            class="text-xs text-gray-500 hover:text-red-500 transition-colors"
+            class="text-xs text-gray-400 hover:text-red-500 transition-colors"
           >
             Clear Chat History
           </button>

@@ -17136,5 +17136,97 @@
       "isFirstVideo": false,
       "isLastVideo": true
     }
+  ],
+  "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA": [
+    {
+      "_id": "689f418b467eff9a6fcb5ecd",
+      "title": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250510_101735-Meeting Recording",
+      "description": "Video: AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250510_101735-Meeting Recording.mp4",
+      "section": null,
+      "videoUrl": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250510_101735-Meeting Recording.mp4",
+      "watched": false,
+      "watchedAt": null,
+      "thumbnailUrl": null
+    },
+    {
+      "_id": "689f418b467eff9a6fcb5ece",
+      "title": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250517_101302-Meeting Recording",
+      "description": "Video: AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250517_101302-Meeting Recording.mp4",
+      "section": null,
+      "videoUrl": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250517_101302-Meeting Recording.mp4",
+      "watched": false,
+      "watchedAt": null,
+      "thumbnailUrl": null
+    },
+    {
+      "_id": "689f418b467eff9a6fcb5ecf",
+      "title": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250621_102251-Meeting Recording",
+      "description": "Video: AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250621_102251-Meeting Recording.mp4",
+      "section": null,
+      "videoUrl": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250621_102251-Meeting Recording.mp4",
+      "watched": false,
+      "watchedAt": null,
+      "thumbnailUrl": null
+    },
+    {
+      "_id": "689f418b467eff9a6fcb5ed0",
+      "title": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250628_101002-Meeting Recording",
+      "description": "Video: AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250628_101002-Meeting Recording.mp4",
+      "section": null,
+      "videoUrl": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250628_101002-Meeting Recording.mp4",
+      "watched": false,
+      "watchedAt": null,
+      "thumbnailUrl": null
+    },
+    {
+      "_id": "689f418b467eff9a6fcb5ed1",
+      "title": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250705_100212-Meeting Recording",
+      "description": "Video: AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250705_100212-Meeting Recording.mp4",
+      "section": null,
+      "videoUrl": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250705_100212-Meeting Recording.mp4",
+      "watched": false,
+      "watchedAt": null,
+      "thumbnailUrl": null
+    },
+    {
+      "_id": "689f418b467eff9a6fcb5ed2",
+      "title": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250712_101003-Meeting Recording",
+      "description": "Video: AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250712_101003-Meeting Recording.mp4",
+      "section": null,
+      "videoUrl": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250712_101003-Meeting Recording.mp4",
+      "watched": false,
+      "watchedAt": null,
+      "thumbnailUrl": null
+    },
+    {
+      "_id": "689f418b467eff9a6fcb5ed3",
+      "title": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250719_080035-Meeting Recording",
+      "description": "Video: AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250719_080035-Meeting Recording.mp4",
+      "section": null,
+      "videoUrl": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250719_080035-Meeting Recording.mp4",
+      "watched": false,
+      "watchedAt": null,
+      "thumbnailUrl": null
+    },
+    {
+      "_id": "689f418b467eff9a6fcb5ed4",
+      "title": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250726_100322-Meeting Recording",
+      "description": "Video: AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250726_100322-Meeting Recording.mp4",
+      "section": null,
+      "videoUrl": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250726_100322-Meeting Recording.mp4",
+      "watched": false,
+      "watchedAt": null,
+      "thumbnailUrl": null
+    },
+    {
+      "_id": "689f418b467eff9a6fcb5ed5",
+      "title": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250802_100746-Meeting Recording",
+      "description": "Video: AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250802_100746-Meeting Recording.mp4",
+      "section": null,
+      "videoUrl": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250802_100746-Meeting Recording.mp4",
+      "watched": false,
+      "watchedAt": null,
+      "thumbnailUrl": null
+    }
   ]
 }
