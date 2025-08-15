@@ -3,11 +3,11 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 class AIService {
   constructor() {
     // Gemini setup
-    this.genAI = new GoogleGenerativeAI('AIzaSyAT7kcq2iej1djqwuDNetyLexUVL9ear68');
+    this.genAI = new GoogleGenerativeAI('XXXX');
     this.geminiModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     // Amazon Nova setup
-    this.novaApiKey = 'ABSKQmVkcm9ja0FQSUtleS0wOTllLWF0LTc2NzM5Nzg4NTA0MzprNDVCaHg4TEZuMjBRU3BTb2VuM1BjUTRWV1YxeGIrd3A4UVpGalE4ZzhBMjM4b1RZZlltNnFDVW15ND0=';
+    this.novaApiKey = 'XXXXX';
     this.novaEndpoint = 'https://nova-lite-v1.us-east-1.amazonaws.com/v1/chat/completions';
   }
 
