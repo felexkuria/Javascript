@@ -28,7 +28,7 @@
         "2025-08-13"
       ]
     },
-    "updatedAt": "2025-08-15T15:52:22.192Z",
+    "updatedAt": "2025-08-15T18:12:27.443Z",
     "userStats": {
       "totalPoints": 2596,
       "videosWatched": {},
@@ -38,12 +38,12 @@
       "experiencePoints": 496
     },
     "stats": {
-      "videosWatched": 27,
+      "videosWatched": 28,
       "coursesCompleted": 0,
-      "keyboardShortcutsUsed": 6,
-      "totalPoints": 173,
-      "experiencePoints": 173
+      "keyboardShortcutsUsed": 7,
+      "totalPoints": 276,
+      "experiencePoints": 276
     },
-    "streak": 2
+    "streak": 3
   }
 }
