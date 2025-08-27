@@ -70,8 +70,25 @@ jobs:
         TF_VAR_nova_api_key: ${{ secrets.NOVA_API_KEY }}
         TF_VAR_key_pair_name: "video-course-key"
       run: |
+        # Import VPC and networking
+        VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=video-course-app-vpc" --query 'Vpcs[0].VpcId' --output text 2>/dev/null)
+        if [ "$VPC_ID" != "None" ] && [ "$VPC_ID" != "" ]; then terraform import aws_vpc.main $VPC_ID || true; fi
+        
+        # Import subnets
+        SUBNET1=$(aws ec2 describe-subnets --filters "Name=tag:Name,Values=video-course-app-public-subnet-1" --query 'Subnets[0].SubnetId' --output text 2>/dev/null)
+        if [ "$SUBNET1" != "None" ] && [ "$SUBNET1" != "" ]; then terraform import 'aws_subnet.public[0]' $SUBNET1 || true; fi
+        SUBNET2=$(aws ec2 describe-subnets --filters "Name=tag:Name,Values=video-course-app-public-subnet-2" --query 'Subnets[0].SubnetId' --output text 2>/dev/null)
+        if [ "$SUBNET2" != "None" ] && [ "$SUBNET2" != "" ]; then terraform import 'aws_subnet.public[1]' $SUBNET2 || true; fi
+        
+        # Import ACM certificate
+        CERT_ARN=$(aws acm list-certificates --query 'CertificateSummaryList[?DomainName==`skool.shopmultitouch.com`].CertificateArn' --output text 2>/dev/null)
+        if [ "$CERT_ARN" != "" ]; then terraform import aws_acm_certificate.main $CERT_ARN || true; fi
+        
+        # Import IAM roles
         terraform import aws_iam_role.cognito_authenticated video-course-app-cognito-authenticated || true
         terraform import aws_iam_role.ec2_role video-course-app-ec2-role || true
+        
+        # Import ECR and load balancer
         terraform import aws_ecr_repository.main video-course-app || true
         ALB_ARN=$(aws elbv2 describe-load-balancers --names video-course-app-alb --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null)
         if [ "$ALB_ARN" != "None" ]; then terraform import aws_lb.main $ALB_ARN || true; fi
