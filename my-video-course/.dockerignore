@@ -1,0 +1,23 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.DS_Store
+*.log
+
+# Exclude large video files
+public/videos/
+public/thumbnails/
+temp/
+logs/
+
+# Exclude development files
+.qodo/
+terraform/
+aws/infrastructure.yml
+*.md
+test-*.html

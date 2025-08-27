@@ -190,22 +190,29 @@
               throw new Error('Missing S3 configuration. Falling back to direct upload.');
             }
             
-            // Use S3 uploader
+            // Use S3 uploader with course-based folder structure
+            const s3Key = `courses/${courseId}/videos/${file.name}`;
             const uploader = new S3Uploader({
               region: form.dataset.region,
               bucket: form.dataset.bucket,
+              key: s3Key,
               onProgress: (percent) => {
                 progressBar.style.width = percent + '%';
-                progressText.textContent = percent + '%';
+                progressText.textContent = `${percent}% - Uploading to courses/${courseId}/videos/`;
               },
-              onComplete: (data) => {
+              onComplete: async (data) => {
                 console.log('S3 upload complete:', data);
-                // File uploaded successfully, now submit the form with the S3 URL
+                progressText.textContent = 'Processing thumbnails and transcriptions...';
+                
+                // Submit form with S3 URL and trigger post-processing
                 const formData = new FormData();
                 formData.append('title', title);
                 formData.append('description', description);
                 formData.append('courseId', courseId);
                 formData.append('videoUrl', data.Location);
+                formData.append('s3Key', s3Key);
+                formData.append('generateThumbnail', 'true');
+                formData.append('generateTranscription', 'true');
                 
                 fetch('/videos/upload', {
                   method: 'POST',
@@ -214,7 +221,10 @@
                 .then(response => response.json())
                 .then(data => {
                   if (data.success) {
-                    window.location.href = data.redirectUrl || `/course/${courseId}`;
+                    progressText.textContent = 'Upload complete! Processing thumbnails and transcriptions in background.';
+                    setTimeout(() => {
+                      window.location.href = data.redirectUrl || `/course/${courseId}`;
+                    }, 2000);
                   } else {
                     throw new Error(data.error || 'Error saving video information');
                   }
@@ -286,7 +296,12 @@
         formData.append('video', file);
         formData.append('title', title);
         
-        // Start processing
+        // Add course selection for Whisper
+        const courseSelect = document.getElementById('courseId');
+        const selectedCourse = courseSelect ? courseSelect.value : 'default';
+        formData.append('courseId', selectedCourse);
+        
+        // Start processing with course-based storage
         fetch('/api/process-whisper', {
           method: 'POST',
           body: formData
@@ -298,6 +313,13 @@
             whisperResult.classList.remove('hidden');
             downloadLink.href = data.downloadUrl;
             downloadLink.textContent = 'Download SRT File';
+            
+            // Show S3 path info
+            const resultDiv = document.getElementById('whisper-result');
+            const pathInfo = document.createElement('p');
+            pathInfo.className = 'text-sm text-gray-600 mt-2';
+            pathInfo.textContent = `Saved to: courses/${selectedCourse}/transcriptions/`;
+            resultDiv.appendChild(pathInfo);
           } else {
             throw new Error(data.error || 'Processing failed');
           }

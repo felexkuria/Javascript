@@ -32,7 +32,6 @@ class SRTQuizGenerator {
         return matchingSrt;
       }
       
-      // If no exact match, don't use any SRT to avoid wrong content
       console.log(`No matching SRT found for ${videoName}`);
     } catch (error) {
       console.warn('Error checking for existing SRT files:', error.message);
@@ -48,8 +47,6 @@ class SRTQuizGenerator {
         '-c:s', 'srt',
         srtPath
       ]);
-      
-      let hasOutput = false;
       
       ffmpegProcess.on('close', (code) => {
         if (fs.existsSync(srtPath) && fs.statSync(srtPath).size > 0) {
@@ -72,15 +69,60 @@ class SRTQuizGenerator {
     });
   }
   
-  // Generate SRT using Whisper
+  // Generate SRT using Whisper with audio extraction for speed
   async generateWithWhisper(videoPath) {
     const videoDir = path.dirname(videoPath);
     const videoName = path.basename(videoPath, path.extname(videoPath));
     const srtPath = path.join(videoDir, `${videoName}.srt`);
+    const audioPath = path.join(videoDir, `${videoName}_temp.wav`);
+    
+    // Get video duration and file size for AWS Transcribe decision
+    let videoDuration = 0;
+    let fileSize = 0;
+    try {
+      const videoCompression = require('./videoCompression');
+      const videoInfo = await videoCompression.getVideoInfo(videoPath);
+      videoDuration = videoInfo.duration || 0;
+      fileSize = fs.statSync(videoPath).size;
+      console.log(`Video duration: ${Math.round(videoDuration / 60)} minutes, size: ${Math.round(fileSize / 1024 / 1024)}MB`);
+    } catch (error) {
+      console.warn('Could not get video info:', error.message);
+    }
+    
+    // Use AWS Transcribe for videos >= 1 hour (3600 seconds) or >= 200MB
+    if (videoDuration >= 3600 || fileSize >= 200 * 1024 * 1024) {
+      console.log(`Video is ${Math.round(videoDuration / 60)} minutes or ${Math.round(fileSize / 1024 / 1024)}MB - using AWS Transcribe`);
+      try {
+        const transcribeService = require('./transcribeService');
+        return await transcribeService.processLargeVideo(videoPath, videoName);
+      } catch (error) {
+        console.warn('AWS Transcribe failed, falling back to Whisper:', error.message);
+        // Continue with Whisper as fallback
+      }
+    }
+    
+    
+    // Extract audio first for faster processing
+    let audioExtracted = false;
+    try {
+      const videoCompression = require('./videoCompression');
+      await videoCompression.extractAudio(videoPath, audioPath, { format: 'wav', audioBitrate: '64k' });
+      audioExtracted = true;
+      console.log(`Extracted audio for faster SRT generation: ${audioPath}`);
+    } catch (error) {
+      console.warn('Audio extraction failed, using original video:', error.message);
+    }
+    
+    const inputFile = audioExtracted && fs.existsSync(audioPath) ? audioPath : videoPath;
+    
+    // Calculate timeout based on video duration (minimum 10 minutes, max 30 minutes)
+    const timeoutMinutes = Math.max(10, Math.min(30, Math.ceil(videoDuration / 60) * 2));
+    const timeoutMs = timeoutMinutes * 60 * 1000;
+    console.log(`Using Whisper for ${Math.round(videoDuration / 60)} minute video with ${timeoutMinutes} minute timeout`);
     
     return new Promise((resolve, reject) => {
       const whisperProcess = spawn('whisper', [
-        videoPath,
+        inputFile,
         '--model', 'base',
         '--output_format', 'srt',
         '--output_dir', videoDir,
@@ -88,6 +130,19 @@ class SRTQuizGenerator {
       ]);
       
       let errorOutput = '';
+      let timeoutHandle;
+      
+      const cleanup = () => {
+        if (timeoutHandle) clearTimeout(timeoutHandle);
+        if (audioExtracted && fs.existsSync(audioPath)) {
+          try {
+            fs.unlinkSync(audioPath);
+            console.log('Cleaned up temporary audio file');
+          } catch (error) {
+            console.warn('Failed to clean up audio file:', error.message);
+          }
+        }
+      };
       
       whisperProcess.stderr.on('data', (data) => {
         const output = data.toString();
@@ -103,8 +158,10 @@ class SRTQuizGenerator {
       });
       
       whisperProcess.on('close', (code) => {
+        cleanup();
+        
         if (code === 0) {
-          const whisperOutput = path.join(videoDir, `${path.basename(videoPath, path.extname(videoPath))}.srt`);
+          const whisperOutput = path.join(videoDir, `${path.basename(inputFile, path.extname(inputFile))}.srt`);
           if (fs.existsSync(whisperOutput) && whisperOutput !== srtPath) {
             fs.renameSync(whisperOutput, srtPath);
           }
@@ -119,23 +176,29 @@ class SRTQuizGenerator {
       });
       
       whisperProcess.on('error', (err) => {
+        cleanup();
         reject(new Error(`Whisper process error: ${err.message}`));
       });
       
-      // Timeout after 5 minutes
-      setTimeout(() => {
-        whisperProcess.kill();
+      // Dynamic timeout based on video duration
+      timeoutHandle = setTimeout(() => {
+        whisperProcess.kill('SIGTERM');
+        setTimeout(() => whisperProcess.kill('SIGKILL'), 5000); // Force kill after 5s
+        cleanup();
         reject(new Error('Whisper timeout'));
-      }, 300000);
+      }, timeoutMs);
     });
   }
   
-  // Parse SRT content with timestamps
+  // Parse SRT content with timestamps and convert to VTT
   parseSRT(srtPath) {
     if (!fs.existsSync(srtPath)) return [];
     
     const content = fs.readFileSync(srtPath, 'utf8');
     const entries = content.split(/\n\s*\n/).filter(entry => entry.trim());
+    
+    // Also generate VTT file for HTML5 video
+    this.convertSRTtoVTT(srtPath);
     
     return entries.map(entry => {
       const lines = entry.trim().split('\n');
@@ -148,21 +211,48 @@ class SRTQuizGenerator {
     }).filter(entry => entry && entry.text.length > 10);
   }
   
-  // Generate quiz questions from SRT entries using AI
-  async generateQuestions(srtEntries, videoTitle) {
-    if (!Array.isArray(srtEntries) || srtEntries.length === 0) return [];
-    
+  // Convert SRT to VTT format for HTML5 video
+  convertSRTtoVTT(srtPath) {
     try {
-      return await this.generateAIQuestions(srtEntries, videoTitle);
+      const vttPath = srtPath.replace('.srt', '.vtt');
+      if (fs.existsSync(vttPath)) return vttPath;
+      
+      const srtContent = fs.readFileSync(srtPath, 'utf8');
+      let vttContent = 'WEBVTT\n\n';
+      
+      // Convert SRT timestamps to VTT format
+      const vttFormatted = srtContent
+        .replace(/\r\n/g, '\n')
+        .replace(/\d+\n/g, '') // Remove sequence numbers
+        .replace(/,/g, '.') // Replace comma with dot in timestamps
+        .replace(/^\n+/gm, '') // Remove extra newlines
+        .trim();
+      
+      vttContent += vttFormatted;
+      fs.writeFileSync(vttPath, vttContent, 'utf8');
+      console.log(`Generated VTT file: ${vttPath}`);
+      return vttPath;
     } catch (error) {
-      console.error('AI generation failed:', error.message);
-      throw error; // Don't fall back to old questions
+      console.warn('Failed to convert SRT to VTT:', error.message);
+      return null;
     }
   }
   
-  // Generate questions using AI with failover
-  async generateAIQuestions(srtEntries, videoTitle) {
-    // Check if quiz already exists in MongoDB
+  // Generate quiz questions from SRT entries using AI
+  async generateQuestions(srtEntries, videoTitle, videoDuration = 0) {
+    if (!Array.isArray(srtEntries) || srtEntries.length === 0) return [];
+    
+    try {
+      return await this.generateAIQuestions(srtEntries, videoTitle, videoDuration);
+    } catch (error) {
+      console.error('AI generation failed:', error.message);
+      throw error;
+    }
+  }
+  
+  // Generate questions using AI with dynamic count based on video duration
+  async generateAIQuestions(srtEntries, videoTitle, videoDuration = 0) {
+    // Check if quiz already exists
     try {
       const existingQuiz = await this.getStoredQuiz(videoTitle);
       if (existingQuiz) {
@@ -170,25 +260,46 @@ class SRTQuizGenerator {
         return existingQuiz.questions;
       }
     } catch (error) {
-      // Silently fail
+      // Continue to generate new quiz
     }
     
-    const content = srtEntries.slice(0, 15).map(e => e.text).join(' ');
-    const response = await aiService.generateQuizQuestions(content, videoTitle);
+    // Calculate number of questions based on video duration
+    const durationMinutes = Math.ceil(videoDuration / 60);
+    let questionCount = 5; // Default
+    
+    if (durationMinutes <= 10) {
+      questionCount = 3;
+    } else if (durationMinutes <= 30) {
+      questionCount = 5;
+    } else if (durationMinutes <= 60) {
+      questionCount = 8;
+    } else if (durationMinutes <= 120) {
+      questionCount = 12;
+    } else {
+      questionCount = Math.min(20, Math.ceil(durationMinutes / 10)); // Max 20 questions
+    }
+    
+    console.log(`Generating ${questionCount} questions for ${durationMinutes}-minute video: ${videoTitle}`);
+    
+    // Use more content for longer videos
+    const contentSampleSize = Math.min(srtEntries.length, Math.max(15, Math.ceil(srtEntries.length / 4)));
+    const content = srtEntries.slice(0, contentSampleSize).map(e => e.text).join(' ');
+    
+    const response = await aiService.generateQuizQuestions(content, videoTitle, questionCount);
     
     const jsonMatch = response.match(/\[.*\]/s);
     if (!jsonMatch) throw new Error('No JSON found in response');
     
-    // Clean up malformed JSON (remove trailing commas)
+    // Clean up malformed JSON
     const cleanJson = jsonMatch[0].replace(/,\s*([}\]])/g, '$1');
     const questions = JSON.parse(cleanJson);
-    const finalQuestions = questions.map((q, i) => ({ ...q, id: `ai_${this.hashString(videoTitle)}_${i}` }));
+    const finalQuestions = questions.slice(0, questionCount).map((q, i) => ({ ...q, id: `ai_${this.hashString(videoTitle)}_${i}` }));
     
-    // Store quiz in MongoDB
+    // Store quiz
     try {
       await this.storeQuiz(videoTitle, finalQuestions);
     } catch (error) {
-      // Silently fail
+      console.warn('Failed to store quiz:', error);
     }
     
     return finalQuestions;
@@ -196,232 +307,85 @@ class SRTQuizGenerator {
   
   // Generate summary and key topics from SRT
   async generateSummaryAndTopics(srtEntries, videoTitle) {
+    // Check if summary already exists in file system
+    try {
+      const dataDir = path.join(__dirname, '..', 'data');
+      const summaryPath = path.join(dataDir, 'video_summaries.json');
+      
+      if (fs.existsSync(summaryPath)) {
+        const summaries = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+        if (summaries[videoTitle]) {
+          console.log('Using cached summary for:', videoTitle);
+          return summaries[videoTitle];
+        }
+      }
+    } catch (error) {
+      console.warn('Error checking cached summary:', error.message);
+    }
+    
+    // Generate new summary using AI
     const content = srtEntries.map(e => e.text).join(' ');
     const response = await aiService.generateSummaryAndTopics(content, videoTitle);
     
     const jsonMatch = response.match(/\{.*\}/s);
     if (!jsonMatch) throw new Error('No JSON found in response');
     
-    // Clean up malformed JSON (remove trailing commas)
+    // Clean up malformed JSON
     const cleanJson = jsonMatch[0].replace(/,\s*([}\]])/g, '$1');
-    return JSON.parse(cleanJson);
-  }
-  
-  // Store quiz in localStorage and sync with MongoDB
-  storeQuiz(videoTitle, questions) {
-    const quizData = JSON.parse(localStorage.getItem('video_quizzes') || '{}');
-    const quizEntry = {
-      questions,
-      createdAt: new Date().toISOString()
-    };
-    quizData[videoTitle] = quizEntry;
-    localStorage.setItem('video_quizzes', JSON.stringify(quizData));
+    const summaryData = JSON.parse(cleanJson);
     
-    // Sync with MongoDB
-    this.syncQuizToMongoDB(videoTitle, quizEntry);
-  }
-  
-  // Sync quiz to MongoDB
-  async syncQuizToMongoDB(videoTitle, quizEntry) {
+    // Store the generated summary
     try {
-      await fetch('/api/quiz/store', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoTitle, ...quizEntry })
-      });
+      const dataDir = path.join(__dirname, '..', 'data');
+      if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+      const summaryPath = path.join(dataDir, 'video_summaries.json');
+      
+      const summaries = fs.existsSync(summaryPath) ? JSON.parse(fs.readFileSync(summaryPath, 'utf8')) : {};
+      summaries[videoTitle] = summaryData;
+      fs.writeFileSync(summaryPath, JSON.stringify(summaries, null, 2));
+      console.log('Stored summary for:', videoTitle);
     } catch (error) {
-      console.warn('Failed to sync quiz to MongoDB:', error);
-    }
-  }
-  
-  // Get stored quiz from localStorage or MongoDB
-  async getStoredQuiz(videoTitle) {
-    // Check localStorage first
-    const quizData = JSON.parse(localStorage.getItem('video_quizzes') || '{}');
-    if (quizData[videoTitle]) {
-      return quizData[videoTitle];
+      console.warn('Failed to store summary:', error.message);
     }
     
-    // Fallback to MongoDB
+    return summaryData;
+  }
+  
+  // Store quiz in MongoDB
+  async storeQuiz(videoTitle, questions) {
     try {
-      const response = await fetch(`/api/quiz/get/${encodeURIComponent(videoTitle)}`);
-      if (response.ok) {
-        const quiz = await response.json();
-        if (quiz) {
-          // Store in localStorage for future use
-          quizData[videoTitle] = quiz;
-          localStorage.setItem('video_quizzes', JSON.stringify(quizData));
-          return quiz;
-        }
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState) {
+        const collection = mongoose.connection.collection('video_quizzes');
+        await collection.updateOne(
+          { videoTitle },
+          { $set: { videoTitle, questions, createdAt: new Date().toISOString(), updatedAt: new Date() } },
+          { upsert: true }
+        );
+        return true;
       }
     } catch (error) {
-      console.warn('Failed to fetch quiz from MongoDB:', error);
+      console.warn('Failed to store quiz:', error);
     }
-    
+    return false;
+  }
+  
+  // Get stored quiz from MongoDB
+  async getStoredQuiz(videoTitle) {
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState) {
+        const collection = mongoose.connection.collection('video_quizzes');
+        const quiz = await collection.findOne({ videoTitle });
+        return quiz;
+      }
+    } catch (error) {
+      console.warn('Failed to get stored quiz:', error);
+    }
     return null;
   }
   
-  // Fallback to hash-based questions
-  generateFallbackQuestions(srtEntries, videoTitle) {
-    const questions = [];
-    const videoHash = this.hashString(videoTitle);
-    
-    const meaningfulEntries = srtEntries.filter(entry => 
-      entry.text.length > 30 && 
-      !entry.text.match(/^[\[\(].*[\]\)]$/) && 
-      entry.text.split(' ').length > 5
-    );
-    
-    const selectedEntries = this.selectUniqueEntries(meaningfulEntries, videoHash, 5);
-    
-    selectedEntries.forEach((entry, index) => {
-      const questionTypes = [
-        this.generateTimestampQuestion,
-        this.generateContentQuestion,
-        this.generateSequenceQuestion
-      ];
-      
-      const questionType = questionTypes[index % questionTypes.length];
-      const question = questionType.call(this, entry, videoTitle, index, videoHash);
-      if (question) questions.push(question);
-    });
-    
-    return questions;
-  }
-  
-  // Generate fill-in-the-blank question
-  generateFillInBlank(sentence, videoTitle) {
-    const words = sentence.split(' ');
-    if (words.length < 5) return null;
-    
-    const keyWordIndex = Math.floor(words.length / 2);
-    const keyWord = words[keyWordIndex];
-    const questionText = words.map((word, index) => 
-      index === keyWordIndex ? '______' : word
-    ).join(' ');
-    
-    return {
-      id: `fill_${Date.now()}_${Math.random()}`,
-      question: `Complete the sentence: "${questionText}"`,
-      options: [keyWord, this.generateWrongAnswer(keyWord), this.generateWrongAnswer(keyWord), this.generateWrongAnswer(keyWord)],
-      correct: 0,
-      explanation: `The correct word is "${keyWord}" from the video content.`
-    };
-  }
-  
-  // Generate multiple choice question
-  generateMultipleChoice(sentence, videoTitle) {
-    const concepts = this.extractConcepts(sentence);
-    if (concepts.length === 0) return null;
-    
-    const concept = concepts[0];
-    const actualContent = sentence.trim();
-    const wrongOptions = [
-      'This was not discussed in the video',
-      'The opposite was mentioned', 
-      'This topic was briefly touched upon'
-    ];
-    
-    return {
-      id: `srt_mc_${Date.now()}`,
-      question: `According to the video, what was mentioned about "${concept}"?`,
-      options: [
-        actualContent.length > 80 ? actualContent.substring(0, 77) + '...' : actualContent,
-        ...wrongOptions
-      ],
-      correct: 0,
-      explanation: `The video specifically mentioned: "${actualContent}"`
-    };
-  }
-  
-  // Generate true/false question
-  generateTrueFalse(sentence, videoTitle) {
-    return {
-      id: `tf_${Date.now()}_${Math.random()}`,
-      question: `True or False: The video mentioned "${sentence.substring(0, 60)}..."`,
-      options: ['True', 'False'],
-      correct: 0,
-      explanation: 'This statement was mentioned in the video content.'
-    };
-  }
-  
-  // Extract key concepts from sentence
-  extractConcepts(sentence) {
-    const words = sentence.toLowerCase().split(' ');
-    const concepts = words.filter(word => 
-      word.length > 4 && 
-      !['this', 'that', 'with', 'from', 'they', 'have', 'will', 'been', 'were'].includes(word)
-    );
-    return concepts.slice(0, 3);
-  }
-  
-  // Generate timestamp-based question
-  generateTimestampQuestion(entry, videoTitle, index, videoHash) {
-    const timeMatch = entry.timestamp.match(/\d{2}:\d{2}:\d{2},\d{3}/);
-    if (!timeMatch) return null;
-    
-    const timestamp = timeMatch[0].replace(',', '.');
-    const uniqueId = `srt_time_${videoHash}_${index}`;
-    
-    return {
-      id: uniqueId,
-      question: `According to the video, what was mentioned around "${timestamp}"?`,
-      options: [
-        entry.text,
-        'This was not discussed in the video',
-        'The opposite was mentioned',
-        'This topic was briefly touched upon'
-      ],
-      correct: 0,
-      explanation: `At ${timestamp}, the video specifically mentioned: "${entry.text}"`
-    };
-  }
-  
-  // Generate content-based question
-  generateContentQuestion(entry, videoTitle, index, videoHash) {
-    const keyPhrase = this.extractKeyPhrase(entry.text);
-    if (!keyPhrase) return null;
-    
-    const uniqueId = `srt_content_${videoHash}_${index}`;
-    
-    return {
-      id: uniqueId,
-      question: `What did the video say about "${keyPhrase}"?`,
-      options: [
-        entry.text,
-        'This concept was not covered',
-        'The video mentioned the opposite',
-        'This was only briefly mentioned'
-      ],
-      correct: 0,
-      explanation: `The video explained: "${entry.text}"`
-    };
-  }
-  
-  // Generate sequence question
-  generateSequenceQuestion(entry, videoTitle, index, videoHash) {
-    const uniqueId = `srt_sequence_${videoHash}_${index}`;
-    
-    return {
-      id: uniqueId,
-      question: `True or False: The video stated "${entry.text.substring(0, 60)}..."`,
-      options: ['True', 'False'],
-      correct: 0,
-      explanation: `This statement was directly mentioned in the video.`
-    };
-  }
-  
-  // Extract key phrase from text
-  extractKeyPhrase(text) {
-    const words = text.split(' ');
-    const meaningfulWords = words.filter(word => 
-      word.length > 3 && 
-      !['this', 'that', 'with', 'from', 'they', 'have', 'will', 'been', 'were', 'when', 'what', 'where'].includes(word.toLowerCase())
-    );
-    return meaningfulWords.slice(0, 2).join(' ');
-  }
-  
-  // Hash string to create consistent unique identifiers
+  // Hash string for consistent IDs
   hashString(str) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -430,34 +394,6 @@ class SRTQuizGenerator {
       hash = hash & hash;
     }
     return Math.abs(hash).toString(36);
-  }
-  
-  // Select unique entries based on video hash
-  selectUniqueEntries(entries, videoHash, count) {
-    if (entries.length <= count) return entries;
-    
-    const hashNum = parseInt(videoHash, 36);
-    const selected = [];
-    const step = Math.floor(entries.length / count);
-    
-    for (let i = 0; i < count; i++) {
-      const index = (hashNum + i * step) % entries.length;
-      if (!selected.find(entry => entry.text === entries[index].text)) {
-        selected.push(entries[index]);
-      }
-    }
-    
-    while (selected.length < count && selected.length < entries.length) {
-      for (const entry of entries) {
-        if (!selected.find(sel => sel.text === entry.text)) {
-          selected.push(entry);
-          if (selected.length >= count) break;
-        }
-      }
-      break;
-    }
-    
-    return selected;
   }
 }
 

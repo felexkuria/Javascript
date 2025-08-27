@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark Mode Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            'inter': ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 font-inter min-h-screen transition-colors">
+  <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 transition-colors">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-6">
+        <a href="/" class="text-xl font-bold text-gray-900 dark:text-white transition-colors">🎓 Learning Platform</a>
+        <div class="hidden md:flex items-center gap-4">
+          <a href="/" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Dashboard</a>
+          <a href="/profile" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Progress</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <button id="theme-toggle" class="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors" title="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+        <div class="hidden sm:flex items-center gap-3 bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2 transition-colors">
+          <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">0</span>
+          <span class="text-sm">🔥</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">0</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">🎓 Dark Mode Test</h1>
+      <p class="text-gray-600 dark:text-gray-400">Testing dark mode implementation</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg overflow-hidden transition-all">
+        <div class="p-6">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Sample Course</h2>
+          <p class="text-gray-600 dark:text-gray-400 mb-4 text-sm">This is a sample course description to test dark mode styling.</p>
+          <div class="mb-4">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Progress</span>
+              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">5/10</span>
+            </div>
+            <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div class="h-full bg-green-500" style="width: 50%"></div>
+            </div>
+          </div>
+          <button class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded transition-colors">
+            Start Learning
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-4 transition-colors">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">🎮 Progress</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Level</span>
+            <span class="font-bold text-gray-900 dark:text-white">1</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Points</span>
+            <span class="font-bold text-gray-900 dark:text-white">0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Streak</span>
+            <span class="font-bold text-gray-900 dark:text-white">0 🔥</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-4 transition-colors">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">🤖 AI Assistant</h3>
+        <div class="bg-gray-50 dark:bg-gray-900 p-3 rounded mb-3">
+          <p class="text-sm text-gray-600 dark:text-gray-400">Hello! I'm here to help you learn. Ask me anything about your courses!</p>
+        </div>
+        <input type="text" placeholder="Ask a question..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-4 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500 dark:text-gray-400">
+      <p>&copy; 2024 Learning Platform. Built with ❤️ for modern learning.</p>
+    </div>
+  </footer>
+
+  <script>
+    class ThemeManager {
+      constructor() {
+        this.init();
+      }
+
+      init() {
+        this.applyTheme();
+        this.setupToggle();
+      }
+
+      applyTheme() {
+        const theme = this.getTheme();
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      }
+
+      getTheme() {
+        const stored = localStorage.getItem('theme');
+        if (stored) return stored;
+        
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+
+      setTheme(theme) {
+        if (theme === 'system') {
+          localStorage.removeItem('theme');
+          const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.classList.toggle('dark', systemTheme === 'dark');
+        } else {
+          localStorage.setItem('theme', theme);
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+        }
+        
+        this.updateToggleIcon();
+      }
+
+      setupToggle() {
+        const toggle = document.getElementById('theme-toggle');
+        if (!toggle) return;
+
+        this.updateToggleIcon();
+        
+        toggle.addEventListener('click', () => {
+          const current = this.getTheme();
+          const next = current === 'dark' ? 'light' : 'dark';
+          this.setTheme(next);
+        });
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          if (!localStorage.getItem('theme')) {
+            document.documentElement.classList.toggle('dark', e.matches);
+            this.updateToggleIcon();
+          }
+        });
+      }
+
+      updateToggleIcon() {
+        const toggle = document.getElementById('theme-toggle');
+        const icon = toggle?.querySelector('i');
+        if (!icon) return;
+
+        const isDark = document.documentElement.classList.contains('dark');
+        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        toggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+      }
+    }
+
+    new ThemeManager();
+  </script>
+</body>
+</html>

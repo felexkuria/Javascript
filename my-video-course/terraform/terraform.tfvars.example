@@ -1,0 +1,25 @@
+# Copy this file to terraform.tfvars and fill in your values
+
+aws_region = "us-east-1"
+app_name   = "video-course-app"
+
+# EC2 Configuration
+instance_type    = "t3.medium"
+key_pair_name    = "video-course-key"
+
+# Auto Scaling Configuration
+min_size         = 1
+max_size         = 5
+desired_capacity = 2
+
+# Application Configuration
+mongodb_uri           = "mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority"
+aws_access_key_id     = "AKIA..."
+aws_secret_access_key = "your-secret-key"
+s3_bucket_name        = "video-course-bucket-001"
+gemini_api_key        = "your-gemini-api-key"
+nova_api_key          = "your-nova-api-key"
+
+# Domain Configuration
+domain_name     = "your-domain.com"
+hosted_zone_id  = "Z1234567890ABC"
