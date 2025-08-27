@@ -1,0 +1,44 @@
+name: Setup Terraform Backend
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  setup-backend:
+    name: Setup S3 Backend
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Create S3 bucket for Terraform state
+      run: |
+        BUCKET_NAME="terraform-state-video-course-$(date +%s)"
+        aws s3 mb s3://$BUCKET_NAME --region ${{ env.AWS_REGION }}
+        aws s3api put-bucket-versioning --bucket $BUCKET_NAME --versioning-configuration Status=Enabled
+        aws s3api put-bucket-encryption --bucket $BUCKET_NAME --server-side-encryption-configuration '{
+          "Rules": [
+            {
+              "ApplyServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }'
+        echo "Created S3 bucket: $BUCKET_NAME"
+        echo "Add this to your terraform backend configuration:"
+        echo "terraform {"
+        echo "  backend \"s3\" {"
+        echo "    bucket = \"$BUCKET_NAME\""
+        echo "    key    = \"terraform.tfstate\""
+        echo "    region = \"${{ env.AWS_REGION }}\""
+        echo "  }"
+        echo "}"
