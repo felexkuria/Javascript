@@ -59,57 +59,17 @@ jobs:
       working-directory: ./my-video-course/terraform
       run: terraform init
 
-    - name: Import Existing Resources
-      working-directory: ./my-video-course/terraform
-      continue-on-error: true
-      env:
-        TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
-        TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-        TF_VAR_nova_api_key: ${{ secrets.NOVA_API_KEY }}
-        TF_VAR_key_pair_name: "video-course-key"
-      run: |
-        # Import VPC and networking
-        VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=video-course-app-vpc" --query 'Vpcs[0].VpcId' --output text 2>/dev/null)
-        if [ "$VPC_ID" != "None" ] && [ "$VPC_ID" != "" ]; then terraform import aws_vpc.main $VPC_ID || true; fi
-        
-        # Import subnets
-        SUBNET1=$(aws ec2 describe-subnets --filters "Name=tag:Name,Values=video-course-app-public-subnet-1" --query 'Subnets[0].SubnetId' --output text 2>/dev/null)
-        if [ "$SUBNET1" != "None" ] && [ "$SUBNET1" != "" ]; then terraform import 'aws_subnet.public[0]' $SUBNET1 || true; fi
-        SUBNET2=$(aws ec2 describe-subnets --filters "Name=tag:Name,Values=video-course-app-public-subnet-2" --query 'Subnets[0].SubnetId' --output text 2>/dev/null)
-        if [ "$SUBNET2" != "None" ] && [ "$SUBNET2" != "" ]; then terraform import 'aws_subnet.public[1]' $SUBNET2 || true; fi
-        
-        # Import ACM certificate
-        CERT_ARN=$(aws acm list-certificates --query 'CertificateSummaryList[?DomainName==`skool.shopmultitouch.com`].CertificateArn' --output text 2>/dev/null)
-        if [ "$CERT_ARN" != "" ]; then terraform import aws_acm_certificate.main $CERT_ARN || true; fi
-        
-        # Import IAM roles
-        terraform import aws_iam_role.cognito_authenticated video-course-app-cognito-authenticated || true
-        terraform import aws_iam_role.ec2_role video-course-app-ec2-role || true
-        
-        # Import ECR and load balancer
-        terraform import aws_ecr_repository.main video-course-app || true
-        ALB_ARN=$(aws elbv2 describe-load-balancers --names video-course-app-alb --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null)
-        if [ "$ALB_ARN" != "None" ]; then terraform import aws_lb.main $ALB_ARN || true; fi
-        TG_ARN=$(aws elbv2 describe-target-groups --names video-course-app-tg --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null)
-        if [ "$TG_ARN" != "None" ]; then terraform import aws_lb_target_group.app $TG_ARN || true; fi
-
-    - name: Skip Terraform - Infrastructure Already Exists
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      run: |
-        echo "⚠️  Skipping Terraform - Infrastructure already deployed"
-        echo "✅ Using existing AWS resources:"
-        echo "   - VPC: video-course-app-vpc"
-        echo "   - ALB: video-course-app-alb"
-        echo "   - ECR: video-course-app"
-        echo "   - Domain: skool.shopmultitouch.com"
-
     - name: Trigger Instance Refresh
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       run: |
-        ASG_NAME=$(cd my-video-course/terraform && terraform output -raw autoscaling_group_name)
-        aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME
+        echo "🔄 Triggering instance refresh for existing ASG..."
+        ASG_NAME=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[?contains(AutoScalingGroupName, `video-course-app`)].AutoScalingGroupName' --output text)
+        if [ "$ASG_NAME" != "" ]; then
+          aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME
+          echo "✅ Instance refresh triggered for: $ASG_NAME"
+        else
+          echo "⚠️  No ASG found with video-course-app in name"
+        fi
 
     - name: Deployment Complete
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
