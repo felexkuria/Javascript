@@ -273,6 +273,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
 resource "aws_ecr_repository" "main" {
   name                 = "video-course-app"
   image_tag_mutability = "MUTABLE"
+  force_delete         = true
   
   image_scanning_configuration {
     scan_on_push = true
