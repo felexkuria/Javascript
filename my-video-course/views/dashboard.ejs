@@ -1,418 +1,256 @@
-<%- include('partials/header', { 
-  title: 'Video Dashboard',
-  extraStyles: `
-    <link rel="stylesheet" href="/css/gamification.css">
-    <style>
-      body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-      }
-      .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      }
-      .glass-header {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-      }
-    </style>
-  `
-}) %>
+<%- include('partials/header', { title: 'Dashboard' }) %>
 
-<!-- Main Content -->
-<main class="flex-grow overflow-y-auto px-4 py-8 md:px-8">
-  <div class="glass-header rounded-2xl p-8 mb-8">
+<main class="max-w-7xl mx-auto px-4 py-6">
+  <div class="mb-8">
     <div class="flex justify-between items-center">
       <div>
-        <h1 class="text-5xl font-bold text-white mb-4">
-          🎓 Learning Dashboard
-        </h1>
-        <p class="text-xl text-white opacity-90 mb-2">Discover amazing courses and track your progress</p>
-        <% if (typeof offlineMode !== 'undefined' && offlineMode) { %>
-          <div class="flex items-center text-amber-200 bg-amber-500 bg-opacity-20 px-4 py-2 rounded-lg backdrop-filter backdrop-blur-sm">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
-            <span>Offline Mode - Your progress is saved locally</span>
-          </div>
-        <% } %>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">🎓 Learning Dashboard</h1>
+        <p class="text-gray-600 dark:text-gray-400">Discover courses and track your progress</p>
       </div>
       <div class="flex items-center gap-4">
-        <!-- Gamification Stats -->
-        <div class="flex items-center gap-6 bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm rounded-2xl px-6 py-4 border border-white border-opacity-30">
-          <div class="flex items-center gap-3">
-            <div class="level-badge" style="width: 40px; height: 40px; font-size: 1rem; background: linear-gradient(135deg, #10b981, #059669);">
-              <span class="user-level">1</span>
-            </div>
-            <span class="text-sm font-semibold text-white">Level</span>
+        <div class="flex items-center gap-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 transition-colors">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold user-level">1</div>
+            <span class="text-sm font-medium">Level</span>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">🏆</span>
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🏆</span>
             <div>
-              <span class="font-bold user-points text-white text-lg">0</span>
-              <span class="text-sm text-white opacity-80 block">points</span>
+              <span class="font-bold user-points text-lg text-gray-900 dark:text-white">0</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400 block">points</span>
             </div>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">🔥</span>
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🔥</span>
             <div>
-              <span class="font-bold user-streak text-white text-lg">0</span>
-              <span class="text-sm text-white opacity-80 block">day streak</span>
+              <span class="font-bold user-streak text-lg text-gray-900 dark:text-white">0</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400 block">streak</span>
             </div>
           </div>
         </div>
-        <div class="flex gap-3">
-          <button id="syncButton" class="px-6 py-3 bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm text-white rounded-2xl hover:bg-opacity-30 transition-all duration-300 flex items-center border border-white border-opacity-30 hover:transform hover:translateY(-2px)">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            Sync Database
+        <div class="flex gap-2">
+          <button id="syncButton" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors">
+            <i class="fas fa-sync-alt mr-2"></i>Sync
           </button>
-          <button id="fixAllThumbnailsButton" class="px-6 py-3 bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm text-white rounded-2xl hover:bg-opacity-30 transition-all duration-300 flex items-center border border-white border-opacity-30 hover:transform hover:translateY(-2px)">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-            Fix Thumbnails
+          <button id="fixAllThumbnailsButton" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors">
+            <i class="fas fa-image mr-2"></i>Fix Thumbnails
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
     <% if (courses && courses.length > 0) { %>
       <% courses.forEach(course => { %>
-        <div class="group glass-card rounded-2xl overflow-hidden transform hover:-translate-y-2 transition-all duration-500 hover:shadow-2xl">
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg overflow-hidden hover:shadow-lg transition-all">
           <div class="relative">
-            <img
-              src="https://uploads.teachablecdn.com/attachments/e2FDxVHOSIKe60ZmL6ki_Teachable+Course+Thumbnail.png"
-              alt="<%= course.name %>"
-              class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+            <img src="https://uploads.teachablecdn.com/attachments/e2FDxVHOSIKe60ZmL6ki_Teachable+Course+Thumbnail.png" 
+                 alt="<%= course.name %>" class="w-full h-48 object-cover">
           </div>
           <div class="p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-3 truncate" title="<%= course.name %>">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3 truncate" title="<%= course.name %>">
               <%= course.name %>
             </h2>
-            <p class="course-description text-gray-600 mb-3 text-sm leading-relaxed" style="height: 60px; overflow: hidden;">
-              Loading course description...
+            <p class="course-description text-gray-600 dark:text-gray-400 mb-4 text-sm leading-relaxed h-16 overflow-hidden">
+              Loading description...
             </p>
             
-            <% if (course.videos && course.videos.length > 0) { %>
-              <% 
-                // Sort videos by lesson number for consistent calculation
-                const sortedVideos = [...course.videos].sort((a, b) => {
-                  const aNum = parseInt(a.title.match(/\d+/)) || 0;
-                  const bNum = parseInt(b.title.match(/\d+/)) || 0;
-                  return aNum - bNum;
-                });
-                const totalVideos = sortedVideos.length;
-                const watchedVideos = sortedVideos.filter(v => v.watched).length;
-                const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
-              %>
-              <div class="mb-4">
-                <div class="flex justify-between items-center mb-1">
-                  <span class="text-xs font-medium text-gray-500">Progress</span>
-                  <span class="text-xs font-medium text-gray-500"><%= watchedVideos %>/<%= totalVideos %> (<%= watchedPercent %>%)</span>
-                </div>
-                <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div class="h-full bg-green-500" style="width: <%= watchedPercent %>%"></div>
-                </div>
+            <% 
+              // Ensure videos array exists and calculate progress
+              const videos = course.videos || [];
+              const sortedVideos = videos.length > 0 ? [...videos].sort((a, b) => {
+                const aNum = parseInt((a.title || '').match(/\d+/)) || 0;
+                const bNum = parseInt((b.title || '').match(/\d+/)) || 0;
+                return aNum - bNum;
+              }) : [];
+              const totalVideos = sortedVideos.length;
+              const watchedVideos = sortedVideos.filter(v => v && v.watched).length;
+              const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
+            %>
+            <div class="mb-4">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Progress</span>
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400"><%= watchedVideos %>/<%= totalVideos %></span>
               </div>
-            <% } %>
+              <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div class="h-full bg-green-500" style="width: <%= watchedPercent %>%"></div>
+              </div>
+              <% if (totalVideos === 0) { %>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">No videos loaded yet</p>
+              <% } %>
+            </div>
             
-            <a
-              href="/course/<%= course.name %>"
-              class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            >
+            <a href="/course/<%= course.name %>" class="inline-flex items-center px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded transition-colors">
               <span>Start Learning</span>
-              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-              </svg>
+              <i class="fas fa-arrow-right ml-2"></i>
             </a>
           </div>
         </div>
       <% }); %>
     <% } else { %>
-      <div class="col-span-full text-center p-8 bg-gray-50 rounded-xl">
-        <h3 class="text-xl font-medium text-gray-700 mb-2">No courses found</h3>
-        <p class="text-gray-500">Add videos to the public/videos directory to get started.</p>
+      <div class="col-span-full text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <h3 class="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">No courses found</h3>
+        <p class="text-gray-500 dark:text-gray-400">Add videos to the public/videos directory to get started.</p>
       </div>
     <% } %>
   </div>
 </main>
 
-<script src="/js/connection-monitor.js"></script>
 <script src="/js/gamification.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Load AI-generated course descriptions with localStorage caching
-    const courseCards = document.querySelectorAll('.course-description');
-    courseCards.forEach(async (desc, index) => {
-      const courseName = desc.closest('.group').querySelector('h2').textContent.trim();
-      const cacheKey = `course_description_${courseName}`;
-      
-      // Check localStorage cache first
-      const cachedDescription = localStorage.getItem(cacheKey);
-      if (cachedDescription) {
-        desc.textContent = cachedDescription;
-        console.log(`Using cached description for: ${courseName}`);
-        return;
-      }
-      
-      desc.textContent = 'Generating AI description...';
-      
-      try {
-        console.log(`Generating AI description for: ${courseName}`);
-        
-        // Add timeout to prevent hanging
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-        
-        const response = await fetch(`/api/course/description/${encodeURIComponent(courseName)}`, {
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        });
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data && data.description && data.description.trim()) {
-            desc.textContent = data.description;
-            // Cache the AI-generated description
-            localStorage.setItem(cacheKey, data.description);
-            console.log(`AI description generated and cached for: ${courseName}`);
-          } else {
-            console.warn(`Empty or invalid description for: ${courseName}`);
-            throw new Error('Empty description returned');
-          }
-        } else {
-          console.warn(`HTTP error ${response.status} for: ${courseName}`);
-          throw new Error(`HTTP ${response.status}`);
-        }
-      } catch (error) {
-        console.warn(`Description failed for ${courseName}:`, error.message);
-        
-        // Enhanced fallback based on course name with Jonas Schmedtmann style
-        const courseNameLower = courseName.toLowerCase();
-        if (courseNameLower.includes('davinci') || courseNameLower.includes('video')) {
-          desc.textContent = 'Master professional video editing with DaVinci Resolve. Learn color grading, audio editing, visual effects, and advanced editing techniques through hands-on projects that will transform you into a video editing expert.';
-        } else if (courseNameLower.includes('aws')) {
-          desc.textContent = 'The complete AWS cloud computing masterclass! Build scalable, secure cloud solutions with hands-on labs covering EC2, S3, Lambda, and more. Perfect for beginners and professionals alike.';
-        } else if (courseNameLower.includes('devops') || courseNameLower.includes('bootcamp')) {
-          desc.textContent = 'The ultimate DevOps bootcamp! Master CI/CD pipelines, Docker, Kubernetes, infrastructure as code, and automation. Build real-world projects and become a DevOps engineer.';
-        } else if (courseNameLower.includes('terraform')) {
-          desc.textContent = 'Master Infrastructure as Code with Terraform! Learn to provision and manage cloud resources declaratively across AWS, Azure, and GCP with hands-on labs and real projects.';
-        } else {
-          desc.textContent = `The complete ${courseName} course! Master essential skills through practical exercises, real-world projects, and expert guidance. Perfect for all skill levels.`;
-        }
-        
-        // Cache the fallback description to avoid repeated attempts
-        localStorage.setItem(cacheKey, desc.textContent);
-        console.log(`Fallback description cached for: ${courseName}`);
-        
-        // Cache the fallback description to avoid repeated attempts
-        localStorage.setItem(cacheKey, desc.textContent);
-        console.log(`Fallback description cached for: ${courseName}`);
-      }
-    });
+document.addEventListener('DOMContentLoaded', function() {
+  // Load AI course descriptions with caching
+  const courseCards = document.querySelectorAll('.course-description');
+  courseCards.forEach(async (desc, index) => {
+    const courseName = desc.closest('.card').querySelector('h2').textContent.trim();
+    const cacheKey = `course_description_${courseName}`;
     
-    // Initialize connection monitor after 2 hours
-    setTimeout(() => {
-      const connectionMonitor = new ConnectionMonitor({
-        checkInterval: 30000, // Check every 30 seconds
-        onOnline: async () => {
-          console.log('Connection restored! Syncing data...');
-          // Show reconnection message
-          const statusDiv = document.createElement('div');
-          statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
-          statusDiv.textContent = 'Connection restored! Syncing data...';
-          document.body.appendChild(statusDiv);
-        
-        try {
-          // Attempt to sync data
-          const response = await fetch('/api/sync', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          const result = await response.json();
-          
-          if (result.success) {
-            statusDiv.textContent = 'Data synced successfully!';
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
-          } else {
-            statusDiv.textContent = result.message || 'Sync completed with some issues';
-            setTimeout(() => {
-              if (document.body.contains(statusDiv)) {
-                document.body.removeChild(statusDiv);
-              }
-            }, 5000);
-          }
-        } catch (err) {
-          console.error('Error syncing after reconnection:', err);
-          statusDiv.textContent = 'Error syncing data';
-          setTimeout(() => {
-            if (document.body.contains(statusDiv)) {
-              document.body.removeChild(statusDiv);
-            }
-          }, 5000);
-        }
-      },
-      onOffline: () => {
-        console.log('Connection lost! Running in offline mode.');
-        // Show offline message if not already shown
-        if (!document.querySelector('#offline-indicator')) {
-          const offlineDiv = document.createElement('div');
-          offlineDiv.id = 'offline-indicator';
-          offlineDiv.className = 'fixed top-4 right-4 bg-amber-100 border border-amber-400 text-amber-700 px-4 py-3 rounded';
-          offlineDiv.textContent = 'You are offline. Your progress will be saved locally.';
-          document.body.appendChild(offlineDiv);
-        }
-      }).start();
-    }, 2 * 60 * 60 * 1000); // 2 hours in milliseconds
-    
-    const syncButton = document.getElementById('syncButton');
-    const fixAllThumbnailsButton = document.getElementById('fixAllThumbnailsButton');
-    
-    // Fix all thumbnails button
-    if (fixAllThumbnailsButton) {
-      fixAllThumbnailsButton.addEventListener('click', async () => {
-        fixAllThumbnailsButton.disabled = true;
-        fixAllThumbnailsButton.innerHTML = '<svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Fixing...';
-        
-        const statusDiv = document.createElement('div');
-        statusDiv.className = 'fixed bottom-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded';
-        statusDiv.id = 'thumbnailStatus';
-        statusDiv.textContent = 'Fixing thumbnails for all courses...';
-        document.body.appendChild(statusDiv);
-        
-        try {
-          const courses = document.querySelectorAll('.course-description');
-          let totalFixed = 0;
-          
-          for (const desc of courses) {
-            const courseName = desc.closest('.group').querySelector('h2').textContent.trim();
-            
-            try {
-              const response = await fetch(`/api/thumbnails/fix/${encodeURIComponent(courseName)}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-              });
-              
-              const data = await response.json();
-              if (data.success) {
-                totalFixed += data.fixedCount;
-                statusDiv.textContent = `Fixed ${totalFixed} thumbnails so far...`;
-              }
-            } catch (err) {
-              console.warn(`Failed to fix thumbnails for ${courseName}:`, err);
-            }
-          }
-          
-          statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
-          statusDiv.textContent = `Fixed ${totalFixed} thumbnail references across all courses!`;
-          
-          setTimeout(() => {
-            if (document.body.contains(statusDiv)) {
-              document.body.removeChild(statusDiv);
-            }
-            if (totalFixed > 0) {
-              location.reload();
-            }
-          }, 3000);
-          
-        } catch (error) {
-          statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
-          statusDiv.textContent = 'Error fixing thumbnails: ' + error.message;
-          
-          setTimeout(() => {
-            if (document.body.contains(statusDiv)) {
-              document.body.removeChild(statusDiv);
-            }
-          }, 5000);
-        } finally {
-          fixAllThumbnailsButton.disabled = false;
-          fixAllThumbnailsButton.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Fix Thumbnails';
-        }
-      });
+    const cachedDescription = localStorage.getItem(cacheKey);
+    if (cachedDescription) {
+      desc.textContent = cachedDescription;
+      return;
     }
     
-    if (syncButton) {
-      syncButton.addEventListener('click', async () => {
-        syncButton.disabled = true;
-        syncButton.innerHTML = '<svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Syncing...';
-        
-        // Add status message
-        const statusDiv = document.createElement('div');
-        statusDiv.className = 'fixed bottom-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded';
-        statusDiv.id = 'syncStatus';
-        statusDiv.textContent = 'Attempting to connect to database...';
-        document.body.appendChild(statusDiv);
-        
-        try {
-          // Set a timeout for the request
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-          
-          const response = await fetch('/api/sync', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeoutId);
-          
-          const result = await response.json();
-          
-          if (result.success) {
-            statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
-            statusDiv.textContent = 'Sync completed successfully!';
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
-          } else if (result.offline) {
-            statusDiv.className = 'fixed bottom-4 right-4 bg-amber-100 border border-amber-400 text-amber-700 px-4 py-3 rounded';
-            statusDiv.textContent = result.message || 'Currently in offline mode. Your progress is saved locally.';
-          } else {
-            statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
-            statusDiv.textContent = 'Sync failed: ' + (result.error || 'Unknown error');
-          }
-        } catch (err) {
-          statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
-          if (err.name === 'AbortError') {
-            statusDiv.textContent = 'Sync timed out. Please try again later.';
-          } else {
-            statusDiv.textContent = 'Error syncing with database: ' + err.message;
-          }
-        } finally {
-          syncButton.disabled = false;
-          syncButton.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Sync with Database';
-          
-          // Remove status message after 5 seconds
-          setTimeout(() => {
-            if (document.body.contains(statusDiv)) {
-              document.body.removeChild(statusDiv);
-            }
-          }, 5000);
-        }
+    desc.textContent = 'Generating description...';
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
+      const response = await fetch(`/api/course/description/${encodeURIComponent(courseName)}`, {
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.description && data.description.trim()) {
+          desc.textContent = data.description;
+          localStorage.setItem(cacheKey, data.description);
+        } else {
+          throw new Error('Empty description');
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      // Fallback descriptions
+      const courseNameLower = courseName.toLowerCase();
+      if (courseNameLower.includes('davinci') || courseNameLower.includes('video')) {
+        desc.textContent = 'Master professional video editing with DaVinci Resolve. Learn color grading, audio editing, and advanced techniques.';
+      } else if (courseNameLower.includes('aws')) {
+        desc.textContent = 'Complete AWS cloud computing course. Build scalable solutions with hands-on labs covering EC2, S3, Lambda, and more.';
+      } else if (courseNameLower.includes('devops')) {
+        desc.textContent = 'Ultimate DevOps course! Master CI/CD pipelines, Docker, Kubernetes, and infrastructure automation.';
+      } else if (courseNameLower.includes('terraform')) {
+        desc.textContent = 'Master Infrastructure as Code with Terraform! Learn to provision cloud resources across AWS, Azure, and GCP.';
+      } else {
+        desc.textContent = `Complete ${courseName} course with practical exercises and real-world projects.`;
+      }
+      
+      localStorage.setItem(cacheKey, desc.textContent);
     }
   });
+  
+  // Sync button
+  document.getElementById('syncButton').addEventListener('click', async function() {
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Syncing...';
+    
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'fixed bottom-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded';
+    statusDiv.textContent = 'Syncing with database...';
+    document.body.appendChild(statusDiv);
+    
+    try {
+      const response = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
+        statusDiv.textContent = 'Sync completed!';
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+        statusDiv.textContent = 'Sync failed: ' + (result.error || 'Unknown error');
+      }
+    } catch (error) {
+      statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+      statusDiv.textContent = 'Error: ' + error.message;
+    } finally {
+      this.disabled = false;
+      this.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Sync';
+      setTimeout(() => {
+        if (document.body.contains(statusDiv)) {
+          document.body.removeChild(statusDiv);
+        }
+      }, 5000);
+    }
+  });
+  
+  // Fix thumbnails button
+  document.getElementById('fixAllThumbnailsButton').addEventListener('click', async function() {
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Fixing...';
+    
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'fixed bottom-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded';
+    statusDiv.textContent = 'Fixing thumbnails...';
+    document.body.appendChild(statusDiv);
+    
+    try {
+      const courses = document.querySelectorAll('.course-description');
+      let totalFixed = 0;
+      
+      for (const desc of courses) {
+        const courseName = desc.closest('.card').querySelector('h2').textContent.trim();
+        
+        try {
+          const response = await fetch(`/api/thumbnails/fix/${encodeURIComponent(courseName)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          const data = await response.json();
+          if (data.success) {
+            totalFixed += data.fixedCount;
+            statusDiv.textContent = `Fixed ${totalFixed} thumbnails...`;
+          }
+        } catch (err) {
+          console.warn(`Failed to fix thumbnails for ${courseName}:`, err);
+        }
+      }
+      
+      statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
+      statusDiv.textContent = `Fixed ${totalFixed} thumbnails!`;
+      
+      setTimeout(() => {
+        if (document.body.contains(statusDiv)) {
+          document.body.removeChild(statusDiv);
+        }
+        if (totalFixed > 0) location.reload();
+      }, 3000);
+      
+    } catch (error) {
+      statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+      statusDiv.textContent = 'Error: ' + error.message;
+      
+      setTimeout(() => {
+        if (document.body.contains(statusDiv)) {
+          document.body.removeChild(statusDiv);
+        }
+      }, 5000);
+    } finally {
+      this.disabled = false;
+      this.innerHTML = '<i class="fas fa-image mr-2"></i>Fix Thumbnails';
+    }
+  });
+});
 </script>
 
 <%- include('partials/footer') %>

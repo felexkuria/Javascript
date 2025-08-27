@@ -22,5 +22,33 @@
       "completed": false,
       "completedAt": null
     }
+  },
+  "dev-ops-bootcamp_202201_lesson10": {
+    "srt_lesson10_3": {
+      "completed": false,
+      "completedAt": null
+    }
+  },
+  "dev-ops-bootcamp_202201_lesson11": {
+    "srt_lesson11_0": {
+      "completed": true,
+      "completedAt": "2025-08-15T19:03:13.596Z"
+    },
+    "srt_lesson11_2": {
+      "completed": true,
+      "completedAt": "2025-08-15T19:03:41.141Z"
+    }
+  },
+  "dev-ops-bootcamp_202201_lesson3": {
+    "srt_lesson3_0": {
+      "completed": false,
+      "completedAt": null
+    }
+  },
+  "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]_1. Introduction and How to use this Course": {
+    "srt_1. Introduction and How to use this Course_3": {
+      "completed": true,
+      "completedAt": "2025-08-21T06:19:18.716Z"
+    }
   }
 }

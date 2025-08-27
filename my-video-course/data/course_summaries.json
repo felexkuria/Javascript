@@ -1,0 +1,137 @@
+{
+  "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA": {
+    "title": "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA",
+    "totalVideos": 13,
+    "chapters": 0,
+    "chapterList": [],
+    "totalDuration": 109266,
+    "videosWithThumbnails": 13,
+    "videosWithSubtitles": 0,
+    "lastUpdated": "2025-08-21T06:15:47.071Z",
+    "metadata": {
+      "avgDuration": 8405,
+      "hasChapters": false
+    }
+  },
+  "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]": {
+    "title": "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]",
+    "totalVideos": 409,
+    "chapters": 27,
+    "chapterList": [
+      "1. Introduction",
+      "10. Serverless",
+      "11. Databases",
+      "12. Analytics",
+      "13. Application Integration",
+      "14. Automation and Platform Services",
+      "15. Monitoring, Logging and Auditing",
+      "16. Security, Identity and Compliance",
+      "17. Advanced IAM",
+      "18. Migration and Transfer Services",
+      "2. Getting Started",
+      "20. Final Exam Preparation",
+      "21. NEW COURSE Let's Get Started!",
+      "22. NEW COURSE AWS Identity and Access Management (IAM)",
+      "23. NEW COURSE Amazon Elastic Compute Cloud (EC2)",
+      "24. NEW COURSE Elastic Load Balancing and Auto Scaling",
+      "25. NEW COURSE AWS Organizations",
+      "26. NEW COURSE Amazon Virtual Private Cloud (VPC)",
+      "27. NEW COURSE Amazon Simple Storage Service (S3)",
+      "28. NEW COURSE DNS, Caching, and Performance Optimization",
+      "3. Elastic Compute Cloud (EC2)",
+      "4. Elastic Load Balancing and Auto Scaling",
+      "5. Virtual Private Cloud (VPC)",
+      "6. Amazon Route 53",
+      "7. Amazon S3 and CloudFront",
+      "8. Amazon Block and File Storage",
+      "9. Containers"
+    ],
+    "totalDuration": 142415,
+    "videosWithThumbnails": 409,
+    "videosWithSubtitles": 13,
+    "lastUpdated": "2025-08-21T06:17:09.066Z",
+    "metadata": {
+      "avgDuration": 348,
+      "hasChapters": true
+    }
+  },
+  "HashiCorp Certified Terraform Associate - Hands-On Labs": {
+    "title": "HashiCorp Certified Terraform Associate - Hands-On Labs",
+    "totalVideos": 72,
+    "chapters": 12,
+    "chapterList": [
+      "01 - Course Introduction",
+      "02 - Understand Infrastructure as Code (IaC) Concepts",
+      "03 - Understand Terraform's purpose (vs other IaC)",
+      "04 - Understand Terraform Basics",
+      "05 - Use the Terraform CLI (outside of core workflow)",
+      "06 - Interact with Terraform Modules",
+      "07 - Navigate Terraform Workflow",
+      "08 - Implement and Maintain State",
+      "09 - Read, Generate, and Modify Configuration",
+      "10 - Understand Terraform Cloud and Enterprise Capabilities",
+      "11 - Additional Terraform Labs",
+      "12 - Exam Tips - Terraform Associate"
+    ],
+    "totalDuration": 51607,
+    "videosWithThumbnails": 72,
+    "videosWithSubtitles": 6,
+    "lastUpdated": "2025-08-21T06:17:22.461Z",
+    "metadata": {
+      "avgDuration": 717,
+      "hasChapters": true
+    }
+  },
+  "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced": {
+    "title": "[TutsNode.com] - Video Editing in DaVinci Resolve 16-17 Beginner to Advanced",
+    "totalVideos": 189,
+    "chapters": 21,
+    "chapterList": [
+      "1. Quick and Easy Video Editing in the Cut Page (Resolve 1617 updates)",
+      "10. Text & Fusion Titles & Lower 3rd - Create, Customize and Animate",
+      "11. ResolveFX Applying Effects in the Edit Page",
+      "12. The Color Page and the Concept of Nodes",
+      "13. Beginner's Color Concepts & Definitions",
+      "14. Achieving perfect Color Correction with the Color Wheels",
+      "15. Power Windows & Color Correction",
+      "16. RGB Curves - Controlling Colors",
+      "17. Using the Secondary Qualifiers + Green Screen Keying",
+      "18. Controlling the Video",
+      "19. Color Grading Workflow Techniques - LUTs and More",
+      "2. More Editing techniques in the Cut Page (Resolve 16)",
+      "20. Complete, Color Correct and Grade your Project",
+      "21. Optimizing Your Media",
+      "3. Clip Tools in the Cut Page",
+      "4. Continuous Editing",
+      "5. Adding, Inserting and Moving Clips to the Timeline",
+      "6. Timeline Editing Techniques & Editing Tools",
+      "7. Video Speed Effects and Retiming",
+      "8. Transitions Applying and Customizing Transitions",
+      "9. Transforms & Motion in the Edit Page"
+    ],
+    "totalDuration": 37462,
+    "videosWithThumbnails": 189,
+    "videosWithSubtitles": 189,
+    "lastUpdated": "2025-08-21T06:17:53.341Z",
+    "metadata": {
+      "avgDuration": 198,
+      "hasChapters": true
+    }
+  },
+  "dev-ops-bootcamp_202201": {
+    "title": "dev-ops-bootcamp_202201",
+    "totalVideos": 218,
+    "chapters": 1,
+    "chapterList": [
+      "[TutsNode.com] - DevOps Bootcamp"
+    ],
+    "totalDuration": 187732,
+    "videosWithThumbnails": 218,
+    "videosWithSubtitles": 17,
+    "lastUpdated": "2025-08-21T06:18:35.075Z",
+    "metadata": {
+      "avgDuration": 861,
+      "hasChapters": true
+    }
+  }
+}

@@ -149,6 +149,10 @@
   color: #374151;
 }
 
+.dark .progress-ring-text {
+  color: #e5e7eb;
+}
+
 /* Streak Counter */
 .streak-counter {
   display: inline-flex;
@@ -216,6 +220,11 @@
   border: 2px solid transparent;
 }
 
+.dark .achievement-card {
+  background: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .achievement-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -229,6 +238,10 @@
 .achievement-card.locked {
   opacity: 0.6;
   background: #f9fafb;
+}
+
+.dark .achievement-card.locked {
+  background: #1f2937;
 }
 
 .achievement-card-icon {
@@ -248,10 +261,18 @@
   margin-bottom: 8px;
 }
 
+.dark .achievement-card-name {
+  color: #f9fafb;
+}
+
 .achievement-card-description {
   font-size: 0.9rem;
   color: #6b7280;
   margin-bottom: 12px;
+}
+
+.dark .achievement-card-description {
+  color: #d1d5db;
 }
 
 .achievement-card-points {
@@ -277,6 +298,11 @@
   transition: transform 0.2s ease;
 }
 
+.dark .stat-card {
+  background: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .stat-card:hover {
   transform: translateY(-2px);
 }
@@ -294,10 +320,18 @@
   margin-bottom: 4px;
 }
 
+.dark .stat-value {
+  color: #f9fafb;
+}
+
 .stat-label {
   font-size: 0.9rem;
   color: #6b7280;
   font-weight: 500;
+}
+
+.dark .stat-label {
+  color: #d1d5db;
 }
 
 /* Progress Bar with Animation */
@@ -307,6 +341,10 @@
   border-radius: 4px;
   overflow: hidden;
   position: relative;
+}
+
+.dark .animated-progress {
+  background: #4b5563;
 }
 
 .animated-progress-fill {
@@ -341,6 +379,11 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.dark .leaderboard {
+  background: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .leaderboard-header {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
@@ -358,8 +401,16 @@
   transition: background-color 0.2s ease;
 }
 
+.dark .leaderboard-item {
+  border-bottom: 1px solid #4b5563;
+}
+
 .leaderboard-item:hover {
   background-color: #f9fafb;
+}
+
+.dark .leaderboard-item:hover {
+  background-color: #4b5563;
 }
 
 .leaderboard-rank {
@@ -383,10 +434,18 @@
   color: #374151;
 }
 
+.dark .leaderboard-name {
+  color: #f9fafb;
+}
+
 .leaderboard-stats {
   font-size: 0.8rem;
   color: #6b7280;
   margin-top: 2px;
+}
+
+.dark .leaderboard-stats {
+  color: #d1d5db;
 }
 
 .leaderboard-points {
@@ -414,6 +473,10 @@
 
 .calendar-nav button:hover {
   background-color: #f3f4f6;
+}
+
+.dark .calendar-nav button:hover {
+  background-color: #4b5563;
 }
 
 .calendar-day {

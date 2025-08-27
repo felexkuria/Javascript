@@ -168,6 +168,43 @@ class QuizSystem {
           explanation: 'Balanced BST search has O(log n) time complexity due to the tree\'s height being logarithmic to the number of nodes.'
         }
       ],
+      'terraform': [
+        {
+          id: 'tf_1',
+          question: 'What is the primary purpose of Terraform?',
+          options: ['Container orchestration', 'Infrastructure as Code', 'Application deployment', 'Database management'],
+          correct: 1,
+          explanation: 'Terraform is an Infrastructure as Code tool that allows you to define and provision infrastructure using declarative configuration files.'
+        },
+        {
+          id: 'tf_2',
+          question: 'Which command initializes a new Terraform working directory?',
+          options: ['terraform start', 'terraform init', 'terraform begin', 'terraform create'],
+          correct: 1,
+          explanation: 'terraform init initializes a working directory containing Terraform configuration files and downloads required providers.'
+        },
+        {
+          id: 'tf_3',
+          question: 'What file extension do Terraform configuration files use?',
+          options: ['.tf', '.terraform', '.config', '.hcl'],
+          correct: 0,
+          explanation: 'Terraform configuration files use the .tf extension and are written in HashiCorp Configuration Language (HCL).'
+        },
+        {
+          id: 'tf_4',
+          question: 'What is the purpose of the Terraform state file?',
+          options: ['Store configuration backups', 'Track resource mappings and metadata', 'Log command history', 'Store provider credentials'],
+          correct: 1,
+          explanation: 'The state file tracks the mapping between your configuration and real-world resources, storing metadata about your infrastructure.'
+        },
+        {
+          id: 'tf_5',
+          question: 'Which Terraform command shows what changes will be made without applying them?',
+          options: ['terraform show', 'terraform plan', 'terraform preview', 'terraform check'],
+          correct: 1,
+          explanation: 'terraform plan creates an execution plan, showing what actions Terraform will take to reach the desired state.'
+        }
+      ],
       'general': [
         {
           id: 'gen_1',
@@ -250,30 +287,39 @@ class QuizSystem {
 
   // Start a quiz based on topic
   startQuiz(topic = 'general', customQuestions = null) {
-    let questions = customQuestions || this.quizData[topic];
+    let questions = customQuestions;
     
-    // If no questions found for the topic, try general
-    if (!questions || questions.length === 0) {
-      console.warn('No questions available for topic:', topic, 'falling back to general');
-      questions = this.quizData['general'];
-    }
-    
-    // If still no questions, create a default one
-    if (!questions || questions.length === 0) {
-      console.warn('No general questions available, creating default');
-      questions = [{
-        id: 'default_1',
-        question: 'What is the most important aspect of learning?',
-        options: ['Practice and repetition', 'Reading only', 'Watching videos only', 'Taking notes only'],
-        correct: 0,
-        explanation: 'Practice and repetition are key to mastering any skill or subject.'
-      }];
+    // If custom questions provided, use them directly
+    if (customQuestions && Array.isArray(customQuestions) && customQuestions.length > 0) {
+      console.log('Using custom AI-generated questions:', customQuestions.length);
+      questions = customQuestions;
+    } else {
+      // Use predefined questions
+      questions = this.quizData[topic];
+      
+      // If no questions found for the topic, try general
+      if (!questions || questions.length === 0) {
+        console.warn('No questions available for topic:', topic, 'falling back to general');
+        questions = this.quizData['general'];
+      }
+      
+      // If still no questions, create a default one
+      if (!questions || questions.length === 0) {
+        console.warn('No general questions available, creating default');
+        questions = [{
+          id: 'default_1',
+          question: 'What is the most important aspect of learning?',
+          options: ['Practice and repetition', 'Reading only', 'Watching videos only', 'Taking notes only'],
+          correct: 0,
+          explanation: 'Practice and repetition are key to mastering any skill or subject.'
+        }];
+      }
     }
 
-    const questionCount = Math.min(questions.length, Math.max(5, Math.floor(questions.length * 0.8)));
+    const questionCount = Math.min(questions.length, Math.max(3, Math.floor(questions.length * 0.8)));
     this.currentQuiz = {
       topic: topic,
-      questions: this.shuffleArray([...questions]).slice(0, questionCount),
+      questions: customQuestions ? questions : this.shuffleArray([...questions]).slice(0, questionCount),
       currentIndex: 0,
       userAnswers: [],
       startTime: Date.now(),
@@ -701,7 +747,15 @@ class QuizSystem {
 }
 
 // Initialize quiz system when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initQuizSystem);
+  } else {
+    initQuizSystem();
+  }
+}
+
+function initQuizSystem() {
   console.log('Initializing quiz system...');
   try {
     window.quizSystem = new QuizSystem();
@@ -709,7 +763,7 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch (error) {
     console.error('Failed to initialize quiz system:', error);
   }
-});
+}
 
 // Add quiz trigger to video completion
 document.addEventListener('videoCompleted', function(event) {

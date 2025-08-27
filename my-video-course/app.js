@@ -6,6 +6,10 @@ const bodyParser = require('body-parser');
 const config = require('./config');
 console.log('MongoDB URI:', config.mongodbUri || 'Not defined');
 const videoRoutes = require('./routes/videoRoutes');
+const videoCompressionService = require('./services/videoCompression');
+const { authenticateToken, optionalAuth } = require('./middleware/auth');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
 const ObjectId = mongoose.Types.ObjectId;
 // .ics after travesring and adding video check video lenght  if video a and video b duratiion is 1 hour
 const app = express();
@@ -16,14 +20,11 @@ const AWS = require('aws-sdk');
 require('dotenv').config();
 console.log('Environment loaded, S3 bucket:', process.env.S3_BUCKET_NAME);
 
-// Set AWS SDK to load config from environment variables
-process.env.AWS_SDK_LOAD_CONFIG = 1;
-
-// Configure AWS SDK
+// Configure AWS SDK with environment variables only
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION
+  region: process.env.AWS_REGION || 'us-east-1'
 });
 
 // Set up AWS S3 instance
@@ -105,6 +106,13 @@ connectToMongoDB();
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(cookieParser());
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+}));
 
 // Middleware to serve static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -113,8 +121,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 const checkForCaptions = (filePath) => {
   const ext = path.extname(filePath).toLowerCase();
   return ext === '.srt';
-};
-
+};   
+  
 // Function to add video files to database
 const addVideoFiles = async () => {
   try {
@@ -253,20 +261,204 @@ const addVideoFiles = async () => {
 };
 
 //  addVideoFiles();
-// Import video service
+// Import video service 
 const videoService = require('./services/videoService');
 const thumbnailGenerator = require('./services/thumbnailGenerator');
 const videoManager = require('./services/videoManager');
 const gamificationManager = require('./services/gamificationManager');
+const dynamoService = require('./services/dynamoService');
+const youtubeService = require('./services/youtubeService');
+const transcribeService = require('./services/transcribeService');
+const examTopicsQuizGenerator = require('./services/examTopicsQuizGenerator');
+const authService = require('./services/authService');
+//const { authenticateToken, optionalAuth } = require('./middleware/auth');
 
-// View engine setup  
+// View engine setup   
 app.set('view engine', 'ejs');
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
 
+
+// Auth Routes
+app.get('/login', (req, res) => {
+  res.render('login', {
+    cognitoClientId: process.env.COGNITO_CLIENT_ID,
+    cognitoUserPoolId: process.env.COGNITO_USER_POOL_ID,
+    region: process.env.AWS_REGION
+  });
+});
+
+app.get('/signup', (req, res) => {
+  res.render('signup', {
+    cognitoClientId: process.env.COGNITO_CLIENT_ID,
+    cognitoUserPoolId: process.env.COGNITO_USER_POOL_ID,
+    region: process.env.AWS_REGION
+  });
+});
+
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const { email, password, name } = req.body;
+    const result = await authService.signUp(email, password, name);
+    res.json({ success: true, userSub: result.UserSub });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/confirm', async (req, res) => {
+  try {
+    const { email, confirmationCode } = req.body;
+    await authService.confirmSignUp(email, confirmationCode);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/signin', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const result = await authService.signIn(email, password);
+    res.json({
+      success: true,
+      accessToken: result.AuthenticationResult.AccessToken,
+      refreshToken: result.AuthenticationResult.RefreshToken,
+      idToken: result.AuthenticationResult.IdToken
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const result = await authService.refreshToken(refreshToken);
+    res.json({
+      success: true,
+      accessToken: result.AuthenticationResult.AccessToken
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.json({ success: true });
+});
+ 
+// Video Compression Routes
+app.post('/api/compress/video/:courseName/:videoFile', optionalAuth, async (req, res) => {
+  try {
+    const { courseName, videoFile } = req.params;
+    const { compressionLevel = 'medium' } = req.body;
+    
+    const result = await videoCompressionService.compressVideoForCourse(
+      courseName, 
+      videoFile, 
+      compressionLevel
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Video compression error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/compress/batch/:courseName', optionalAuth, async (req, res) => {
+  try {
+    const { courseName } = req.params;
+    const { compressionLevel = 'medium' } = req.body;
+    
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    });
+    
+    const progressCallback = (progress) => {
+      res.write(`data: ${JSON.stringify(progress)}\n\n`);
+    };
+    
+    const result = await videoCompressionService.batchCompressVideos(
+      courseName, 
+      compressionLevel, 
+      progressCallback
+    );
+    
+    res.write(`data: ${JSON.stringify({ completed: true, result })}\n\n`);
+    res.end();
+  } catch (error) {
+    console.error('Batch compression error:', error);
+    res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+    res.end();
+  }
+});
+
+app.get('/api/video/info/:courseName/:videoFile', optionalAuth, async (req, res) => {
+  try {
+    const { courseName, videoFile } = req.params;
+    const videoPath = path.join(process.cwd(), 'public', 'videos', courseName, videoFile);
+    
+    const info = await videoCompressionService.getVideoInfo(videoPath);
+    res.json(info);
+  } catch (error) {
+    console.error('Video info error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/compress/upload-s3/:courseName/:videoFile', optionalAuth, async (req, res) => {
+  try {
+    const { courseName, videoFile } = req.params;
+    const { compressionLevel = 'medium', deleteOriginal = false } = req.body;
+    
+    const result = await videoCompressionService.compressAndUploadToS3(
+      courseName, 
+      videoFile, 
+      compressionLevel,
+      deleteOriginal
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Compress and upload error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/upload', authenticateToken, (req, res) => {
+  res.render('upload', {
+    user: req.user,
+    s3BucketName: process.env.S3_BUCKET_NAME,
+    region: process.env.AWS_REGION
+  });
+});
+
+app.delete('/api/videos/delete/:courseName/:videoFile', optionalAuth, async (req, res) => {
+  try {
+    const { courseName, videoFile } = req.params;
+    const videoPath = path.join(process.cwd(), 'public', 'videos', courseName, videoFile);
+    
+    if (require('fs').existsSync(videoPath)) {
+      require('fs').unlinkSync(videoPath);
+      res.json({ success: true, message: 'Video deleted successfully' });
+    } else {
+      res.status(404).json({ error: 'Video file not found' });
+    }
+  } catch (error) {
+    console.error('Delete video error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Routes
 
 // Course video route
-app.get('/course/:courseName/video/:videoId?', async (req, res) => {
+app.get('/course/:courseName/video/:videoId?', optionalAuth, async (req, res) => {
   try {
     const courseName = decodeURIComponent(req.params.courseName);
     const videoId = req.params.videoId;
@@ -279,21 +471,31 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
       return res.status(404).render('error', { message: 'Course not found or has no videos' });
     }
 
-    // Normalize lesson titles for consistency
-    videos.forEach(video => {
-      if (video.title) {
-        // Extract lesson number if it exists
-        const match = video.title.match(/(?:lesson|lession|leson)\s*(\d+)/i);
-        if (match) {
-          // Standardize to "Lesson X" format but keep original title for watched videos
-          const lessonNum = match[1];
-          video.displayTitle = `${video.title} (Lesson ${lessonNum})`;
-        } else {
-          video.displayTitle = video.title;
+    // Sort videos first to establish proper order
+    videos = videos.sort((a, b) => {
+      // First sort by chapter if different
+      if (a.chapter !== b.chapter) {
+        if (!a.chapter) return 1;
+        if (!b.chapter) return -1;
+        const aChapterMatch = a.chapter.match(/\d+/);
+        const bChapterMatch = b.chapter.match(/\d+/);
+        const aChapterNum = aChapterMatch ? parseInt(aChapterMatch[0], 10) : 0;
+        const bChapterNum = bChapterMatch ? parseInt(bChapterMatch[0], 10) : 0;
+        if (aChapterNum !== bChapterNum) {
+          return aChapterNum - bChapterNum;
         }
-      } else {
-        video.displayTitle = 'Untitled Video';
+        return a.chapter.localeCompare(b.chapter);
       }
+      // Then sort by filename or title alphabetically within chapter
+      const aName = a.filename || a.title || '';
+      const bName = b.filename || b.title || '';
+      return aName.localeCompare(bName);
+    });
+
+    // Assign sequential lesson numbers based on sorted order
+    videos.forEach((video, index) => {
+      video.lessonNumber = index + 1;
+      video.displayTitle = video.title || 'Untitled Video';
     });
 
     // Group videos by chapter and sort within each chapter
@@ -306,51 +508,9 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
       videosByChapter[chapter].push(video);
     });
 
-    // Sort videos within each chapter by lesson number
+    // Sort videos within each chapter by their assigned lesson number
     Object.keys(videosByChapter).forEach(chapter => {
-      videosByChapter[chapter].sort((a, b) => {
-        const aMatch = a.title ? a.title.match(/\d+/) : null;
-        const bMatch = b.title ? b.title.match(/\d+/) : null;
-        const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
-        const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
-        return aNum - bNum;
-      });
-    });
-
-    // Sort videos by lesson number with proper handling of double-digit numbers
-    videos = videos.sort((a, b) => {
-      // First sort by chapter if different
-      if (a.chapter !== b.chapter) {
-        // If one has a chapter and the other doesn't, prioritize the one with chapter
-        if (!a.chapter) return 1;
-        if (!b.chapter) return -1;
-
-        // Extract chapter numbers for proper sorting
-        const aChapterMatch = a.chapter.match(/\d+/);
-        const bChapterMatch = b.chapter.match(/\d+/);
-        const aChapterNum = aChapterMatch ? parseInt(aChapterMatch[0], 10) : 0;
-        const bChapterNum = bChapterMatch ? parseInt(bChapterMatch[0], 10) : 0;
-
-        if (aChapterNum !== bChapterNum) {
-          return aChapterNum - bChapterNum;
-        }
-        return a.chapter.localeCompare(b.chapter);
-      }
-
-      // Extract numbers from titles
-      const aMatch = a.title ? a.title.match(/\d+/) : null;
-      const bMatch = b.title ? b.title.match(/\d+/) : null;
-
-      // Convert to numbers and ensure proper comparison
-      const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
-      const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
-
-      // If numbers are the same, sort alphabetically
-      if (aNum === bNum) {
-        return a.title.localeCompare(b.title);
-      }
-
-      return aNum - bNum;
+      videosByChapter[chapter].sort((a, b) => a.lessonNumber - b.lessonNumber);
     });
 
     // Add chapter information to the template context
@@ -377,7 +537,16 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
     // Allow watched videos to be displayed even without a URL
 
     // Create full video URL path
-    video.fullVideoUrl = `/videos/${courseName}/file/${video._id}`;
+    if (video.isYouTube) {
+      video.fullVideoUrl = `https://www.youtube.com/embed/${video.youtubeId}`;
+      video.embedUrl = `https://www.youtube.com/embed/${video.youtubeId}?enablejsapi=1&origin=${req.protocol}://${req.get('host')}`;
+    } else if (video.videoUrl && (video.videoUrl.startsWith('https://') || video.videoUrl.includes('amazonaws.com'))) {
+      // S3 or external URL - use directly
+      video.fullVideoUrl = video.videoUrl;
+      video.isS3Video = true;
+    } else {
+      video.fullVideoUrl = `/videos/${courseName}/file/${video._id}`;
+    }
 
     // Calculate watched stats
     const watchedVideos = videos.filter(v => v.watched).length;
@@ -420,7 +589,8 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
       autoplay,
       chapters,
       videosByChapter,
-      aiEnabled: true
+      aiEnabled: true,
+      isYouTube: video.isYouTube || false
     });
   } catch (err) {
     console.error('Error rendering video page:', err);
@@ -429,7 +599,7 @@ app.get('/course/:courseName/video/:videoId?', async (req, res) => {
 });
 
 // API route for marking videos as watched
-app.post('/api/videos/:videoId/watch', async (req, res) => {
+app.post('/api/videos/:videoId/watch', optionalAuth, async (req, res) => {
   try {
     const videoId = req.params.videoId;
     const courseName = req.body.courseName || req.query.courseName;
@@ -454,7 +624,7 @@ app.post('/api/videos/:videoId/watch', async (req, res) => {
 app.use('/videos', videoRoutes);
 
 // Default route with error handling
-app.get('/', (req, res) => {
+app.get('/', optionalAuth, (req, res) => {
   try {
     res.redirect('/dashboard');
   } catch (err) {
@@ -464,7 +634,7 @@ app.get('/', (req, res) => {
 });
 
 // Dashboard route
-app.get('/dashboard', async (req, res) => {
+app.get('/dashboard', optionalAuth, async (req, res) => {
   try {
     const videoDir = path.join(__dirname, 'public', 'videos');
 
@@ -1057,7 +1227,8 @@ app.get('/videos/:courseName/:id', async (req, res) => {
       pdfs: pdfFiles,
       chapters,
       videosByChapter,
-      aiEnabled: true
+      aiEnabled: true,
+      isYouTube: video.isYouTube || false
     });
   } catch (err) {
     console.error('Error serving video:', err.stack);
@@ -1090,6 +1261,12 @@ app.get('/videos/:courseName/file/:id', async (req, res) => {
     // Allow watched videos without URLs to be accessed
     if (!video.videoUrl) {
       console.warn(`Video ${id} has no URL but is being accessed`);
+    }
+
+    // Handle S3 URLs - redirect to S3 directly
+    if (video.videoUrl && (video.videoUrl.startsWith('https://') || video.videoUrl.includes('amazonaws.com'))) {
+      console.log(`Redirecting to S3 URL: ${video.videoUrl}`);
+      return res.redirect(video.videoUrl);
     }
 
     // Check if video has a URL
@@ -1156,27 +1333,61 @@ app.get('/videos/:courseName/file/:id', async (req, res) => {
     // Stream the video file
     res.sendFile(videoPath);
 
-    // Start SRT generation in background if not exists and not already processing
+    // Start SRT and quiz generation in background for all videos
     const videoName = path.basename(videoPath, path.extname(videoPath));
     const srtPath = path.join(path.dirname(videoPath), `${videoName}.srt`);
 
-    if (!fs.existsSync(srtPath) && !srtGenerationProgress.has(videoName)) {
-      console.log(`Starting background SRT generation for: ${videoName}`);
+    if (!srtGenerationProgress.has(videoName)) {
+      console.log(`Starting background processing for: ${videoName}`);
       srtGenerationProgress.set(videoName, { status: 'processing', progress: 0 });
 
       const srtQuizGenerator = require('./services/srtQuizGenerator');
-      srtQuizGenerator.generateSRT(videoPath)
-        .then(async (srtPath) => {
-          console.log(`Background SRT generation completed for: ${videoName}`);
-          srtGenerationProgress.set(videoName, { status: 'completed', progress: 100 });
-
-          // Generate summary and topics after SRT completion
-          try {
-            const srtEntries = srtQuizGenerator.parseSRT(srtPath);
-            if (srtEntries && srtEntries.length > 3) {
+      
+      // Process SRT and quiz generation
+      (async () => {
+        try {
+          // Generate or find SRT
+          const generatedSrtPath = await srtQuizGenerator.generateSRT(videoPath);
+          console.log(`SRT ready for: ${videoName}`);
+          
+          // Parse SRT entries
+          const srtEntries = srtQuizGenerator.parseSRT(generatedSrtPath);
+          
+          if (srtEntries && srtEntries.length > 3) {
+            // Check if quiz already exists
+            const existingQuiz = await srtQuizGenerator.getStoredQuiz(video.title);
+            
+            if (!existingQuiz) {
+              console.log(`Generating quiz for: ${video.title}`);
+              try {
+                // Get video duration for dynamic question count
+                let videoDuration = 0;
+                try {
+                  const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
+                  if (fs.existsSync(videoPath)) {
+                    const videoInfo = await videoCompressionService.getVideoInfo(videoPath);
+                    videoDuration = videoInfo.duration || 0;
+                  }
+                } catch (durationError) {
+                  console.warn('Could not get video duration for quiz generation:', durationError.message);
+                }
+                
+                const questions = await srtQuizGenerator.generateQuestions(srtEntries, video.title, videoDuration);
+                if (questions && questions.length > 0) {
+                  await srtQuizGenerator.storeQuiz(video.title, questions);
+                  console.log(`Quiz generated and stored for: ${video.title}`);
+                }
+              } catch (quizError) {
+                console.warn(`Quiz generation failed for ${video.title}:`, quizError.message);
+              }
+            } else {
+              console.log(`Quiz already exists for: ${video.title}`);
+            }
+            
+            // Generate summary and topics
+            try {
               const summaryData = await srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoName);
-              console.log(`Generated summary and topics for: ${videoName}`);
-
+              
               // Store summary data
               const dataDir = path.join(__dirname, 'data');
               if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
@@ -1184,21 +1395,20 @@ app.get('/videos/:courseName/file/:id', async (req, res) => {
               const summaries = fs.existsSync(summaryPath) ? JSON.parse(fs.readFileSync(summaryPath, 'utf8')) : {};
               summaries[videoName] = summaryData;
               fs.writeFileSync(summaryPath, JSON.stringify(summaries, null, 2));
+              console.log(`Summary generated for: ${videoName}`);
+            } catch (summaryError) {
+              console.warn(`Summary generation failed for ${videoName}:`, summaryError.message);
             }
-          } catch (summaryError) {
-            console.warn(`Summary generation failed for ${videoName}:`, summaryError.message);
           }
-
-          setTimeout(() => srtGenerationProgress.delete(videoName), 60000);
-        })
-        .catch(error => {
-          console.warn(`Background SRT generation failed for ${videoName}:`, error.message);
+          
+          srtGenerationProgress.set(videoName, { status: 'completed', progress: 100 });
+        } catch (error) {
+          console.warn(`Background processing failed for ${videoName}:`, error.message);
           srtGenerationProgress.set(videoName, { status: 'failed', progress: 0 });
-          setTimeout(() => srtGenerationProgress.delete(videoName), 60000);
-        });
-    } else if (srtGenerationProgress.has(videoName)) {
-      const progress = srtGenerationProgress.get(videoName);
-      console.log(`SRT generation for ${videoName} already ${progress.status} (${progress.progress}%)`);
+        } finally {
+          setTimeout(() => srtGenerationProgress.delete(videoName), 300000); // 5 minutes
+        }
+      })();
     }
   } catch (err) {
     console.error('Error streaming video:', err.stack);
@@ -1284,6 +1494,47 @@ app.get('/subtitles/:courseName/:videoTitle.srt', async (req, res) => {
   } catch (error) {
     console.error('Error serving subtitle:', error);
     res.status(500).send('Error serving subtitle');
+  }
+});
+
+// API endpoint to serve VTT captions from video directories
+app.get('/api/captions/vtt/:courseName/:videoTitle', async (req, res) => {
+  try {
+    const courseName = decodeURIComponent(req.params.courseName);
+    const videoTitle = decodeURIComponent(req.params.videoTitle);
+
+    // Find VTT file in course directory (same location as video)
+    const courseDir = path.join(__dirname, 'public', 'videos', courseName);
+    let vttPath = null;
+
+    const findVtt = (dir) => {
+      if (!fs.existsSync(dir)) return null;
+      const files = fs.readdirSync(dir);
+      for (const file of files) {
+        const filePath = path.join(dir, file);
+        if (fs.statSync(filePath).isDirectory()) {
+          const result = findVtt(filePath);
+          if (result) return result;
+        } else if (file === `${videoTitle}.vtt`) {
+          return filePath;
+        }
+      }
+      return null;
+    };
+
+    vttPath = findVtt(courseDir);
+
+    if (vttPath && fs.existsSync(vttPath)) {
+      res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.sendFile(vttPath);
+      console.log(`Served VTT captions: ${path.basename(vttPath)}`);
+    } else {
+      res.status(404).send('VTT captions not found');
+    }
+  } catch (error) {
+    console.error('Error serving VTT captions:', error);
+    res.status(500).send('Error serving VTT captions');
   }
 });
 
@@ -1445,6 +1696,11 @@ app.get('/api/next-video', async (req, res) => {
     // Get videos from service (will use localStorage if MongoDB is not available)
     const videos = await videoService.getVideosForCourse(courseName);
 
+    if (!videos || videos.length === 0) {
+      console.log("No videos found for course:", courseName);
+      return res.status(404).json({ error: "No videos found for course" });
+    }
+
     // Sort videos by lesson number in title with proper handling of double-digit numbers
     const sortedVideos = videos.sort((a, b) => {
       // First sort by chapter if different
@@ -1452,29 +1708,46 @@ app.get('/api/next-video', async (req, res) => {
         // If one has a chapter and the other doesn't, prioritize the one with chapter
         if (!a.chapter) return 1;
         if (!b.chapter) return -1;
+        
+        // Extract chapter numbers for proper sorting
+        const aChapterMatch = a.chapter.match(/\d+/);
+        const bChapterMatch = b.chapter.match(/\d+/);
+        const aChapterNum = aChapterMatch ? parseInt(aChapterMatch[0], 10) : 0;
+        const bChapterNum = bChapterMatch ? parseInt(bChapterMatch[0], 10) : 0;
+        
+        if (aChapterNum !== bChapterNum) {
+          return aChapterNum - bChapterNum;
+        }
         return a.chapter.localeCompare(b.chapter);
       }
 
-      const aMatch = a.title.match(/\d+/);
-      const bMatch = b.title.match(/\d+/);
+      // Extract numbers from titles for proper sorting
+      const aMatch = a.title ? a.title.match(/\d+/) : null;
+      const bMatch = b.title ? b.title.match(/\d+/) : null;
       const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
       const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
 
-      // Log sorting for debugging
-      console.log(`API sorting: ${a.title} (${aNum}) vs ${b.title} (${bNum})`);
+      // If numbers are the same, sort alphabetically
+      if (aNum === bNum) {
+        return (a.title || '').localeCompare(b.title || '');
+      }
 
       return aNum - bNum;
     });
 
+    console.log(`Sorted ${sortedVideos.length} videos for navigation`);
+
     // Find the index of the current video in the sorted array
     const currentIndex = sortedVideos.findIndex(
-      (video) => video._id.toString() === currentVideoId
+      (video) => video && video._id && video._id.toString() === currentVideoId
     );
 
     if (currentIndex === -1) {
-      console.log("Current video not found in course.");
+      console.log("Current video not found in course. Available videos:", sortedVideos.map(v => ({ id: v._id, title: v.title })));
       return res.status(404).json({ error: "Current video not found in course" });
     }
+
+    console.log(`Current video index: ${currentIndex} of ${sortedVideos.length}`);
 
     // Check if we're at the beginning or end
     if (isPrev && currentIndex === 0) {
@@ -1488,8 +1761,15 @@ app.get('/api/next-video', async (req, res) => {
     }
 
     // Return the next or previous video
-    const adjacentVideo = sortedVideos[isPrev ? currentIndex - 1 : currentIndex + 1];
-    console.log(`${isPrev ? 'Previous' : 'Next'} video found:`, adjacentVideo);
+    const targetIndex = isPrev ? currentIndex - 1 : currentIndex + 1;
+    const adjacentVideo = sortedVideos[targetIndex];
+    
+    if (!adjacentVideo) {
+      console.log(`No ${isPrev ? 'previous' : 'next'} video at index ${targetIndex}`);
+      return res.status(404).json({ error: `No ${isPrev ? 'previous' : 'next'} video available` });
+    }
+
+    console.log(`${isPrev ? 'Previous' : 'Next'} video found:`, { id: adjacentVideo._id, title: adjacentVideo.title });
 
     res.status(200).json({
       ...adjacentVideo,
@@ -1789,6 +2069,148 @@ app.get('/api/quiz/get/:videoTitle', async (req, res) => {
   } catch (error) {
     console.error('Error getting quiz:', error);
     res.status(500).json({ error: 'Failed to get quiz' });
+  }
+});
+
+// API endpoint to sync data across all storage systems
+app.post('/api/sync-all-storages', async (req, res) => {
+  try {
+    console.log('Starting comprehensive data sync across all storage systems...');
+    
+    const results = {
+      localStorage: { status: 'success', courses: 0, videos: 0 },
+      mongodb: { status: 'unavailable', courses: 0, videos: 0, synced: 0 },
+      dynamodb: { status: 'unavailable', courses: 0, videos: 0, synced: 0 },
+      errors: []
+    };
+
+    // 1. Get data from localStorage (primary source)
+    const localStorage = videoService.getLocalStorage();
+    const courseNames = Object.keys(localStorage);
+    results.localStorage.courses = courseNames.length;
+    results.localStorage.videos = Object.values(localStorage).reduce((sum, videos) => sum + videos.length, 0);
+    console.log(`localStorage: ${results.localStorage.courses} courses, ${results.localStorage.videos} videos`);
+
+    // 2. Sync with MongoDB
+    try {
+      if (!mongoose.connection.readyState) {
+        await connectToMongoDB();
+      }
+      
+      if (mongoose.connection.readyState) {
+        results.mongodb.status = 'success';
+        
+        for (const courseName of courseNames) {
+          const localVideos = localStorage[courseName] || [];
+          if (localVideos.length === 0) continue;
+          
+          const courseCollection = mongoose.connection.collection(courseName);
+          const dbVideos = await courseCollection.find({}).toArray();
+          
+          // Sync videos to MongoDB
+          for (const localVideo of localVideos) {
+            if (!localVideo?._id) continue;
+            
+            const dbVideo = dbVideos.find(v => v._id.toString() === localVideo._id.toString());
+            if (dbVideo) {
+              // Update if different
+              if (dbVideo.watched !== localVideo.watched || dbVideo.watchedAt !== localVideo.watchedAt) {
+                await courseCollection.updateOne(
+                  { _id: dbVideo._id },
+                  { $set: { watched: localVideo.watched, watchedAt: localVideo.watchedAt } }
+                );
+                results.mongodb.synced++;
+              }
+            } else {
+              // Insert new video
+              await courseCollection.insertOne(localVideo);
+              results.mongodb.synced++;
+            }
+          }
+          
+          results.mongodb.courses++;
+          results.mongodb.videos += localVideos.length;
+        }
+        console.log(`MongoDB sync: ${results.mongodb.synced} videos synced`);
+      }
+    } catch (mongoError) {
+      results.mongodb.status = 'error';
+      results.errors.push(`MongoDB: ${mongoError.message}`);
+      console.warn('MongoDB sync failed:', mongoError.message);
+    }
+
+    // 3. Sync with DynamoDB
+    try {
+      for (const courseName of courseNames) {
+        const localVideos = localStorage[courseName] || [];
+        if (localVideos.length === 0) continue;
+        
+        // Get existing videos from DynamoDB
+        const dynamoVideos = await dynamoService.getVideosForCourse(courseName);
+        
+        for (const localVideo of localVideos) {
+          if (!localVideo?._id) continue;
+          
+          const dynamoVideo = dynamoVideos.find(v => v.id === localVideo._id.toString());
+          if (!dynamoVideo || dynamoVideo.watched !== localVideo.watched) {
+            // Convert localStorage format to DynamoDB format
+            const dynamoData = {
+              id: localVideo._id.toString(),
+              title: localVideo.title,
+              videoUrl: localVideo.videoUrl,
+              watched: localVideo.watched || false,
+              watchedAt: localVideo.watchedAt,
+              chapter: localVideo.chapter,
+              thumbnailUrl: localVideo.thumbnailUrl,
+              isYouTube: localVideo.isYouTube || false
+            };
+            
+            await dynamoService.saveVideo(courseName, dynamoData);
+            results.dynamodb.synced++;
+          }
+        }
+        
+        results.dynamodb.courses++;
+        results.dynamodb.videos += localVideos.length;
+      }
+      
+      results.dynamodb.status = 'success';
+      console.log(`DynamoDB sync: ${results.dynamodb.synced} videos synced`);
+    } catch (dynamoError) {
+      results.dynamodb.status = 'error';
+      results.errors.push(`DynamoDB: ${dynamoError.message}`);
+      console.warn('DynamoDB sync failed:', dynamoError.message);
+    }
+
+    // 4. Sync gamification data
+    try {
+      const gamificationData = await gamificationManager.getUserData('default_user');
+      if (gamificationData) {
+        console.log('Gamification data synced');
+      }
+    } catch (gamificationError) {
+      results.errors.push(`Gamification: ${gamificationError.message}`);
+    }
+
+    const summary = {
+      success: true,
+      message: 'Data sync completed across all storage systems',
+      timestamp: new Date().toISOString(),
+      results,
+      totalErrors: results.errors.length
+    };
+
+    console.log('Sync completed:', summary);
+    res.json(summary);
+    
+  } catch (error) {
+    console.error('Comprehensive sync error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Comprehensive sync failed',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
@@ -2178,6 +2600,44 @@ app.get('/api/srt-progress/:videoName', (req, res) => {
   }
 });
 
+// API endpoint to check if captions are available
+app.get('/api/captions/check/:courseName/:videoTitle', (req, res) => {
+  try {
+    const courseName = decodeURIComponent(req.params.courseName);
+    const videoTitle = decodeURIComponent(req.params.videoTitle);
+    
+    const courseDir = path.join(__dirname, 'public', 'videos', courseName);
+    let vttExists = false;
+    let srtExists = false;
+    
+    const findFiles = (dir) => {
+      if (!fs.existsSync(dir)) return;
+      const files = fs.readdirSync(dir);
+      for (const file of files) {
+        const filePath = path.join(dir, file);
+        if (fs.statSync(filePath).isDirectory()) {
+          findFiles(filePath);
+        } else if (file === `${videoTitle}.vtt`) {
+          vttExists = true;
+        } else if (file === `${videoTitle}.srt`) {
+          srtExists = true;
+        }
+      }
+    };
+    
+    findFiles(courseDir);
+    
+    res.json({
+      vttAvailable: vttExists,
+      srtAvailable: srtExists,
+      captionsReady: vttExists || srtExists
+    });
+  } catch (error) {
+    console.error('Error checking captions:', error);
+    res.status(500).json({ error: 'Failed to check captions' });
+  }
+});
+
 // API endpoint to generate SRT for any video
 app.post('/api/generate-srt', async (req, res) => {
   try {
@@ -2280,6 +2740,70 @@ const preGeneratedQuizService = require('./services/preGeneratedQuizzes');
 const pdfTodoExtractor = require('./services/pdfTodoExtractor');
 const pdfKnowledgeService = require('./services/pdfKnowledgeService');
 
+// YouTube playlist routes
+app.post('/api/youtube/playlist', async (req, res) => {
+  try {
+    const { playlistId, courseName } = req.body;
+    
+    const playlistInfo = await youtubeService.getPlaylistInfo(playlistId);
+    const videos = await youtubeService.getPlaylistVideos(playlistId);
+    
+    // Save to DynamoDB
+    await dynamoService.savePlaylist(playlistId, {
+      ...playlistInfo,
+      courseName,
+      videoCount: videos.length
+    });
+    
+    // Save videos to DynamoDB
+    for (const video of videos) {
+      await dynamoService.saveVideo(courseName, video);
+    }
+    
+    res.json({ success: true, playlist: playlistInfo, videos });
+  } catch (error) {
+    console.error('YouTube playlist error:', error);
+    res.status(500).json({ error: 'Failed to import YouTube playlist' });
+  }
+});
+
+// Practice exam generation
+app.post('/api/practice-exam/generate', async (req, res) => {
+  try {
+    const { courseName } = req.body;
+    
+    // Try DynamoDB first, fallback to localStorage
+    let completedVideos;
+    try {
+      completedVideos = await dynamoService.getVideosForCourse(courseName);
+    } catch (dynamoError) {
+      console.log('DynamoDB not available, using localStorage');
+      const localStorage = videoService.getLocalStorage();
+      completedVideos = localStorage[courseName] || [];
+    }
+    
+    const questions = await examTopicsQuizGenerator.generatePracticeExam(courseName, completedVideos);
+    
+    res.json({ questions, totalQuestions: questions.length, examType: 'practice' });
+  } catch (error) {
+    console.error('Practice exam generation error:', error);
+    res.status(500).json({ error: 'Failed to generate practice exam' });
+  }
+});
+
+// Large video transcription
+app.post('/api/transcribe/large-video', async (req, res) => {
+  try {
+    const { videoPath, videoTitle } = req.body;
+    const srtPath = await transcribeService.processLargeVideo(videoPath, videoTitle);
+    
+    res.json({ success: true, srtPath, message: 'Transcription completed' });
+  } catch (error) {
+    console.error('Transcription error:', error);
+    res.status(500).json({ error: 'Transcription failed' });
+  }
+});
+
 // API endpoint to generate quiz from video SRT or pre-generated
 app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
   try {
@@ -2287,7 +2811,11 @@ app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
     const videoId = req.params.videoId;
     console.log(`Quiz generation requested for course: ${courseName}, video: ${videoId}`);
 
-    const video = await videoService.getVideoById(courseName, videoId);
+    // Try DynamoDB first, fallback to existing service
+    let video = await dynamoService.getVideoById(courseName, videoId);
+    if (!video) {
+      video = await videoService.getVideoById(courseName, videoId);
+    }
     if (!video) {
       console.error(`Video not found: ${videoId} in course ${courseName}`);
       return res.status(404).json({ error: 'Video not found' });
@@ -2299,28 +2827,70 @@ app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
     // Try SRT-based quiz first
     try {
       if (video.videoUrl) {
-        const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
-        console.log(`Checking video path: ${videoPath}`);
+        // Handle YouTube videos
+        if (video.isYouTube) {
+          console.log('YouTube video detected, skipping local file processing');
+        } else if (video.videoUrl) {
+          const videoPath = path.join(__dirname, 'public', 'videos', video.videoUrl);
+          console.log(`Checking video path: ${videoPath}`);
 
-        if (fs.existsSync(videoPath)) {
-          console.log('Video file exists, attempting SRT generation...');
-          try {
-            const srtPath = await srtQuizGenerator.generateSRT(videoPath);
-            const srtEntries = srtQuizGenerator.parseSRT(srtPath);
+          if (fs.existsSync(videoPath)) {
+            console.log('Video file exists, attempting SRT generation...');
+            try {
+              // Check file size and duration for transcription method
+              const stats = fs.statSync(videoPath);
+              const fileSizeMB = stats.size / (1024 * 1024);
+              
+              let videoDuration = 0;
+              try {
+                const videoInfo = await videoCompressionService.getVideoInfo(videoPath);
+                videoDuration = videoInfo.duration || 0;
+              } catch (err) {
+                console.warn('Could not get video duration:', err.message);
+              }
+              
+              const durationMinutes = videoDuration / 60;
+              
+              let srtPath;
+              // Use AWS Transcribe for large files (>200MB) or long videos (>60 minutes)
+              if (fileSizeMB > 200 || durationMinutes > 60) {
+                console.log(`Large video (${fileSizeMB}MB, ${Math.round(durationMinutes)}min), using AWS Transcribe to reduce M1 heat`);
+                try {
+                  srtPath = await transcribeService.processLargeVideo(videoPath, video.title);
+                } catch (transcribeError) {
+                  console.warn('AWS Transcribe failed, falling back to Whisper:', transcribeError.message);
+                  srtPath = await srtQuizGenerator.generateSRT(videoPath);
+                }
+              } else {
+                console.log(`Small video (${fileSizeMB}MB, ${Math.round(durationMinutes)}min), using local Whisper`);
+                srtPath = await srtQuizGenerator.generateSRT(videoPath);
+              }
+              
+              const srtEntries = srtQuizGenerator.parseSRT(srtPath);
 
-            if (srtEntries && srtEntries.length > 3) {
-              questions = await srtQuizGenerator.generateQuestions(srtEntries, video.title);
-              console.log(`Generated ${questions.length} AI-powered questions`);
-            } else {
-              console.log('SRT entries too few or empty');
+              if (srtEntries && srtEntries.length > 3) {
+                // Get video duration for dynamic question count
+                let videoDuration = 0;
+                try {
+                  const videoInfo = await videoCompressionService.getVideoInfo(videoPath);
+                  videoDuration = videoInfo.duration || 0;
+                } catch (durationError) {
+                  console.warn('Could not get video duration for quiz generation:', durationError.message);
+                }
+                
+                questions = await srtQuizGenerator.generateQuestions(srtEntries, video.title, videoDuration);
+                console.log(`Generated ${questions.length} AI-powered questions`);
+              } else {
+                console.log('SRT entries too few or empty');
+              }
+            } catch (srtGenError) {
+              console.error('SRT generation error:', srtGenError.message);
             }
-          } catch (srtGenError) {
-            console.error('SRT generation error:', srtGenError.message);
+          } else {
+            console.log('Video file does not exist on disk');
           }
-        } else {
-          console.log('Video file does not exist on disk');
         }
-      } else {
+      } else if (!video.isYouTube) {
         console.log('Video has no videoUrl property');
       }
     } catch (srtError) {
@@ -2350,63 +2920,20 @@ app.get('/api/quiz/generate/:courseName/:videoId', async (req, res) => {
 // API endpoint to get video summary and topics
 app.get('/api/video/summary/:videoName', async (req, res) => {
   try {
-    const videoName = req.params.videoName;
+    const videoName = decodeURIComponent(req.params.videoName);
     const summaryPath = path.join(__dirname, 'data', 'video_summaries.json');
 
     // Check if summary already exists
     if (fs.existsSync(summaryPath)) {
       const summaries = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
       if (summaries[videoName]) {
+        console.log(`Serving cached summary for: ${videoName}`);
         return res.json(summaries[videoName]);
       }
     }
 
-    // If no summary exists, try to generate it from existing SRT
-    const videoDir = path.join(__dirname, 'public', 'videos');
-    const courseFolders = fs.readdirSync(videoDir).filter(folder =>
-      fs.statSync(path.join(videoDir, folder)).isDirectory()
-    );
-
-    let srtPath = null;
-    for (const courseFolder of courseFolders) {
-      const coursePath = path.join(videoDir, courseFolder);
-      const findSrt = (dir) => {
-        const files = fs.readdirSync(dir);
-        for (const file of files) {
-          const filePath = path.join(dir, file);
-          if (fs.statSync(filePath).isDirectory()) {
-            const result = findSrt(filePath);
-            if (result) return result;
-          } else if (file === `${videoName}.srt`) {
-            return filePath;
-          }
-        }
-        return null;
-      };
-      srtPath = findSrt(coursePath);
-      if (srtPath) break;
-    }
-
-    if (srtPath && fs.existsSync(srtPath)) {
-      console.log(`Generating summary for existing SRT: ${videoName}`);
-      const srtQuizGenerator = require('./services/srtQuizGenerator');
-      const srtEntries = srtQuizGenerator.parseSRT(srtPath);
-
-      if (srtEntries && srtEntries.length > 3) {
-        const summaryData = await srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoName);
-
-        // Store the generated summary
-        const dataDir = path.join(__dirname, 'data');
-        if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
-        const summaries = fs.existsSync(summaryPath) ? JSON.parse(fs.readFileSync(summaryPath, 'utf8')) : {};
-        summaries[videoName] = summaryData;
-        fs.writeFileSync(summaryPath, JSON.stringify(summaries, null, 2));
-
-        console.log(`Generated and stored summary for: ${videoName}`);
-        return res.json(summaryData);
-      }
-    }
-
+    // Return empty response if no summary exists
+    console.log(`No summary found for: ${videoName}`);
     res.json({ summary: null, keyTopics: [] });
   } catch (error) {
     console.error('Error getting video summary:', error);
@@ -3145,7 +3672,7 @@ app.get('/api/videos/display/:courseName/:videoId', async (req, res) => {
 });
 
 // Start server
-app.listen(config.port, () => {
+app.listen(config.port, '0.0.0.0', () => {
   console.log(`Server running on port ${config.port}`);
   console.log('\n📊 Sync Commands:');
   console.log('curl -X POST http://localhost:3000/api/sync-course -H "Content-Type: application/json" -d "{\"courseName\":\"dev-ops-bootcamp_202201\"}"');

@@ -36,15 +36,13 @@
     ]
   },
   "1. Introduction and How to use this Course": {
-    "summary": "This course prepares students for the AWS Certified Solutions Architect Associate exam using a hands-on, incremental learning approach.  It covers fundamental concepts, builds practical skills through architectural exercises, and provides supplementary materials like downloadable ebooks and cheat sheets.",
+    "summary": "Welcome to the AWS Certified Solutions Architect course, where instructor Neil Davis guides students through a hands-on, incremental learning process to build practical and theoretical skills for the exam, providing various resources such as video lectures, exam crams, training notes, and cheat sheets.",
     "keyTopics": [
-      "AWS Certified Solutions Architect Associate Exam Prep",
-      "Hands-on AWS Training",
-      "Incremental Learning Methodology",
-      "Identity and Access Management (IAM)",
-      "Free Tier AWS Account Setup",
-      "Course Structure and Resources",
-      "Exam Cram Sessions"
+      "Introduction",
+      "Hands-on course",
+      "Incremental learning",
+      "Resources",
+      "Exam preparation"
     ]
   },
   "2. SAA-C02 Exam Guide": {
@@ -269,13 +267,13 @@
     ]
   },
   "001 Course Introduction": {
-    "summary": "This course provides a 100% hands-on approach to learning HashiCorp Terraform, preparing students for the HashiCorp Certified Terraform Associate exam.  It features over 70 labs, practice questions, study tips, and follows the exam objectives sequentially.  Each lab includes downloadable PDFs, code examples, and instructor insights based on real-world experience.",
+    "summary": "Welcome to the HashiCorp Terraform course, a 100% hands-on-labs course designed to help you earn your HashiCorp Certified Terraform Associate Certification through practical experience and over 70 labs aligned with exam objectives.",
     "keyTopics": [
-      "HashiCorp Terraform",
+      "course introduction",
+      "hands-on-labs",
       "HashiCorp Certified Terraform Associate Certification",
-      "Hands-on Labs",
-      "Exam Preparation",
-      "Practical Application"
+      "exam objectives",
+      "practice questions"
     ]
   },
   "001 What is Infrastructure as Code": {
@@ -296,6 +294,96 @@
       "registration process",
       "preparation strategies",
       "exam objectives"
+    ]
+  },
+  "lesson11": {
+    "summary": "The content discusses the options and best practices for managing branches after merging them into the master branch, emphasizing the benefits of deleting branches post-merge to avoid clutter and confusion. It also covers the process of deleting branches both remotely and locally.",
+    "keyTopics": [
+      "branch management",
+      "merging branches",
+      "deleting branches",
+      "best practices",
+      "local vs remote branches"
+    ]
+  },
+  "001 Terraform Purpose": {
+    "summary": "This lab introduces Terraform's purpose, focusing on its goal to unify the view of resources through infrastructure as code, simplifying the deployment of diverse application components across various platforms.",
+    "keyTopics": [
+      "Terraform's purpose",
+      "infrastructure as code",
+      "application deployment",
+      "resource unification",
+      "platform diversity"
+    ]
+  },
+  "002 Benefits of Terraform State": {
+    "summary": "This lab explores the benefits of using state in Terraform, emphasizing its necessity for managing infrastructure and resources. It discusses the default local storage of state files, the option to use remote backends for collaborative management, and the importance of state in Terraform operations like plan, apply, and destroy.",
+    "keyTopics": [
+      "Terraform state necessity",
+      "Default local state storage",
+      "Remote backends for state",
+      "Collaborative infrastructure management",
+      "Terraform operations using state"
+    ]
+  },
+  "lesson100": {
+    "summary": "This video discusses the basic architecture of Kubernetes, focusing on the roles of master and slave nodes within a cluster, the self-management and self-healing capabilities of the cluster, and the essential processes like container runtimes (e.g., Container D, Docker) and Kubelet that enable pod scheduling and management.",
+    "keyTopics": [
+      "Kubernetes architecture",
+      "master and slave nodes",
+      "self-managed and self-healing cluster",
+      "container runtimes",
+      "Kubelet"
+    ]
+  },
+  "lesson8": {
+    "summary": "This lesson explains how to move existing local code to a Git repository by initializing a local Git repository using 'git init', adding and committing files, and then pushing the local repository to a remote repository like GitLab or GitHub.",
+    "keyTopics": [
+      "local code",
+      "Git repository",
+      "git init",
+      "git add",
+      "git commit"
+    ]
+  },
+  "lesson9": {
+    "summary": "The content discusses the importance of branches in a Git repository for managing code changes by different developers, emphasizing the creation of separate branches for each feature or bug fix to maintain clarity and organization.",
+    "keyTopics": [
+      "branches",
+      "master branch",
+      "feature development",
+      "bug fixes",
+      "best practices"
+    ]
+  },
+  "lesson10": {
+    "summary": "When working with Git, it is common practice to have code reviewed by another developer before merging changes to the master branch to ensure code quality and prevent errors. This is typically done through pull requests, allowing for collaboration, learning, and validation of code changes.",
+    "keyTopics": [
+      "code review",
+      "Git",
+      "master branch protection",
+      "pull requests",
+      "collaboration and learning"
+    ]
+  },
+  "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250726_100322-Meeting Recording": {
+    "summary": "Paulina Makira, a technical trainer, conducts a session on AWS Solutions Architect Associate exam focusing on serverless architectures, AWS integration, messaging services like SQS and SNS, and event-driven architectures using step functions.",
+    "keyTopics": [
+      "AWS Solutions Architect Associate exam",
+      "serverless architectures",
+      "AWS integration and messaging",
+      "SQS and SNS services",
+      "event-driven architectures using step functions"
+    ]
+  },
+  "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250802_100746-Meeting Recording": {
+    "summary": "The AWS Cloud Solutions Architect Bootcamp Series recording discusses the importance of understanding architecture and practical application in preparing for the CSA exam, with a focus on a three-tiered architecture as a warm-up example.",
+    "keyTopics": [
+      "AWS Cloud Solutions Architect Bootcamp",
+      "CSA exam preparation",
+      "architecture understanding",
+      "practical application",
+      "three-tiered architecture"
     ]
   }
 }

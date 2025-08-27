@@ -66,11 +66,11 @@ class AIService {
   }
 
   // Specialized methods for different use cases
-  async generateQuizQuestions(content, videoTitle) {
-    const prompt = `Based on this video content, create 5 multiple-choice quiz questions.
+  async generateQuizQuestions(content, videoTitle, questionCount = 5) {
+    const prompt = `Based on this video content, create ${questionCount} multiple-choice quiz questions.
 
 Video: ${videoTitle}
-Content: ${content.substring(0, 2000)}
+Content: ${content.substring(0, 3000)}
 
 Return JSON array:
 [{
@@ -81,7 +81,7 @@ Return JSON array:
   "explanation": "Why this is correct"
 }]
 
-Return only the JSON array.`;
+Generate exactly ${questionCount} questions. Return only the JSON array.`;
 
     return this.generateContent(prompt);
   }

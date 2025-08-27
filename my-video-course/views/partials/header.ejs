@@ -5,16 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof title !== 'undefined' ? title : 'Video Course Platform' %></title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            'inter': ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="/css/main.css" rel="stylesheet">
-  <link href="/css/video-controls.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-  <script src="/js/connection-monitor.js"></script>
+  <link rel="stylesheet" href="/css/quiz-system.css">
+  <script src="/js/theme-manager.js"></script>
   <% if (typeof extraStyles !== 'undefined') { %>
     <%- extraStyles %>
   <% } %>
 </head>
-<body class="bg-gray-50 font-['Inter']">
-  <div class="flex h-screen" x-data="{ sidebarOpen: false, sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' }" x-init="$watch('sidebarCollapsed', val => localStorage.setItem('sidebarCollapsed', val))">
-    <%- include('sidebar') %>
+<body class="bg-gray-50 dark:bg-gray-900 font-inter min-h-screen transition-colors">
+  <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 transition-colors">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-6">
+        <a href="/" class="text-xl font-bold text-gray-900 dark:text-white transition-colors">🎓 Learning Platform</a>
+        <div class="hidden md:flex items-center gap-4">
+          <a href="/" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Dashboard</a>
+          <a href="/profile" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Progress</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <button id="theme-toggle" class="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors" title="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+        <div class="hidden sm:flex items-center gap-3 bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2 transition-colors">
+          <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold user-level">1</div>
+          <span class="text-sm font-medium text-gray-900 dark:text-white user-points">0</span>
+          <span class="text-sm">🔥</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-white user-streak">0</span>
+        </div>
+        <button class="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+  <div class="flex-1">
