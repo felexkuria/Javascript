@@ -78,7 +78,8 @@ jobs:
         TG_ARN=$(aws elbv2 describe-target-groups --names video-course-app-tg --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null)
         if [ "$TG_ARN" != "None" ]; then terraform import aws_lb_target_group.app $TG_ARN || true; fi
 
-    - name: Terraform Plan
+    - name: Terraform Apply - Base Resources
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       working-directory: ./my-video-course/terraform
       env:
         TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
@@ -87,9 +88,10 @@ jobs:
         TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
         TF_VAR_nova_api_key: ${{ secrets.NOVA_API_KEY }}
         TF_VAR_key_pair_name: "video-course-key"
-      run: terraform plan
-
-    - name: Terraform Apply
+      run: |
+        terraform apply -auto-approve -target=aws_vpc.main -target=aws_subnet.public -target=aws_acm_certificate.main
+        
+    - name: Terraform Apply - Complete
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       working-directory: ./my-video-course/terraform
       env:
