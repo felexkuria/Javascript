@@ -8,7 +8,7 @@ env:
 
 jobs:
   setup-backend:
-    name: Setup S3 Backend
+    name: Setup S3 Backend 
     runs-on: ubuntu-latest
     
     steps:
