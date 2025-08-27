@@ -59,17 +59,6 @@ jobs:
       working-directory: ./my-video-course/terraform
       run: terraform init
 
-    - name: Import Existing Resources
-      working-directory: ./my-video-course/terraform
-      continue-on-error: true
-      run: |
-        # Import existing resources if they exist
-        terraform import aws_iam_role.cognito_authenticated video-course-app-cognito-authenticated || true
-        terraform import aws_iam_role.ec2_role video-course-app-ec2-role || true
-        terraform import aws_ecr_repository.main video-course-app || true
-        terraform import aws_lb.main $(aws elbv2 describe-load-balancers --names video-course-app-alb --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null) || true
-        terraform import aws_lb_target_group.app $(aws elbv2 describe-target-groups --names video-course-app-tg --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null) || true
-
     - name: Terraform Plan
       working-directory: ./my-video-course/terraform
       env:
@@ -98,3 +87,10 @@ jobs:
       run: |
         ASG_NAME=$(cd my-video-course/terraform && terraform output -raw autoscaling_group_name)
         aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME
+
+    - name: Deployment Complete
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      run: |
+        echo "🚀 Deployment completed successfully!"
+        echo "📱 Your app is live at: https://skool.shopmultitouch.com"
+        echo "⏱️  Allow 5-10 minutes for instance refresh to complete"
