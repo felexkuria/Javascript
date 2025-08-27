@@ -53,6 +53,17 @@ jobs:
       working-directory: ./my-video-course/terraform
       run: terraform init
 
+    - name: Import Existing Resources
+      working-directory: ./my-video-course/terraform
+      continue-on-error: true
+      run: |
+        # Import existing resources if they exist
+        terraform import aws_iam_role.cognito_authenticated video-course-app-cognito-authenticated || true
+        terraform import aws_iam_role.ec2_role video-course-app-ec2-role || true
+        terraform import aws_ecr_repository.main video-course-app || true
+        terraform import aws_lb.main $(aws elbv2 describe-load-balancers --names video-course-app-alb --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null) || true
+        terraform import aws_lb_target_group.app $(aws elbv2 describe-target-groups --names video-course-app-tg --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null) || true
+
     - name: Terraform Plan
       working-directory: ./my-video-course/terraform
       env:
