@@ -59,6 +59,11 @@ jobs:
       working-directory: ./my-video-course/terraform
       run: terraform init
 
+    - name: Import ECR Repository
+      working-directory: ./my-video-course/terraform
+      continue-on-error: true
+      run: terraform import aws_ecr_repository.main video-course-app || true
+
     - name: Terraform Plan
       working-directory: ./my-video-course/terraform
       env:
