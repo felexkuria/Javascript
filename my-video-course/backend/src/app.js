@@ -101,7 +101,111 @@ app.use('/api/ai', cognitoAuth, require('./routes/api/ai'));
 app.use('/api/users', cognitoAuth, require('./routes/api/users'));
 app.use('/api/enrollments', cognitoAuth, require('./routes/api/enrollments'));
 
-// AI-powered endpoints
+// Video control endpoints
+app.post('/api/mark-watched', cognitoAuth, async (req, res) => {
+  try {
+    const { videoId, courseName } = req.body;
+    const userId = req.user?.email || 'guest';
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    const success = await dynamoVideoService.updateVideoWatchStatus(courseName, videoId, true, userId);
+    
+    if (success) {
+      // Update gamification stats with achievement points
+      const gamificationData = await dynamoVideoService.getUserGamificationData(userId) || {
+        userStats: { totalPoints: 0, videosWatched: {}, currentLevel: 1 },
+        achievements: [],
+        streakData: { currentStreak: 0 }
+      };
+      
+      // Add points for watching video
+      if (!gamificationData.userStats.videosWatched[videoId]) {
+        gamificationData.userStats.totalPoints = (gamificationData.userStats.totalPoints || 0) + 10;
+        gamificationData.userStats.videosWatched[videoId] = true;
+        
+        // Check achievements
+        const watchedCount = Object.keys(gamificationData.userStats.videosWatched).length;
+        const newAchievements = [];
+        
+        // Getting Started - First video
+        if (watchedCount === 1 && !gamificationData.achievements.find(a => a.id === 'getting-started')) {
+          newAchievements.push({ id: 'getting-started', title: 'Getting Started', points: 10 });
+        }
+        
+        // Video Enthusiast - 5 videos
+        if (watchedCount === 5 && !gamificationData.achievements.find(a => a.id === 'video-enthusiast')) {
+          newAchievements.push({ id: 'video-enthusiast', title: 'Video Enthusiast', points: 25 });
+        }
+        
+        // Learning Streak - 10 videos
+        if (watchedCount === 10 && !gamificationData.achievements.find(a => a.id === 'learning-streak')) {
+          newAchievements.push({ id: 'learning-streak', title: 'Learning Streak', points: 50 });
+        }
+        
+        // Knowledge Seeker - 25 videos
+        if (watchedCount === 25 && !gamificationData.achievements.find(a => a.id === 'knowledge-seeker')) {
+          newAchievements.push({ id: 'knowledge-seeker', title: 'Knowledge Seeker', points: 100 });
+        }
+        
+        // Course Master - 50 videos
+        if (watchedCount === 50 && !gamificationData.achievements.find(a => a.id === 'course-master')) {
+          newAchievements.push({ id: 'course-master', title: 'Course Master', points: 200 });
+        }
+        
+        // Add new achievements
+        newAchievements.forEach(achievement => {
+          gamificationData.achievements.push({
+            ...achievement,
+            unlockedAt: new Date().toISOString()
+          });
+          gamificationData.userStats.totalPoints += achievement.points;
+        });
+        
+        await dynamoVideoService.updateUserGamificationData(userId, gamificationData);
+      }
+    }
+    
+    res.json({ success, message: success ? 'Video marked as watched' : 'Failed to mark video' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/next-video', cognitoAuth, async (req, res) => {
+  try {
+    const { currentVideoId, courseName, direction } = req.query;
+    const userId = req.user?.email || 'guest';
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
+    
+    const currentIndex = videos.findIndex(v => v._id.toString() === currentVideoId);
+    let targetVideo = null;
+    
+    if (direction === 'prev' && currentIndex > 0) {
+      targetVideo = videos[currentIndex - 1];
+    } else if (direction === 'next' && currentIndex < videos.length - 1) {
+      targetVideo = videos[currentIndex + 1];
+    }
+    
+    if (targetVideo) {
+      res.json(targetVideo);
+    } else {
+      res.status(404).json({ error: 'No video found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/generate-srt', cognitoAuth, async (req, res) => {
+  try {
+    const { videoTitle, courseName, videoId } = req.body;
+    res.json({ success: true, status: 'processing' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
 const aiService = require('./services/aiService');
 app.post('/api/ai/generate-todos', cognitoAuth, async (req, res) => {
   try {

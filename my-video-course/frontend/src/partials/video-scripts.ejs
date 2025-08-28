@@ -1,0 +1,349 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const videoPlayer = document.getElementById('videoPlayer');
+    const markWatchedButton = document.getElementById('markWatchedButton');
+    const prevButton = document.getElementById('prevButton');
+    const nextButton = document.getElementById('nextButton');
+    const quizButton = document.getElementById('quizButton');
+    const generateSRTButton = document.getElementById('generateSRTButton');
+    const keyHint = document.getElementById('keyHint');
+    
+    let courseName = '<%= courseName %>';
+    let videoId = '<%= video ? video._id : "" %>';
+    let chatHistory = [];
+    const chatKey = `chat_${courseName}_${videoId}`;
+    
+    function showKeyHint(text) {
+        keyHint.textContent = text;
+        keyHint.classList.add('visible');
+        setTimeout(() => keyHint.classList.remove('visible'), 1000);
+    }
+
+    function markVideoAsWatched() {
+        fetch('/api/mark-watched', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoId, courseName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.querySelector('.status-badge');
+            if (badge) {
+                badge.className = 'status-badge status-watched';
+                badge.innerHTML = '✓ Watched';
+            }
+            
+            if (window.gamificationSystem) {
+                window.gamificationSystem.onVideoCompleted({
+                    videoId, courseName,
+                    isLastVideo: <%= isLastVideo ? 'true' : 'false' %>,
+                    isLastInChapter: <%= isLastInChapter ? 'true' : 'false' %>
+                });
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Event listeners
+    if (markWatchedButton) markWatchedButton.addEventListener('click', markVideoAsWatched);
+    if (quizButton) quizButton.addEventListener('click', startVideoQuiz);
+    
+    // SRT Generation
+    if (generateSRTButton) {
+        generateSRTButton.addEventListener('click', async function() {
+            this.disabled = true;
+            this.innerHTML = '<span>🔄</span> Generating...';
+            
+            try {
+                const response = await fetch('/api/generate-srt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        videoTitle: '<%= video ? video.title : "" %>',
+                        courseName: courseName,
+                        videoId: videoId
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'processing') {
+                    this.innerHTML = '<span>🔄</span> Processing...';
+                    setTimeout(() => location.reload(), 3000);
+                } else {
+                    this.innerHTML = '<span>✅</span> Ready';
+                    this.disabled = false;
+                }
+            } catch (error) {
+                console.error('SRT generation failed:', error);
+                this.innerHTML = '<span>❌</span> Failed';
+                this.disabled = false;
+            }
+        });
+    }
+    
+    if (prevButton) {
+        prevButton.addEventListener('click', async () => {
+            try {
+                const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${encodeURIComponent(courseName)}&direction=prev`);
+                if (response.ok) {
+                    const prevVideo = await response.json();
+                    window.location.href = `/videos/${encodeURIComponent(courseName)}/${prevVideo._id}`;
+                }
+            } catch (error) {
+                console.error('Error getting previous video:', error);
+            }
+        });
+    }
+    
+    if (nextButton) {
+        nextButton.addEventListener('click', async () => {
+            try {
+                const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${encodeURIComponent(courseName)}&direction=next`);
+                if (response.ok) {
+                    const nextVideo = await response.json();
+                    window.location.href = `/videos/${encodeURIComponent(courseName)}/${nextVideo._id}?autoplay=true`;
+                }
+            } catch (error) {
+                console.error('Error getting next video:', error);
+            }
+        });
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        const videoPlayer = document.getElementById('videoPlayer');
+        if (!videoPlayer || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+
+        const key = e.key.toLowerCase();
+        
+        switch(key) {
+            case 'f':
+                e.preventDefault();
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                    showKeyHint('Exit Fullscreen');
+                } else {
+                    videoPlayer.requestFullscreen();
+                    showKeyHint('Fullscreen');
+                }
+                break;
+            case 'j':
+                e.preventDefault();
+                if (videoPlayer.currentTime) {
+                    videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
+                    showKeyHint('⏪ -10s');
+                }
+                break;
+            case 'k':
+            case ' ':
+                e.preventDefault();
+                if (videoPlayer.paused) {
+                    videoPlayer.play();
+                    showKeyHint('▶️ Play');
+                } else {
+                    videoPlayer.pause();
+                    showKeyHint('⏸️ Pause');
+                }
+                break;
+            case 'l':
+                e.preventDefault();
+                if (videoPlayer.duration) {
+                    videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 10);
+                    showKeyHint('⏩ +10s');
+                }
+                break;
+        }
+    });
+
+    // Video event listeners
+    if (videoPlayer) {
+        videoPlayer.addEventListener('ended', markVideoAsWatched);
+        
+        let watchedMarked = false;
+        videoPlayer.addEventListener('timeupdate', function() {
+            if (!videoPlayer.duration) return;
+            const watchPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+            
+            if (watchPercent >= 90 && !watchedMarked) {
+                markVideoAsWatched();
+                watchedMarked = true;
+            }
+        });
+    }
+
+    // Global functions for components
+    window.startVideoQuiz = async function() {
+        try {
+            const response = await fetch(`/api/quizzes/${videoId}`);
+            const data = await response.json();
+            
+            if (data.success && data.quiz) {
+                window.quizSystem.startQuiz('video-specific', data.quiz);
+            } else {
+                window.quizSystem.startQuiz('terraform');
+            }
+        } catch (error) {
+            console.error('Error loading video quiz:', error);
+            window.quizSystem.startQuiz('terraform');
+        }
+    };
+
+    window.showFloatingChatbot = function() {
+        const chatbot = document.getElementById('floating-chatbot');
+        const trigger = document.getElementById('chatbot-trigger');
+        
+        if (chatbot && trigger) {
+            chatbot.style.display = 'flex';
+            trigger.style.display = 'none';
+            
+            setTimeout(() => {
+                const input = document.getElementById('floating-chat-input');
+                if (input) input.focus();
+            }, 300);
+        }
+    };
+    
+    window.toggleFloatingChatbot = function() {
+        const chatbot = document.getElementById('floating-chatbot');
+        const trigger = document.getElementById('chatbot-trigger');
+        
+        if (chatbot && trigger) {
+            chatbot.style.display = 'none';
+            trigger.style.display = 'flex';
+        }
+    };
+
+    window.sendFloatingChatMessage = async function() {
+        const input = document.getElementById('floating-chat-input');
+        const messages = document.getElementById('floating-chat-messages');
+        
+        if (!input || !messages) return;
+        
+        const message = input.value.trim();
+        if (!message) return;
+        
+        // Add user message
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        messages.innerHTML += `
+            <div class="chat-message user animate-message-in">
+                <div class="message-content">${message}</div>
+                <div class="message-meta">You • ${time}</div>
+            </div>
+        `;
+        
+        input.value = '';
+        messages.scrollTop = messages.scrollHeight;
+        
+        try {
+            const response = await fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message, 
+                    aiModel: 'nova-pro',
+                    teachingStyle: 'david-malan',
+                    context: {
+                        videoTitle: '<%= video ? video.title : "" %>',
+                        courseName: courseName,
+                        videoId: videoId
+                    }
+                })
+            });
+            
+            const data = await response.json();
+            const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            if (data.success) {
+                messages.innerHTML += `
+                    <div class="chat-message bot animate-message-in">
+                        <div class="message-content">${data.response}</div>
+                        <div class="message-meta">Nova Pro • ${botTime}</div>
+                    </div>
+                `;
+            } else {
+                messages.innerHTML += `
+                    <div class="chat-message bot animate-message-in">
+                        <div class="message-content">Sorry, I couldn't process that. Try asking about the video content.</div>
+                        <div class="message-meta">System • ${botTime}</div>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            messages.innerHTML += `
+                <div class="chat-message bot animate-message-in">
+                    <div class="message-content">I'm having trouble connecting. Please try again.</div>
+                    <div class="message-meta">System • ${botTime}</div>
+                </div>
+            `;
+        }
+        
+        messages.scrollTop = messages.scrollHeight;
+    };
+
+    // Enter key support for chat
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && document.getElementById('floating-chat-input') === document.activeElement) {
+            sendFloatingChatMessage();
+        }
+    });
+
+    // Achievement popup function
+    window.showAchievement = function(icon, title, name, points) {
+        const popup = document.getElementById('achievement-popup');
+        const iconEl = document.getElementById('achievement-icon');
+        const titleEl = document.getElementById('achievement-title');
+        const nameEl = document.getElementById('achievement-name');
+        const pointsEl = document.getElementById('achievement-points');
+        
+        if (popup && iconEl && titleEl && nameEl && pointsEl) {
+            iconEl.textContent = icon;
+            titleEl.textContent = title;
+            nameEl.textContent = name;
+            pointsEl.textContent = points;
+            
+            popup.classList.add('show');
+            
+            // Auto hide after 4 seconds
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 4000);
+        }
+    };
+    
+    // Listen for gamification events
+    document.addEventListener('achievementUnlocked', function(event) {
+        const { icon, title, name, points } = event.detail;
+        showAchievement(icon || '🏆', title || 'Achievement Unlocked!', name, points);
+    });
+
+    // Theme management
+    function initTheme() {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+    
+    function toggleTheme() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const newTheme = isDark ? 'light' : 'dark';
+        document.documentElement.classList.toggle('dark', newTheme === 'dark');
+        localStorage.setItem('theme', newTheme);
+        document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    }
+    
+    initTheme();
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    // Initialize animations
+    setTimeout(() => {
+        const progressBars = document.querySelectorAll('.progress-fill-animated');
+        progressBars.forEach(bar => {
+            const width = bar.getAttribute('data-width');
+            if (width) {
+                bar.style.width = width + '%';
+            }
+        });
+    }, 500);
+});
+</script>

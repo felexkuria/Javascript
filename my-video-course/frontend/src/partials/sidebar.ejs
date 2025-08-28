@@ -1,0 +1,118 @@
+<div class="sidebar">
+    <!-- Progress Card -->
+    <div class="sidebar-card animate-slide-right" style="animation-delay: 0.3s;">
+        <h3 class="sidebar-title">📊 Progress</h3>
+        <div class="stats-column">
+            <div class="stat-item animate-counter" data-target="1">
+                <div class="stat-value user-level">1</div>
+                <div class="stat-label">Level</div>
+            </div>
+            <div class="stat-item animate-counter" data-target="0">
+                <div class="stat-value user-points">0</div>
+                <div class="stat-label">Points</div>
+            </div>
+            <div class="stat-item animate-counter" data-target="0">
+                <div class="stat-value user-streak">0 🔥</div>
+                <div class="stat-label">Day Streak</div>
+            </div>
+        </div>
+        <div style="margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 14px; color: #86868b;"><%= watchedVideos || 0 %>/<%= totalVideos || 0 %> videos</span>
+                <span style="font-size: 14px; color: #86868b;"><%= watchedPercent || 0 %>%</span>
+            </div>
+            <div class="progress-bar-animated" style="width: 100%; height: 4px; background: #e5e5e7; border-radius: 2px; overflow: hidden;">
+                <div class="progress-fill-animated" style="height: 100%; background: #007aff; border-radius: 2px; width: 0%; transition: width 2s ease;" data-width="<%= watchedPercent || 0 %>"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Analysis Card -->
+    <div class="sidebar-card animate-slide-right" style="animation-delay: 0.4s;">
+        <h3 class="sidebar-title">🧠 AI Analysis</h3>
+        <div id="video-summary" style="font-size: 14px; line-height: 1.4; margin-bottom: 16px; color: #86868b;">
+            <div class="loading-skeleton">
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line short"></div>
+            </div>
+        </div>
+        <div id="key-topics" style="display: none;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #1d1d1f;">Key Topics:</h4>
+            <div id="topics-list" style="display: flex; flex-wrap: gap: 6px;"></div>
+        </div>
+    </div>
+    
+    <!-- AI Todos Card -->
+    <div class="sidebar-card animate-slide-right" style="animation-delay: 0.5s;">
+        <h3 class="sidebar-title">✅ AI Todos</h3>
+        <div id="todo-container" style="max-height: 200px; overflow-y: auto; margin-bottom: 16px;">
+            <div class="loading-skeleton">
+                <div class="skeleton-todo"></div>
+                <div class="skeleton-todo"></div>
+                <div class="skeleton-todo"></div>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #f2f2f7;">
+            <span id="todo-progress" style="font-size: 12px; color: #86868b;">0/0 completed</span>
+            <button onclick="refreshTodos()" class="interactive-button" style="padding: 4px 8px; background: #f2f2f7; border: none; border-radius: 6px; font-size: 11px; color: #1d1d1f; cursor: pointer;">
+                🔄 Refresh
+            </button>
+        </div>
+        <div style="width: 100%; height: 3px; background: #f2f2f7; border-radius: 2px; margin-top: 8px; overflow: hidden;">
+            <div id="todo-progress-bar" class="progress-fill-animated" style="height: 100%; background: #30d158; border-radius: 2px; width: 0%; transition: width 0.3s ease;"></div>
+        </div>
+    </div>
+    
+    <!-- Chapters Card -->
+    <% if (typeof chapters !== 'undefined' && chapters.length > 0) { %>
+    <div class="sidebar-card animate-slide-right" style="animation-delay: 0.6s;">
+        <h3 class="sidebar-title">📚 Chapters</h3>
+        <div class="chapter-list">
+            <% chapters.sort((a, b) => {
+                const aMatch = a.match(/(\\d+)/);
+                const bMatch = b.match(/(\\d+)/);
+                if (!aMatch || !bMatch) return a.localeCompare(b);
+                return parseInt(aMatch[0], 10) - parseInt(bMatch[0], 10);
+            }).forEach(chapter => {
+                const chapterVideos = videosByChapter[chapter];
+            %>
+            <div class="chapter-item interactive-chapter">
+                <strong><%= chapter %></strong>
+                <% chapterVideos.forEach((chapterVideo, index) => { %>
+                <div style="margin-left: 12px; margin-top: 4px;">
+                    <a href="/videos/<%= encodeURIComponent(courseName) %>/<%= chapterVideo._id %>" 
+                       class="chapter-link interactive-link <%= chapterVideo._id.toString() === video._id.toString() ? 'active' : '' %>">
+                        <%= (index + 1) %>. <%= chapterVideo.title %>
+                        <% if (chapterVideo.watched) { %> ✓<% } %>
+                    </a>
+                </div>
+                <% }); %>
+            </div>
+            <% }); %>
+        </div>
+    </div>
+    <% } %>
+    
+    <!-- Shortcuts Card -->
+    <div class="sidebar-card animate-slide-right" style="animation-delay: 0.7s;">
+        <h2 class="sidebar-title">⌨️ Shortcuts</h2>
+        <div class="shortcuts-list">
+            <div class="shortcut-item interactive-shortcut" data-key="f">
+                <span class="shortcut-key">F</span>
+                <span class="shortcut-desc">Fullscreen</span>
+            </div>
+            <div class="shortcut-item interactive-shortcut" data-key="k">
+                <span class="shortcut-key">K</span>
+                <span class="shortcut-desc">Play/Pause</span>
+            </div>
+            <div class="shortcut-item interactive-shortcut" data-key="j">
+                <span class="shortcut-key">J</span>
+                <span class="shortcut-desc">Rewind 10s</span>
+            </div>
+            <div class="shortcut-item interactive-shortcut" data-key="l">
+                <span class="shortcut-key">L</span>
+                <span class="shortcut-desc">Forward 10s</span>
+            </div>
+        </div>
+    </div>
+</div>
