@@ -27,250 +27,56 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# VPC
-resource "aws_vpc" "main" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-  
-  tags = {
-    Name = "${var.app_name}-vpc"
+# Use existing VPC
+data "aws_vpc" "existing" {
+  id = "vpc-0357f6ce9238d73be"
+}
+
+data "aws_subnets" "existing" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.existing.id]
   }
 }
 
-# Internet Gateway
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-  
-  tags = {
-    Name = "${var.app_name}-igw"
-  }
+# Use existing subnets
+data "aws_subnet" "existing" {
+  count = length(data.aws_subnets.existing.ids)
+  id    = data.aws_subnets.existing.ids[count.index]
 }
 
-# Public Subnets
-resource "aws_subnet" "public" {
-  count = 2
-  
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index + 1)
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
-  map_public_ip_on_launch = true
-  
-  tags = {
-    Name = "${var.app_name}-public-subnet-${count.index + 1}"
-  }
+
+
+# Get existing security groups
+data "aws_security_group" "alb_sg" {
+  id = "sg-0b49a8604369c68a9"
 }
 
-# Route Table
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-  
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
-  }
-  
-  tags = {
-    Name = "${var.app_name}-public-rt"
-  }
+data "aws_security_group" "ec2_sg" {
+  id = "sg-0459a70ee2fda5644"
 }
 
-resource "aws_route_table_association" "public" {
-  count = length(aws_subnet.public)
-  
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
+# Local values for resource references
+locals {
+  alb_security_group_id = data.aws_security_group.alb_sg.id
+  ec2_security_group_id = data.aws_security_group.ec2_sg.id
+  load_balancer_arn     = data.aws_lb.main.arn
+  load_balancer_dns     = data.aws_lb.main.dns_name
+  load_balancer_zone_id = data.aws_lb.main.zone_id
+  target_group_arn      = data.aws_lb_target_group.app.arn
 }
 
-# Security Groups
-resource "aws_security_group" "alb" {
-  name_prefix = "${var.app_name}-alb-"
-  vpc_id      = aws_vpc.main.id
-  
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  tags = {
-    Name = "${var.app_name}-alb-sg"
-  }
+# Use existing Cognito resources
+locals {
+  cognito_user_pool_id = data.aws_cognito_user_pool.existing.id
+  cognito_client_id    = data.aws_cognito_user_pool_client.existing.id
 }
 
-resource "aws_security_group" "ec2" {
-  name_prefix = "${var.app_name}-ec2-"
-  vpc_id      = aws_vpc.main.id
-  
-  ingress {
-    from_port       = 3000
-    to_port         = 3000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
-  
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  tags = {
-    Name = "${var.app_name}-ec2-sg"
-  }
-}
 
-# Cognito User Pool
-resource "aws_cognito_user_pool" "main" {
-  name = "${var.app_name}-users"
-  
-  username_attributes = ["email"]
-  auto_verified_attributes = ["email"]
-  
-  password_policy {
-    minimum_length    = 8
-    require_lowercase = true
-    require_numbers   = true
-    require_symbols   = false
-    require_uppercase = true
-  }
-  
-  schema {
-    attribute_data_type = "String"
-    name               = "email"
-    required           = true
-    mutable           = true
-  }
-  
-  schema {
-    attribute_data_type = "String"
-    name               = "name"
-    required           = true
-    mutable           = true
-  }
-  
-  tags = {
-    Name = "${var.app_name}-user-pool"
-  }
-}
 
-resource "aws_cognito_user_pool_client" "main" {
-  name         = "${var.app_name}-client"
-  user_pool_id = aws_cognito_user_pool.main.id
-  
-  generate_secret = false
-  
-  explicit_auth_flows = [
-    "ALLOW_USER_PASSWORD_AUTH",
-    "ALLOW_REFRESH_TOKEN_AUTH",
-    "ALLOW_USER_SRP_AUTH"
-  ]
-  
-  supported_identity_providers = ["COGNITO"]
-  
-  callback_urls = [
-    "https://${var.domain_name}/auth/callback",
-    "http://localhost:3000/auth/callback"
-  ]
-  
-  logout_urls = [
-    "https://${var.domain_name}/auth/logout",
-    "http://localhost:3000/auth/logout"
-  ]
-}
-
-resource "aws_cognito_identity_pool" "main" {
-  identity_pool_name               = "${var.app_name}_identity_pool"
-  allow_unauthenticated_identities = false
-  
-  cognito_identity_providers {
-    client_id               = aws_cognito_user_pool_client.main.id
-    provider_name           = aws_cognito_user_pool.main.endpoint
-    server_side_token_check = false
-  }
-  
-  tags = {
-    Name = "${var.app_name}-identity-pool"
-  }
-}
-
-resource "aws_iam_role" "cognito_authenticated" {
-  name = "${var.app_name}-cognito-authenticated"
-  
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Federated = "cognito-identity.amazonaws.com"
-        }
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Condition = {
-          StringEquals = {
-            "cognito-identity.amazonaws.com:aud" = aws_cognito_identity_pool.main.id
-          }
-          "ForAnyValue:StringLike" = {
-            "cognito-identity.amazonaws.com:amr" = "authenticated"
-          }
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "cognito_authenticated" {
-  name = "${var.app_name}-cognito-authenticated-policy"
-  role = aws_iam_role.cognito_authenticated.id
-  
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject"
-        ]
-        Resource = "arn:aws:s3:::${var.s3_bucket_name}/users/$${cognito-identity.amazonaws.com:sub}/*"
-      }
-    ]
-  })
-}
-
-resource "aws_cognito_identity_pool_roles_attachment" "main" {
-  identity_pool_id = aws_cognito_identity_pool.main.id
-  
-  roles = {
-    "authenticated" = aws_iam_role.cognito_authenticated.arn
-  }
-}
-
-# ECR Repository for Docker Images
+# Use existing ECR repository or create if needed
 resource "aws_ecr_repository" "main" {
+  count                = var.create_ecr_repo ? 1 : 0
   name                 = "video-course-app"
   image_tag_mutability = "MUTABLE"
   force_delete         = true
@@ -284,60 +90,33 @@ resource "aws_ecr_repository" "main" {
   }
 }
 
-# S3 Bucket for Video Storage
-resource "random_id" "suffix" {
-  byte_length = 4
+locals {
+  ecr_repository_url = var.create_ecr_repo ? aws_ecr_repository.main[0].repository_url : data.aws_ecr_repository.existing.repository_url
 }
 
-resource "aws_s3_bucket" "main" {
-  bucket        = "video-course-bucket-${random_id.suffix.hex}"
-  force_destroy = true
-  
-  tags = {
-    Name = "${var.app_name}-storage"
-  }
+# Use existing S3 bucket
+locals {
+  s3_bucket_name = data.aws_s3_bucket.existing.bucket
+  s3_bucket_arn  = data.aws_s3_bucket.existing.arn
 }
 
-resource "aws_s3_bucket_versioning" "main" {
-  bucket = aws_s3_bucket.main.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
+# S3 bucket configurations (skip if using existing bucket)
+# Uncomment if you need to configure the existing bucket
+# resource "aws_s3_bucket_cors_configuration" "main" {
+#   bucket = local.s3_bucket_name
+#   
+#   cors_rule {
+#     allowed_headers = ["*"]
+#     allowed_methods = ["GET", "PUT", "POST", "DELETE"]
+#     allowed_origins = ["https://${var.domain_name}"]
+#     expose_headers  = ["ETag"]
+#     max_age_seconds = 3000
+#   }
+# }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "main" {
-  bucket = aws_s3_bucket.main.id
-  
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "main" {
-  bucket = aws_s3_bucket.main.id
-  
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-resource "aws_s3_bucket_cors_configuration" "main" {
-  bucket = aws_s3_bucket.main.id
-  
-  cors_rule {
-    allowed_headers = ["*"]
-    allowed_methods = ["GET", "PUT", "POST", "DELETE"]
-    allowed_origins = ["https://${var.domain_name}"]
-    expose_headers  = ["ETag"]
-    max_age_seconds = 3000
-  }
-}
-
-# IAM Role for EC2
+# IAM Role for EC2 - use existing or create new
 resource "aws_iam_role" "ec2_role" {
+  count = var.create_ec2_role ? 1 : 0
   name = "${var.app_name}-ec2-role"
   
   assume_role_policy = jsonencode({
@@ -354,9 +133,15 @@ resource "aws_iam_role" "ec2_role" {
   })
 }
 
+locals {
+  ec2_role_name = var.create_ec2_role ? aws_iam_role.ec2_role[0].name : data.aws_iam_role.existing_ec2_role.name
+  ec2_role_arn  = var.create_ec2_role ? aws_iam_role.ec2_role[0].arn : data.aws_iam_role.existing_ec2_role.arn
+}
+
 resource "aws_iam_role_policy" "ec2_policy" {
+  count = var.create_ec2_role ? 1 : 0
   name = "${var.app_name}-ec2-policy"
-  role = aws_iam_role.ec2_role.id
+  role = aws_iam_role.ec2_role[0].id
   
   policy = jsonencode({
     Version = "2012-10-17"
@@ -368,21 +153,21 @@ resource "aws_iam_role_policy" "ec2_policy" {
           "s3:PutObject",
           "s3:DeleteObject"
         ]
-        Resource = "${aws_s3_bucket.main.arn}/*"
+        Resource = "${local.s3_bucket_arn}/*"
       },
       {
         Effect = "Allow"
         Action = [
           "s3:ListBucket"
         ]
-        Resource = aws_s3_bucket.main.arn
+        Resource = local.s3_bucket_arn
       },
       {
         Effect = "Allow"
         Action = [
           "cognito-idp:*"
         ]
-        Resource = aws_cognito_user_pool.main.arn
+        Resource = data.aws_cognito_user_pool.existing.arn
       },
       {
         Effect = "Allow"
@@ -390,6 +175,13 @@ resource "aws_iam_role_policy" "ec2_policy" {
           "transcribe:*"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel"
+        ]
+        Resource = "arn:aws:bedrock:*::foundation-model/amazon.nova-lite-v1:0"
       },
       {
         Effect = "Allow"
@@ -406,21 +198,27 @@ resource "aws_iam_role_policy" "ec2_policy" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
+  count = var.create_ec2_role ? 1 : 0
   name = "${var.app_name}-ec2-profile"
-  role = aws_iam_role.ec2_role.name
+  role = local.ec2_role_name
+}
+
+locals {
+  ec2_instance_profile_name = var.create_ec2_role ? aws_iam_instance_profile.ec2_profile[0].name : "${var.app_name}-ec2-profile"
 }
 
 # Launch Template
 resource "aws_launch_template" "app" {
+  count         = var.create_asg ? 1 : 0
   name_prefix   = "${var.app_name}-"
   image_id      = data.aws_ami.amazon_linux.id
   instance_type = var.instance_type
   key_name      = var.key_pair_name
   
-  vpc_security_group_ids = [aws_security_group.ec2.id]
+  vpc_security_group_ids = [local.ec2_security_group_id]
   
   iam_instance_profile {
-    name = aws_iam_instance_profile.ec2_profile.name
+    name = local.ec2_instance_profile_name
   }
   
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
@@ -431,9 +229,9 @@ resource "aws_launch_template" "app" {
     s3_bucket_name           = var.s3_bucket_name
     gemini_api_key           = var.gemini_api_key
     nova_api_key             = var.nova_api_key
-    cognito_user_pool_id     = aws_cognito_user_pool.main.id
-    cognito_client_id        = aws_cognito_user_pool_client.main.id
-    cognito_identity_pool_id = aws_cognito_identity_pool.main.id
+    cognito_user_pool_id     = local.cognito_user_pool_id
+    cognito_client_id        = local.cognito_client_id
+
   }))
   
   tag_specifications {
@@ -444,76 +242,23 @@ resource "aws_launch_template" "app" {
   }
 }
 
-# Application Load Balancer
-resource "aws_lb" "main" {
-  name               = "${var.app_name}-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = aws_subnet.public[*].id
-  
-  tags = {
-    Name = "${var.app_name}-alb"
-  }
+# Use existing ALB and Target Group
+data "aws_lb" "main" {
+  name = "${var.app_name}-alb"
 }
 
-resource "aws_lb_target_group" "app" {
-  name     = "${var.app_name}-tg"
-  port     = 3000
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.main.id
-  
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/health"
-    matcher             = "200"
-  }
-  
-  tags = {
-    Name = "${var.app_name}-tg"
-  }
+data "aws_lb_target_group" "app" {
+  name = "${var.app_name}-tg"
 }
 
-# HTTP Listener (redirect to HTTPS)
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = "80"
-  protocol          = "HTTP"
-  
-  default_action {
-    type = "redirect"
-    
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
-    }
-  }
-}
 
-# HTTPS Listener
-resource "aws_lb_listener" "https" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn   = aws_acm_certificate_validation.main.certificate_arn
-  
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.app.arn
-  }
-}
 
-# Auto Scaling Group
+# Auto Scaling Group (conditional creation)
 resource "aws_autoscaling_group" "app" {
+  count               = var.create_asg ? 1 : 0
   name                = "${var.app_name}-asg"
-  vpc_zone_identifier = aws_subnet.public[*].id
-  target_group_arns   = [aws_lb_target_group.app.arn]
+  vpc_zone_identifier = data.aws_subnets.existing.ids
+  target_group_arns   = [local.target_group_arn]
   health_check_type   = "ELB"
   health_check_grace_period = 300
   
@@ -522,7 +267,7 @@ resource "aws_autoscaling_group" "app" {
   desired_capacity = var.desired_capacity
   
   launch_template {
-    id      = aws_launch_template.app.id
+    id      = aws_launch_template.app[0].id
     version = "$Latest"
   }
   
@@ -531,78 +276,141 @@ resource "aws_autoscaling_group" "app" {
     value               = "${var.app_name}-asg"
     propagate_at_launch = false
   }
+  
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
-# Auto Scaling Policies
+# Auto Scaling Policies (conditional creation)
 resource "aws_autoscaling_policy" "scale_up" {
+  count                  = var.create_asg ? 1 : 0
   name                   = "${var.app_name}-scale-up"
   scaling_adjustment     = 1
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300
-  autoscaling_group_name = aws_autoscaling_group.app.name
+  autoscaling_group_name = aws_autoscaling_group.app[0].name
 }
 
 resource "aws_autoscaling_policy" "scale_down" {
+  count                  = var.create_asg ? 1 : 0
   name                   = "${var.app_name}-scale-down"
   scaling_adjustment     = -1
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300
-  autoscaling_group_name = aws_autoscaling_group.app.name
+  autoscaling_group_name = aws_autoscaling_group.app[0].name
 }
 
-# ACM Certificate
-resource "aws_acm_certificate" "main" {
-  domain_name       = var.domain_name
-  validation_method = "DNS"
+# Use existing ACM Certificate
+data "aws_acm_certificate" "existing" {
+  domain   = var.domain_name
+  statuses = ["ISSUED"]
+}
+
+
+
+# DynamoDB Tables
+resource "aws_dynamodb_table" "videos" {
+  name           = "${var.app_name}-videos-${var.environment}"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "courseName"
+  range_key      = "videoId"
+
+  attribute {
+    name = "courseName"
+    type = "S"
+  }
+
+  attribute {
+    name = "videoId"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "${var.app_name}-videos"
+    Environment = var.environment
+  }
   
   lifecycle {
-    create_before_destroy = true
+    prevent_destroy = true
   }
-  
+}
+
+resource "aws_dynamodb_table" "gamification" {
+  name         = "${var.app_name}-gamification-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "userId"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
   tags = {
-    Name = "${var.app_name}-cert"
-  }
-}
-
-# Route 53 Record for Certificate Validation
-resource "aws_route53_record" "cert_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.main.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
+    Name        = "${var.app_name}-gamification"
+    Environment = var.environment
   }
   
-  allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
-  ttl             = 60
-  type            = each.value.type
-  zone_id         = var.hosted_zone_id
-}
-
-# Certificate Validation
-resource "aws_acm_certificate_validation" "main" {
-  certificate_arn         = aws_acm_certificate.main.arn
-  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
-}
-
-# Route 53 A Record for ALB
-resource "aws_route53_record" "main" {
-  zone_id = var.hosted_zone_id
-  name    = var.domain_name
-  type    = "A"
-  
-  alias {
-    name                   = aws_lb.main.dns_name
-    zone_id                = aws_lb.main.zone_id
-    evaluate_target_health = true
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
-# CloudWatch Alarms
+resource "aws_dynamodb_table" "users" {
+  name         = "${var.app_name}-users-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "email"
+
+  attribute {
+    name = "email"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "${var.app_name}-users"
+    Environment = var.environment
+  }
+  
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# DynamoDB IAM Policy for EC2
+resource "aws_iam_policy" "dynamodb_policy" {
+  name = "${var.app_name}-dynamodb-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = [
+          aws_dynamodb_table.videos.arn,
+          aws_dynamodb_table.gamification.arn,
+          aws_dynamodb_table.users.arn
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_dynamodb" {
+  role       = local.ec2_role_name
+  policy_arn = aws_iam_policy.dynamodb_policy.arn
+}
+
+# CloudWatch Alarms (conditional creation)
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
+  count               = var.create_asg ? 1 : 0
   alarm_name          = "${var.app_name}-cpu-high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "2"
@@ -612,14 +420,15 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   statistic           = "Average"
   threshold           = "70"
   alarm_description   = "This metric monitors ec2 cpu utilization"
-  alarm_actions       = [aws_autoscaling_policy.scale_up.arn]
+  alarm_actions       = [aws_autoscaling_policy.scale_up[0].arn]
   
   dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.app.name
+    AutoScalingGroupName = aws_autoscaling_group.app[0].name
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_low" {
+  count               = var.create_asg ? 1 : 0
   alarm_name          = "${var.app_name}-cpu-low"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
@@ -629,9 +438,9 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
   statistic           = "Average"
   threshold           = "30"
   alarm_description   = "This metric monitors ec2 cpu utilization"
-  alarm_actions       = [aws_autoscaling_policy.scale_down.arn]
+  alarm_actions       = [aws_autoscaling_policy.scale_down[0].arn]
   
   dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.app.name
+    AutoScalingGroupName = aws_autoscaling_group.app[0].name
   }
 }

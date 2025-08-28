@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Video Course Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">Teacher Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-700">Welcome, <%= user?.name || user?.email || 'Teacher' %></span>
+                    <div class="flex space-x-2">
+                        <a href="/student/dashboard" class="text-blue-600 hover:text-blue-800 text-sm px-3 py-1 bg-blue-50 rounded-lg">Student View</a>
+                        <a href="/dashboard" class="text-gray-600 hover:text-gray-800 text-sm px-3 py-1 bg-gray-50 rounded-lg">Auto View</a>
+                    </div>
+                    <a href="/logout" class="text-red-600 hover:text-red-800">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-book text-blue-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Courses</dt>
+                                <dd class="text-lg font-medium text-gray-900"><%= totalCourses %></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-play-circle text-green-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Videos</dt>
+                                <dd class="text-lg font-medium text-gray-900"><%= totalVideos %></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-users text-purple-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Active Students</dt>
+                                <dd class="text-lg font-medium text-gray-900"><%= totalStudents %></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-chart-line text-yellow-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Avg Completion</dt>
+                                <dd class="text-lg font-medium text-gray-900">
+                                    <% 
+                                    const avgCompletion = courseStats.length > 0 
+                                        ? Math.round(courseStats.reduce((sum, course) => sum + course.completionRate, 0) / courseStats.length)
+                                        : 0;
+                                    %>
+                                    <%= avgCompletion %>%
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Course Statistics -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Course Performance</h3>
+                    <div class="space-y-4">
+                        <% courseStats.forEach(course => { %>
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h4 class="font-medium text-gray-900 truncate" title="<%= course.name %>">
+                                        <%= course.name.length > 50 ? course.name.substring(0, 50) + '...' : course.name %>
+                                    </h4>
+                                    <p class="text-sm text-gray-500">
+                                        <%= course.watchedVideos %>/<%= course.totalVideos %> videos watched
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-lg font-semibold text-gray-900"><%= course.completionRate %>%</span>
+                                    <div class="w-20 bg-gray-200 rounded-full h-2 mt-1">
+                                        <div class="bg-blue-600 h-2 rounded-full" style="width: <%= course.completionRate %>%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Recent Activity</h3>
+                    <div class="space-y-3">
+                        <% if (recentActivity.length > 0) { %>
+                            <% recentActivity.forEach(activity => { %>
+                            <div class="flex items-center space-x-3">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-play-circle text-green-500"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">
+                                        <%= activity.videoTitle %>
+                                    </p>
+                                    <p class="text-sm text-gray-500 truncate">
+                                        <%= activity.courseName %>
+                                    </p>
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    <%= new Date(activity.watchedAt).toLocaleDateString() %>
+                                </div>
+                            </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p class="text-gray-500 text-center py-4">No recent activity</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="mt-8">
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <a href="/admin/course-manager" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                            <i class="fas fa-plus mr-2"></i>
+                            Manage Courses
+                        </a>
+                        <a href="/admin/dashboard" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            <i class="fas fa-chart-bar mr-2"></i>
+                            Analytics
+                        </a>
+                        <a href="/admin/teacher-requests" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            <i class="fas fa-users mr-2"></i>
+                            Student Management
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="text-center text-gray-500 dark:text-gray-400 text-sm">
+                © 2024 Video Course Platform. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Dark theme toggle
+        function initTheme() {
+            const theme = localStorage.getItem("theme") || "light";
+            document.documentElement.classList.toggle("dark", theme === "dark");
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = theme === "dark" ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
+            document.documentElement.classList.toggle("dark", newTheme === "dark");
+            localStorage.setItem("theme", newTheme);
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = newTheme === "dark" ? '☀️' : '🌙';
+        }
+        
+        initTheme();
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+    </script>
+</body>
+</html>

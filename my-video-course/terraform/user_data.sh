@@ -31,7 +31,7 @@ GEMINI_API_KEY=${gemini_api_key}
 NOVA_API_KEY=${nova_api_key}
 COGNITO_USER_POOL_ID=${cognito_user_pool_id}
 COGNITO_CLIENT_ID=${cognito_client_id}
-COGNITO_IDENTITY_POOL_ID=${cognito_identity_pool_id}
+
 EOF
 
 # Login to ECR

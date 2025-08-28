@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'apple-blue': '#007AFF',
+              'apple-gray': '#F2F2F7'
+            },
+            fontFamily: {
+              'sans': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif']
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-apple-gray dark:bg-gray-900 font-sans antialiased transition-colors duration-200">
+    <div class="min-h-screen flex items-center justify-center px-6">
+        <!-- Dark Mode Toggle -->
+        <button id="themeToggle" class="fixed top-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-10">
+            <span id="themeIcon" class="text-xl">🌙</span>
+        </button>
+        
+        <div class="w-full max-w-sm">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-10 transition-colors duration-200">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                        <span class="text-white text-3xl font-medium">👑</span>
+                    </div>
+                    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Super Admin</h1>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">Secure access portal</p>
+                </div>
+                
+                <form id="adminLoginForm" class="space-y-5">
+                    <div>
+                        <input type="email" id="email" placeholder="Admin Email" required
+                               class="w-full px-4 py-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                    </div>
+                    
+                    <div>
+                        <input type="password" id="password" placeholder="Password" required
+                               class="w-full px-4 py-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                    </div>
+                    
+                    <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-purple-500 to-blue-600 text-white font-medium py-4 rounded-2xl hover:from-purple-600 hover:to-blue-700 transition-all shadow-lg">
+                        Access Admin Panel
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <a href="/login" class="text-sm text-gray-500 dark:text-gray-400 hover:text-purple-500 transition-colors">
+                        ← Back to Student Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Dark theme toggle
+        function initTheme() {
+            const theme = localStorage.getItem("theme") || "light";
+            document.documentElement.classList.toggle("dark", theme === "dark");
+            document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
+            document.documentElement.classList.toggle("dark", newTheme === "dark");
+            localStorage.setItem("theme", newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === "dark" ? '☀️' : '🌙';
+        }
+        
+        initTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (email !== 'engineerfelex@gmail.com') {
+                alert('Access denied. Super Admin only.');
+                return;
+            }
+            
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Authenticating...';
+            
+            try {
+                const response = await fetch('/api/auth/signin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && email === 'engineerfelex@gmail.com') {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = '/admin/dashboard';
+                } else {
+                    alert('Invalid credentials or insufficient privileges');
+                }
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Access Admin Panel';
+            }
+        });
+    </script>
+</body>
+</html>

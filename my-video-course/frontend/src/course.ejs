@@ -1,0 +1,252 @@
+<%- include('partials/header', { title: `${courseName} Course` }) %>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+  <div class="mb-8">
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">📚 <%= courseName %></h1>
+        <p class="text-gray-600 dark:text-gray-400">Master new skills with comprehensive lessons</p>
+      </div>
+      <div class="flex space-x-3">
+        <button id="enrollBtn" class="px-6 py-3 bg-apple-blue text-white rounded-xl hover:bg-blue-600 transition-all font-medium">
+          Enroll in Course
+        </button>
+      </div>
+    </div>
+    
+    <% if (typeof watchedVideos !== 'undefined' && typeof totalVideos !== 'undefined') { %>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-colors shadow-sm">
+      <div class="flex justify-between items-center mb-3">
+        <span class="font-semibold text-gray-900 dark:text-white">Course Progress</span>
+        <span class="font-bold text-gray-900 dark:text-white"><%= watchedVideos %>/<%= totalVideos %> videos (<%= Math.round((watchedVideos / totalVideos) * 100) %>%)</span>
+      </div>
+      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div class="h-full bg-apple-blue rounded-full transition-all" style="width: <%= typeof watchedPercent !== 'undefined' ? watchedPercent : Math.round((watchedVideos / totalVideos) * 100) %>%"></div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <% if (typeof error !== 'undefined') { %>
+  <div class="text-center p-6 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-2xl">
+    <%= error %>
+  </div>
+  <% } else { %>
+  
+  <% if (videos.length === 0) { %>
+  <div class="text-center p-6 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-2xl mb-8">
+    No videos found for this course.
+  </div>
+  <% } else { %>
+  
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">🎥 Course Videos</h2>
+  </div>
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+    <% 
+    // Remove duplicates and sort videos
+    const uniqueVideos = [];
+    const seenIds = new Set();
+    
+    videos.forEach(video => {
+      if (video && video._id && !seenIds.has(video._id.toString())) {
+        seenIds.add(video._id.toString());
+        uniqueVideos.push(video);
+      }
+    });
+
+    // Group by chapter and sort
+    const videosByChapter = {};
+    uniqueVideos.forEach(video => {
+      const chapter = video.chapter || 'Uncategorized';
+      if (!videosByChapter[chapter]) {
+        videosByChapter[chapter] = [];
+      }
+      videosByChapter[chapter].push(video);
+    });
+
+    Object.keys(videosByChapter).forEach(chapter => {
+      videosByChapter[chapter].sort((a, b) => {
+        const aMatch = a.title.match(/\d+/);
+        const bMatch = b.title.match(/\d+/);
+        const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+        const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+        
+        if (aNum === bNum) {
+          return a.title.localeCompare(b.title);
+        }
+        return aNum - bNum;
+      });
+    });
+
+    const sortedVideos = Object.keys(videosByChapter)
+      .sort((a, b) => {
+        const aMatch = a.match(/\d+/);
+        const bMatch = b.match(/\d+/);
+        const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
+        const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+        
+        if (aNum === bNum) {
+          return a.localeCompare(b);
+        }
+        return aNum - bNum;
+      })
+      .flatMap(chapter => videosByChapter[chapter]);
+
+    let currentChapter = '';
+    sortedVideos.forEach((video, index) => { 
+      const chapter = video.chapter || 'Uncategorized';
+      if (chapter !== currentChapter) {
+        currentChapter = chapter;
+    %>
+        <div class="col-span-full">
+          <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 border-b border-gray-200 dark:border-gray-600 pb-2">
+            <%= video.chapter || 'Uncategorized' %>
+          </h3>
+        </div>
+    <% } %>
+    
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden hover:shadow-lg transition-all shadow-sm">
+      <div class="relative">
+        <% if (video.thumbnailUrl) { %>
+        <img src="<%= video.thumbnailUrl %>" alt="<%= video.title %>" class="w-full h-48 object-cover"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <% } %>
+        <div class="w-full h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white <%= video.thumbnailUrl ? 'hidden' : 'flex' %>">
+          <div class="text-center">
+            <span class="text-4xl mb-2">▶️</span>
+            <p class="text-sm font-medium">Video Lesson</p>
+          </div>
+        </div>
+        <div class="absolute top-2 left-2 bg-apple-blue text-white px-2 py-1 rounded-lg text-sm font-medium">
+          Lesson <%= index + 1 %>
+        </div>
+        <% if (video.watched) { %>
+        <div class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-lg text-sm font-medium">
+          ✅
+        </div>
+        <% } %>
+      </div>
+      <div class="p-6">
+        <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+          <%= video.title %>
+          <% if (video.watched) { %>
+          <span class="ml-2 text-green-500 text-sm">✅</span>
+          <% } %>
+        </h4>
+        <% if (video.videoUrl && video.videoUrl.endsWith('.pdf')) { %>
+        <a href="/pdf/<%= courseName %>/<%= encodeURIComponent(video.basename) %>" target="_blank"
+           class="inline-flex items-center px-4 py-2 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors">
+          📄 View PDF
+        </a>
+        <% } else { %>
+        <div id="watchBtn-<%= video._id %>" class="watch-button" data-video-id="<%= video._id %>" data-course="<%= courseName %>">
+          <button class="inline-flex items-center px-4 py-2 bg-gray-400 text-white font-medium rounded-xl cursor-not-allowed">
+            🔒 Enroll to Watch
+          </button>
+        </div>
+        <% } %>
+      </div>
+    </div>
+    <% }); %>
+  </div>
+  <% } %>
+  <% } %>
+</main>
+
+<script>
+let isEnrolled = false;
+let isAdmin = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+  checkEnrollmentStatus();
+  checkUserRole();
+});
+
+async function checkUserRole() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  isAdmin = user.email === 'engineerfelex@gmail.com';
+  updateWatchButtons();
+}
+
+async function checkEnrollmentStatus() {
+  try {
+    const token = localStorage.getItem('accessToken');
+    const courseName = '<%= courseName %>';
+    
+    const response = await fetch(`/api/enrollments/check/${encodeURIComponent(courseName)}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    const data = await response.json();
+    if (data.success && data.data.enrolled) {
+      isEnrolled = true;
+      const enrollBtn = document.getElementById('enrollBtn');
+      enrollBtn.textContent = 'Enrolled ✓';
+      enrollBtn.classList.remove('bg-apple-blue', 'hover:bg-blue-600');
+      enrollBtn.classList.add('bg-green-500');
+      enrollBtn.disabled = true;
+      enrollBtn.style.display = 'none'; // Hide the button when enrolled
+    }
+    
+    updateWatchButtons();
+  } catch (error) {
+    console.error('Error checking enrollment:', error);
+  }
+}
+
+function updateWatchButtons() {
+  const watchButtons = document.querySelectorAll('.watch-button');
+  
+  watchButtons.forEach(btn => {
+    const videoId = btn.dataset.videoId;
+    const courseName = btn.dataset.course;
+    
+    if (isAdmin || isEnrolled) {
+      btn.innerHTML = `
+        <a href="/videos/${encodeURIComponent(courseName)}/${videoId}"
+           class="inline-flex items-center px-4 py-2 bg-apple-blue text-white font-medium rounded-xl hover:bg-blue-600 transition-colors">
+          ▶️ Watch Video
+        </a>
+      `;
+    }
+  });
+}
+
+document.getElementById('enrollBtn').addEventListener('click', async () => {
+  if (isEnrolled) return;
+  
+  try {
+    const token = localStorage.getItem('accessToken');
+    const courseName = '<%= courseName %>';
+    
+    const response = await fetch('/api/enrollments', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ courseId: courseName })
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      isEnrolled = true;
+      const enrollBtn = document.getElementById('enrollBtn');
+      enrollBtn.textContent = 'Enrolled ✓';
+      enrollBtn.classList.remove('bg-apple-blue', 'hover:bg-blue-600');
+      enrollBtn.classList.add('bg-green-500');
+      enrollBtn.disabled = true;
+      enrollBtn.style.display = 'none'; // Hide button after enrollment
+      updateWatchButtons();
+    } else {
+      alert('Failed to enroll: ' + data.error);
+    }
+  } catch (error) {
+    alert('Error enrolling: ' + error.message);
+  }
+});
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,55 @@
+<%- include('partials/header', { title: 'All Videos' }) %>
+
+<main class="max-w-7xl mx-auto px-3 py-4 sm:px-4 sm:py-6">
+  <div class="mb-6">
+    <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-2">All Videos</h1>
+    <p class="text-sm text-gray-600 dark:text-gray-400">Browse all available videos</p>
+  </div>
+
+  <div class="space-y-3">
+    <% if (videos && videos.length > 0) { %>
+      <% videos.forEach((video, index) => { %>
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200">
+          <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+              <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M8 5v10l7-5-7-5z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <%= video.title %>
+              </h3>
+              <div class="flex items-center mt-1 space-x-3">
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                  <%= video.courseName %>
+                </span>
+                <% if (video.duration) { %>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                    <%= video.duration %>
+                  </span>
+                <% } %>
+              </div>
+            </div>
+            <div class="flex-shrink-0">
+              <a href="/videos/<%= video.courseName %>/<%= video._id %>" 
+                 class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                Watch
+              </a>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <div class="text-center py-12">
+        <div class="text-4xl mb-4">🎥</div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No videos available</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Check back later for new videos</p>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

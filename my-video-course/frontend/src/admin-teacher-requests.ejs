@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Requests - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-semibold text-gray-900">Teacher Access Requests</h1>
+                    <div class="flex items-center space-x-4">
+                        <a href="/dashboard" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+                            Back to Dashboard
+                        </a>
+                        <button id="logoutBtn" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <!-- Pending Requests -->
+            <div class="bg-white rounded-lg shadow-sm border">
+                <div class="px-6 py-4 border-b">
+                    <h2 class="text-lg font-semibold text-gray-900">Pending Requests</h2>
+                </div>
+                <div id="pendingRequests" class="divide-y">
+                    <!-- Requests will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Processed Requests -->
+            <div class="bg-white rounded-lg shadow-sm border mt-8">
+                <div class="px-6 py-4 border-b">
+                    <h2 class="text-lg font-semibold text-gray-900">Processed Requests</h2>
+                </div>
+                <div id="processedRequests" class="divide-y">
+                    <!-- Processed requests will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTeacherRequests();
+        });
+
+        async function loadTeacherRequests() {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/admin/teacher-requests', {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'x-admin-key': 'admin123'
+                    }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    renderRequests(data.data);
+                    updateBadge(data.data.filter(r => r.status === 'pending').length);
+                } else {
+                    alert('Failed to load requests: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error loading requests: ' + error.message);
+            }
+        }
+        
+        function updateBadge(count) {
+            const badge = document.createElement('span');
+            badge.className = 'ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full';
+            badge.textContent = count;
+            const title = document.querySelector('h1');
+            const existingBadge = title.querySelector('span');
+            if (existingBadge) existingBadge.remove();
+            if (count > 0) title.appendChild(badge);
+        }
+
+        function renderRequests(requests) {
+            const pending = requests.filter(r => r.status === 'pending');
+            const processed = requests.filter(r => r.status !== 'pending');
+
+            // Render pending requests
+            const pendingContainer = document.getElementById('pendingRequests');
+            if (pending.length === 0) {
+                pendingContainer.innerHTML = '<div class="p-6 text-gray-500 text-center">No pending requests</div>';
+            } else {
+                pendingContainer.innerHTML = pending.map(request => `
+                    <div class="p-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium text-gray-900">${request.name}</h3>
+                            <p class="text-sm text-gray-500">${request.email}</p>
+                            <p class="text-xs text-gray-400">Requested: ${new Date(request.requestedAt).toLocaleDateString()}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="approveRequest('${request._id}')" 
+                                    class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+                                Approve
+                            </button>
+                            <button onclick="rejectRequest('${request._id}')" 
+                                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+                                Reject
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Render processed requests
+            const processedContainer = document.getElementById('processedRequests');
+            if (processed.length === 0) {
+                processedContainer.innerHTML = '<div class="p-6 text-gray-500 text-center">No processed requests</div>';
+            } else {
+                processedContainer.innerHTML = processed.map(request => `
+                    <div class="p-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium text-gray-900">${request.name}</h3>
+                            <p class="text-sm text-gray-500">${request.email}</p>
+                            <p class="text-xs text-gray-400">
+                                ${request.status === 'approved' ? 'Approved' : 'Rejected'}: 
+                                ${new Date(request.reviewedAt).toLocaleDateString()}
+                            </p>
+                        </div>
+                        <span class="px-3 py-1 text-xs rounded-full ${
+                            request.status === 'approved' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                        }">
+                            ${request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        </span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function approveRequest(requestId) {
+            await processRequest(requestId, 'approved');
+        }
+
+        async function rejectRequest(requestId) {
+            await processRequest(requestId, 'rejected');
+        }
+
+        async function processRequest(requestId, action) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch(`/api/admin/teacher-requests/${requestId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'x-admin-key': 'admin123'
+                    },
+                    body: JSON.stringify({ action })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert(`Request ${action} successfully`);
+                    loadTeacherRequests();
+                } else {
+                    alert('Failed to process request: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error processing request: ' + error.message);
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+            } catch (error) {
+                console.error('Logout failed:', error);
+            } finally {
+                localStorage.removeItem('cognitoToken');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('user');
+                localStorage.removeItem('userId');
+                window.location.href = '/login';
+            }
+        });
+    </script>
+</body>
+</html>

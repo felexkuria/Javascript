@@ -1,0 +1,37 @@
+<div class="flex space-x-2">
+  <% if (!isFirstVideo && prevVideoId) { %>
+  <button id="prevButton" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">
+    <i class="fas fa-step-backward mr-1"></i> Previous
+  </button>
+  <% } %>
+  
+  <% if (!isLastVideo && nextVideoId) { %>
+  <button id="nextButton" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">
+    Next <i class="fas fa-step-forward ml-1"></i>
+  </button>
+  <% } %>
+</div>
+
+<script>
+const prevButton = document.getElementById('prevButton');
+const nextButton = document.getElementById('nextButton');
+const courseName = '<%= courseName %>';
+
+if (prevButton) {
+  prevButton.addEventListener('click', function() {
+    const prevId = '<%= typeof prevVideoId !== "undefined" ? prevVideoId : "" %>';
+    if (prevId) {
+      window.location.href = `/videos/${encodeURIComponent(courseName)}/${prevId}`;
+    }
+  });
+}
+
+if (nextButton) {
+  nextButton.addEventListener('click', function() {
+    const nextId = '<%= typeof nextVideoId !== "undefined" ? nextVideoId : "" %>';
+    if (nextId) {
+      window.location.href = `/videos/${encodeURIComponent(courseName)}/${nextId}?autoplay=true`;
+    }
+  });
+}
+</script>

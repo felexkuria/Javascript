@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'apple-blue': '#007AFF',
+              'apple-gray': '#F2F2F7'
+            },
+            fontFamily: {
+              'sans': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif']
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-apple-gray dark:bg-gray-900 font-sans antialiased transition-colors duration-200">
+    <div class="min-h-screen flex items-center justify-center px-6">
+        <!-- Dark Mode Toggle -->
+        <button id="themeToggle" class="fixed top-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-10">
+            <span id="themeIcon" class="text-xl">🌙</span>
+        </button>
+        
+        <div class="w-full max-w-sm">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 transition-colors duration-200">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-apple-blue rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white text-2xl font-medium">📚</span>
+                    </div>
+                    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Welcome Back</h1>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">Sign in to your account</p>
+                </div>
+                
+                <% if (typeof error !== 'undefined' && error) { %>
+                <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 rounded-xl text-sm">
+                    <%= error %>
+                </div>
+                <% } %>
+                
+                <!-- Role Selection -->
+                <div class="mb-6">
+                    <div class="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
+                        <button id="studentTab" class="flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all bg-white dark:bg-gray-600 text-apple-blue shadow-sm">
+                            🎓 Student
+                        </button>
+                        <button id="teacherTab" class="flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all text-gray-500 dark:text-gray-400">
+                            👨🏫 Teacher
+                        </button>
+                    </div>
+                </div>
+                
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <input type="email" id="email" name="email" placeholder="Email" required
+                               class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent transition-all">
+                    </div>
+                    
+                    <div>
+                        <input type="password" id="password" name="password" placeholder="Password" required
+                               class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent transition-all">
+                    </div>
+                    
+                    <div id="teacherNote" class="hidden p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
+                        <p class="text-sm text-amber-700 dark:text-amber-300">
+                            📋 Teacher access requires approval from admin
+                        </p>
+                    </div>
+                    
+                    <button type="submit" id="loginBtn" class="w-full bg-apple-blue text-white font-medium py-3 rounded-xl hover:bg-blue-600 transition-all">
+                        <span id="loginText">Sign In as Student</span>
+                    </button>
+                    
+                    <div class="flex justify-between items-center text-sm">
+                        <a href="/forgot-password" class="text-apple-blue dark:text-blue-400 hover:underline">Forgot Password?</a>
+                        <a href="/signup" class="text-apple-blue dark:text-blue-400 hover:underline">Sign Up</a>
+                    </div>
+                </form>
+                
+                <div class="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors" onclick="loginAsSuperAdmin()">
+                    <p class="text-xs text-blue-700 dark:text-blue-300 text-center">
+                        🔑 <strong>Super Admin:</strong> engineerfelex@gmail.com <span class="text-blue-500">(Click to login)</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Dark theme toggle
+        function initTheme() {
+            const theme = localStorage.getItem("theme") || "light";
+            document.documentElement.classList.toggle("dark", theme === "dark");
+            document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
+            document.documentElement.classList.toggle("dark", newTheme === "dark");
+            localStorage.setItem("theme", newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === "dark" ? '☀️' : '🌙';
+        }
+        
+        initTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        
+        let selectedRole = 'student';
+        
+        // Role tab switching
+        document.getElementById('studentTab').addEventListener('click', () => {
+            selectedRole = 'student';
+            document.getElementById('studentTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all bg-white dark:bg-gray-600 text-apple-blue shadow-sm';
+            document.getElementById('teacherTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all text-gray-500 dark:text-gray-400';
+            document.getElementById('teacherNote').classList.add('hidden');
+            document.getElementById('loginText').textContent = 'Sign In as Student';
+        });
+        
+        document.getElementById('teacherTab').addEventListener('click', () => {
+            selectedRole = 'teacher';
+            document.getElementById('teacherTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all bg-white dark:bg-gray-600 text-apple-blue shadow-sm';
+            document.getElementById('studentTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all text-gray-500 dark:text-gray-400';
+            document.getElementById('teacherNote').classList.remove('hidden');
+            document.getElementById('loginText').textContent = 'Sign In as Teacher';
+        });
+        
+        // Super admin login function
+        function loginAsSuperAdmin() {
+            document.getElementById('email').value = 'engineerfelex@gmail.com';
+            document.getElementById('password').focus();
+            // Switch to teacher tab
+            document.getElementById('teacherTab').click();
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in...';
+            
+            try {
+                const response = await fetch('/api/auth/signin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, requestedRole: selectedRole })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    if (selectedRole === 'teacher' && !data.user.roles.includes('teacher')) {
+                        alert('Teacher access requested. Admin approval required.');
+                        window.location.href = '/dashboard';
+                    } else {
+                        // Force reload to ensure session is updated with new role
+                        window.location.href = '/dashboard';
+                    }
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            } finally {
+                loginBtn.disabled = false;
+                document.getElementById('loginText').textContent = selectedRole === 'teacher' ? 'Sign In as Teacher' : 'Sign In as Student';
+            }
+        });
+    </script>
+</body>
+</html>

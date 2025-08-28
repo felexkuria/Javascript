@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Video Course Platform' %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'apple-blue': '#007AFF',
+              'apple-gray': '#F2F2F7'
+            },
+            fontFamily: {
+              'sans': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif']
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-apple-gray dark:bg-gray-900 font-sans antialiased transition-colors duration-200">
+    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" class="w-10 h-10 bg-apple-blue rounded-xl flex items-center justify-center">
+                        <span class="text-white font-medium">📚</span>
+                    </a>
+                    <h1 class="text-xl font-semibold text-gray-900 dark:text-white"><%= title || 'Course' %></h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="themeToggle" class="p-2 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">
+                        <span id="themeIcon" class="text-lg">🌙</span>
+                    </button>
+                    <a href="/dashboard" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
