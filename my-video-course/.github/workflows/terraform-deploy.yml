@@ -1,0 +1,84 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths: ['terraform/**']
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  TF_VAR_environment: prod
+
+jobs:
+  terraform:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+
+    - name: Create terraform.tfvars
+      run: |
+        cd terraform
+        cat > terraform.tfvars << EOF
+        environment = "prod"
+        aws_region = "${{ env.AWS_REGION }}"
+        app_name = "video-course-app"
+        vpc_cidr = "10.0.0.0/16"
+        instance_type = "t3.medium"
+        key_pair_name = "${{ secrets.KEY_PAIR_NAME }}"
+        min_size = 1
+        max_size = 5
+        desired_capacity = 2
+        domain_name = "${{ secrets.DOMAIN_NAME }}"
+        hosted_zone_id = "${{ secrets.HOSTED_ZONE_ID }}"
+        s3_bucket_name = "${{ secrets.S3_BUCKET_NAME }}"
+        mongodb_uri = "${{ secrets.MONGODB_URI }}"
+        aws_access_key_id = "${{ secrets.AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+        gemini_api_key = "${{ secrets.GEMINI_API_KEY }}"
+        nova_api_key = "${{ secrets.NOVA_API_KEY }}"
+        create_cognito_role = false
+        create_ec2_role = false
+        create_ecr_repo = false
+        EOF
+
+    - name: Terraform Init
+      run: |
+        cd terraform
+        terraform init
+
+    - name: Terraform Plan
+      run: |
+        cd terraform
+        terraform plan -out=tfplan
+
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main'
+      run: |
+        cd terraform
+        terraform apply -auto-approve tfplan
+
+    - name: Output Infrastructure Info
+      run: |
+        cd terraform
+        echo "## 🚀 Infrastructure Deployed" >> $GITHUB_STEP_SUMMARY
+        echo "| Resource | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Load Balancer URL | $(terraform output -raw load_balancer_url) |" >> $GITHUB_STEP_SUMMARY
+        echo "| VPC ID | $(terraform output -raw vpc_id) |" >> $GITHUB_STEP_SUMMARY
+        echo "| DynamoDB Tables | $(terraform output -json dynamodb_tables) |" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'apple-blue': '#007AFF',
+              'apple-gray': '#F2F2F7'
+            },
+            fontFamily: {
+              'sans': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif']
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-apple-gray dark:bg-gray-900 font-sans antialiased transition-colors duration-200">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center">
+                        <span class="text-white font-medium">👑</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-900 dark:text-white">Admin Panel</h1>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Super Admin</p>
+                    </div>
+                </div>
+                
+                <nav class="space-y-2">
+                    <a href="/admin/dashboard" class="flex items-center space-x-3 px-4 py-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-2xl font-medium">
+                        <span>📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/admin/course-manager" class="flex items-center space-x-3 px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-2xl transition-colors">
+                        <span>📚</span>
+                        <span>Course Manager</span>
+                    </a>
+                    <a href="/admin/teacher-requests" class="flex items-center space-x-3 px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-2xl transition-colors">
+                        <span>👨‍🏫</span>
+                        <span>Teacher Requests</span>
+                        <span id="requestBadge" class="hidden ml-auto px-2 py-1 bg-red-500 text-white text-xs rounded-full"></span>
+                    </a>
+                    <a href="/admin/analytics" class="flex items-center space-x-3 px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-2xl transition-colors">
+                        <span>📈</span>
+                        <span>Analytics</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-6 left-6 right-6">
+                <button id="themeToggle" class="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    <span id="themeIcon">🌙</span>
+                    <span>Toggle Theme</span>
+                </button>
+                <button id="logoutBtn" class="w-full mt-2 flex items-center justify-center space-x-2 px-4 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                    <span>🚪</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <div class="p-8">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Dashboard Overview</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Manage your learning platform</p>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Courses</p>
+                                <p id="totalCourses" class="text-3xl font-bold text-gray-900 dark:text-white">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center">
+                                <span class="text-blue-500 text-xl">📚</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Students</p>
+                                <p id="totalStudents" class="text-3xl font-bold text-gray-900 dark:text-white">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-2xl flex items-center justify-center">
+                                <span class="text-green-500 text-xl">👨‍🎓</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Teachers</p>
+                                <p id="totalTeachers" class="text-3xl font-bold text-gray-900 dark:text-white">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-2xl flex items-center justify-center">
+                                <span class="text-purple-500 text-xl">👨‍🏫</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Enrollments</p>
+                                <p id="totalEnrollments" class="text-3xl font-bold text-gray-900 dark:text-white">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-2xl flex items-center justify-center">
+                                <span class="text-orange-500 text-xl">📈</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-200">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Recent Activity</h2>
+                    <div id="recentActivity" class="space-y-4">
+                        <!-- Activity items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Dark theme toggle
+        function initTheme() {
+            const theme = localStorage.getItem("theme") || "light";
+            document.documentElement.classList.toggle("dark", theme === "dark");
+            document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
+            document.documentElement.classList.toggle("dark", newTheme === "dark");
+            localStorage.setItem("theme", newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === "dark" ? '☀️' : '🌙';
+        }
+        
+        initTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        
+        // Load dashboard data
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardStats();
+            loadPendingRequests();
+        });
+        
+        async function loadDashboardStats() {
+            try {
+                const token = localStorage.getItem('accessToken');
+                
+                // Load courses
+                const coursesRes = await fetch('/api/courses', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (coursesRes.ok) {
+                    const coursesData = await coursesRes.json();
+                    document.getElementById('totalCourses').textContent = coursesData.data.length;
+                }
+                
+                // Load users (placeholder)
+                document.getElementById('totalStudents').textContent = '156';
+                document.getElementById('totalTeachers').textContent = '12';
+                document.getElementById('totalEnrollments').textContent = '1,234';
+                
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+        
+        async function loadPendingRequests() {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/admin/teacher-requests', {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'x-admin-key': 'admin123'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const pendingCount = data.data.filter(r => r.status === 'pending').length;
+                    const badge = document.getElementById('requestBadge');
+                    if (pendingCount > 0) {
+                        badge.textContent = pendingCount;
+                        badge.classList.remove('hidden');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading pending requests:', error);
+            }
+        }
+        
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = '/admin/login';
+        });
+    </script>
+</body>
+</html>

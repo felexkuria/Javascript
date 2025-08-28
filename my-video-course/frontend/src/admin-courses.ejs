@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Management - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: { 'apple': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'sans-serif'] },
+            colors: { 
+              'apple-blue': '#007AFF', 
+              'apple-gray': '#F2F2F7',
+              'dark-bg': '#1a1a1a',
+              'dark-card': '#2d2d2d',
+              'dark-border': '#404040'
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-apple-gray dark:bg-dark-bg font-apple text-sm transition-colors duration-200">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-64 bg-white dark:bg-dark-card shadow-lg transition-all duration-300">
+            <div class="p-6 border-b dark:border-dark-border flex justify-between items-center">
+                <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Course Admin</h1>
+                <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <span class="dark:hidden">🌙</span>
+                    <span class="hidden dark:inline">☀️</span>
+                </button>
+            </div>
+            <nav class="p-4">
+                <a href="#dashboard" class="nav-item active" data-tab="dashboard">
+                    <span class="icon">📊</span>
+                    <span class="text">Dashboard</span>
+                </a>
+                <a href="#courses" class="nav-item" data-tab="courses">
+                    <span class="icon">📚</span>
+                    <span class="text">Courses</span>
+                </a>
+                <a href="#curriculum" class="nav-item" data-tab="curriculum">
+                    <span class="icon">📝</span>
+                    <span class="text">Curriculum</span>
+                </a>
+                <a href="#analytics" class="nav-item" data-tab="analytics">
+                    <span class="icon">📈</span>
+                    <span class="text">Analytics</span>
+                </a>
+                <a href="#uploads" class="nav-item" data-tab="uploads">
+                    <span class="icon">📁</span>
+                    <span class="text">File Manager</span>
+                </a>
+            </nav>
+            <div class="absolute bottom-4 left-4">
+                <button id="sidebarToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span id="sidebarIcon">◀</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto bg-apple-gray dark:bg-dark-bg transition-colors duration-200">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard</h2>
+                        <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                            <span>Auto-save:</span>
+                            <span id="autoSaveStatus" class="text-green-500">✓ Active</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border dark:border-dark-border">
+                            <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total Courses</h3>
+                            <p class="text-3xl font-bold text-apple-blue" id="totalCourses">0</p>
+                            <span class="text-xs text-green-500">+12% this month</span>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border dark:border-dark-border">
+                            <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-2">Published</h3>
+                            <p class="text-3xl font-bold text-green-600" id="publishedCourses">0</p>
+                            <span class="text-xs text-green-500">+5% this week</span>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border dark:border-dark-border">
+                            <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-2">Drafts</h3>
+                            <p class="text-3xl font-bold text-orange-600" id="draftCourses">0</p>
+                            <span class="text-xs text-orange-500">3 pending</span>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border dark:border-dark-border">
+                            <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-2">Total Revenue</h3>
+                            <p class="text-3xl font-bold text-purple-600" id="totalRevenue">$0</p>
+                            <span class="text-xs text-green-500">+8% this month</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border p-6 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+                        <div class="flex flex-wrap gap-3">
+                            <button class="bg-apple-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors" onclick="showTab('courses'); document.getElementById('createCourseBtn').click()">
+                                + New Course
+                            </button>
+                            <button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors" onclick="showTab('uploads')">
+                                📁 Upload Files
+                            </button>
+                            <button class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors" onclick="showTab('analytics')">
+                                📈 View Analytics
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border p-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Recent Activity</h3>
+                        <div id="recentActivity" class="space-y-3">
+                            <div class="flex items-center space-x-3 text-sm">
+                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <span class="text-gray-600 dark:text-gray-300">Course "AWS Fundamentals" published</span>
+                                <span class="text-gray-400 text-xs ml-auto">2 hours ago</span>
+                            </div>
+                            <div class="flex items-center space-x-3 text-sm">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                <span class="text-gray-600 dark:text-gray-300">New video uploaded to "DevOps Course"</span>
+                                <span class="text-gray-400 text-xs ml-auto">5 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Courses Tab -->
+            <div id="courses" class="tab-content">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Courses</h2>
+                        <div class="flex space-x-3">
+                            <button id="viewToggle" class="px-3 py-2 border border-gray-200 dark:border-dark-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <span id="viewIcon">⊞</span>
+                            </button>
+                            <button id="createCourseBtn" class="bg-apple-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                + New Course
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Search & Filters -->
+                    <div class="bg-white dark:bg-dark-card p-4 rounded-xl shadow-sm border dark:border-dark-border mb-6">
+                        <div class="flex gap-4">
+                            <input type="text" id="searchCourses" placeholder="Search courses..." 
+                                   class="flex-1 px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-apple-blue">
+                            <select id="statusFilter" class="px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg">
+                                <option value="">All Status</option>
+                                <option value="published">Published</option>
+                                <option value="draft">Draft</option>
+                            </select>
+                            <select id="sortBy" class="px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg">
+                                <option value="updated">Recently Updated</option>
+                                <option value="created">Recently Created</option>
+                                <option value="title">Title A-Z</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Course List -->
+                    <div id="coursesContainer" class="bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border">
+                        <div id="coursesList" class="divide-y divide-gray-100 dark:divide-dark-border"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Curriculum Tab -->
+            <div id="curriculum" class="tab-content">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Curriculum Builder</h2>
+                        <div class="flex space-x-3">
+                            <select id="courseSelect" class="px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg">
+                                <option value="">Select Course</option>
+                            </select>
+                            <button id="previewCurriculum" class="px-4 py-2 border border-gray-200 dark:border-dark-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                👁️ Preview
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="curriculumBuilder" class="bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Course Sections</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Drag and drop to reorder sections and lectures</p>
+                            </div>
+                            <button id="addSectionBtn" class="bg-apple-blue text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                                + Add Section
+                            </button>
+                        </div>
+                        
+                        <div id="sectionsList" class="space-y-4">
+                            <!-- Sections will be dynamically loaded here -->
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="emptyCurriculum" class="text-center py-12 text-gray-500 dark:text-gray-400">
+                            <div class="text-6xl mb-4">📚</div>
+                            <h3 class="text-lg font-medium mb-2">No curriculum yet</h3>
+                            <p class="mb-4">Select a course and start building your curriculum</p>
+                            <button onclick="document.getElementById('addSectionBtn').click()" class="bg-apple-blue text-white px-4 py-2 rounded-lg">
+                                Create First Section
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Analytics Dashboard</h2>
+                        <div class="flex space-x-3">
+                            <select id="analyticsTimeRange" class="px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg">
+                                <option value="7d">Last 7 days</option>
+                                <option value="30d">Last 30 days</option>
+                                <option value="90d">Last 90 days</option>
+                                <option value="1y">Last year</option>
+                            </select>
+                            <button id="exportAnalytics" class="px-4 py-2 border border-gray-200 dark:border-dark-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                📄 Export
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Analytics Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <!-- Enrollment Trends -->
+                        <div class="bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border p-6">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Enrollment Trends</h3>
+                            <canvas id="enrollmentChart" width="400" height="200"></canvas>
+                        </div>
+                        
+                        <!-- Revenue by Course -->
+                        <div class="bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border p-6">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Revenue by Course</h3>
+                            <canvas id="revenueChart" width="400" height="200"></canvas>
+                        </div>
+                        
+                        <!-- Completion Rates -->
+                        <div class="bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border p-6">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Completion Rates</h3>
+                            <canvas id="completionChart" width="400" height="200"></canvas>
+                        </div>
+                        
+                        <!-- Top Performing Courses -->
+                        <div class="bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border p-6">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Top Performing Courses</h3>
+                            <div id="topCourses" class="space-y-3">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- File Manager Tab -->
+            <div id="uploads" class="tab-content">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">File Manager</h2>
+                        <div class="flex space-x-3">
+                            <select id="fileFilter" class="px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg">
+                                <option value="all">All Files</option>
+                                <option value="videos">Videos</option>
+                                <option value="images">Images</option>
+                                <option value="documents">Documents</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Upload Area -->
+                    <div id="uploadArea" class="bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border p-8 mb-6 border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-apple-blue dark:hover:border-apple-blue transition-colors cursor-pointer">
+                        <div class="text-center">
+                            <div class="text-4xl mb-4">📁</div>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Drop files here or click to upload</h3>
+                            <p class="text-gray-500 dark:text-gray-400 mb-4">Support for videos (MP4), images (JPG, PNG), and documents (PDF)</p>
+                            <input type="file" id="fileInput" multiple accept=".mp4,.jpg,.jpeg,.png,.pdf" class="hidden">
+                            <button onclick="document.getElementById('fileInput').click()" class="bg-apple-blue text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                Choose Files
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Upload Progress -->
+                    <div id="uploadProgress" class="hidden bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border p-6 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Upload Progress</h3>
+                        <div id="uploadList" class="space-y-3"></div>
+                    </div>
+                    
+                    <!-- File List -->
+                    <div class="bg-white dark:bg-dark-card rounded-xl shadow-sm border dark:border-dark-border">
+                        <div class="p-4 border-b dark:border-dark-border">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Uploaded Files</h3>
+                        </div>
+                        <div id="filesList" class="divide-y divide-gray-100 dark:divide-dark-border">
+                            <!-- Dynamic file list -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- Create Course Modal -->
+    <div id="createCourseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-dark-card rounded-xl p-6 w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto border dark:border-dark-border">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Create New Course</h3>
+                <button id="closeCourseModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">✕</button>
+            </div>
+            
+            <form id="createCourseForm" class="space-y-6">
+                <!-- Basic Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Course Title *</label>
+                        <input type="text" name="title" required 
+                               class="w-full px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-apple-blue">
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Auto-saving...</div>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subtitle</label>
+                        <input type="text" name="subtitle" 
+                               class="w-full px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-apple-blue">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+                        <select name="category" class="w-full px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg">
+                            <option value="technology">Technology</option>
+                            <option value="business">Business</option>
+                            <option value="design">Design</option>
+                            <option value="marketing">Marketing</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Level</label>
+                        <select name="level" class="w-full px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg">
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Language</label>
+                        <select name="language" class="w-full px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg">
+                            <option value="english">English</option>
+                            <option value="spanish">Spanish</option>
+                            <option value="french">French</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Price</label>
+                        <div class="flex">
+                            <span class="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 dark:bg-gray-700 border border-r-0 border-gray-200 dark:border-dark-border rounded-l-lg">$</span>
+                            <input type="number" name="price" placeholder="0" min="0" step="0.01"
+                                   class="flex-1 px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-r-lg focus:ring-2 focus:ring-apple-blue">
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                    <textarea name="description" rows="4" placeholder="What will students learn in this course?"
+                              class="w-full px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-apple-blue"></textarea>
+                </div>
+                
+                <!-- Thumbnail Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Course Thumbnail</label>
+                    <div class="flex items-center space-x-4">
+                        <div id="thumbnailPreview" class="w-24 h-16 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                            <span class="text-gray-400">🖼️</span>
+                        </div>
+                        <input type="file" id="thumbnailInput" accept="image/*" class="hidden">
+                        <button type="button" onclick="document.getElementById('thumbnailInput').click()" 
+                                class="px-4 py-2 border border-gray-200 dark:border-dark-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            Choose Image
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end gap-3 pt-4 border-t dark:border-dark-border">
+                    <button type="button" id="saveDraftBtn" class="px-6 py-2 border border-gray-200 dark:border-dark-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                        Save as Draft
+                    </button>
+                    <button type="submit" class="bg-apple-blue text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        Create & Publish
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Add Section Modal -->
+    <div id="addSectionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-dark-card rounded-xl p-6 w-full max-w-md mx-4 border dark:border-dark-border">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add New Section</h3>
+                <button id="closeSectionModal" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            
+            <form id="addSectionForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Section Title *</label>
+                    <input type="text" name="sectionTitle" required placeholder="e.g., Introduction to AWS"
+                           class="w-full px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-apple-blue">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                    <textarea name="sectionDescription" rows="3" placeholder="Brief description of this section"
+                              class="w-full px-3 py-2 border border-gray-200 dark:border-dark-border bg-white dark:bg-dark-bg text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-apple-blue"></textarea>
+                </div>
+                
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeSectionModal()" class="px-4 py-2 border border-gray-200 dark:border-dark-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Cancel
+                    </button>
+                    <button type="submit" class="bg-apple-blue text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                        Add Section
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <style>
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: #6B7280;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+        }
+        .nav-item .icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        .nav-item:hover, .nav-item.active {
+            background-color: #F3F4F6;
+            color: #007AFF;
+        }
+        .dark .nav-item:hover, .dark .nav-item.active {
+            background-color: #374151;
+            color: #007AFF;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .section-item {
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 16px;
+            background: #F9FAFB;
+            cursor: move;
+        }
+        .dark .section-item {
+            border-color: #404040;
+            background: #2d2d2d;
+        }
+        .lecture-item {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: move;
+            transition: all 0.2s;
+        }
+        .dark .lecture-item {
+            background: #1a1a1a;
+            border-color: #404040;
+        }
+        .lecture-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar-collapsed {
+            width: 64px;
+        }
+        .sidebar-collapsed .text {
+            display: none;
+        }
+        .upload-progress {
+            height: 4px;
+            background: #E5E7EB;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .upload-progress-bar {
+            height: 100%;
+            background: #007AFF;
+            transition: width 0.3s ease;
+        }
+        .toast {
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+        .toast.success { background: #10B981; }
+        .toast.error { background: #EF4444; }
+        .toast.info { background: #3B82F6; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+
+    <script>
+        // Global state
+        let currentTheme = localStorage.getItem('adminTheme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        let autoSaveTimeout;
+        let sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        
+        // Initialize theme
+        document.documentElement.classList.toggle('dark', currentTheme === 'dark');
+        
+        // Theme Toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.classList.toggle('dark', currentTheme === 'dark');
+            localStorage.setItem('adminTheme', currentTheme);
+            showToast(`Switched to ${currentTheme} theme`, 'info');
+        });
+        
+        // Sidebar Toggle
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            sidebarCollapsed = !sidebarCollapsed;
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+            document.getElementById('sidebarIcon').textContent = sidebarCollapsed ? '▶' : '◀';
+            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+        });
+        
+        // Initialize sidebar state
+        if (sidebarCollapsed) {
+            document.getElementById('sidebar').classList.add('sidebar-collapsed');
+            document.getElementById('sidebarIcon').textContent = '▶';
+        }
+        
+        // Tab Navigation
+        function showTab(tabName) {
+            // Update nav
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            
+            // Load tab data
+            if (tabName === 'courses') loadCourses();
+            if (tabName === 'curriculum') loadCurriculum();
+            if (tabName === 'dashboard') loadDashboard();
+            if (tabName === 'analytics') loadAnalytics();
+            if (tabName === 'uploads') loadFileManager();
+        }
+        
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tab = e.target.closest('.nav-item').dataset.tab;
+                showTab(tab);
+            });
+        });
+
+        // Auto-save functionality
+        function setupAutoSave(formId) {
+            const form = document.getElementById(formId);
+            if (!form) return;
+            
+            form.querySelectorAll('input, textarea, select').forEach(field => {
+                field.addEventListener('input', () => {
+                    clearTimeout(autoSaveTimeout);
+                    autoSaveTimeout = setTimeout(() => {
+                        saveDraft(formId);
+                    }, 2000); // 2 second debounce
+                });
+            });
+        }
+        
+        function saveDraft(formId) {
+            const form = document.getElementById(formId);
+            const formData = new FormData(form);
+            const draftData = Object.fromEntries(formData);
+            
+            localStorage.setItem(`draft_${formId}`, JSON.stringify(draftData));
+            document.getElementById('autoSaveStatus').innerHTML = '✓ Saved';
+            
+            setTimeout(() => {
+                document.getElementById('autoSaveStatus').innerHTML = '✓ Active';
+            }, 2000);
+        }
+        
+        function loadDraft(formId) {
+            const draftData = localStorage.getItem(`draft_${formId}`);
+            if (!draftData) return;
+            
+            const data = JSON.parse(draftData);
+            const form = document.getElementById(formId);
+            
+            Object.keys(data).forEach(key => {
+                const field = form.querySelector(`[name="${key}"]`);
+                if (field) field.value = data[key];
+            });
+        }
+        
+        // Modal Management
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            if (modalId === 'createCourseModal') {
+                setupAutoSave('createCourseForm');
+                loadDraft('createCourseForm');
+            }
+        }
+        
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+        
+        document.getElementById('createCourseBtn').addEventListener('click', () => openModal('createCourseModal'));
+        document.getElementById('closeCourseModal').addEventListener('click', () => closeModal('createCourseModal'));
+        document.getElementById('addSectionBtn').addEventListener('click', () => openModal('addSectionModal'));
+        document.getElementById('closeSectionModal').addEventListener('click', () => closeModal('addSectionModal'));
+        
+        function closeSectionModal() {
+            closeModal('addSectionModal');
+        }
+
+        // Course Creation
+        document.getElementById('createCourseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const courseData = Object.fromEntries(formData);
+            courseData.status = 'published';
+            
+            try {
+                const response = await fetch('/api/courses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(courseData)
+                });
+                
+                if (response.ok) {
+                    closeModal('createCourseModal');
+                    localStorage.removeItem('draft_createCourseForm');
+                    loadCourses();
+                    showToast('Course created and published! 🎉', 'success');
+                }
+            } catch (error) {
+                showToast('Failed to create course', 'error');
+            }
+        });
+
+        // Save as Draft
+        document.getElementById('saveDraftBtn').addEventListener('click', async () => {
+            const formData = new FormData(document.getElementById('createCourseForm'));
+            const courseData = Object.fromEntries(formData);
+            courseData.status = 'draft';
+            
+            try {
+                const response = await fetch('/api/courses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(courseData)
+                });
+                
+                if (response.ok) {
+                    closeModal('createCourseModal');
+                    localStorage.removeItem('draft_createCourseForm');
+                    loadCourses();
+                    showToast('Course saved as draft! 📝', 'success');
+                }
+            } catch (error) {
+                showToast('Failed to save course', 'error');
+            }
+        });
+
+        // Load Functions
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/api/courses');
+                const data = await response.json();
+                const courses = data.data || [];
+                
+                document.getElementById('totalCourses').textContent = courses.length;
+                document.getElementById('publishedCourses').textContent = courses.filter(c => c.status === 'published').length;
+                document.getElementById('draftCourses').textContent = courses.filter(c => c.status === 'draft').length;
+                document.getElementById('totalRevenue').textContent = '$' + (courses.length * 299).toLocaleString();
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+
+        async function loadCourses() {
+            try {
+                const response = await fetch('/api/courses');
+                const data = await response.json();
+                const courses = data.data || [];
+                
+                const coursesList = document.getElementById('coursesList');
+                coursesList.innerHTML = courses.map(course => `
+                    <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-20 h-14 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">📚</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-900 dark:text-white">${course.title || course.name}</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">${course.subtitle || 'No subtitle'}</p>
+                                    <div class="flex items-center space-x-4 mt-1 text-xs text-gray-400">
+                                        <span>📹 ${course.videoCount || 0} videos</span>
+                                        <span>👥 ${course.enrollments || 0} students</span>
+                                        <span>📅 ${new Date().toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="px-3 py-1 text-xs rounded-full font-medium ${
+                                    course.status === 'published' 
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                        : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                                }">
+                                    ${course.status || 'draft'}
+                                </span>
+                                <div class="flex space-x-2">
+                                    <button onclick="editCourse('${course._id}')" class="text-apple-blue hover:text-blue-600 text-sm px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900">
+                                        ✏️ Edit
+                                    </button>
+                                    <button onclick="viewCurriculum('${course._id}')" class="text-purple-600 hover:text-purple-700 text-sm px-2 py-1 rounded hover:bg-purple-50 dark:hover:bg-purple-900">
+                                        📝 Curriculum
+                                    </button>
+                                    <button onclick="viewAnalytics('${course._id}')" class="text-green-600 hover:text-green-700 text-sm px-2 py-1 rounded hover:bg-green-50 dark:hover:bg-green-900">
+                                        📊 Analytics
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load courses:', error);
+            }
+        }
+
+        async function loadCurriculum() {
+            // Load courses for selection
+            try {
+                const response = await fetch('/api/courses');
+                const data = await response.json();
+                const courses = data.data || [];
+                
+                const courseSelect = document.getElementById('courseSelect');
+                courseSelect.innerHTML = '<option value="">Select Course</option>' + 
+                    courses.map(course => `<option value="${course._id}">${course.title || course.name}</option>`).join('');
+            } catch (error) {
+                console.error('Failed to load courses for curriculum:', error);
+            }
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            const container = document.getElementById('toastContainer');
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // File Upload Functionality
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            // Drag and drop
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('border-apple-blue');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('border-apple-blue');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('border-apple-blue');
+                const files = Array.from(e.dataTransfer.files);
+                handleFileUpload(files);
+            });
+            
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                handleFileUpload(files);
+            });
+        }
+        
+        function handleFileUpload(files) {
+            const progressContainer = document.getElementById('uploadProgress');
+            const uploadList = document.getElementById('uploadList');
+            
+            progressContainer.classList.remove('hidden');
+            
+            files.forEach(file => {
+                const uploadItem = document.createElement('div');
+                uploadItem.className = 'flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg';
+                uploadItem.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">${getFileIcon(file.type)}</span>
+                        <div>
+                            <div class="font-medium text-sm">${file.name}</div>
+                            <div class="text-xs text-gray-500">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                    <div class="w-32">
+                        <div class="upload-progress">
+                            <div class="upload-progress-bar" style="width: 0%"></div>
+                        </div>
+                        <div class="text-xs text-center mt-1">0%</div>
+                    </div>
+                `;
+                
+                uploadList.appendChild(uploadItem);
+                
+                // Simulate upload progress
+                simulateUpload(uploadItem, file);
+            });
+        }
+        
+        function simulateUpload(uploadItem, file) {
+            const progressBar = uploadItem.querySelector('.upload-progress-bar');
+            const progressText = uploadItem.querySelector('.text-xs');
+            let progress = 0;
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    showToast(`${file.name} uploaded successfully! 📁`, 'success');
+                }
+                
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${Math.round(progress)}%`;
+            }, 200);
+        }
+        
+        function getFileIcon(type) {
+            if (type.startsWith('video/')) return '🎥';
+            if (type.startsWith('image/')) return '🖼️';
+            if (type.includes('pdf')) return '📄';
+            return '📁';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Analytics Charts
+        function loadAnalytics() {
+            // Enrollment Trends Chart
+            const enrollmentCtx = document.getElementById('enrollmentChart');
+            if (enrollmentCtx && !enrollmentCtx.chart) {
+                enrollmentCtx.chart = new Chart(enrollmentCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Enrollments',
+                            data: [12, 19, 3, 5, 2, 3],
+                            borderColor: '#007AFF',
+                            backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+            
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx && !revenueCtx.chart) {
+                revenueCtx.chart = new Chart(revenueCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['AWS Course', 'DevOps', 'React', 'Node.js'],
+                        datasets: [{
+                            label: 'Revenue',
+                            data: [1200, 800, 600, 400],
+                            backgroundColor: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+            
+            // Completion Chart
+            const completionCtx = document.getElementById('completionChart');
+            if (completionCtx && !completionCtx.chart) {
+                completionCtx.chart = new Chart(completionCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Completed', 'In Progress', 'Not Started'],
+                        datasets: [{
+                            data: [65, 25, 10],
+                            backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+        }
+        
+        function loadFileManager() {
+            setupFileUpload();
+            // Load existing files
+            const filesList = document.getElementById('filesList');
+            filesList.innerHTML = `
+                <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">🎥</span>
+                        <div>
+                            <div class="font-medium">intro-video.mp4</div>
+                            <div class="text-sm text-gray-500">2.5 MB • Uploaded 2 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="text-apple-blue hover:text-blue-600">Preview</button>
+                        <button class="text-red-500 hover:text-red-600">Delete</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Course Actions
+        function editCourse(courseId) {
+            showToast('Opening course editor...', 'info');
+            // Implementation for course editing
+        }
+        
+        function viewCurriculum(courseId) {
+            showTab('curriculum');
+            // Select the course in curriculum builder
+            setTimeout(() => {
+                const courseSelect = document.getElementById('courseSelect');
+                courseSelect.value = courseId;
+                loadCurriculumForCourse(courseId);
+            }, 100);
+        }
+        
+        function viewAnalytics(courseId) {
+            showTab('analytics');
+            showToast('Loading course analytics...', 'info');
+        }
+        
+        function loadCurriculumForCourse(courseId) {
+            const sectionsList = document.getElementById('sectionsList');
+            const emptyCurriculum = document.getElementById('emptyCurriculum');
+            
+            // Hide empty state
+            emptyCurriculum.style.display = 'none';
+            
+            // Sample curriculum data
+            sectionsList.innerHTML = `
+                <div class="section-item" data-section-id="1">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-medium text-gray-900 dark:text-white">Introduction to AWS</h4>
+                        <div class="flex space-x-2">
+                            <button class="text-apple-blue hover:text-blue-600 text-sm">+ Add Lecture</button>
+                            <button class="text-gray-400 hover:text-gray-600">⋮</button>
+                        </div>
+                    </div>
+                    <div class="space-y-2 ml-4">
+                        <div class="lecture-item">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-lg">🎥</span>
+                                    <div>
+                                        <div class="font-medium text-sm">What is AWS?</div>
+                                        <div class="text-xs text-gray-500">Video • 5:30</div>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="text-apple-blue hover:text-blue-600 text-xs">Edit</button>
+                                    <button class="text-red-500 hover:text-red-600 text-xs">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Initialize drag and drop
+            new Sortable(sectionsList, {
+                animation: 150,
+                ghostClass: 'opacity-50',
+                onEnd: function(evt) {
+                    showToast('Section order updated', 'success');
+                }
+            });
+        }
+        
+        // Preview Curriculum Handler
+        document.getElementById('previewCurriculum').addEventListener('click', () => {
+            const courseSelect = document.getElementById('courseSelect');
+            const selectedCourse = courseSelect.value;
+            
+            if (!selectedCourse) {
+                showToast('Please select a course first', 'error');
+                return;
+            }
+            
+            // Get course name for URL
+            const courseName = courseSelect.options[courseSelect.selectedIndex].text;
+            const courseUrl = `/course/${encodeURIComponent(courseName)}`;
+            
+            // Open preview in new tab
+            window.open(courseUrl, '_blank');
+            showToast('Opening course preview...', 'info');
+        });
+        
+        // Initialize
+        loadDashboard();
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'n':
+                        e.preventDefault();
+                        document.getElementById('createCourseBtn').click();
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        document.getElementById('themeToggle').click();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

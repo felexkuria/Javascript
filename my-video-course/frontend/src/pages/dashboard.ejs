@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'apple-blue': '#007AFF',
+              'apple-gray': '#F2F2F7'
+            },
+            fontFamily: {
+              'sans': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif']
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-apple-gray dark:bg-gray-900 font-sans antialiased transition-colors duration-200">
+    <!-- Dark Mode Toggle -->
+    <button id="themeToggle" class="fixed top-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-10">
+        <span id="themeIcon" class="text-xl">🌙</span>
+    </button>
+    
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-apple-blue rounded-xl flex items-center justify-center">
+                        <span class="text-white font-medium">📚</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Dashboard</h1>
+                        <p id="userRole" class="text-sm text-gray-500 dark:text-gray-400">Student</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <span id="userName" class="text-gray-700 dark:text-gray-300 font-medium"></span>
+                    <button id="logoutBtn" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Super Admin Panel -->
+        <div id="adminPanel" class="hidden mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-200">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">🔑 Super Admin Panel</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                        <h3 class="font-medium text-gray-900 dark:text-white mb-2">Grant Teacher Access</h3>
+                        <form id="grantTeacherForm" class="space-y-3">
+                            <input type="email" id="teacherEmail" placeholder="Teacher Email" required
+                                   class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue">
+                            <button type="submit" class="w-full bg-apple-blue text-white py-2 rounded-lg hover:bg-blue-600 transition-all">
+                                Grant Access
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                        <h3 class="font-medium text-gray-900 dark:text-white mb-2">Teacher Requests</h3>
+                        <a href="/admin/teacher-requests" class="inline-block w-full bg-purple-500 text-white text-center py-2 rounded-lg hover:bg-purple-600 transition-all mb-2 relative">
+                            Manage Requests
+                            <span id="requestBadge" class="hidden absolute -top-2 -right-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full"></span>
+                        </a>
+                        <a href="/admin/course-manager" class="inline-block w-full bg-orange-500 text-white text-center py-2 rounded-lg hover:bg-orange-600 transition-all">
+                            Manage Courses
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Enrolled Courses</p>
+                        <p id="enrolledCount" class="text-2xl font-semibold text-gray-900">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <span class="text-apple-blue text-xl">📚</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Completed</p>
+                        <p id="completedCount" class="text-2xl font-semibold text-gray-900">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <span class="text-green-500 text-xl">✅</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Progress</p>
+                        <p id="progressPercent" class="text-2xl font-semibold text-gray-900">0%</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <span class="text-purple-500 text-xl">📊</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Courses -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-200">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Available Courses</h2>
+            <div id="courseGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Courses will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentUser = null;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUser();
+            loadCourses();
+        });
+        
+        function loadUser() {
+            const userStr = localStorage.getItem('user');
+            const token = localStorage.getItem('accessToken');
+            
+            if (!userStr || !token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            currentUser = JSON.parse(userStr);
+            document.getElementById('userName').textContent = currentUser.name || currentUser.email;
+            
+            // Show admin panel for super admin
+            if (currentUser.email === 'engineerfelex@gmail.com') {
+                document.getElementById('adminPanel').classList.remove('hidden');
+                document.getElementById('userRole').textContent = 'Super Admin';
+                loadPendingRequests();
+            }
+        }
+        
+        async function loadCourses() {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/courses', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    renderCourses(data.data || []);
+                    updateStats(data.data || []);
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+        
+        function updateStats(courses) {
+            // Update enrolled count from actual enrollments
+            loadEnrollmentStats();
+        }
+        
+        async function loadEnrollmentStats() {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/enrollments/my-enrollments', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const enrollments = data.data || [];
+                    document.getElementById('enrolledCount').textContent = enrollments.length;
+                    
+                    const completed = enrollments.filter(e => e.status === 'completed').length;
+                    document.getElementById('completedCount').textContent = completed;
+                    
+                    const progress = enrollments.length > 0 ? Math.round((completed / enrollments.length) * 100) : 0;
+                    document.getElementById('progressPercent').textContent = progress + '%';
+                }
+            } catch (error) {
+                console.error('Error loading enrollment stats:', error);
+            }
+        }
+        
+        function renderCourses(courses) {
+            const grid = document.getElementById('courseGrid');
+            
+            if (courses.length === 0) {
+                grid.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">No courses available</p>';
+                return;
+            }
+            
+            grid.innerHTML = courses.map(course => `
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all">
+                    <div class="w-12 h-12 bg-apple-blue rounded-xl flex items-center justify-center mb-4">
+                        <span class="text-white font-medium">${(course.title || course.name || 'Course').charAt(0)}</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-2">${course.title || course.name || 'Untitled Course'}</h3>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">${course.description || 'No description available'}</p>
+                    <div class="space-y-2">
+                        <button onclick="enrollInCourse('${course._id || course.name}')" 
+                                class="w-full px-4 py-2 bg-apple-blue text-white rounded-lg hover:bg-blue-600 transition-all enroll-btn" 
+                                data-course-id="${course._id || course.name}">
+                            Enroll
+                        </button>
+                        <a href="/course/${encodeURIComponent(course.name || course.title || 'unknown')}" class="block w-full px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-center rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-all">
+                            View Course
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+            
+            checkEnrollmentStatus();
+        }
+        
+        async function enrollInCourse(courseId) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const button = document.querySelector(`[data-course-id="${courseId}"]`);
+                
+                button.disabled = true;
+                button.textContent = 'Enrolling...';
+                
+                const response = await fetch('/api/enrollments', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ courseId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    button.textContent = 'Enrolled ✓';
+                    button.classList.remove('bg-apple-blue', 'hover:bg-blue-600');
+                    button.classList.add('bg-green-500');
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                alert('Failed to enroll: ' + error.message);
+                button.disabled = false;
+                button.textContent = 'Enroll';
+            }
+        }
+        
+        async function checkEnrollmentStatus() {
+            const token = localStorage.getItem('accessToken');
+            const buttons = document.querySelectorAll('.enroll-btn');
+            
+            for (const button of buttons) {
+                const courseId = button.dataset.courseId;
+                try {
+                    const response = await fetch(`/api/enrollments/check/${courseId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success && data.data.enrolled) {
+                        button.textContent = 'Enrolled ✓';
+                        button.disabled = true;
+                        button.classList.remove('bg-apple-blue', 'hover:bg-blue-600');
+                        button.classList.add('bg-green-500');
+                    }
+                } catch (error) {
+                    console.error('Error checking enrollment:', error);
+                }
+            }
+        }
+        
+        // Grant teacher access
+        document.getElementById('grantTeacherForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('teacherEmail').value;
+            const token = localStorage.getItem('accessToken');
+            
+            try {
+                const response = await fetch('/api/admin/grant-teacher', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Teacher access granted ✅');
+                    document.getElementById('teacherEmail').value = '';
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+        
+        // Load pending teacher requests count
+        async function loadPendingRequests() {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/admin/teacher-requests', {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'x-admin-key': 'admin123'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const pendingCount = data.data.filter(r => r.status === 'pending').length;
+                    const badge = document.getElementById('requestBadge');
+                    if (pendingCount > 0) {
+                        badge.textContent = pendingCount;
+                        badge.classList.remove('hidden');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading pending requests:', error);
+            }
+        }
+        
+        // Dark theme toggle
+        function initTheme() {
+            const theme = localStorage.getItem("theme") || "light";
+            document.documentElement.classList.toggle("dark", theme === "dark");
+            document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
+            document.documentElement.classList.toggle("dark", newTheme === "dark");
+            localStorage.setItem("theme", newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === "dark" ? '☀️' : '🌙';
+        }
+        
+        initTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+            } catch (error) {
+                console.error('Logout failed:', error);
+            } finally {
+                localStorage.clear();
+                window.location.href = '/login';
+            }
+        });
+    </script>
+</body>
+</html>

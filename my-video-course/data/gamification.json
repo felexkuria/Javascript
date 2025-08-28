@@ -2,16 +2,7 @@
   "default_user": {
     "_id": "689c6bdf333eb821fbe8ec54",
     "userId": "default_user",
-    "achievements": [
-      "first_video",
-      "speed_demon",
-      "night_owl",
-      "perfect_score",
-      "speed_learner",
-      "quiz_master",
-      "early_bird",
-      "keyboard_ninja"
-    ],
+    "achievements": [],
     "streakData": {
       "currentStreak": 1,
       "longestStreak": 3,
@@ -27,7 +18,7 @@
         "2025-08-13"
       ]
     },
-    "updatedAt": "2025-08-26T16:43:47.594Z",
+    "updatedAt": "2025-08-27T13:30:17.357Z",
     "userStats": {
       "totalPoints": 2596,
       "videosWatched": {},
@@ -43,6 +34,6 @@
       "totalPoints": 758,
       "experiencePoints": 758
     },
-    "streak": 1
+    "streak": 0
   }
 }

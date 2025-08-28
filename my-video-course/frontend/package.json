@@ -1,0 +1,18 @@
+{
+  "name": "video-course-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Video Course Platform",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "echo 'Frontend build complete'",
+    "dev": "echo 'Frontend development server'",
+    "lint": "echo 'Frontend linting'"
+  },
+  "dependencies": {
+    "ejs": "^3.1.9"
+  },
+  "devDependencies": {},
+  "keywords": ["video", "course", "education", "frontend"],
+  "author": "Video Course Platform",
+  "license": "MIT"
+}

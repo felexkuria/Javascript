@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Video Course Platform' %></title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            'apple': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Segoe UI', 'Roboto', 'sans-serif']
+          },
+          fontSize: {
+            'xs': ['0.75rem', { lineHeight: '1rem' }],
+            'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+            'base': ['1rem', { lineHeight: '1.5rem' }],
+            'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+            'xl': ['1.25rem', { lineHeight: '1.75rem' }]
+          },
+          colors: {
+            'apple-blue': '#007AFF',
+            'apple-gray': '#F2F2F7',
+            'apple-dark': '#1C1C1E',
+            'apple-secondary': '#8E8E93'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/quiz-system.css">
+  <script src="/js/theme-manager.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuBtn = document.getElementById('mobile-menu');
+      const mobileNav = document.getElementById('mobile-nav');
+      if (mobileMenuBtn && mobileNav) {
+        mobileMenuBtn.addEventListener('click', function() {
+          mobileNav.classList.toggle('hidden');
+        });
+      }
+    });
+  </script>
+  <% if (typeof extraStyles !== 'undefined') { %>
+    <%- extraStyles %>
+  <% } %>
+</head>
+<body class="bg-apple-gray dark:bg-apple-dark font-apple min-h-screen flex flex-col transition-colors text-sm">
+  <nav class="bg-white/80 dark:bg-apple-dark/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 px-3 py-2 transition-colors">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-4">
+        <a href="/" class="text-base font-semibold text-gray-900 dark:text-white transition-colors flex items-center">
+          <span class="text-lg mr-2">🎓</span> Learning
+        </a>
+        <div class="hidden md:flex items-center gap-1">
+          <a href="/" class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">Dashboard</a>
+          <a href="/profile" class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">Progress</a>
+          <a href="/courses" class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">Courses</a>
+          <a href="/videos" class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">Videos</a>
+          <a href="/chatbot" class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all flex items-center">
+            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+            </svg>
+            Chat
+          </a>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="p-2 text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all" title="Toggle theme">
+          <i class="fas fa-moon text-sm"></i>
+        </button>
+        <div class="hidden sm:flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-2 py-1">
+          <div class="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs font-medium user-level">1</div>
+          <span class="text-xs font-medium text-gray-900 dark:text-white user-points">0</span>
+          <span class="text-xs">🔥</span>
+          <span class="text-xs font-medium text-gray-900 dark:text-white user-streak">0</span>
+        </div>
+        <button id="logoutBtn" class="text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue px-2 py-1 rounded-lg transition-all">
+          Logout
+        </button>
+        <button id="mobile-menu" class="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">
+          <i class="fas fa-bars text-sm"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Mobile Menu -->
+    <div id="mobile-nav" class="hidden md:hidden mt-3 pb-3 border-t border-gray-200/50 dark:border-gray-700/50">
+      <div class="flex flex-col gap-1 pt-3">
+        <a href="/" class="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">Dashboard</a>
+        <a href="/profile" class="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">Progress</a>
+        <a href="/courses" class="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">Courses</a>
+        <a href="/videos" class="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all">Videos</a>
+        <a href="/chatbot" class="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-apple-blue hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+          </svg>
+          Chat
+        </a>
+      </div>
+    </div>
+  </nav>
+  <div class="flex-1">

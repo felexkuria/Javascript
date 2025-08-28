@@ -1,0 +1,22 @@
+.key-hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  font-size: 24px;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.key-hint.show {
+  opacity: 1;
+}
+
+.key-hint.hide {
+  opacity: 0;
+}

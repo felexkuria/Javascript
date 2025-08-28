@@ -1,0 +1,338 @@
+<%- include('partials/header', { title: 'Dashboard' }) %>
+
+<main class="max-w-7xl mx-auto px-4 py-6">
+  <div class="mb-8">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">🎓 Learning Dashboard</h1>
+        <% if (user && user.isTeacher) { %>
+        <div class="flex space-x-2 mt-2">
+          <a href="/teacher/dashboard" class="text-blue-600 hover:text-blue-800 text-sm px-3 py-1 bg-blue-50 rounded-lg">Teacher View</a>
+          <span class="text-gray-600 text-sm px-3 py-1 bg-gray-100 rounded-lg">Student View</span>
+        </div>
+        <% } %>
+        <p class="text-gray-600 dark:text-gray-400">Discover courses and track your progress</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 transition-colors">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold user-level">1</div>
+            <span class="text-sm font-medium">Level</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🏆</span>
+            <div>
+              <span class="font-bold user-points text-lg text-gray-900 dark:text-white">0</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400 block">points</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🔥</span>
+            <div>
+              <span class="font-bold user-streak text-lg text-gray-900 dark:text-white">0</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400 block">streak</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button id="syncButton" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors">
+            <i class="fas fa-sync-alt mr-2"></i>Sync
+          </button>
+          <button id="fixAllThumbnailsButton" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors">
+            <i class="fas fa-image mr-2"></i>Fix Thumbnails
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <% if (courses && courses.length > 0) { %>
+      <% courses.forEach(course => { %>
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg overflow-hidden hover:shadow-lg transition-all">
+          <div class="relative">
+            <img src="https://uploads.teachablecdn.com/attachments/e2FDxVHOSIKe60ZmL6ki_Teachable+Course+Thumbnail.png" 
+                 alt="<%= course.name %>" class="w-full h-48 object-cover">
+          </div>
+          <div class="p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3 truncate" title="<%= course.name %>">
+              <%= course.name %>
+            </h2>
+            <p class="course-description text-gray-600 dark:text-gray-400 mb-4 text-sm leading-relaxed h-16 overflow-hidden">
+              Loading description...
+            </p>
+            
+            <% 
+              // Ensure videos array exists and calculate progress
+              const videos = course.videos || [];
+              const sortedVideos = videos.length > 0 ? [...videos].sort((a, b) => {
+                const aNum = parseInt((a.title || '').match(/\d+/)) || 0;
+                const bNum = parseInt((b.title || '').match(/\d+/)) || 0;
+                return aNum - bNum;
+              }) : [];
+              const totalVideos = sortedVideos.length;
+              const watchedVideos = sortedVideos.filter(v => v && v.watched).length;
+              const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
+            %>
+            <div class="mb-4">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Progress</span>
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400"><%= watchedVideos %>/<%= totalVideos %></span>
+              </div>
+              <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div class="h-full bg-green-500" style="width: <%= watchedPercent %>%"></div>
+              </div>
+              <% if (totalVideos === 0) { %>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">No videos loaded yet</p>
+              <% } %>
+            </div>
+            
+            <div class="space-y-2">
+              <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
+                      class="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded transition-colors enroll-btn" 
+                      data-course-id="<%= course._id || course.name %>">
+                Enroll
+              </button>
+              <a href="/course/<%= course.name %>" class="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded transition-colors">
+                <span>Start Learning</span>
+                <i class="fas fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    <% } else { %>
+      <div class="col-span-full text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <h3 class="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">No courses found</h3>
+        <p class="text-gray-500 dark:text-gray-400">Add videos to the public/videos directory to get started.</p>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<script src="/js/gamification.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Load AI course descriptions with caching
+  const courseCards = document.querySelectorAll('.course-description');
+  courseCards.forEach(async (desc, index) => {
+    const courseName = desc.closest('.card').querySelector('h2').textContent.trim();
+    const cacheKey = `course_description_${courseName}`;
+    
+    const cachedDescription = localStorage.getItem(cacheKey);
+    if (cachedDescription) {
+      desc.textContent = cachedDescription;
+      return;
+    }
+    
+    desc.textContent = 'Generating description...';
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
+      const response = await fetch(`/api/course/description/${encodeURIComponent(courseName)}`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.description && data.description.trim()) {
+          desc.textContent = data.description;
+          localStorage.setItem(cacheKey, data.description);
+        } else {
+          throw new Error('Empty description');
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      // Fallback descriptions
+      const courseNameLower = courseName.toLowerCase();
+      if (courseNameLower.includes('davinci') || courseNameLower.includes('video')) {
+        desc.textContent = 'Master professional video editing with DaVinci Resolve. Learn color grading, audio editing, and advanced techniques.';
+      } else if (courseNameLower.includes('aws')) {
+        desc.textContent = 'Complete AWS cloud computing course. Build scalable solutions with hands-on labs covering EC2, S3, Lambda, and more.';
+      } else if (courseNameLower.includes('devops')) {
+        desc.textContent = 'Ultimate DevOps course! Master CI/CD pipelines, Docker, Kubernetes, and infrastructure automation.';
+      } else if (courseNameLower.includes('terraform')) {
+        desc.textContent = 'Master Infrastructure as Code with Terraform! Learn to provision cloud resources across AWS, Azure, and GCP.';
+      } else {
+        desc.textContent = `Complete ${courseName} course with practical exercises and real-world projects.`;
+      }
+      
+      localStorage.setItem(cacheKey, desc.textContent);
+    }
+  });
+  
+  // Sync button
+  document.getElementById('syncButton').addEventListener('click', async function() {
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Syncing...';
+    
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'fixed bottom-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded';
+    statusDiv.textContent = 'Syncing with database...';
+    document.body.appendChild(statusDiv);
+    
+    try {
+      const response = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
+        statusDiv.textContent = 'Sync completed!';
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+        statusDiv.textContent = 'Sync failed: ' + (result.error || 'Unknown error');
+      }
+    } catch (error) {
+      statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+      statusDiv.textContent = 'Error: ' + error.message;
+    } finally {
+      this.disabled = false;
+      this.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Sync';
+      setTimeout(() => {
+        if (document.body.contains(statusDiv)) {
+          document.body.removeChild(statusDiv);
+        }
+      }, 5000);
+    }
+  });
+  
+  // Fix thumbnails button
+  document.getElementById('fixAllThumbnailsButton').addEventListener('click', async function() {
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Fixing...';
+    
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'fixed bottom-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded';
+    statusDiv.textContent = 'Fixing thumbnails...';
+    document.body.appendChild(statusDiv);
+    
+    try {
+      const courses = document.querySelectorAll('.course-description');
+      let totalFixed = 0;
+      
+      for (const desc of courses) {
+        const courseName = desc.closest('.card').querySelector('h2').textContent.trim();
+        
+        try {
+          const response = await fetch(`/api/thumbnails/fix/${encodeURIComponent(courseName)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          const data = await response.json();
+          if (data.success) {
+            totalFixed += data.fixedCount;
+            statusDiv.textContent = `Fixed ${totalFixed} thumbnails...`;
+          }
+        } catch (err) {
+          console.warn(`Failed to fix thumbnails for ${courseName}:`, err);
+        }
+      }
+      
+      statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
+      statusDiv.textContent = `Fixed ${totalFixed} thumbnails!`;
+      
+      setTimeout(() => {
+        if (document.body.contains(statusDiv)) {
+          document.body.removeChild(statusDiv);
+        }
+        if (totalFixed > 0) location.reload();
+      }, 3000);
+      
+    } catch (error) {
+      statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
+      statusDiv.textContent = 'Error: ' + error.message;
+      
+      setTimeout(() => {
+        if (document.body.contains(statusDiv)) {
+          document.body.removeChild(statusDiv);
+        }
+      }, 5000);
+    } finally {
+      this.disabled = false;
+      this.innerHTML = '<i class="fas fa-image mr-2"></i>Fix Thumbnails';
+    }
+  });
+});
+
+// Enrollment functionality
+async function enrollInCourse(courseId) {
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      alert('Please login to enroll in courses');
+      window.location.href = '/login';
+      return;
+    }
+
+    const button = document.querySelector(`[data-course-id="${courseId}"]`);
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Enrolling...';
+
+    const response = await fetch('/api/enrollments', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ courseId })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      button.textContent = 'Enrolled ✓';
+      button.classList.remove('bg-green-600', 'hover:bg-green-700');
+      button.classList.add('bg-gray-500');
+      alert('Successfully enrolled in course!');
+    } else {
+      throw new Error(data.error);
+    }
+  } catch (error) {
+    console.error('Enrollment error:', error);
+    alert('Failed to enroll: ' + error.message);
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
+// Check enrollment status on page load
+document.addEventListener('DOMContentLoaded', async () => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+
+  const enrollButtons = document.querySelectorAll('.enroll-btn');
+  
+  for (const button of enrollButtons) {
+    const courseId = button.dataset.courseId;
+    try {
+      const response = await fetch(`/api/enrollments/check/${courseId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      const data = await response.json();
+      if (data.success && data.data.enrolled) {
+        button.textContent = 'Enrolled ✓';
+        button.disabled = true;
+        button.classList.remove('bg-green-600', 'hover:bg-green-700');
+        button.classList.add('bg-gray-500');
+      }
+    } catch (error) {
+      console.error('Error checking enrollment:', error);
+    }
+  }
+});
+</script>
+
+<%- include('partials/footer') %>

@@ -36,8 +36,8 @@ const videoDir = path.join(__dirname, 'public', 'videos');
 // Configure multer for file upload
 let storage;
 
-// Check if S3 credentials are available
-if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.S3_BUCKET_NAME) {
+// Force local storage (disable S3 for now)
+if (false) {
   console.log('Using S3 storage for uploads');
   storage = multerS3({
     s3: s3,
@@ -3468,6 +3468,10 @@ app.get('/settings', (req, res) => {
 // Test quiz page
 app.get('/test-quiz', (req, res) => {
   res.sendFile(path.join(__dirname, 'test-quiz.html'));
+});
+
+app.get('/test-upload', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test-upload.html'));
 });
 
 // Video management API endpoints
