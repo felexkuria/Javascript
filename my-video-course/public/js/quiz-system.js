@@ -3,12 +3,29 @@ class QuizSystem {
   constructor() {
     this.currentQuiz = null;
     this.userAnswers = [];
-    this.quizData = this.loadQuizData();
+    this.quizData = {};
     this.initializeSystem();
   }
+  
+  async init() {
+    this.quizData = await this.loadQuizData();
+  }
 
-  // Load quiz data from localStorage or default
-  loadQuizData() {
+  // Load quiz data from database or default
+  async loadQuizData() {
+    try {
+      const response = await fetch('/api/quizzes');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.quizzes) {
+          console.log('Loaded quizzes from database');
+          return data.quizzes;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load quizzes from database, using defaults:', error);
+    }
+    
     const saved = localStorage.getItem('quiz_data');
     return saved ? JSON.parse(saved) : this.getDefaultQuizzes();
   }
@@ -755,10 +772,11 @@ if (typeof window !== 'undefined') {
   }
 }
 
-function initQuizSystem() {
+async function initQuizSystem() {
   console.log('Initializing quiz system...');
   try {
     window.quizSystem = new QuizSystem();
+    await window.quizSystem.init();
     console.log('Quiz system initialized successfully');
   } catch (error) {
     console.error('Failed to initialize quiz system:', error);

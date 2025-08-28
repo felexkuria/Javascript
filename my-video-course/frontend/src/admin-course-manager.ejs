@@ -4,355 +4,186 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Course Manager</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              'apple-blue': '#007AFF',
-              'apple-gray': '#F2F2F7'
-            },
-            fontFamily: {
-              'sans': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif']
-            }
-          }
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            transition: all 0.3s ease;
         }
-      }
-    </script>
+        body.dark { background: #000; color: #f5f5f7; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        .header { text-align: center; margin-bottom: 60px; }
+        .header h1 { font-size: 48px; font-weight: 600; margin-bottom: 16px; }
+        .header p { font-size: 21px; color: #86868b; }
+        .courses-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px; }
+        .course-card { 
+            background: white; 
+            border-radius: 18px; 
+            padding: 32px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        body.dark .course-card { background: #1c1c1e; box-shadow: 0 4px 20px rgba(255,255,255,0.05); }
+        .course-card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+        }
+        .course-title { font-size: 24px; font-weight: 600; margin-bottom: 12px; }
+        .course-description { color: #86868b; font-size: 17px; line-height: 1.5; margin-bottom: 24px; }
+        .course-stats { display: flex; gap: 24px; margin-bottom: 32px; }
+        .stat { text-align: center; }
+        .stat-number { font-size: 28px; font-weight: 600; color: #007aff; }
+        .stat-label { font-size: 13px; color: #86868b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn { 
+            background: #007aff; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 12px; 
+            font-size: 17px; 
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .btn:hover { background: #0056b3; transform: scale(1.02); }
+        .empty-state { 
+            text-align: center; 
+            padding: 80px 20px; 
+            color: #86868b; 
+        }
+        .empty-state h2 { font-size: 32px; margin-bottom: 16px; }
+        .nav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 40px; 
+            padding: 20px 0;
+        }
+        .nav-links { display: flex; gap: 32px; }
+        .nav-link { 
+            color: #1d1d1f; 
+            text-decoration: none; 
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-link:hover { color: #007aff; }
+        .nav-link.active { color: #007aff; }
+        .logo { font-size: 24px; font-weight: 600; }
+        .theme-toggle {
+            background: none;
+            border: 2px solid currentColor;
+            color: inherit;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            margin-left: 16px;
+        }
+        .theme-toggle:hover { background: currentColor; color: #f5f5f7; }
+        body.dark .theme-toggle:hover { color: #000; }
+    </style>
 </head>
-<body class="bg-apple-gray dark:bg-gray-900 font-sans antialiased transition-colors duration-200">
-    <div class="flex h-screen">
-        <!-- Sidebar -->
-        <div class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-colors duration-200">
-            <div class="p-6">
-                <div class="flex items-center space-x-3 mb-8">
-                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center">
-                        <span class="text-white font-medium">👑</span>
-                    </div>
-                    <div>
-                        <h1 class="text-lg font-semibold text-gray-900 dark:text-white">Admin Panel</h1>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Super Admin</p>
-                    </div>
-                </div>
-                
-                <nav class="space-y-2">
-                    <a href="/admin/dashboard" class="flex items-center space-x-3 px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-2xl transition-colors">
-                        <span>📊</span>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="/admin/course-manager" class="flex items-center space-x-3 px-4 py-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-2xl font-medium">
-                        <span>📚</span>
-                        <span>Course Manager</span>
-                    </a>
-                    <a href="/admin/teacher-requests" class="flex items-center space-x-3 px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-2xl transition-colors">
-                        <span>👨🏫</span>
-                        <span>Teacher Requests</span>
-                    </a>
-                </nav>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <div class="logo">📚 Admin Panel</div>
+            <div class="nav-links">
+                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+                <a href="/admin/course-manager" class="nav-link active">Courses</a>
+                <a href="/admin/teacher-requests" class="nav-link">Teachers</a>
+                <a href="/logout" class="nav-link">Logout</a>
+                <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
             </div>
-            
-            <div class="absolute bottom-6 left-6 right-6">
-                <button id="themeToggle" class="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                    <span id="themeIcon">🌙</span>
-                    <span>Toggle Theme</span>
-                </button>
-            </div>
+        </nav>
+
+        <div class="header">
+            <h1>Course Manager</h1>
+            <p>Manage and edit your course content</p>
         </div>
-        
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col">
-            <!-- Course List -->
-            <div class="flex-1 overflow-auto p-8">
-                <div class="mb-8">
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Course Manager</h1>
-                    <p class="text-gray-600 dark:text-gray-400">Edit and manage course content</p>
-                </div>
-                
-                <div id="courseList" class="space-y-4">
-                    <!-- Courses will be loaded here -->
-                </div>
-            </div>
+
+        <div id="courseList" class="courses-grid">
+            <!-- Courses will be loaded here -->
         </div>
     </div>
-    
-    <!-- Course Editor Modal -->
-    <div id="courseModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden transition-colors duration-200">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Edit Course</h2>
-                    <button id="closeModal" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">
-                        <span class="text-gray-500 dark:text-gray-400 text-xl">✕</span>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-                <form id="courseForm" class="space-y-6">
-                    <!-- Course Title -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Course Title</label>
-                        <input type="text" id="courseTitle" class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    
-                    <!-- Course Description -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                        <textarea id="courseDescription" rows="4" class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
-                    </div>
-                    
-                    <!-- Videos Section -->
-                    <div>
-                        <div class="flex justify-between items-center mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Videos</label>
-                            <button type="button" id="addVideo" class="px-4 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-colors">
-                                + Add Video
-                            </button>
-                        </div>
-                        <div id="videosList" class="space-y-3">
-                            <!-- Video items will be added here -->
-                        </div>
-                    </div>
-                    
-                    <!-- Quizzes Section -->
-                    <div>
-                        <div class="flex justify-between items-center mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quizzes</label>
-                            <button type="button" id="addQuiz" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors">
-                                + Add Quiz
-                            </button>
-                        </div>
-                        <div id="quizzesList" class="space-y-4">
-                            <!-- Quiz items will be added here -->
-                        </div>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- Sticky Save Bar -->
-            <div class="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <div class="flex justify-end space-x-3">
-                    <button id="cancelEdit" class="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                        Cancel
-                    </button>
-                    <button id="saveCourse" class="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-2xl hover:from-purple-600 hover:to-blue-700 transition-all shadow-lg">
-                        Save Changes
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
+
     <script>
-        let currentCourse = null;
+        const serverCourses = <%- JSON.stringify(courses || []) %>;
         
-        // Dark theme toggle
-        function initTheme() {
-            const theme = localStorage.getItem("theme") || "light";
-            document.documentElement.classList.toggle("dark", theme === "dark");
-            document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
-        }
-        
-        function toggleTheme() {
-            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
-            document.documentElement.classList.toggle("dark", newTheme === "dark");
-            localStorage.setItem("theme", newTheme);
-            document.getElementById('themeIcon').textContent = newTheme === "dark" ? '☀️' : '🌙';
-        }
-        
-        initTheme();
-        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-        
-        // Load courses
         document.addEventListener('DOMContentLoaded', () => {
-            loadCourses();
+            renderCourses(serverCourses);
         });
-        
-        async function loadCourses() {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('/api/courses', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    renderCourses(data.data || []);
-                }
-            } catch (error) {
-                console.error('Error loading courses:', error);
-            }
-        }
         
         function renderCourses(courses) {
             const container = document.getElementById('courseList');
             
             if (courses.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-12">No courses found</p>';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>No courses found</h2>
+                        <p>Start by creating your first course</p>
+                    </div>
+                `;
                 return;
             }
             
-            container.innerHTML = courses.map(course => `
-                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors duration-200">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">${course.title || course.name || 'Untitled Course'}</h3>
-                            <p class="text-gray-500 dark:text-gray-400 mb-4">${course.description || 'No description available'}</p>
-                            <div class="flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                                <span>📹 ${course.totalLectures || 0} videos</span>
-                                <span>👥 ${course.enrollments || 0} students</span>
-                                <span>⭐ ${course.rating || 'N/A'}</span>
-                                <span>📂 ${course.category || 'General'}</span>
+            container.innerHTML = courses.map(course => {
+                const videoCount = course.videos ? course.videos.length : 0;
+                const watchedCount = course.videos ? course.videos.filter(v => v.watched).length : 0;
+                const completionRate = videoCount > 0 ? Math.round((watchedCount / videoCount) * 100) : 0;
+                
+                return `
+                    <div class="course-card">
+                        <div class="course-title">${course.title || course.name || 'Untitled Course'}</div>
+                        <div class="course-description">${course.description || 'No description available'}</div>
+                        
+                        <div class="course-stats">
+                            <div class="stat">
+                                <div class="stat-number">${videoCount}</div>
+                                <div class="stat-label">Videos</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">${completionRate}%</div>
+                                <div class="stat-label">Completed</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">${course.category || 'General'}</div>
+                                <div class="stat-label">Category</div>
                             </div>
                         </div>
-                        <button onclick="editCourse('${course.name || course._id}', '${course.title || course.name}')" 
-                                class="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-2xl hover:from-purple-600 hover:to-blue-700 transition-all shadow-lg">
+                        
+                        <button class="btn" onclick="editCourse('${course.name || course._id}')">
                             Edit Course
                         </button>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
         
-        async function editCourse(courseId, courseTitle) {
-            // Load course data and open modal
-            currentCourse = courseId;
-            document.getElementById('courseModal').classList.remove('hidden');
-            
-            // Load actual course details
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('/api/courses', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    const course = data.data.find(c => c.name === courseId || c._id === courseId);
-                    
-                    if (course) {
-                        document.getElementById('courseTitle').value = course.title || course.name || '';
-                        document.getElementById('courseDescription').value = course.description || '';
-                        
-                        // Load videos if available
-                        const videosList = document.getElementById('videosList');
-                        videosList.innerHTML = '';
-                        
-                        if (course.videos && course.videos.length > 0) {
-                            course.videos.slice(0, 10).forEach(video => { // Show first 10 videos
-                                const videoItem = document.createElement('div');
-                                videoItem.className = 'flex space-x-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl';
-                                videoItem.innerHTML = `
-                                    <input type="text" value="${video.title || ''}" placeholder="Video Title" class="flex-1 px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl">
-                                    <input type="url" value="${video.videoUrl || ''}" placeholder="Video URL" class="flex-1 px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl">
-                                    <button type="button" onclick="this.parentElement.remove()" class="px-3 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600">Remove</button>
-                                `;
-                                videosList.appendChild(videoItem);
-                            });
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading course details:', error);
-                // Fallback to basic info
-                document.getElementById('courseTitle').value = courseTitle || 'Course Title';
-                document.getElementById('courseDescription').value = 'Course description...';
-            }
+        function editCourse(courseId) {
+            window.location.href = `/course/${encodeURIComponent(courseId)}`;
         }
         
-        // Modal controls
-        document.getElementById('closeModal').addEventListener('click', () => {
-            document.getElementById('courseModal').classList.add('hidden');
-        });
-        
-        document.getElementById('cancelEdit').addEventListener('click', () => {
-            document.getElementById('courseModal').classList.add('hidden');
-        });
-        
-        // Add video functionality
-        document.getElementById('addVideo').addEventListener('click', () => {
-            const videosList = document.getElementById('videosList');
-            const videoItem = document.createElement('div');
-            videoItem.className = 'flex space-x-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl';
-            videoItem.innerHTML = `
-                <input type="text" placeholder="Video Title" class="flex-1 px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl">
-                <input type="url" placeholder="Video URL" class="flex-1 px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl">
-                <button type="button" onclick="this.parentElement.remove()" class="px-3 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600">Remove</button>
-            `;
-            videosList.appendChild(videoItem);
-        });
-        
-        // Add quiz functionality
-        document.getElementById('addQuiz').addEventListener('click', () => {
-            const quizzesList = document.getElementById('quizzesList');
-            const quizItem = document.createElement('div');
-            quizItem.className = 'p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl space-y-3';
-            quizItem.innerHTML = `
-                <input type="text" placeholder="Quiz Question" class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="text" placeholder="Option A" class="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl">
-                    <input type="text" placeholder="Option B" class="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl">
-                    <input type="text" placeholder="Option C" class="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl">
-                    <input type="text" placeholder="Option D" class="px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl">
-                </div>
-                <select class="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl">
-                    <option>Select Correct Answer</option>
-                    <option value="A">Option A</option>
-                    <option value="B">Option B</option>
-                    <option value="C">Option C</option>
-                    <option value="D">Option D</option>
-                </select>
-                <button type="button" onclick="this.parentElement.remove()" class="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600">Remove Quiz</button>
-            `;
-            quizzesList.appendChild(quizItem);
-        });
-        
-        // Save course
-        document.getElementById('saveCourse').addEventListener('click', async () => {
-            const title = document.getElementById('courseTitle').value;
-            const description = document.getElementById('courseDescription').value;
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
             
-            // Collect videos and quizzes data
-            const videos = Array.from(document.querySelectorAll('#videosList > div')).map(item => ({
-                title: item.querySelector('input[placeholder="Video Title"]').value,
-                url: item.querySelector('input[placeholder="Video URL"]').value
-            }));
+            body.classList.toggle('dark');
+            const isDark = body.classList.contains('dark');
             
-            const quizzes = Array.from(document.querySelectorAll('#quizzesList > div')).map(item => ({
-                question: item.querySelector('input[placeholder="Quiz Question"]').value,
-                options: [
-                    item.querySelector('input[placeholder="Option A"]').value,
-                    item.querySelector('input[placeholder="Option B"]').value,
-                    item.querySelector('input[placeholder="Option C"]').value,
-                    item.querySelector('input[placeholder="Option D"]').value
-                ],
-                correct: item.querySelector('select').value
-            }));
-            
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch(`/api/courses/${currentCourse}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ title, description, videos, quizzes })
-                });
-                
-                if (response.ok) {
-                    alert('Course updated successfully!');
-                    document.getElementById('courseModal').classList.add('hidden');
-                    loadCourses();
-                } else {
-                    alert('Failed to update course');
-                }
-            } catch (error) {
-                alert('Error saving course: ' + error.message);
-            }
-        });
+            button.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark');
+            document.querySelector('.theme-toggle').textContent = '☀️';
+        }
     </script>
 </body>
 </html>

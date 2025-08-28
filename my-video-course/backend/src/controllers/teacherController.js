@@ -3,8 +3,10 @@ const dynamoVideoService = require('../services/dynamoVideoService');
 class TeacherController {
   async renderDashboard(req, res) {
     try {
-      // Get all courses and student data
-      const courses = await dynamoVideoService.getAllCourses();
+      // Get all courses for teacher (teachers can see all courses)
+      const userId = req.user?.email || 'guest';
+      const isTeacher = req.user?.isTeacher || false;
+      const courses = await dynamoVideoService.getAllCourses(userId, isTeacher);
       
       // Calculate teacher dashboard stats
       let totalVideos = 0;

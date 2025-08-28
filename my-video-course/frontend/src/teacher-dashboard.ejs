@@ -4,188 +4,589 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - Video Course Platform</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.47059;
+            font-weight: 400;
+            letter-spacing: -0.022em;
+        }
+        
+        .dark body {
+            background: #000;
+            color: #f5f5f7;
+        }
+        
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #d2d2d7;
+            padding: 0 20px;
+        }
+        
+        .dark .navbar {
+            background: #1d1d1f;
+            border-bottom-color: #424245;
+        }
+        
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+        
+        .nav-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .dark .nav-title {
+            color: #f5f5f7;
+        }
+        
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .nav-user {
+            font-size: 14px;
+            color: #86868b;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link.active {
+            background: #007aff;
+            color: white;
+        }
+        
+        .nav-link:not(.active) {
+            background: #f2f2f7;
+            color: #1d1d1f;
+        }
+        
+        .dark .nav-link:not(.active) {
+            background: #2c2c2e;
+            color: #f5f5f7;
+        }
+        
+        .nav-logout {
+            color: #ff3b30;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .dark .stat-card {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .stat-icon.courses { background: #007aff; }
+        .stat-icon.videos { background: #30d158; }
+        .stat-icon.students { background: #af52de; }
+        .stat-icon.completion { background: #ff9500; }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #86868b;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .dark .stat-value {
+            color: #f5f5f7;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .dark .content-card {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .card-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #1d1d1f;
+        }
+        
+        .dark .card-title {
+            color: #f5f5f7;
+        }
+        
+        .course-item {
+            padding: 20px 0;
+            border-bottom: 1px solid #f2f2f7;
+        }
+        
+        .dark .course-item {
+            border-bottom-color: #2c2c2e;
+        }
+        
+        .course-item:last-child {
+            border-bottom: none;
+        }
+        
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .course-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1d1d1f;
+            max-width: 60%;
+        }
+        
+        .dark .course-name {
+            color: #f5f5f7;
+        }
+        
+        .course-completion {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .dark .course-completion {
+            color: #f5f5f7;
+        }
+        
+        .course-stats {
+            font-size: 14px;
+            color: #86868b;
+            margin-bottom: 12px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #f2f2f7;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .dark .progress-bar {
+            background: #2c2c2e;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #007aff;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #f2f2f7;
+        }
+        
+        .dark .activity-item {
+            border-bottom-color: #2c2c2e;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            background: #30d158;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d1d1f;
+            margin-bottom: 4px;
+        }
+        
+        .dark .activity-title {
+            color: #f5f5f7;
+        }
+        
+        .activity-subtitle {
+            font-size: 12px;
+            color: #86868b;
+        }
+        
+        .activity-date {
+            font-size: 12px;
+            color: #86868b;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #86868b;
+        }
+        
+        .actions-card {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .dark .actions-card {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .action-btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .action-btn.primary {
+            background: #007aff;
+            color: white;
+        }
+        
+        .action-btn.primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .action-btn.secondary {
+            background: #f2f2f7;
+            color: #1d1d1f;
+            border: 1px solid #d2d2d7;
+        }
+        
+        .dark .action-btn.secondary {
+            background: #2c2c2e;
+            color: #f5f5f7;
+            border-color: #424245;
+        }
+        
+        .action-btn.secondary:hover {
+            background: #e5e5ea;
+            transform: translateY(-2px);
+        }
+        
+        .dark .action-btn.secondary:hover {
+            background: #3a3a3c;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 22px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        
+        .dark .theme-toggle {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            .nav-content {
+                flex-direction: column;
+                height: auto;
+                padding: 16px 0;
+                gap: 16px;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <h1 class="text-xl font-semibold text-gray-900">Teacher Dashboard</h1>
+<body>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+    
+    <nav class="navbar">
+        <div class="nav-content">
+            <h1 class="nav-title">Teacher Dashboard</h1>
+            <div class="nav-actions">
+                <span class="nav-user">Welcome, <%= user?.name || user?.email || 'Teacher' %></span>
+                <div class="nav-links">
+                    <a href="/student/dashboard" class="nav-link">Student View</a>
+                    <a href="/dashboard" class="nav-link">Auto View</a>
+                    <span class="nav-link active">Teacher View</span>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-700">Welcome, <%= user?.name || user?.email || 'Teacher' %></span>
-                    <div class="flex space-x-2">
-                        <a href="/student/dashboard" class="text-blue-600 hover:text-blue-800 text-sm px-3 py-1 bg-blue-50 rounded-lg">Student View</a>
-                        <a href="/dashboard" class="text-gray-600 hover:text-gray-800 text-sm px-3 py-1 bg-gray-50 rounded-lg">Auto View</a>
-                    </div>
-                    <a href="/logout" class="text-red-600 hover:text-red-800">Logout</a>
-                </div>
+                <a href="/logout" class="nav-logout">Logout</a>
             </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Stats Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-book text-blue-500 text-2xl"></i>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Total Courses</dt>
-                                <dd class="text-lg font-medium text-gray-900"><%= totalCourses %></dd>
-                            </dl>
-                        </div>
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon courses">📚</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Courses</div>
+                        <div class="stat-value"><%= totalCourses %></div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-play-circle text-green-500 text-2xl"></i>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Total Videos</dt>
-                                <dd class="text-lg font-medium text-gray-900"><%= totalVideos %></dd>
-                            </dl>
-                        </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon videos">▶️</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Videos</div>
+                        <div class="stat-value"><%= totalVideos %></div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-users text-purple-500 text-2xl"></i>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Active Students</dt>
-                                <dd class="text-lg font-medium text-gray-900"><%= totalStudents %></dd>
-                            </dl>
-                        </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon students">👥</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Active Students</div>
+                        <div class="stat-value"><%= totalStudents %></div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-chart-line text-yellow-500 text-2xl"></i>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">Avg Completion</dt>
-                                <dd class="text-lg font-medium text-gray-900">
-                                    <% 
-                                    const avgCompletion = courseStats.length > 0 
-                                        ? Math.round(courseStats.reduce((sum, course) => sum + course.completionRate, 0) / courseStats.length)
-                                        : 0;
-                                    %>
-                                    <%= avgCompletion %>%
-                                </dd>
-                            </dl>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon completion">📈</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Avg Completion</div>
+                        <div class="stat-value">
+                            <% 
+                            const avgCompletion = courseStats.length > 0 
+                                ? Math.round(courseStats.reduce((sum, course) => sum + course.completionRate, 0) / courseStats.length)
+                                : 0;
+                            %>
+                            <%= avgCompletion %>%
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Course Statistics -->
-            <div class="bg-white shadow rounded-lg">
-                <div class="px-4 py-5 sm:p-6">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Course Performance</h3>
-                    <div class="space-y-4">
+        <div class="content-grid">
+            <div class="content-card">
+                <h3 class="card-title">Course Performance</h3>
+                <div class="course-list">
+                    <% if (courseStats.length > 0) { %>
                         <% courseStats.forEach(course => { %>
-                        <div class="border-l-4 border-blue-500 pl-4">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h4 class="font-medium text-gray-900 truncate" title="<%= course.name %>">
-                                        <%= course.name.length > 50 ? course.name.substring(0, 50) + '...' : course.name %>
-                                    </h4>
-                                    <p class="text-sm text-gray-500">
-                                        <%= course.watchedVideos %>/<%= course.totalVideos %> videos watched
-                                    </p>
+                        <div class="course-item">
+                            <div class="course-header">
+                                <div class="course-name" title="<%= course.name %>">
+                                    <%= course.name.length > 50 ? course.name.substring(0, 50) + '...' : course.name %>
                                 </div>
-                                <div class="text-right">
-                                    <span class="text-lg font-semibold text-gray-900"><%= course.completionRate %>%</span>
-                                    <div class="w-20 bg-gray-200 rounded-full h-2 mt-1">
-                                        <div class="bg-blue-600 h-2 rounded-full" style="width: <%= course.completionRate %>%"></div>
-                                    </div>
-                                </div>
+                                <div class="course-completion"><%= course.completionRate %>%</div>
+                            </div>
+                            <div class="course-stats">
+                                <%= course.watchedVideos %>/<%= course.totalVideos %> videos watched
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: <%= course.completionRate %>%"></div>
                             </div>
                         </div>
                         <% }); %>
-                    </div>
+                    <% } else { %>
+                        <div class="empty-state">No course data available</div>
+                    <% } %>
                 </div>
             </div>
 
-            <!-- Recent Activity -->
-            <div class="bg-white shadow rounded-lg">
-                <div class="px-4 py-5 sm:p-6">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Recent Activity</h3>
-                    <div class="space-y-3">
-                        <% if (recentActivity.length > 0) { %>
-                            <% recentActivity.forEach(activity => { %>
-                            <div class="flex items-center space-x-3">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-play-circle text-green-500"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 truncate">
-                                        <%= activity.videoTitle %>
-                                    </p>
-                                    <p class="text-sm text-gray-500 truncate">
-                                        <%= activity.courseName %>
-                                    </p>
-                                </div>
-                                <div class="text-sm text-gray-500">
-                                    <%= new Date(activity.watchedAt).toLocaleDateString() %>
-                                </div>
+            <div class="content-card">
+                <h3 class="card-title">Recent Activity</h3>
+                <div class="activity-list">
+                    <% if (recentActivity.length > 0) { %>
+                        <% recentActivity.forEach(activity => { %>
+                        <div class="activity-item">
+                            <div class="activity-icon">▶️</div>
+                            <div class="activity-content">
+                                <div class="activity-title"><%= activity.videoTitle %></div>
+                                <div class="activity-subtitle"><%= activity.courseName %></div>
                             </div>
-                            <% }); %>
-                        <% } else { %>
-                            <p class="text-gray-500 text-center py-4">No recent activity</p>
-                        <% } %>
-                    </div>
+                            <div class="activity-date">
+                                <%= new Date(activity.watchedAt).toLocaleDateString() %>
+                            </div>
+                        </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="empty-state">No recent activity</div>
+                    <% } %>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="mt-8">
-            <div class="bg-white shadow rounded-lg">
-                <div class="px-4 py-5 sm:p-6">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <a href="/admin/course-manager" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                            <i class="fas fa-plus mr-2"></i>
-                            Manage Courses
-                        </a>
-                        <a href="/admin/dashboard" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            <i class="fas fa-chart-bar mr-2"></i>
-                            Analytics
-                        </a>
-                        <a href="/admin/teacher-requests" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            <i class="fas fa-users mr-2"></i>
-                            Student Management
-                        </a>
-                    </div>
-                </div>
+        <div class="actions-card">
+            <h3 class="card-title">Quick Actions</h3>
+            <div class="actions-grid">
+                <a href="/admin/course-manager" class="action-btn primary">
+                    ➕ Manage Courses
+                </a>
+                <a href="/admin/dashboard" class="action-btn secondary">
+                    📊 Analytics
+                </a>
+                <a href="/admin/teacher-requests" class="action-btn secondary">
+                    👥 Student Management
+                </a>
             </div>
         </div>
     </div>
+
+    <script>
+        // Theme management
+        function initTheme() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.classList.toggle('dark', newTheme === 'dark');
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        initTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    </script>
 </body>
 </html>

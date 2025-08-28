@@ -8,7 +8,7 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
+// Middleware 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -96,9 +96,59 @@ app.use('/api/admin', cognitoAuth, require('./routes/api/admin'));
 app.use('/api/videos', cognitoAuth, require('./routes/api/videos'));
 app.use('/api/video-proxy', cognitoAuth, require('./routes/api/video-proxy'));
 app.use('/api/gamification', cognitoAuth, require('./routes/api/gamification'));
+app.use('/api/quizzes', cognitoAuth, require('./routes/api/quizzes'));
 app.use('/api/ai', cognitoAuth, require('./routes/api/ai'));
 app.use('/api/users', cognitoAuth, require('./routes/api/users'));
 app.use('/api/enrollments', cognitoAuth, require('./routes/api/enrollments'));
+
+// AI-powered endpoints
+const aiService = require('./services/aiService');
+app.post('/api/ai/generate-todos', cognitoAuth, async (req, res) => {
+  try {
+    const { videoTitle, videoId } = req.body;
+    const todos = await aiService.generateTodoFromVideo(videoTitle);
+    res.json({ success: true, todos });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/ai/generate-quiz', cognitoAuth, async (req, res) => {
+  try {
+    const { videoTitle, videoId } = req.body;
+    const quiz = await aiService.generateQuizFromVideo(videoTitle);
+    res.json({ success: true, quiz });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/ai/analyze-content', cognitoAuth, async (req, res) => {
+  try {
+    const { videoTitle, videoId } = req.body;
+    const analysis = await aiService.analyzeVideoContent(videoTitle);
+    res.json({ success: true, analysis });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/ai/chat', cognitoAuth, async (req, res) => {
+  try {
+    const { message, context, teachingStyle } = req.body;
+    let response;
+    
+    if (teachingStyle === 'david-malan') {
+      response = await aiService.generateDavidMalanResponse(message, context);
+    } else {
+      response = await aiService.generateWithNovaPro(message, context);
+    }
+    
+    res.json({ success: true, response, model: 'Amazon Nova Pro' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Test upload page
 app.get('/test-upload', (req, res) => {
@@ -139,17 +189,39 @@ app.get('/admin/teacher-requests', sessionAuth, (req, res) => {
 
 // Admin routes
 app.get('/admin/login', (req, res) => res.render('admin-login'));
-app.get('/admin/dashboard', sessionAuth, (req, res) => {
+app.get('/admin/dashboard', sessionAuth, async (req, res) => {
   if (req.user?.email !== 'engineerfelex@gmail.com') {
     return res.redirect('/dashboard');
   }
-  res.render('admin-dashboard');
+  
+  try {
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    const courses = await dynamoVideoService.getAllCourses();
+    const stats = {
+      totalCourses: courses.length,
+      totalVideos: courses.reduce((sum, course) => sum + (course.videos?.length || 0), 0),
+      totalStudents: 1
+    };
+    res.render('admin-dashboard', { stats, courses: courses || [] });
+  } catch (error) {
+    console.error('Error loading admin dashboard:', error);
+    res.render('admin-dashboard', { stats: { totalCourses: 0, totalVideos: 0, totalStudents: 0 }, courses: [] });
+  }
 });
-app.get('/admin/course-manager', sessionAuth, (req, res) => {
+app.get('/admin/course-manager', sessionAuth, async (req, res) => {
   if (req.user?.email !== 'engineerfelex@gmail.com') {
     return res.redirect('/dashboard');
   }
-  res.render('admin-course-manager');
+  
+  try {
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    const courses = await dynamoVideoService.getAllCourses();
+    console.log('Admin courses loaded:', courses.length);
+    res.render('admin-course-manager', { courses: courses || [] });
+  } catch (error) {
+    console.error('Error loading courses for admin:', error);
+    res.render('admin-course-manager', { courses: [] });
+  }
 });
 
 // Web Routes (protected by session)
@@ -161,6 +233,6 @@ app.use('/videos', sessionAuth, require('./routes/videos'));
 const webController = require('./controllers/webController');
 app.get('/course/:courseName', sessionAuth, (req, res) => webController.renderCourse(req, res));
 app.get('/course/:courseName/video/:videoId?', sessionAuth, (req, res) => webController.renderVideo(req, res));
-app.get('/videos/:courseName/:videoId', sessionAuth, (req, res) => webController.renderVideoById(req, res));
+app.get('/videos/:courseName/:videoId', sessionAuth, (req, res) => webController.renderVideo(req, res));
 
 module.exports = app;

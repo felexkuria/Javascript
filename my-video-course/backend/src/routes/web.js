@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const webController = require('../controllers/webController');
+const videoController = require('../controllers/videoController');
 const authController = require('../controllers/authController');
 const uploadController = require('../controllers/uploadController');
 
@@ -10,13 +11,12 @@ router.get('/signup', (req, res) => authController.renderSignup(req, res));
 
 // Main routes
 router.get('/', (req, res) => webController.redirectToDashboard(req, res));
-router.get('/dashboard', (req, res) => {
-  res.render('pages/dashboard');
-});
+// Dashboard route handled in app.js
+router.get('/videos', (req, res) => videoController.getVideos(req, res));
 router.get('/course/:courseName', (req, res) => webController.renderCourse(req, res));
 router.get('/course/:courseName/video/:videoId?', (req, res) => webController.renderVideo(req, res));
+router.get('/videos/:courseName/:videoId', (req, res) => webController.renderVideo(req, res));
 router.get('/videos/:courseName', (req, res) => webController.redirectToCourse(req, res));
-router.get('/videos/:courseName/:id', (req, res) => webController.renderVideoById(req, res));
 router.get('/watch/:videoUrl', (req, res) => webController.redirectToVideo(req, res));
 
 // Static pages

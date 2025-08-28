@@ -1,310 +1,835 @@
-<%- include('partials/header', { title: 'Learning Progress', extraStyles: `
-<link rel="stylesheet" href="/css/gamification.css">
-` }) %>
-
-<main class="max-w-6xl mx-auto px-4 py-6">
-  <div class="mb-8">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">🏆 Learning Progress</h1>
-        <p class="text-gray-600 dark:text-gray-400">Track your achievements and learning journey</p>
-      </div>
-      <div class="flex items-center gap-4">
-        <button id="refresh-stats" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors">
-          <i class="fas fa-sync-alt mr-2"></i>Refresh
-        </button>
-        <div class="level-badge bg-green-500 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold">
-          <span class="user-level">1</span>
-        </div>
-        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 transition-colors">
-          <span class="text-lg">🔥</span>
-          <span class="user-streak font-bold text-lg ml-2 text-gray-900 dark:text-white">0</span>
-          <span class="text-sm text-gray-500 dark:text-gray-400 block">day streak</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Stats Dashboard -->
-  <div class="stats-dashboard grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-    <div class="stat-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-6 text-center transition-colors">
-      <span class="stat-icon text-3xl">🏆</span>
-      <div class="stat-value user-points text-2xl font-bold mt-2 text-gray-900 dark:text-white">0</div>
-      <div class="stat-label text-sm text-gray-600 dark:text-gray-400">Total Points</div>
-    </div>
-    <div class="stat-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-6 text-center transition-colors">
-      <span class="stat-icon text-3xl">📺</span>
-      <div class="stat-value text-2xl font-bold mt-2 text-gray-900 dark:text-white" id="videos-watched">0</div>
-      <div class="stat-label text-sm text-gray-600 dark:text-gray-400">Videos Watched</div>
-    </div>
-    <div class="stat-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-6 text-center transition-colors">
-      <span class="stat-icon text-3xl">📚</span>
-      <div class="stat-value text-2xl font-bold mt-2 text-gray-900 dark:text-white" id="courses-completed">0</div>
-      <div class="stat-label text-sm text-gray-600 dark:text-gray-400">Courses Completed</div>
-    </div>
-    <div class="stat-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-6 text-center transition-colors">
-      <span class="stat-icon text-3xl">🎯</span>
-      <div class="stat-value text-2xl font-bold mt-2 text-gray-900 dark:text-white" id="achievements-earned">0</div>
-      <div class="stat-label text-sm text-gray-600 dark:text-gray-400">Achievements</div>
-    </div>
-  </div>
-
-  <!-- Level Progress -->
-  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-6 mb-8 transition-colors">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Level Progress</h2>
-      <span class="text-sm text-gray-600 dark:text-gray-400">Level <span class="user-level">1</span></span>
-    </div>
-    <div class="animated-progress bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
-      <div class="animated-progress-fill bg-green-500 h-3 rounded-full transition-all" id="level-progress" style="width: 0%"></div>
-    </div>
-    <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-      <span id="current-xp">0 XP</span>
-      <span id="next-level-xp">100 XP</span>
-    </div>
-  </div>
-
-  <!-- Achievements Section -->
-  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-6 mb-8 transition-colors">
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Achievements</h2>
-    <div class="achievements-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="achievements-container">
-      <!-- Achievements populated by JavaScript -->
-    </div>
-  </div>
-
-  <!-- Learning Streak Calendar -->
-  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-6 transition-colors">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Learning Streak</h2>
-      <div class="flex items-center gap-2">
-        <button id="prev-month" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
-          <i class="fas fa-chevron-left text-gray-600 dark:text-gray-400"></i>
-        </button>
-        <span id="calendar-month" class="font-medium min-w-[120px] text-center text-gray-900 dark:text-white"></span>
-        <button id="next-month" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
-          <i class="fas fa-chevron-right text-gray-600 dark:text-gray-400"></i>
-        </button>
-      </div>
-    </div>
-    <div class="grid grid-cols-7 gap-2 mb-4">
-      <div class="text-center text-sm font-medium text-gray-600 dark:text-gray-400 py-2">Sun</div>
-      <div class="text-center text-sm font-medium text-gray-600 dark:text-gray-400 py-2">Mon</div>
-      <div class="text-center text-sm font-medium text-gray-600 dark:text-gray-400 py-2">Tue</div>
-      <div class="text-center text-sm font-medium text-gray-600 dark:text-gray-400 py-2">Wed</div>
-      <div class="text-center text-sm font-medium text-gray-600 dark:text-gray-400 py-2">Thu</div>
-      <div class="text-center text-sm font-medium text-gray-600 dark:text-gray-400 py-2">Fri</div>
-      <div class="text-center text-sm font-medium text-gray-600 dark:text-gray-400 py-2">Sat</div>
-    </div>
-    <div class="grid grid-cols-7 gap-1 sm:gap-2" id="streak-calendar">
-      <!-- Calendar populated by JavaScript -->
-    </div>
-    <div class="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-      <span>Current Streak: <strong class="user-streak">0</strong> days</span>
-      <span>Longest Streak: <strong id="longest-streak">0</strong> days</span>
-    </div>
-  </div>
-</main>
-
-<script src="/js/gamification.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  let retryCount = 0;
-  const maxRetries = 10;
-  
-  function tryUpdateProfile() {
-    if (window.gamificationSystem) {
-      updateProfileDisplay();
-    } else if (retryCount < maxRetries) {
-      retryCount++;
-      setTimeout(tryUpdateProfile, 500);
-    } else {
-      console.error('Gamification system failed to load');
-      showFallbackData();
-    }
-  }
-  
-  function showFallbackData() {
-    const elements = {
-      'videos-watched': '0',
-      'courses-completed': '0', 
-      'achievements-earned': '0/8',
-      'current-xp': '0 XP',
-      'next-level-xp': '100 XP',
-      'longest-streak': '0'
-    };
-    
-    Object.entries(elements).forEach(([id, value]) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    });
-  }
-  
-  loadWatchDates().then(() => {
-    if (window.gamificationSystem) {
-      window.gamificationSystem.syncWithLocalStorageVideos().then(() => {
-        updateProfileDisplay();
-      });
-    } else {
-      updateProfileDisplay();
-    }
-  });
-  
-  async function updateProfileDisplay() {
-    if (!window.gamificationSystem) {
-      console.warn('Gamification system not loaded yet');
-      return;
-    }
-    
-    const progress = await window.gamificationSystem.getProgressSummary();
-    
-    const videosWatchedEl = document.getElementById('videos-watched');
-    const coursesCompletedEl = document.getElementById('courses-completed');
-    const achievementsEarnedEl = document.getElementById('achievements-earned');
-    
-    if (videosWatchedEl) {
-      videosWatchedEl.textContent = progress.videosWatched || 0;
-    }
-    if (coursesCompletedEl) coursesCompletedEl.textContent = progress.coursesCompleted || 0;
-    if (achievementsEarnedEl) achievementsEarnedEl.textContent = `${progress.achievements || 0}/${progress.totalAchievements || 0}`;
-    
-    // Update level progress
-    const xpForNextLevel = (progress.level || 1) * 100;
-    const currentXP = window.gamificationSystem.userStats?.experiencePoints || 0;
-    const progressPercent = (currentXP / xpForNextLevel) * 100;
-    
-    const levelProgressEl = document.getElementById('level-progress');
-    const currentXpEl = document.getElementById('current-xp');
-    const nextLevelXpEl = document.getElementById('next-level-xp');
-    const longestStreakEl = document.getElementById('longest-streak');
-    
-    if (levelProgressEl) levelProgressEl.style.width = `${progressPercent}%`;
-    if (currentXpEl) currentXpEl.textContent = `${currentXP} XP`;
-    if (nextLevelXpEl) nextLevelXpEl.textContent = `${xpForNextLevel} XP`;
-    if (longestStreakEl) longestStreakEl.textContent = progress.longestStreak || 0;
-    
-    populateAchievements();
-    populateStreakCalendar();
-  }
-  
-  function populateAchievements() {
-    const container = document.getElementById('achievements-container');
-    if (!container || !window.gamificationSystem) return;
-    
-    const definitions = window.gamificationSystem.getAchievementDefinitions();
-    const earned = window.gamificationSystem.achievements || [];
-    
-    container.innerHTML = '';
-    
-    Object.values(definitions).forEach(achievement => {
-      const isEarned = earned.includes(achievement.id);
-      const card = document.createElement('div');
-      card.className = `achievement-card card border rounded-lg p-4 text-center ${isEarned ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 opacity-60'}`;
-      
-      card.innerHTML = `
-        <span class="achievement-card-icon text-2xl">${achievement.icon}</span>
-        <div class="achievement-card-name font-medium mt-2 text-gray-900 dark:text-white">${achievement.name}</div>
-        <div class="achievement-card-description text-sm text-gray-600 dark:text-gray-400 mt-1">${achievement.description}</div>
-        <div class="achievement-card-points text-xs text-gray-500 dark:text-gray-400 mt-2">${achievement.points} points</div>
-      `;
-      
-      container.appendChild(card);
-    });
-  }
-  
-  let currentCalendarDate = new Date();
-  let watchDatesData = [];
-  
-  async function loadWatchDates() {
-    try {
-      const response = await fetch('/api/videos/watch-dates');
-      if (response.ok) {
-        watchDatesData = await response.json();
-      }
-    } catch (error) {
-      console.warn('Failed to load watch dates:', error);
-    }
-  }
-  
-  function populateStreakCalendar() {
-    const calendar = document.getElementById('streak-calendar');
-    const monthLabel = document.getElementById('calendar-month');
-    
-    if (!calendar || !monthLabel) return;
-    
-    monthLabel.textContent = currentCalendarDate.toLocaleDateString('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
-    });
-    
-    const firstDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
-    const startDate = new Date(firstDay.getTime() - (firstDay.getDay() * 24 * 60 * 60 * 1000));
-    
-    calendar.innerHTML = '';
-    
-    for (let i = 0; i < 42; i++) {
-      const date = new Date(startDate.getTime() + (i * 24 * 60 * 60 * 1000));
-      const dateString = date.toISOString().split('T')[0];
-      
-      const dayWatchData = watchDatesData.filter(w => w.date === dateString);
-      const hasActivity = dayWatchData.length > 0;
-      const isCurrentMonth = date.getMonth() === currentCalendarDate.getMonth();
-      const isToday = dateString === new Date().toISOString().split('T')[0];
-      
-      const dayElement = document.createElement('div');
-      dayElement.className = `w-8 h-8 rounded flex items-center justify-center text-xs transition-colors cursor-pointer relative ${
-        hasActivity 
-          ? 'bg-green-500 text-white' 
-          : isCurrentMonth 
-            ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' 
-            : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
-      } ${
-        isToday ? 'ring-2 ring-blue-500' : ''
-      }`;
-      dayElement.textContent = date.getDate();
-      
-      if (hasActivity) {
-        const videoTitles = dayWatchData.map(w => `${w.videoTitle} (${w.courseName})`).join('\n');
-        dayElement.title = `Videos watched on ${date.toLocaleDateString()}:\n${videoTitles}`;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Progress - Video Course Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        if (dayWatchData.length > 1) {
-          const indicator = document.createElement('div');
-          indicator.className = 'absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full text-xs flex items-center justify-center text-black font-bold';
-          indicator.textContent = dayWatchData.length;
-          indicator.style.fontSize = '8px';
-          dayElement.appendChild(indicator);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.47059;
+            font-weight: 400;
+            letter-spacing: -0.022em;
         }
-      }
-      
-      calendar.appendChild(dayElement);
-    }
-  }
-  
-  // Calendar navigation
-  document.getElementById('prev-month').addEventListener('click', () => {
-    currentCalendarDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() - 1, 1);
-    populateStreakCalendar();
-  });
-  
-  document.getElementById('next-month').addEventListener('click', () => {
-    currentCalendarDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 1);
-    populateStreakCalendar();
-  });
-  
-  // Refresh stats
-  document.getElementById('refresh-stats').addEventListener('click', async function() {
-    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing...';
+        
+        .dark body {
+            background: #000;
+            color: #f5f5f7;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+        
+        .header-content h1 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+        
+        .dark .header-content h1 {
+            color: #f5f5f7;
+        }
+        
+        .header-content p {
+            font-size: 21px;
+            color: #86868b;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .level-badge {
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background: #30d158;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .streak-display {
+            background: white;
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .dark .streak-display {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .streak-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .streak-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .dark .streak-value {
+            color: #f5f5f7;
+        }
+        
+        .streak-label {
+            font-size: 12px;
+            color: #86868b;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .dark .stat-card {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .stat-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+        
+        .dark .stat-value {
+            color: #f5f5f7;
+        }
+        
+        .stat-label {
+            font-size: 16px;
+            color: #86868b;
+        }
+        
+        .level-progress-card {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+        }
+        
+        .dark .level-progress-card {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .progress-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .dark .progress-title {
+            color: #f5f5f7;
+        }
+        
+        .level-info {
+            font-size: 16px;
+            color: #86868b;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #f2f2f7;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        
+        .dark .progress-bar {
+            background: #2c2c2e;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #30d158, #007aff);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+        
+        .xp-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #86868b;
+        }
+        
+        .achievements-card {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+        }
+        
+        .dark .achievements-card {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .achievements-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 32px;
+            color: #1d1d1f;
+        }
+        
+        .dark .achievements-title {
+            color: #f5f5f7;
+        }
+        
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .achievement-card {
+            background: #f2f2f7;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .dark .achievement-card {
+            background: #2c2c2e;
+        }
+        
+        .achievement-card.earned {
+            background: linear-gradient(135deg, #30d158, #007aff);
+            color: white;
+        }
+        
+        .achievement-card.earned .achievement-name,
+        .achievement-card.earned .achievement-description,
+        .achievement-card.earned .achievement-points {
+            color: white;
+        }
+        
+        .achievement-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .achievement-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+        
+        .dark .achievement-name {
+            color: #f5f5f7;
+        }
+        
+        .achievement-description {
+            font-size: 14px;
+            color: #86868b;
+            margin-bottom: 8px;
+        }
+        
+        .achievement-points {
+            font-size: 12px;
+            color: #86868b;
+        }
+        
+        .calendar-card {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .dark .calendar-card {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        
+        .calendar-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .dark .calendar-title {
+            color: #f5f5f7;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 18px;
+            background: #f2f2f7;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .dark .nav-btn {
+            background: #2c2c2e;
+            color: #f5f5f7;
+        }
+        
+        .nav-btn:hover {
+            background: #e5e5ea;
+            transform: scale(1.1);
+        }
+        
+        .dark .nav-btn:hover {
+            background: #3a3a3c;
+        }
+        
+        .calendar-month {
+            font-size: 16px;
+            font-weight: 500;
+            min-width: 120px;
+            text-align: center;
+            color: #1d1d1f;
+        }
+        
+        .dark .calendar-month {
+            color: #f5f5f7;
+        }
+        
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .weekday {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #86868b;
+            padding: 12px 0;
+        }
+        
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        
+        .calendar-day {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .calendar-day.current-month {
+            background: #f2f2f7;
+            color: #1d1d1f;
+        }
+        
+        .dark .calendar-day.current-month {
+            background: #2c2c2e;
+            color: #f5f5f7;
+        }
+        
+        .calendar-day.other-month {
+            background: #f9f9f9;
+            color: #86868b;
+        }
+        
+        .dark .calendar-day.other-month {
+            background: #1a1a1a;
+            color: #86868b;
+        }
+        
+        .calendar-day.has-activity {
+            background: #30d158;
+            color: white;
+        }
+        
+        .calendar-day.today {
+            box-shadow: 0 0 0 2px #007aff;
+        }
+        
+        .activity-indicator {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: #ff9500;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .calendar-footer {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #86868b;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 22px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        
+        .dark .theme-toggle {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .achievements-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
     
-    if (window.gamificationSystem) {
-      await window.gamificationSystem.syncWithLocalStorageVideos();
-      await loadWatchDates();
-      updateProfileDisplay();
-    }
-    
-    this.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Refresh';
-  });
-  
-  tryUpdateProfile();
-});
-</script>
+    <div class="container">
+        <div class="profile-header">
+            <div class="header-content">
+                <h1>Learning Progress</h1>
+                <p>Track your achievements and learning journey</p>
+            </div>
+            <div class="header-actions">
+                <button id="refresh-stats" class="btn btn-primary">
+                    🔄 Refresh
+                </button>
+                <div class="level-badge user-level">1</div>
+                <div class="streak-display">
+                    <div class="streak-icon">🔥</div>
+                    <div class="streak-value user-streak">0</div>
+                    <div class="streak-label">day streak</div>
+                </div>
+            </div>
+        </div>
 
-<%- include('partials/footer') %>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-value user-points">0</div>
+                <div class="stat-label">Total Points</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">📺</div>
+                <div class="stat-value" id="videos-watched">0</div>
+                <div class="stat-label">Videos Watched</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-value" id="courses-completed">0</div>
+                <div class="stat-label">Courses Completed</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-value" id="achievements-earned">0</div>
+                <div class="stat-label">Achievements</div>
+            </div>
+        </div>
+
+        <div class="level-progress-card">
+            <div class="progress-header">
+                <h2 class="progress-title">Level Progress</h2>
+                <span class="level-info">Level <span class="user-level">1</span></span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="level-progress" style="width: 0%"></div>
+            </div>
+            <div class="xp-info">
+                <span id="current-xp">0 XP</span>
+                <span id="next-level-xp">100 XP</span>
+            </div>
+        </div>
+
+        <div class="achievements-card">
+            <h2 class="achievements-title">Achievements</h2>
+            <div class="achievements-grid" id="achievements-container">
+                <!-- Achievements populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <h2 class="calendar-title">Learning Streak</h2>
+                <div class="calendar-nav">
+                    <button id="prev-month" class="nav-btn">‹</button>
+                    <span id="calendar-month" class="calendar-month"></span>
+                    <button id="next-month" class="nav-btn">›</button>
+                </div>
+            </div>
+            
+            <div class="calendar-weekdays">
+                <div class="weekday">Sun</div>
+                <div class="weekday">Mon</div>
+                <div class="weekday">Tue</div>
+                <div class="weekday">Wed</div>
+                <div class="weekday">Thu</div>
+                <div class="weekday">Fri</div>
+                <div class="weekday">Sat</div>
+            </div>
+            
+            <div class="calendar-days" id="streak-calendar">
+                <!-- Calendar populated by JavaScript -->
+            </div>
+            
+            <div class="calendar-footer">
+                <span>Current Streak: <strong class="user-streak">0</strong> days</span>
+                <span>Longest Streak: <strong id="longest-streak">0</strong> days</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/gamification.js"></script>
+    <script>
+        // Theme management
+        function initTheme() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.classList.toggle('dark', newTheme === 'dark');
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        initTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            let retryCount = 0;
+            const maxRetries = 10;
+            
+            function tryUpdateProfile() {
+                if (window.gamificationSystem) {
+                    updateProfileDisplay();
+                } else if (retryCount < maxRetries) {
+                    retryCount++;
+                    setTimeout(tryUpdateProfile, 500);
+                } else {
+                    console.error('Gamification system failed to load');
+                    showFallbackData();
+                }
+            }
+            
+            function showFallbackData() {
+                const elements = {
+                    'videos-watched': '0',
+                    'courses-completed': '0', 
+                    'achievements-earned': '0/8',
+                    'current-xp': '0 XP',
+                    'next-level-xp': '100 XP',
+                    'longest-streak': '0'
+                };
+                
+                Object.entries(elements).forEach(([id, value]) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = value;
+                });
+            }
+            
+            loadWatchDates().then(() => {
+                if (window.gamificationSystem) {
+                    window.gamificationSystem.syncWithLocalStorageVideos().then(() => {
+                        updateProfileDisplay();
+                    });
+                } else {
+                    updateProfileDisplay();
+                }
+            });
+            
+            async function updateProfileDisplay() {
+                if (!window.gamificationSystem) {
+                    console.warn('Gamification system not loaded yet');
+                    return;
+                }
+                
+                const progress = await window.gamificationSystem.getProgressSummary();
+                
+                const videosWatchedEl = document.getElementById('videos-watched');
+                const coursesCompletedEl = document.getElementById('courses-completed');
+                const achievementsEarnedEl = document.getElementById('achievements-earned');
+                
+                if (videosWatchedEl) {
+                    videosWatchedEl.textContent = progress.videosWatched || 0;
+                }
+                if (coursesCompletedEl) coursesCompletedEl.textContent = progress.coursesCompleted || 0;
+                if (achievementsEarnedEl) achievementsEarnedEl.textContent = `${progress.achievements || 0}/${progress.totalAchievements || 0}`;
+                
+                // Update level progress
+                const xpForNextLevel = (progress.level || 1) * 100;
+                const currentXP = window.gamificationSystem.userStats?.experiencePoints || 0;
+                const progressPercent = (currentXP / xpForNextLevel) * 100;
+                
+                const levelProgressEl = document.getElementById('level-progress');
+                const currentXpEl = document.getElementById('current-xp');
+                const nextLevelXpEl = document.getElementById('next-level-xp');
+                const longestStreakEl = document.getElementById('longest-streak');
+                
+                if (levelProgressEl) levelProgressEl.style.width = `${progressPercent}%`;
+                if (currentXpEl) currentXpEl.textContent = `${currentXP} XP`;
+                if (nextLevelXpEl) nextLevelXpEl.textContent = `${xpForNextLevel} XP`;
+                if (longestStreakEl) longestStreakEl.textContent = progress.longestStreak || 0;
+                
+                populateAchievements();
+                populateStreakCalendar();
+            }
+            
+            function populateAchievements() {
+                const container = document.getElementById('achievements-container');
+                if (!container || !window.gamificationSystem) return;
+                
+                const definitions = window.gamificationSystem.getAchievementDefinitions();
+                const earned = window.gamificationSystem.achievements || [];
+                
+                container.innerHTML = '';
+                
+                Object.values(definitions).forEach(achievement => {
+                    const isEarned = earned.includes(achievement.id);
+                    const card = document.createElement('div');
+                    card.className = `achievement-card ${isEarned ? 'earned' : ''}`;
+                    
+                    card.innerHTML = `
+                        <div class="achievement-icon">${achievement.icon}</div>
+                        <div class="achievement-name">${achievement.name}</div>
+                        <div class="achievement-description">${achievement.description}</div>
+                        <div class="achievement-points">${achievement.points} points</div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+            }
+            
+            let currentCalendarDate = new Date();
+            let watchDatesData = [];
+            
+            async function loadWatchDates() {
+                try {
+                    const response = await fetch('/api/videos/watch-dates');
+                    if (response.ok) {
+                        watchDatesData = await response.json();
+                    }
+                } catch (error) {
+                    console.warn('Failed to load watch dates:', error);
+                }
+            }
+            
+            function populateStreakCalendar() {
+                const calendar = document.getElementById('streak-calendar');
+                const monthLabel = document.getElementById('calendar-month');
+                
+                if (!calendar || !monthLabel) return;
+                
+                monthLabel.textContent = currentCalendarDate.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+                
+                const firstDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
+                const startDate = new Date(firstDay.getTime() - (firstDay.getDay() * 24 * 60 * 60 * 1000));
+                
+                calendar.innerHTML = '';
+                
+                for (let i = 0; i < 42; i++) {
+                    const date = new Date(startDate.getTime() + (i * 24 * 60 * 60 * 1000));
+                    const dateString = date.toISOString().split('T')[0];
+                    
+                    const dayWatchData = watchDatesData.filter(w => w.date === dateString);
+                    const hasActivity = dayWatchData.length > 0;
+                    const isCurrentMonth = date.getMonth() === currentCalendarDate.getMonth();
+                    const isToday = dateString === new Date().toISOString().split('T')[0];
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = `calendar-day ${
+                        isCurrentMonth ? 'current-month' : 'other-month'
+                    } ${hasActivity ? 'has-activity' : ''} ${isToday ? 'today' : ''}`;
+                    dayElement.textContent = date.getDate();
+                    
+                    if (hasActivity && dayWatchData.length > 1) {
+                        const indicator = document.createElement('div');
+                        indicator.className = 'activity-indicator';
+                        indicator.textContent = dayWatchData.length;
+                        dayElement.appendChild(indicator);
+                    }
+                    
+                    if (hasActivity) {
+                        const videoTitles = dayWatchData.map(w => `${w.videoTitle} (${w.courseName})`).join('\\n');
+                        dayElement.title = `Videos watched on ${date.toLocaleDateString()}:\\n${videoTitles}`;
+                    }
+                    
+                    calendar.appendChild(dayElement);
+                }
+            }
+            
+            // Calendar navigation
+            document.getElementById('prev-month').addEventListener('click', () => {
+                currentCalendarDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() - 1, 1);
+                populateStreakCalendar();
+            });
+            
+            document.getElementById('next-month').addEventListener('click', () => {
+                currentCalendarDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 1);
+                populateStreakCalendar();
+            });
+            
+            // Refresh stats
+            document.getElementById('refresh-stats').addEventListener('click', async function() {
+                this.innerHTML = '⏳ Refreshing...';
+                
+                if (window.gamificationSystem) {
+                    await window.gamificationSystem.syncWithLocalStorageVideos();
+                    await loadWatchDates();
+                    updateProfileDisplay();
+                }
+                
+                this.innerHTML = '🔄 Refresh';
+            });
+            
+            tryUpdateProfile();
+        });
+    </script>
+</body>
+</html>

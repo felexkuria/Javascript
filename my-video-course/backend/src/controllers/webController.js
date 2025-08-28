@@ -16,30 +16,45 @@ class WebController {
 
   async renderDashboard(req, res) {
     try {
-      console.log('Dashboard request - User:', req.user);
-      console.log('Session user:', req.session?.user);
-      
-      // Get user from session or request
       const user = req.user || req.session?.user;
+      console.log('Dashboard - User roles:', user?.roles, 'Current role:', user?.currentRole);
       
-      // Check if user is teacher and show appropriate dashboard
-      if (user && (user.isTeacher || user.currentRole === 'teacher' || (user.roles && user.roles.includes('teacher')))) {
-        console.log('Redirecting to teacher dashboard');
+      // Check if user specifically requested teacher role and has teacher permissions
+      const requestedTeacher = user?.currentRole === 'teacher';
+      const hasTeacherRole = user?.roles?.includes('teacher') || user?.isTeacher;
+      
+      if (requestedTeacher && hasTeacherRole) {
+        console.log('✅ Rendering teacher dashboard');
         const teacherController = require('./teacherController');
         return teacherController.renderDashboard(req, res);
       }
       
-      console.log('Rendering student dashboard');
-      const userId = user?.email || 'default_user';
-      
-      // Use DynamoDB service first (which has fallback logic)
+      console.log('✅ Rendering student dashboard');
+      const userId = user?.email || 'guest';
+      console.log('🔍 User ID:', userId);
       const courses = await dynamoVideoService.getAllCourses(userId);
+      const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
+      console.log('🔍 Gamification Data:', {
+        totalPoints: gamificationData?.userStats?.totalPoints,
+        currentLevel: gamificationData?.userStats?.currentLevel,
+        currentStreak: gamificationData?.streakData?.currentStreak
+      });
       const usingDynamoDB = dynamoVideoService.isDynamoAvailable();
 
       res.render('dashboard', { 
         courses, 
         offlineMode: !usingDynamoDB,
-        user: user 
+        user: user,
+        gamificationData: gamificationData || {
+          userStats: {
+            totalPoints: 0,
+            currentLevel: 1,
+            experiencePoints: 0
+          },
+          streakData: {
+            currentStreak: 0
+          }
+        }
       });
     } catch (err) {
       console.error('Error fetching course data:', err);
@@ -50,7 +65,7 @@ class WebController {
   async renderCourse(req, res) {
     try {
       const courseName = decodeURIComponent(req.params.courseName);
-      const userId = req.user?.email || 'default_user';
+      const userId = req.user?.email || 'guest';
       console.log(`Rendering course: ${courseName} for user: ${userId}`);
       
       // Use DynamoDB service with user personalization
@@ -61,19 +76,8 @@ class WebController {
         videos = [];
       }
 
-      // Remove duplicates by _id
-      const uniqueVideos = [];
-      const seenIds = new Set();
-      
-      for (const video of videos) {
-        if (video && video._id && !seenIds.has(video._id.toString())) {
-          seenIds.add(video._id.toString());
-          uniqueVideos.push(video);
-        }
-      }
-      
-      console.log(`Removed duplicates: ${videos.length} -> ${uniqueVideos.length}`);
-      videos = uniqueVideos;
+      console.log(`Videos already deduplicated and sorted: ${videos.length}`);
+      // DynamoDB service already handles deduplication and sorting
 
       if (videos.length === 0) {
         return res.render('course', {
@@ -115,8 +119,11 @@ class WebController {
   async renderVideo(req, res) {
     try {
       const courseName = decodeURIComponent(req.params.courseName);
-      const videoId = req.params.videoId;
-      const userId = req.user?.email || 'default_user';
+      console.log('Route params:', req.params);
+      console.log('URL:', req.url);
+      const videoId = req.params.videoId || req.params.id;
+      console.log('Extracted videoId:', videoId);
+      const userId = req.user?.email || 'guest';
       const autoplay = req.query.autoplay === 'true';
 
       // Use DynamoDB service with user personalization
@@ -185,12 +192,26 @@ class WebController {
       let videoIndex = 0;
 
       if (videoId) {
-        video = videos.find(v => v._id.toString() === videoId);
-        videoIndex = videos.findIndex(v => v._id.toString() === videoId);
+        console.log(`Looking for video ID: ${videoId}`);
+        console.log(`Available videos: ${videos.length}`);
+        if (videos.length > 0) {
+          console.log(`Sample video IDs: ${videos.slice(0,3).map(v => v._id || v.videoId).join(', ')}`);
+        }
+        
+        video = videos.find(v => 
+          (v._id && v._id.toString() === videoId) || 
+          (v.videoId && v.videoId.toString() === videoId)
+        );
+        videoIndex = videos.findIndex(v => 
+          (v._id && v._id.toString() === videoId) || 
+          (v.videoId && v.videoId.toString() === videoId)
+        );
 
         if (!video) {
-          return res.status(404).render('error', { message: 'Video not found' });
+          console.log(`Video not found: ${videoId}`);
+          return res.status(404).render('error', { message: 'Video not found', courseName });
         }
+        console.log(`Found video: ${video.title}`);
       } else {
         video = videos[0];
       }
@@ -249,10 +270,7 @@ class WebController {
       const courseName = decodeURIComponent(req.params.courseName);
       const id = req.params.id;
 
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).send('Invalid video ID');
-      }
-
+      // Skip MongoDB ObjectId validation for DynamoDB IDs
       res.redirect(`/course/${encodeURIComponent(courseName)}/video/${id}`);
     } catch (err) {
       console.error('Error serving video:', err);
@@ -291,7 +309,7 @@ class WebController {
 
   async renderProfile(req, res) {
     try {
-      const userId = req.user?.email || 'default_user';
+      const userId = req.user?.email || 'guest';
       const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
       
       res.render('profile', {

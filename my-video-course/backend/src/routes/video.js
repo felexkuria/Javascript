@@ -5,10 +5,6 @@ const videoController = require('../controllers/videoController');
 router.get('/', videoController.getAllVideos);
 router.get('/:id', videoController.getVideoById);
 router.post('/:id/watch', videoController.markVideoAsWatched);
-// GET dashboard page
-router.get('/dashboard', (req, res) => {
-    // Render the dashboard.ejs template
-    res.render('dashboard');
-  });
+// Dashboard route removed - handled in app.js
 
 module.exports = router;

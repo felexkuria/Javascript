@@ -1,252 +1,694 @@
-<%- include('partials/header', { title: `${courseName} Course` }) %>
-
-<main class="max-w-7xl mx-auto px-4 py-6">
-  <div class="mb-8">
-    <div class="flex justify-between items-start mb-6">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">📚 <%= courseName %></h1>
-        <p class="text-gray-600 dark:text-gray-400">Master new skills with comprehensive lessons</p>
-      </div>
-      <div class="flex space-x-3">
-        <button id="enrollBtn" class="px-6 py-3 bg-apple-blue text-white rounded-xl hover:bg-blue-600 transition-all font-medium">
-          Enroll in Course
-        </button>
-      </div>
-    </div>
-    
-    <% if (typeof watchedVideos !== 'undefined' && typeof totalVideos !== 'undefined') { %>
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-colors shadow-sm">
-      <div class="flex justify-between items-center mb-3">
-        <span class="font-semibold text-gray-900 dark:text-white">Course Progress</span>
-        <span class="font-bold text-gray-900 dark:text-white"><%= watchedVideos %>/<%= totalVideos %> videos (<%= Math.round((watchedVideos / totalVideos) * 100) %>%)</span>
-      </div>
-      <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-        <div class="h-full bg-apple-blue rounded-full transition-all" style="width: <%= typeof watchedPercent !== 'undefined' ? watchedPercent : Math.round((watchedVideos / totalVideos) * 100) %>%"></div>
-      </div>
-    </div>
-    <% } %>
-  </div>
-
-  <% if (typeof error !== 'undefined') { %>
-  <div class="text-center p-6 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-2xl">
-    <%= error %>
-  </div>
-  <% } else { %>
-  
-  <% if (videos.length === 0) { %>
-  <div class="text-center p-6 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-2xl mb-8">
-    No videos found for this course.
-  </div>
-  <% } else { %>
-  
-  <div class="mb-6">
-    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">🎥 Course Videos</h2>
-  </div>
-  
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-    <% 
-    // Remove duplicates and sort videos
-    const uniqueVideos = [];
-    const seenIds = new Set();
-    
-    videos.forEach(video => {
-      if (video && video._id && !seenIds.has(video._id.toString())) {
-        seenIds.add(video._id.toString());
-        uniqueVideos.push(video);
-      }
-    });
-
-    // Group by chapter and sort
-    const videosByChapter = {};
-    uniqueVideos.forEach(video => {
-      const chapter = video.chapter || 'Uncategorized';
-      if (!videosByChapter[chapter]) {
-        videosByChapter[chapter] = [];
-      }
-      videosByChapter[chapter].push(video);
-    });
-
-    Object.keys(videosByChapter).forEach(chapter => {
-      videosByChapter[chapter].sort((a, b) => {
-        const aMatch = a.title.match(/\d+/);
-        const bMatch = b.title.match(/\d+/);
-        const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
-        const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= courseName %> Course - Video Course Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        if (aNum === bNum) {
-          return a.title.localeCompare(b.title);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.47059;
+            font-weight: 400;
+            letter-spacing: -0.022em;
         }
-        return aNum - bNum;
-      });
-    });
-
-    const sortedVideos = Object.keys(videosByChapter)
-      .sort((a, b) => {
-        const aMatch = a.match(/\d+/);
-        const bMatch = b.match(/\d+/);
-        const aNum = aMatch ? parseInt(aMatch[0], 10) : 0;
-        const bNum = bMatch ? parseInt(bMatch[0], 10) : 0;
         
-        if (aNum === bNum) {
-          return a.localeCompare(b);
+        .dark body {
+            background: #000;
+            color: #f5f5f7;
         }
-        return aNum - bNum;
-      })
-      .flatMap(chapter => videosByChapter[chapter]);
-
-    let currentChapter = '';
-    sortedVideos.forEach((video, index) => { 
-      const chapter = video.chapter || 'Uncategorized';
-      if (chapter !== currentChapter) {
-        currentChapter = chapter;
-    %>
-        <div class="col-span-full">
-          <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 border-b border-gray-200 dark:border-gray-600 pb-2">
-            <%= video.chapter || 'Uncategorized' %>
-          </h3>
-        </div>
-    <% } %>
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .course-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        
+        .course-title {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+        }
+        
+        .dark .course-title {
+            color: #f5f5f7;
+        }
+        
+        .course-subtitle {
+            font-size: 21px;
+            color: #86868b;
+            margin-bottom: 32px;
+        }
+        
+        .course-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #f2f2f7;
+            color: #1d1d1f;
+        }
+        
+        .dark .btn-secondary {
+            background: #2c2c2e;
+            color: #f5f5f7;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e5ea;
+            transform: translateY(-2px);
+        }
+        
+        .dark .btn-secondary:hover {
+            background: #3a3a3c;
+        }
+        
+        .progress-card {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 48px;
+        }
+        
+        .dark .progress-card {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .progress-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .dark .progress-title {
+            color: #f5f5f7;
+        }
+        
+        .progress-stats {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .dark .progress-stats {
+            color: #f5f5f7;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f2f2f7;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .dark .progress-bar {
+            background: #2c2c2e;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007aff, #5856d6);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .videos-section {
+            margin-bottom: 32px;
+        }
+        
+        .section-title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 32px;
+            color: #1d1d1f;
+        }
+        
+        .dark .section-title {
+            color: #f5f5f7;
+        }
+        
+        .chapter-section {
+            margin-bottom: 40px;
+        }
+        
+        .chapter-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f2f2f7;
+            color: #1d1d1f;
+        }
+        
+        .dark .chapter-title {
+            color: #f5f5f7;
+            border-bottom-color: #2c2c2e;
+        }
+        
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        
+        .video-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .dark .video-card {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .video-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+        }
+        
+        .dark .video-card:hover {
+            box-shadow: 0 8px 40px rgba(255,255,255,0.08);
+        }
+        
+        .video-thumbnail {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #007aff, #5856d6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-placeholder {
+            text-align: center;
+        }
+        
+        .video-placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+        
+        .video-placeholder-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .video-badges {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .lesson-badge {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .watched-badge {
+            background: #30d158;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .video-content {
+            padding: 24px;
+        }
+        
+        .video-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dark .video-title {
+            color: #f5f5f7;
+        }
+        
+        .watch-button {
+            width: 100%;
+        }
+        
+        .btn-watch {
+            width: 100%;
+            background: #007aff;
+            color: white;
+            justify-content: center;
+        }
+        
+        .btn-watch:hover {
+            background: #0056b3;
+        }
+        
+        .btn-locked {
+            width: 100%;
+            background: #86868b;
+            color: white;
+            justify-content: center;
+            cursor: not-allowed;
+        }
+        
+        .btn-locked:hover {
+            transform: none;
+        }
+        
+        .btn-pdf {
+            width: 100%;
+            background: #ff3b30;
+            color: white;
+            justify-content: center;
+        }
+        
+        .btn-pdf:hover {
+            background: #d70015;
+        }
+        
+        .error-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .dark .error-state {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .error-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .error-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+        
+        .dark .error-title {
+            color: #f5f5f7;
+        }
+        
+        .error-message {
+            color: #86868b;
+            margin-bottom: 24px;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 22px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        
+        .dark .theme-toggle {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            .course-title {
+                font-size: 32px;
+            }
+            
+            .course-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .videos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
     
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden hover:shadow-lg transition-all shadow-sm">
-      <div class="relative">
-        <% if (video.thumbnailUrl) { %>
-        <img src="<%= video.thumbnailUrl %>" alt="<%= video.title %>" class="w-full h-48 object-cover"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <div class="container">
+        <div class="course-header">
+            <h1 class="course-title"><%= courseName %></h1>
+            <p class="course-subtitle">Master new skills with comprehensive lessons</p>
+            
+            <div class="course-actions">
+                <button id="enrollBtn" class="btn btn-primary">
+                    Enroll in Course
+                </button>
+            </div>
+        </div>
+        
+        <% if (typeof watchedVideos !== 'undefined' && typeof totalVideos !== 'undefined') { %>
+        <div class="progress-card">
+            <div class="progress-header">
+                <span class="progress-title">Course Progress</span>
+                <span class="progress-stats"><%= watchedVideos %>/<%= totalVideos %> videos (<%= Math.round((watchedVideos / totalVideos) * 100) %>%)</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: <%= typeof watchedPercent !== 'undefined' ? watchedPercent : Math.round((watchedVideos / totalVideos) * 100) %>%"></div>
+            </div>
+        </div>
         <% } %>
-        <div class="w-full h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white <%= video.thumbnailUrl ? 'hidden' : 'flex' %>">
-          <div class="text-center">
-            <span class="text-4xl mb-2">▶️</span>
-            <p class="text-sm font-medium">Video Lesson</p>
-          </div>
+
+        <% if (typeof error !== 'undefined') { %>
+        <div class="error-state">
+            <div class="error-icon">⚠️</div>
+            <h2 class="error-title">Course Error</h2>
+            <p class="error-message"><%= error %></p>
         </div>
-        <div class="absolute top-2 left-2 bg-apple-blue text-white px-2 py-1 rounded-lg text-sm font-medium">
-          Lesson <%= index + 1 %>
+        <% } else if (videos.length === 0) { %>
+        <div class="error-state">
+            <div class="error-icon">📹</div>
+            <h2 class="error-title">No Videos Found</h2>
+            <p class="error-message">No videos found for this course.</p>
         </div>
-        <% if (video.watched) { %>
-        <div class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-lg text-sm font-medium">
-          ✅
-        </div>
-        <% } %>
-      </div>
-      <div class="p-6">
-        <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-          <%= video.title %>
-          <% if (video.watched) { %>
-          <span class="ml-2 text-green-500 text-sm">✅</span>
-          <% } %>
-        </h4>
-        <% if (video.videoUrl && video.videoUrl.endsWith('.pdf')) { %>
-        <a href="/pdf/<%= courseName %>/<%= encodeURIComponent(video.basename) %>" target="_blank"
-           class="inline-flex items-center px-4 py-2 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors">
-          📄 View PDF
-        </a>
         <% } else { %>
-        <div id="watchBtn-<%= video._id %>" class="watch-button" data-video-id="<%= video._id %>" data-course="<%= courseName %>">
-          <button class="inline-flex items-center px-4 py-2 bg-gray-400 text-white font-medium rounded-xl cursor-not-allowed">
-            🔒 Enroll to Watch
-          </button>
+        
+        <div class="videos-section">
+            <h2 class="section-title">Course Videos</h2>
+            
+            <% 
+            // Remove duplicates and sort videos
+            const uniqueVideos = [];
+            const seenIds = new Set();
+            
+            videos.forEach(video => {
+                if (video && video._id && !seenIds.has(video._id.toString())) {
+                    seenIds.add(video._id.toString());
+                    uniqueVideos.push(video);
+                }
+            });
+
+            // Group by chapter and sort
+            const videosByChapter = {};
+            uniqueVideos.forEach(video => {
+                const chapter = video.chapter || 'Uncategorized';
+                if (!videosByChapter[chapter]) {
+                    videosByChapter[chapter] = [];
+                }
+                videosByChapter[chapter].push(video);
+            });
+
+            Object.keys(videosByChapter).forEach(chapter => {
+                videosByChapter[chapter].sort((a, b) => {
+                    const aTitle = a.title.toLowerCase();
+                    const bTitle = b.title.toLowerCase();
+                    
+                    const aMatch = aTitle.match(/(lesson|video|part|chapter)\s*(\d+)|^(\d+)/);
+                    const bMatch = bTitle.match(/(lesson|video|part|chapter)\s*(\d+)|^(\d+)/);
+                    
+                    const aNum = aMatch ? parseInt(aMatch[2] || aMatch[3], 10) : 0;
+                    const bNum = bMatch ? parseInt(bMatch[2] || bMatch[3], 10) : 0;
+                    
+                    if (aNum && bNum && aNum !== bNum) {
+                        return aNum - bNum;
+                    }
+                    
+                    if (aNum && !bNum) return -1;
+                    if (!aNum && bNum) return 1;
+                    
+                    return a.title.localeCompare(b.title);
+                });
+            });
+
+            const sortedChapters = Object.keys(videosByChapter).sort((a, b) => {
+                const aLower = a.toLowerCase();
+                const bLower = b.toLowerCase();
+                
+                const aMatch = aLower.match(/(chapter|section|part)\s*(\d+)|^(\d+)/);
+                const bMatch = bLower.match(/(chapter|section|part)\s*(\d+)|^(\d+)/);
+                
+                const aNum = aMatch ? parseInt(aMatch[2] || aMatch[3], 10) : 0;
+                const bNum = bMatch ? parseInt(bMatch[2] || bMatch[3], 10) : 0;
+                
+                if (aNum && bNum && aNum !== bNum) {
+                    return aNum - bNum;
+                }
+                
+                if (aNum && !bNum) return -1;
+                if (!aNum && bNum) return 1;
+                
+                return a.localeCompare(b);
+            });
+
+            let videoIndex = 0;
+            sortedChapters.forEach(chapter => {
+            %>
+            <div class="chapter-section">
+                <h3 class="chapter-title"><%= chapter %></h3>
+                <div class="videos-grid">
+                    <% videosByChapter[chapter].forEach(video => { 
+                        videoIndex++;
+                    %>
+                    <div class="video-card">
+                        <div class="video-thumbnail">
+                            <% if (video.thumbnailUrl) { %>
+                            <img src="<%= video.thumbnailUrl %>" alt="<%= video.title %>"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <% } %>
+                            <div class="video-placeholder" <%= video.thumbnailUrl ? 'style="display: none;"' : '' %>>
+                                <div class="video-placeholder-icon">▶️</div>
+                                <div class="video-placeholder-text">Video Lesson</div>
+                            </div>
+                            
+                            <div class="video-badges">
+                                <span class="lesson-badge">Lesson <%= videoIndex %></span>
+                                <% if (video.watched) { %>
+                                <span class="watched-badge">✓</span>
+                                <% } %>
+                            </div>
+                        </div>
+                        
+                        <div class="video-content">
+                            <h4 class="video-title">
+                                <%= video.title %>
+                                <% if (video.watched) { %>
+                                <span style="color: #30d158;">✓</span>
+                                <% } %>
+                            </h4>
+                            
+                            <div class="watch-button" id="watchBtn-<%= video._id %>" data-video-id="<%= video._id %>" data-course="<%= courseName %>">
+                                <% if (video.videoUrl && video.videoUrl.endsWith('.pdf')) { %>
+                                <a href="/pdf/<%= courseName %>/<%= encodeURIComponent(video.basename) %>" target="_blank"
+                                   class="btn btn-pdf">
+                                    📄 View PDF
+                                </a>
+                                <% } else { %>
+                                <button class="btn btn-locked">
+                                    🔒 Enroll to Watch
+                                </button>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <% }); %>
+                </div>
+            </div>
+            <% }); %>
         </div>
         <% } %>
-      </div>
     </div>
-    <% }); %>
-  </div>
-  <% } %>
-  <% } %>
-</main>
 
-<script>
-let isEnrolled = false;
-let isAdmin = false;
+    <script>
+        // Theme management
+        function initTheme() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.classList.toggle('dark', newTheme === 'dark');
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        initTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
-document.addEventListener('DOMContentLoaded', () => {
-  checkEnrollmentStatus();
-  checkUserRole();
-});
+        let isEnrolled = false;
+        let isAdmin = false;
 
-async function checkUserRole() {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  isAdmin = user.email === 'engineerfelex@gmail.com';
-  updateWatchButtons();
-}
+        document.addEventListener('DOMContentLoaded', () => {
+            checkEnrollmentStatus();
+            checkUserRole();
+        });
 
-async function checkEnrollmentStatus() {
-  try {
-    const token = localStorage.getItem('accessToken');
-    const courseName = '<%= courseName %>';
-    
-    const response = await fetch(`/api/enrollments/check/${encodeURIComponent(courseName)}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    
-    const data = await response.json();
-    if (data.success && data.data.enrolled) {
-      isEnrolled = true;
-      const enrollBtn = document.getElementById('enrollBtn');
-      enrollBtn.textContent = 'Enrolled ✓';
-      enrollBtn.classList.remove('bg-apple-blue', 'hover:bg-blue-600');
-      enrollBtn.classList.add('bg-green-500');
-      enrollBtn.disabled = true;
-      enrollBtn.style.display = 'none'; // Hide the button when enrolled
-    }
-    
-    updateWatchButtons();
-  } catch (error) {
-    console.error('Error checking enrollment:', error);
-  }
-}
+        async function checkUserRole() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            isAdmin = user.email === 'engineerfelex@gmail.com';
+            updateWatchButtons();
+        }
 
-function updateWatchButtons() {
-  const watchButtons = document.querySelectorAll('.watch-button');
-  
-  watchButtons.forEach(btn => {
-    const videoId = btn.dataset.videoId;
-    const courseName = btn.dataset.course;
-    
-    if (isAdmin || isEnrolled) {
-      btn.innerHTML = `
-        <a href="/videos/${encodeURIComponent(courseName)}/${videoId}"
-           class="inline-flex items-center px-4 py-2 bg-apple-blue text-white font-medium rounded-xl hover:bg-blue-600 transition-colors">
-          ▶️ Watch Video
-        </a>
-      `;
-    }
-  });
-}
+        async function checkEnrollmentStatus() {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const courseName = '<%= courseName %>';
+                
+                const response = await fetch(`/api/enrollments/check/${encodeURIComponent(courseName)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                if (data.success && data.data.enrolled) {
+                    isEnrolled = true;
+                    const enrollBtn = document.getElementById('enrollBtn');
+                    enrollBtn.textContent = 'Enrolled ✓';
+                    enrollBtn.style.background = '#30d158';
+                    enrollBtn.disabled = true;
+                    enrollBtn.style.display = 'none';
+                }
+                
+                updateWatchButtons();
+            } catch (error) {
+                console.error('Error checking enrollment:', error);
+            }
+        }
 
-document.getElementById('enrollBtn').addEventListener('click', async () => {
-  if (isEnrolled) return;
-  
-  try {
-    const token = localStorage.getItem('accessToken');
-    const courseName = '<%= courseName %>';
-    
-    const response = await fetch('/api/enrollments', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ courseId: courseName })
-    });
-    
-    const data = await response.json();
-    if (data.success) {
-      isEnrolled = true;
-      const enrollBtn = document.getElementById('enrollBtn');
-      enrollBtn.textContent = 'Enrolled ✓';
-      enrollBtn.classList.remove('bg-apple-blue', 'hover:bg-blue-600');
-      enrollBtn.classList.add('bg-green-500');
-      enrollBtn.disabled = true;
-      enrollBtn.style.display = 'none'; // Hide button after enrollment
-      updateWatchButtons();
-    } else {
-      alert('Failed to enroll: ' + data.error);
-    }
-  } catch (error) {
-    alert('Error enrolling: ' + error.message);
-  }
-});
-</script>
+        function updateWatchButtons() {
+            const watchButtons = document.querySelectorAll('.watch-button');
+            
+            watchButtons.forEach(btn => {
+                const videoId = btn.dataset.videoId;
+                const courseName = btn.dataset.course;
+                
+                if (isAdmin || isEnrolled) {
+                    const button = btn.querySelector('button');
+                    if (button && button.classList.contains('btn-locked')) {
+                        btn.innerHTML = `
+                            <a href="/videos/${encodeURIComponent(courseName)}/${videoId}"
+                               class="btn btn-watch">
+                                ▶️ Watch Video
+                            </a>
+                        `;
+                    }
+                }
+            });
+        }
 
-<%- include('partials/footer') %>
+        document.getElementById('enrollBtn').addEventListener('click', async () => {
+            if (isEnrolled) return;
+            
+            try {
+                const token = localStorage.getItem('accessToken');
+                const courseName = '<%= courseName %>';
+                
+                const response = await fetch('/api/enrollments', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ courseId: courseName })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    isEnrolled = true;
+                    const enrollBtn = document.getElementById('enrollBtn');
+                    enrollBtn.textContent = 'Enrolled ✓';
+                    enrollBtn.style.background = '#30d158';
+                    enrollBtn.disabled = true;
+                    enrollBtn.style.display = 'none';
+                    updateWatchButtons();
+                } else {
+                    alert('Failed to enroll: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error enrolling: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

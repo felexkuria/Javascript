@@ -40,14 +40,20 @@ const cognitoAuth = async (req, res, next) => {
     };
     next();
   } catch (error) {
-    console.error('Cognito auth error:', error);
+    console.warn('Token expired, logging out user');
+    
+    // Clear all authentication data
     res.clearCookie('cognitoToken');
+    res.clearCookie('connect.sid');
+    if (req.session) {
+      req.session.destroy();
+    }
     
     // Return JSON for API requests, redirect for web requests
     if (req.path.startsWith('/api/')) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
+      return res.status(401).json({ error: 'Session expired, please login again' });
     }
-    res.redirect('/api/auth/login');
+    res.redirect('/login');
   }
 };
 
