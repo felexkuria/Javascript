@@ -1,0 +1,42 @@
+<div class="video-controls animate-slide-up" style="animation-delay: 0.2s;">
+    <div class="progress-section">
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: <%= watchedPercent || 0 %>%"></div>
+        </div>
+        <div class="progress-text" id="videoProgress"><%= watchedVideos || 0 %>/<%= totalVideos || 0 %> videos</div>
+    </div>
+    
+    <div class="control-buttons">
+        <% if (!isFirstVideo) { %>
+        <button id="prevButton" class="btn btn-secondary animate-hover-lift">
+            <span>←</span> Previous
+        </button>
+        <% } %>
+        
+        <button id="markWatchedButton" class="btn btn-primary animate-hover-lift">
+            <span>✓</span> Mark Watched
+        </button>
+        
+        <button id="quizButton" class="btn btn-secondary animate-hover-lift" onclick="startVideoQuiz()">
+            <span>🎯</span> Quiz
+        </button>
+        
+        <button id="generateSRTButton" class="btn btn-secondary animate-hover-lift">
+            <span>📝</span> Subtitles
+        </button>
+        
+        <button onclick="showFloatingChatbot()" class="btn btn-secondary animate-hover-lift">
+            <span>🤖</span> AI Chat
+        </button>
+        
+        <% if (!isLastVideo) { %>
+        <button id="nextButton" class="btn btn-primary animate-hover-lift">
+            Next <span>→</span>
+        </button>
+        <% } %>
+        
+        <a href="/course/<%= courseName %>" class="btn btn-secondary animate-hover-lift">
+            <span>←</span> Back to Course
+        </a>
+    </div>
+</div>

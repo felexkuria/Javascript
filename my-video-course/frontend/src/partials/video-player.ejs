@@ -1,0 +1,31 @@
+<div class="video-section animate-slide-up">
+    <div class="video-container">
+        <% if (isYouTube) { %>
+        <iframe id="youtubePlayer" 
+                src="<%= video.embedUrl %>" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+        </iframe>
+        <% } else { %>
+        <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video">
+            <% if (video.isS3Video) { %>
+            <source src="<%= video.fullVideoUrl %>" type="video/mp4" />
+            <% } else { %>
+            <source src="/videos/<%= courseName %>/file/<%= video._id %>" type="video/mp4" />
+            <% } %>
+            <% if (video.captionsUrl) { %>
+            <track label="English" kind="subtitles" srclang="en" src="/captions/<%= courseName %>/<%= video._id %>" default />
+            <% } %>
+            <track id="autoCaption" label="Auto-Generated" kind="subtitles" srclang="en" 
+                   src="/api/captions/vtt/<%= encodeURIComponent(courseName) %>/<%= encodeURIComponent(video.title) %>" default />
+        </video>
+        <% } %>
+        
+        <!-- Interactive overlay -->
+        <div class="video-overlay" id="videoOverlay">
+            <div class="play-button" id="playButton">
+                <span>▶</span>
+            </div>
+        </div>
+    </div>
+</div>

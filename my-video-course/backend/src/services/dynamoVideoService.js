@@ -281,6 +281,20 @@ class DynamoVideoService {
     }
   }
 
+  // Count videos for a specific course
+  async getVideoCount(courseName, userId) {
+    try {
+      const videos = await this.getVideosForCourse(courseName, userId);
+      return {
+        total: videos.length,
+        watched: videos.filter(v => v.watched).length
+      };
+    } catch (error) {
+      console.error('Error counting videos:', error);
+      return { total: 0, watched: 0 };
+    }
+  }
+
   // Health check
   async healthCheck() {
     const status = {

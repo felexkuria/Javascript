@@ -1,0 +1,329 @@
+<style>
+/* Interactive Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRight {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes messageIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Animation Classes */
+.animate-fade-in { animation: fadeIn 0.6s ease-out; }
+.animate-slide-up { animation: slideUp 0.6s ease-out; }
+.animate-slide-right { animation: slideRight 0.6s ease-out; }
+.animate-bounce-in { animation: bounceIn 0.8s ease-out; }
+.animate-pulse { animation: pulse 2s infinite; }
+.animate-message-in { animation: messageIn 0.4s ease-out; }
+
+/* Interactive Elements */
+.animate-hover-lift {
+    transition: all 0.2s ease;
+}
+
+.animate-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.interactive-button {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.interactive-button:hover {
+    transform: scale(1.05);
+}
+
+.interactive-button:active {
+    transform: scale(0.95);
+}
+
+.interactive-link {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.interactive-link:hover {
+    transform: translateX(4px);
+}
+
+.interactive-link::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    background: #007aff;
+    border-radius: 2px;
+    transition: height 0.2s ease;
+}
+
+.interactive-link:hover::before {
+    height: 100%;
+}
+
+.interactive-chapter {
+    transition: all 0.2s ease;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.interactive-chapter:hover {
+    background: rgba(0, 122, 255, 0.05);
+}
+
+.interactive-shortcut {
+    transition: all 0.2s ease;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.interactive-shortcut:hover {
+    background: rgba(0, 122, 255, 0.1);
+    transform: translateX(4px);
+}
+
+.interactive-shortcut.active {
+    background: rgba(0, 122, 255, 0.2);
+    transform: scale(1.02);
+}
+
+.interactive-video {
+    transition: all 0.3s ease;
+}
+
+.interactive-video:hover {
+    filter: brightness(1.05);
+}
+
+/* Loading Skeletons */
+.loading-skeleton {
+    animation: pulse 1.5s infinite;
+}
+
+.skeleton-line {
+    height: 12px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    animation: shimmer 2s infinite;
+}
+
+.skeleton-line.short {
+    width: 60%;
+}
+
+.skeleton-todo {
+    height: 40px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
+}
+
+/* Video Overlay */
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.video-container:hover .video-overlay {
+    opacity: 1;
+}
+
+.play-button {
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #007aff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    pointer-events: all;
+}
+
+.play-button:hover {
+    transform: scale(1.1);
+    background: white;
+}
+
+/* Counter Animation */
+.animate-counter {
+    counter-reset: num var(--num, 0);
+}
+
+.animate-counter::before {
+    content: counter(num);
+    animation: counter 2s ease-out;
+}
+
+@keyframes counter {
+    from { --num: 0; }
+    to { --num: var(--target); }
+}
+
+/* Progress Bar Animation */
+.progress-fill-animated {
+    animation: fillProgress 2s ease-out;
+}
+
+@keyframes fillProgress {
+    from { width: 0%; }
+}
+
+/* Achievement Popup */
+.achievement-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+    transform: translateX(400px);
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 10001;
+    min-width: 280px;
+    backdrop-filter: blur(20px);
+}
+
+.achievement-popup.show {
+    transform: translateX(0);
+}
+
+.achievement-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.achievement-icon {
+    font-size: 48px;
+    animation: bounce 0.6s ease-out;
+}
+
+.achievement-text {
+    flex: 1;
+}
+
+.achievement-title {
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.9;
+    margin-bottom: 4px;
+}
+
+.achievement-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.achievement-points {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffd700;
+}
+
+/* Optimized CSS - Reduced redundancy */
+.btn, .interactive-button {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn:hover, .interactive-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.sidebar-card, .video-section {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease;
+}
+
+.dark .sidebar-card, .dark .video-section {
+    background: #1d1d1f;
+    box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+}
+
+.sidebar-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Responsive Interactions */
+@media (max-width: 768px) {
+    .achievement-popup {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+        transform: translateY(-100px);
+    }
+    
+    .achievement-popup.show {
+        transform: translateY(0);
+    }
+    
+    .animate-hover-lift:hover {
+        transform: none;
+    }
+    
+    .interactive-link:hover {
+        transform: none;
+    }
+    
+    .interactive-shortcut:hover {
+        transform: none;
+    }
+}
+</style>

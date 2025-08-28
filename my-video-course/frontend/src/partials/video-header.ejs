@@ -1,0 +1,17 @@
+<div class="video-header animate-fade-in">
+    <h1 class="video-title"><%= video ? video.title : 'Video Not Found' %></h1>
+    <div class="video-status">
+        <% if (video && video.watched) { %>
+        <span class="status-badge status-watched animate-bounce-in">
+            ✓ Watched
+        </span>
+        <% } else { %>
+        <span class="status-badge status-unwatched animate-pulse">
+            ○ Unwatched
+        </span>
+        <% } %>
+        <button id="syncButton" class="btn btn-secondary animate-hover-lift">
+            <span>🔄</span> Sync
+        </button>
+    </div>
+</div>

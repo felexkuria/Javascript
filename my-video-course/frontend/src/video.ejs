@@ -4,75 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= video ? video.title : 'Video' %> - <%= courseName %></title>
+    <%- include('partials/interactive-styles') %>
+    <%- include('partials/video-styles') %>
+    <%- include('partials/chatbot-styles') %>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
-            line-height: 1.47059;
-            font-weight: 400;
-            letter-spacing: -0.022em;
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            align-items: start;
         }
         
-        .dark body {
-            background: #000;
-            color: #f5f5f7;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .video-header {
+        .corner-badges {
+            position: fixed;
+            top: 80px;
+            left: 20px;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
         }
         
-        .video-title {
-            font-size: 32px;
-            font-weight: 600;
-            color: #1d1d1f;
+        .corner-badge {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            min-width: 200px;
+            transition: all 0.2s ease;
         }
         
-        .dark .video-title {
-            color: #f5f5f7;
+        .dark .corner-badge {
+            background: rgba(28, 28, 30, 0.9);
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
         }
         
-        .video-status {
+        .corner-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        .badge-content {
             display: flex;
             align-items: center;
             gap: 12px;
         }
         
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+        .badge-icon {
+            font-size: 20px;
+        }
+        
+        .badge-stats {
+            flex: 1;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .stat-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .stat-row .stat-label {
+            font-size: 11px;
+            color: #86868b;
             font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
-        .status-watched {
-            background: #30d158;
-            color: white;
+        .stat-row .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1d1d1f;
         }
         
-        .status-unwatched {
-            background: #ff3b30;
-            color: white;
+        .dark .stat-row .stat-value {
+            color: #f5f5f7;
         }
         
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 32px;
+        .shortcuts-mini {
+            flex: 1;
+        }
+        
+        .shortcut-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            font-size: 11px;
+        }
+        
+        .shortcut-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .shortcut-row span {
+            background: #f2f2f7;
+            color: #1d1d1f;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-weight: 500;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        .dark .shortcut-row span {
+            background: #2c2c2e;
+            color: #f5f5f7;
+        }
+        
+        .chapters-sidebar {
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
         }
         
         @media (max-width: 1024px) {
@@ -80,563 +129,20 @@
                 grid-template-columns: 1fr;
                 gap: 24px;
             }
-        }
-        
-        .video-section {
-            background: white;
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .dark .video-section {
-            background: #1d1d1f;
-            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
-        }
-        
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 0;
-            padding-bottom: 56.25%;
-            background: #000;
-        }
-        
-        .video-container video,
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .video-controls {
-            padding: 24px;
-        }
-        
-        .progress-section {
-            margin-bottom: 24px;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: #e5e5e7;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-        
-        .dark .progress-bar {
-            background: #424245;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #007aff;
-            border-radius: 2px;
-            transition: width 0.3s ease;
-        }
-        
-        .progress-text {
-            font-size: 14px;
-            color: #86868b;
-            text-align: right;
-        }
-        
-        .dark .progress-text {
-            color: #86868b;
-        }
-        
-        .control-buttons {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: #007aff;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #0056b3;
-            transform: translateY(-1px);
-        }
-        
-        .btn-secondary {
-            background: #f2f2f7;
-            color: #1d1d1f;
-        }
-        
-        .dark .btn-secondary {
-            background: #2c2c2e;
-            color: #f5f5f7;
-        }
-        
-        .btn-secondary:hover {
-            background: #e5e5ea;
-            transform: translateY(-1px);
-        }
-        
-        .dark .btn-secondary:hover {
-            background: #3a3a3c;
-        }
-        
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .sidebar-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .dark .sidebar-card {
-            background: #1d1d1f;
-            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
-        }
-        
-        .sidebar-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #1d1d1f;
-        }
-        
-        .dark .sidebar-title {
-            color: #f5f5f7;
-        }
-        
-        .chapter-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .chapter-item {
-            padding: 12px 0;
-            border-bottom: 1px solid #f2f2f7;
-        }
-        
-        .dark .chapter-item {
-            border-bottom-color: #2c2c2e;
-        }
-        
-        .chapter-item:last-child {
-            border-bottom: none;
-        }
-        
-        .chapter-link {
-            display: block;
-            color: #1d1d1f;
-            text-decoration: none;
-            font-size: 14px;
-            transition: color 0.2s ease;
-        }
-        
-        .dark .chapter-link {
-            color: #f5f5f7;
-        }
-        
-        .chapter-link:hover {
-            color: #007aff;
-        }
-        
-        .chapter-link.active {
-            color: #007aff;
-            font-weight: 500;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-        
-        .stat-item {
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-        
-        .dark .stat-value {
-            color: #f5f5f7;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: #86868b;
-            margin-top: 4px;
-        }
-        
-        .shortcuts-list {
-            display: grid;
-            gap: 8px;
-        }
-        
-        .shortcut-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-        }
-        
-        .shortcut-key {
-            background: #f2f2f7;
-            color: #1d1d1f;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .dark .shortcut-key {
-            background: #2c2c2e;
-            color: #f5f5f7;
-        }
-        
-        .shortcut-desc {
-            color: #86868b;
-        }
-        
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 44px;
-            height: 44px;
-            border: none;
-            border-radius: 22px;
-            background: white;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.2s ease;
-            z-index: 1000;
-        }
-        
-        .dark .theme-toggle {
-            background: #1d1d1f;
-            box-shadow: 0 4px 20px rgba(255,255,255,0.1);
-        }
-        
-        .theme-toggle:hover {
-            transform: scale(1.1);
-        }
-        
-        .key-hint {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            z-index: 2000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-        
-        .key-hint.visible {
-            opacity: 1;
-        }
-        
-        /* Floating Chatbot Styles */
-        .floating-chatbot {
-            position: fixed;
-            bottom: 90px;
-            right: 20px;
-            width: 350px;
-            height: 500px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            display: none;
-            flex-direction: column;
-            z-index: 10000;
-            animation: slideUp 0.3s ease;
-            transform-origin: bottom right;
-        }
-        
-        .dark .floating-chatbot {
-            background: rgba(29, 29, 31, 0.95);
-            border: 1px solid rgba(75, 85, 99, 0.3);
-        }
-        
-        .chatbot-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 20px 20px 0 0;
-        }
-        
-        .chatbot-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-        }
-        
-        .chatbot-icon {
-            font-size: 1.2rem;
-        }
-        
-        .ai-model {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        
-        .chatbot-toggle {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-        
-        .chatbot-body {
-            display: flex;
-            flex-direction: column;
-            height: calc(100% - 60px);
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .chat-message {
-            max-width: 85%;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .chat-message.user {
-            align-self: flex-end;
-        }
-        
-        .chat-message.bot {
-            align-self: flex-start;
-        }
-        
-        .message-content {
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        
-        .chat-message.user .message-content {
-            background: #007aff;
-            color: white;
-        }
-        
-        .chat-message.bot .message-content {
-            background: #f0f0f0;
-            color: #1d1d1f;
-        }
-        
-        .dark .chat-message.bot .message-content {
-            background: #2c2c2e;
-            color: #f5f5f7;
-        }
-        
-        .message-meta {
-            font-size: 11px;
-            color: #86868b;
-            margin-top: 4px;
-            padding: 0 4px;
-        }
-        
-        .chat-input-container {
-            display: flex;
-            padding: 16px;
-            gap: 8px;
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
-        }
-        
-        .dark .chat-input-container {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        #floating-chat-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid #e0e0e0;
-            border-radius: 20px;
-            font-size: 14px;
-            outline: none;
-            background: white;
-        }
-        
-        .dark #floating-chat-input {
-            background: #2c2c2e;
-            border-color: #424245;
-            color: #f5f5f7;
-        }
-        
-        #send-btn {
-            width: 40px;
-            height: 40px;
-            border: none;
-            background: #007aff;
-            color: white;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-        
-        .chatbot-trigger {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 24px;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-            z-index: 9999;
-            animation: bounce 2s infinite;
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
-        
-        .chatbot-trigger:hover {
-            transform: translateY(-2px) scale(1.1);
-            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
-            animation: none;
-        }
-        
-        .chatbot-trigger:active {
-            transform: scale(0.95);
-        }
-        
-        .chatbot-trigger.has-message {
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); }
-            50% { box-shadow: 0 8px 35px rgba(102, 126, 234, 0.8); }
-            100% { box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); }
-        }
-        
-        .notification-dot {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 12px;
-            height: 12px;
-            background: #ff3b30;
-            border-radius: 50%;
-            border: 2px solid white;
-            animation: pulse 2s infinite;
-        }
-        
-        @media (max-width: 768px) {
-            .floating-chatbot {
-                width: calc(100vw - 40px);
-                height: 400px;
-                bottom: 80px;
-                right: 20px;
-                left: 20px;
+            
+            .corner-badges {
+                position: relative;
+                top: auto;
+                left: auto;
+                flex-direction: row;
+                justify-content: center;
+                margin: 20px 0;
             }
-        }
-        
-        .error-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 18px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .dark .error-state {
-            background: #1d1d1f;
-            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
-        }
-        
-        .error-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-        
-        .error-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1d1d1f;
-        }
-        
-        .dark .error-title {
-            color: #f5f5f7;
-        }
-        
-        .error-message {
-            color: #86868b;
-            margin-bottom: 24px;
+            
+            .corner-badge {
+                min-width: auto;
+                flex: 1;
+            }
         }
     </style>
 </head>
@@ -644,173 +150,35 @@
     <button class="theme-toggle" id="themeToggle">🌙</button>
     
     <div class="container">
-        <div class="video-header">
-            <h1 class="video-title"><%= video ? video.title : 'Video Not Found' %></h1>
-            <div class="video-status">
-                <% if (video && video.watched) { %>
-                <span class="status-badge status-watched">✓ Watched</span>
-                <% } else { %>
-                <span class="status-badge status-unwatched">○ Unwatched</span>
-                <% } %>
-                <button id="syncButton" class="btn btn-secondary">
-                    <span>🔄</span> Sync
-                </button>
-            </div>
-        </div>
+        <%- include('partials/video-header', { video, courseName }) %>
 
         <% if (video) { %>
         <div class="main-content">
-            <div class="video-section">
-                <div class="video-container">
-                    <% if (isYouTube) { %>
-                    <iframe id="youtubePlayer" 
-                            src="<%= video.embedUrl %>" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowfullscreen>
-                    </iframe>
-                    <% } else { %>
-                    <video id="videoPlayer" controls crossorigin="anonymous">
-                        <% if (video.isS3Video) { %>
-                        <source src="<%= video.fullVideoUrl %>" type="video/mp4" />
-                        <% } else { %>
-                        <source src="/videos/<%= courseName %>/file/<%= video._id %>" type="video/mp4" />
-                        <% } %>
-                        <% if (video.captionsUrl) { %>
-                        <track label="English" kind="subtitles" srclang="en" src="/captions/<%= courseName %>/<%= video._id %>" default />
-                        <% } %>
-                        <track id="autoCaption" label="Auto-Generated" kind="subtitles" srclang="en" 
-                               src="/api/captions/vtt/<%= encodeURIComponent(courseName) %>/<%= encodeURIComponent(video.title) %>" default />
-                    </video>
-                    <% } %>
-                </div>
-                
-                <div class="video-controls">
-                    <div class="progress-section">
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: <%= watchedPercent || 0 %>%"></div>
-                        </div>
-                        <div class="progress-text"><%= watchedVideos || 0 %>/<%= totalVideos || 0 %> videos</div>
-                    </div>
-                    
-                    <div class="control-buttons">
-                        <% if (!isFirstVideo) { %>
-                        <button id="prevButton" class="btn btn-secondary">
-                            <span>←</span> Previous
-                        </button>
-                        <% } %>
-                        
-                        <button id="markWatchedButton" class="btn btn-primary">
-                            <span>✓</span> Mark Watched
-                        </button>
-                        
-                        <button id="generateSRTButton" class="btn btn-secondary">
-                            <span>📝</span> Subtitles
-                        </button>
-                        
-                        <button onclick="startVideoQuiz()" class="btn btn-secondary">
-                            <span>🎯</span> Quiz
-                        </button>
-                        
-                        <button id="generateSRTButton" class="btn btn-secondary">
-                            <span>📝</span> Subtitles
-                        </button>
-                        
-                        <button onclick="toggleChatbot()" class="btn btn-secondary">
-                            <span>🤖</span> AI Chat
-                        </button>
-                        
-                        <% if (!isLastVideo) { %>
-                        <button id="nextButton" class="btn btn-primary">
-                            Next <span>→</span>
-                        </button>
-                        <% } %>
-                        
-                        <a href="/course/<%= courseName %>" class="btn btn-secondary">
-                            <span>←</span> Back to Course
-                        </a>
-                    </div>
-                </div>
+            <div class="video-main">
+                <%- include('partials/video-player', { video, courseName, isYouTube }) %>
+                <%- include('partials/video-controls', { video, courseName, isFirstVideo, isLastVideo, watchedVideos, totalVideos, watchedPercent }) %>
             </div>
             
-            <div class="sidebar">
-                <div class="sidebar-card">
-                    <h3 class="sidebar-title">📊 Progress</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value user-level">1</div>
-                            <div class="stat-label">Level</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value user-points">0</div>
-                            <div class="stat-label">Points</div>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value user-streak">0 🔥</div>
-                        <div class="stat-label">Day Streak</div>
-                    </div>
-                    <div style="margin-top: 16px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="font-size: 14px; color: #86868b;"><%= watchedVideos || 0 %>/<%= totalVideos || 0 %> videos</span>
-                            <span style="font-size: 14px; color: #86868b;"><%= watchedPercent || 0 %>%</span>
-                        </div>
-                        <div style="width: 100%; height: 4px; background: #e5e5e7; border-radius: 2px; overflow: hidden;">
-                            <div style="height: 100%; background: #007aff; border-radius: 2px; width: <%= watchedPercent || 0 %>%; transition: width 0.3s ease;"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="sidebar-card">
-                    <h3 class="sidebar-title">🧠 AI Analysis</h3>
-                    <div id="video-summary" style="font-size: 14px; line-height: 1.4; margin-bottom: 16px; color: #86868b;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div style="width: 12px; height: 12px; border: 2px solid #007aff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                            <span>AI analyzing content...</span>
-                        </div>
-                    </div>
-                    <div id="key-topics" style="display: none;">
-                        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #1d1d1f;">Key Topics:</h4>
-                        <div id="topics-list" style="display: flex; flex-wrap: gap: 6px;"></div>
-                    </div>
-                </div>
-                
-                <div class="sidebar-card">
-                    <h3 class="sidebar-title">✅ AI Todos</h3>
-                    <div id="todo-container" style="max-height: 200px; overflow-y: auto; margin-bottom: 16px;">
-                        <div style="display: flex; align-items: center; justify-content: center; padding: 20px; color: #86868b; font-size: 14px;">
-                            <div style="width: 12px; height: 12px; border: 2px solid #007aff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></div>
-                            <span>Generating learning tasks...</span>
-                        </div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #f2f2f7;">
-                        <span id="todo-progress" style="font-size: 12px; color: #86868b;">0/0 completed</span>
-                        <button onclick="refreshTodos()" style="padding: 4px 8px; background: #f2f2f7; border: none; border-radius: 6px; font-size: 11px; color: #1d1d1f; cursor: pointer;">
-                            🔄 Refresh
-                        </button>
-                    </div>
-                    <div style="width: 100%; height: 3px; background: #f2f2f7; border-radius: 2px; margin-top: 8px; overflow: hidden;">
-                        <div id="todo-progress-bar" style="height: 100%; background: #30d158; border-radius: 2px; width: 0%; transition: width 0.3s ease;"></div>
-                    </div>
-                </div>
-                
-                <% if (typeof chapters !== 'undefined' && chapters.length > 0) { %>
+            <!-- Chapters Sidebar -->
+            <% if (typeof chapters !== 'undefined' && chapters.length > 0) { %>
+            <div class="chapters-sidebar">
                 <div class="sidebar-card">
                     <h3 class="sidebar-title">📚 Chapters</h3>
                     <div class="chapter-list">
                         <% chapters.sort((a, b) => {
-                            const aMatch = a.match(/(\\d+)/);
-                            const bMatch = b.match(/(\\d+)/);
+                            const aMatch = a.match(/(\d+)/);
+                            const bMatch = b.match(/(\d+)/);
                             if (!aMatch || !bMatch) return a.localeCompare(b);
                             return parseInt(aMatch[0], 10) - parseInt(bMatch[0], 10);
                         }).forEach(chapter => {
                             const chapterVideos = videosByChapter[chapter];
                         %>
-                        <div class="chapter-item">
+                        <div class="chapter-item interactive-chapter">
                             <strong><%= chapter %></strong>
                             <% chapterVideos.forEach((chapterVideo, index) => { %>
                             <div style="margin-left: 12px; margin-top: 4px;">
                                 <a href="/videos/<%= encodeURIComponent(courseName) %>/<%= chapterVideo._id %>" 
-                                   class="chapter-link <%= chapterVideo._id.toString() === video._id.toString() ? 'active' : '' %>">
+                                   class="chapter-link interactive-link <%= chapterVideo._id.toString() === video._id.toString() ? 'active' : '' %>">
                                     <%= (index + 1) %>. <%= chapterVideo.title %>
                                     <% if (chapterVideo.watched) { %> ✓<% } %>
                                 </a>
@@ -820,31 +188,44 @@
                         <% }); %>
                     </div>
                 </div>
-                <% } %>
-                
-                <div class="sidebar-card">
-                    <h3 class="sidebar-title">⌨️ Shortcuts</h3>
-                    <div class="shortcuts-list">
-                        <div class="shortcut-item">
-                            <span class="shortcut-key">F</span>
-                            <span class="shortcut-desc">Fullscreen</span>
+            </div>
+            <% } %>
+        </div>
+        
+        <!-- Corner Badges -->
+        <div class="corner-badges">
+            <!-- Progress Badge -->
+            <div class="corner-badge progress-badge">
+                <div class="badge-content">
+                    <span class="badge-icon">📊</span>
+                    <div class="badge-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Level</span>
+                            <span class="stat-value user-level">1</span>
                         </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-key">K</span>
-                            <span class="shortcut-desc">Play/Pause</span>
+                        <div class="stat-row">
+                            <span class="stat-label">Points</span>
+                            <span class="stat-value user-points">0</span>
                         </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-key">J</span>
-                            <span class="shortcut-desc">Rewind 10s</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="shortcut-key">L</span>
-                            <span class="shortcut-desc">Forward 10s</span>
+                        <div class="stat-row">
+                            <span class="stat-label">Streak</span>
+                            <span class="stat-value user-streak">0🔥</span>
                         </div>
                     </div>
                 </div>
-                
-
+            </div>
+            
+            <!-- Shortcuts Badge -->
+            <div class="corner-badge shortcuts-badge">
+                <div class="badge-content">
+                    <span class="badge-icon">⌨️</span>
+                    <div class="shortcuts-mini">
+                        <div class="shortcut-row"><span>F</span>Fullscreen</div>
+                        <div class="shortcut-row"><span>K</span>Play/Pause</div>
+                        <div class="shortcut-row"><span>J</span>-10s</div>
+                        <div class="shortcut-row"><span>L</span>+10s</div>
+                    </div>
+                </div>
             </div>
         </div>
         <% } else { %>
@@ -861,42 +242,15 @@
 
     <div id="keyHint" class="key-hint"></div>
     
-    <!-- Floating AI Chatbot -->
-    <div id="floating-chatbot" class="floating-chatbot">
-        <div class="chatbot-header">
-            <div class="chatbot-title">
-                <span class="chatbot-icon">🤖</span>
-                <span>AI Assistant</span>
-                <span class="ai-model" id="ai-model">GPT-4</span>
-            </div>
-            <button class="chatbot-toggle" onclick="toggleFloatingChatbot()">−</button>
-        </div>
-        <div class="chatbot-body" id="chatbot-body">
-            <div class="chat-messages" id="floating-chat-messages">
-                <div class="chat-message bot">
-                    <div class="message-content">Hi! I'm your AI learning assistant. I can help explain concepts from this video. What would you like to know?</div>
-                    <div class="message-meta">AI Assistant • Just now</div>
-                </div>
-            </div>
-            <div class="chat-input-container">
-                <input type="text" id="floating-chat-input" placeholder="Ask about the video content..." maxlength="500">
-                <button onclick="sendFloatingChatMessage()" id="send-btn">📤</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Chatbot Trigger Button -->
-    <button id="chatbot-trigger" class="chatbot-trigger" onclick="showFloatingChatbot()">
-        💬
-        <span class="notification-dot" id="chat-notification" style="display: none;"></span>
-    </button>
+    <%- include('partials/achievement-popup') %>
+    <%- include('partials/floating-chatbot') %>
 
     <link rel="stylesheet" href="/css/quiz-system.css">
     <script src="/js/confetti.min.js"></script>
     <script src="/js/gamification.js"></script>
     <script src="/js/quiz-system.js"></script>
+    <%- include('partials/video-scripts', { video, courseName, isLastVideo, isLastInChapter }) %>
     <script>
-        // Theme management
         function initTheme() {
             const theme = localStorage.getItem('theme') || 'light';
             document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -924,475 +278,12 @@
             let courseName = '<%= courseName %>';
             let videoId = '<%= video ? video._id : "" %>';
             
-            // Function to start quiz for current video
-            window.startVideoQuiz = async function() {
-                try {
-                    const response = await fetch(`/api/quizzes/${videoId}`);
-                    const data = await response.json();
-                    
-                    if (data.success && data.quiz) {
-                        window.quizSystem.startQuiz('video-specific', data.quiz);
-                    } else {
-                        // Fallback to topic-based quiz
-                        window.quizSystem.startQuiz('terraform');
-                    }
-                } catch (error) {
-                    console.error('Error loading video quiz:', error);
-                    window.quizSystem.startQuiz('terraform');
-                }
-            };
-            
-            // Floating Chatbot System
-            let chatHistory = [];
-            const chatKey = `chat_${courseName}_${videoId}`;
-            
-            // Load chat history
-            function loadChatHistory() {
-                const saved = localStorage.getItem(chatKey);
-                if (saved) {
-                    chatHistory = JSON.parse(saved);
-                    displayChatHistory();
-                }
-            }
-            
-            function saveChatHistory() {
-                localStorage.setItem(chatKey, JSON.stringify(chatHistory));
-            }
-            
-            function displayChatHistory() {
-                const messages = document.getElementById('floating-chat-messages');
-                messages.innerHTML = '';
-                
-                if (chatHistory.length === 0) {
-                    messages.innerHTML = `
-                        <div class="chat-message bot">
-                            <div class="message-content">Hi! I'm your AI learning assistant. I can help explain concepts from this video. What would you like to know?</div>
-                            <div class="message-meta">AI Assistant • Just now</div>
-                        </div>
-                    `;
-                } else {
-                    chatHistory.forEach(msg => {
-                        const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                        messages.innerHTML += `
-                            <div class="chat-message ${msg.type}">
-                                <div class="message-content">${msg.content}</div>
-                                <div class="message-meta">${msg.type === 'bot' ? msg.model || 'AI Assistant' : 'You'} • ${time}</div>
-                            </div>
-                        `;
-                    });
-                }
-                messages.scrollTop = messages.scrollHeight;
-            }
-            
-            window.showFloatingChatbot = function() {
-                const chatbot = document.getElementById('floating-chatbot');
-                const trigger = document.getElementById('chatbot-trigger');
-                
-                chatbot.style.display = 'flex';
-                trigger.style.display = 'none';
-                trigger.classList.remove('has-message');
-                document.getElementById('chat-notification').style.display = 'none';
-                loadChatHistory();
-                
-                // Focus input for immediate typing
-                setTimeout(() => {
-                    document.getElementById('floating-chat-input').focus();
-                }, 300);
-            };
-            
-            window.toggleFloatingChatbot = function() {
-                const chatbot = document.getElementById('floating-chatbot');
-                const trigger = document.getElementById('chatbot-trigger');
-                
-                chatbot.style.display = 'none';
-                trigger.style.display = 'flex';
-                
-                // Add bounce animation when closing
-                trigger.style.animation = 'bounce 2s infinite';
-            };
-            
-            // Add interactive welcome message
-            setTimeout(() => {
-                const trigger = document.getElementById('chatbot-trigger');
-                if (trigger && !localStorage.getItem('chatbot_welcomed')) {
-                    trigger.classList.add('has-message');
-                    
-                    // Show welcome tooltip
-                    const tooltip = document.createElement('div');
-                    tooltip.style.cssText = `
-                        position: absolute;
-                        bottom: 70px;
-                        left: 0;
-                        background: rgba(0,0,0,0.8);
-                        color: white;
-                        padding: 8px 12px;
-                        border-radius: 8px;
-                        font-size: 12px;
-                        white-space: nowrap;
-                        z-index: 10001;
-                        animation: fadeIn 0.3s ease;
-                    `;
-                    tooltip.textContent = 'Hi! Ask me about this video 👋';
-                    trigger.appendChild(tooltip);
-                    
-                    // Remove tooltip after 3 seconds
-                    setTimeout(() => {
-                        if (tooltip.parentNode) {
-                            tooltip.remove();
-                        }
-                        localStorage.setItem('chatbot_welcomed', 'true');
-                    }, 3000);
-                }
-            }, 5000);
-            
-            window.sendFloatingChatMessage = async function() {
-                const input = document.getElementById('floating-chat-input');
-                const messages = document.getElementById('floating-chat-messages');
-                const sendBtn = document.getElementById('send-btn');
-                const message = input.value.trim();
-                
-                if (!message) return;
-                
-                // Add user message to history
-                const userMsg = {
-                    type: 'user',
-                    content: message,
-                    timestamp: new Date().toISOString()
-                };
-                chatHistory.push(userMsg);
-                
-                // Display user message
-                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                messages.innerHTML += `
-                    <div class="chat-message user">
-                        <div class="message-content">${message}</div>
-                        <div class="message-meta">You • ${time}</div>
-                    </div>
-                `;
-                
-                input.value = '';
-                sendBtn.disabled = true;
-                sendBtn.innerHTML = '⏳';
-                
-                try {
-                    const response = await fetch('/api/ai/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            message, 
-                            aiModel: 'nova-pro',
-                            teachingStyle: 'david-malan',
-                            context: {
-                                videoTitle: '<%= video ? video.title : "" %>',
-                                courseName: courseName,
-                                videoId: videoId,
-                                chatHistory: chatHistory.slice(-5)
-                            }
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    
-                    if (data.success) {
-                        const botMsg = {
-                            type: 'bot',
-                            content: data.response,
-                            model: data.model || 'GPT-4',
-                            timestamp: new Date().toISOString()
-                        };
-                        chatHistory.push(botMsg);
-                        
-                        // Update AI model display
-                        document.getElementById('ai-model').textContent = 'Nova Pro';
-                        
-                        // Auto-generate todos and analysis
-                        if (message.toLowerCase().includes('todo') || message.toLowerCase().includes('task')) {
-                            generateVideoTodos();
-                        }
-                        if (message.toLowerCase().includes('quiz') || message.toLowerCase().includes('test')) {
-                            generateVideoQuiz();
-                        }
-                        
-                        messages.innerHTML += `
-                            <div class="chat-message bot">
-                                <div class="message-content">${data.response}</div>
-                                <div class="message-meta">${botMsg.model} • ${botTime}</div>
-                            </div>
-                        `;
-                        
-                        // Add typing sound effect (visual)
-                        const lastMessage = messages.lastElementChild;
-                        lastMessage.style.opacity = '0';
-                        lastMessage.style.transform = 'translateY(10px)';
-                        setTimeout(() => {
-                            lastMessage.style.opacity = '1';
-                            lastMessage.style.transform = 'translateY(0)';
-                            lastMessage.style.transition = 'all 0.3s ease';
-                        }, 100);
-                    } else {
-                        const errorMsg = {
-                            type: 'bot',
-                            content: 'Sorry, I couldn\'t process that. Try asking about the video content.',
-                            model: 'System',
-                            timestamp: new Date().toISOString()
-                        };
-                        chatHistory.push(errorMsg);
-                        
-                        messages.innerHTML += `
-                            <div class="chat-message bot">
-                                <div class="message-content">${errorMsg.content}</div>
-                                <div class="message-meta">System • ${botTime}</div>
-                            </div>
-                        `;
-                    }
-                } catch (error) {
-                    const errorMsg = {
-                        type: 'bot',
-                        content: 'I\'m having trouble connecting. Please try again.',
-                        model: 'System',
-                        timestamp: new Date().toISOString()
-                    };
-                    chatHistory.push(errorMsg);
-                    
-                    const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    messages.innerHTML += `
-                        <div class="chat-message bot">
-                            <div class="message-content">${errorMsg.content}</div>
-                            <div class="message-meta">System • ${botTime}</div>
-                        </div>
-                    `;
-                }
-                
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = '📤';
-                messages.scrollTop = messages.scrollHeight;
-                saveChatHistory();
-            };
-            
-            // Enter key support
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && document.getElementById('floating-chat-input') === document.activeElement) {
-                    sendFloatingChatMessage();
-                }
-            });
-            
-            // AI-powered feature functions
-            window.generateVideoTodos = async function() {
-                try {
-                    const response = await fetch('/api/ai/generate-todos', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            videoTitle: '<%= video ? video.title : "" %>',
-                            videoId: videoId
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        console.log('Generated todos:', data.todos);
-                        // Store todos in localStorage
-                        localStorage.setItem(`todos_${videoId}`, JSON.stringify(data.todos));
-                    }
-                } catch (error) {
-                    console.error('Todo generation failed:', error);
-                }
-            };
-            
-            window.generateVideoQuiz = async function() {
-                try {
-                    const response = await fetch('/api/ai/generate-quiz', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            videoTitle: '<%= video ? video.title : "" %>',
-                            videoId: videoId
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.success && window.quizSystem) {
-                        window.quizSystem.startQuiz('ai-generated', data.quiz);
-                    }
-                } catch (error) {
-                    console.error('Quiz generation failed:', error);
-                }
-            };
-            
-            window.analyzeVideoContent = async function() {
-                try {
-                    const response = await fetch('/api/ai/analyze-content', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            videoTitle: '<%= video ? video.title : "" %>',
-                            videoId: videoId
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        console.log('Content analysis:', data.analysis);
-                        // Display analysis in sidebar
-                        showContentAnalysis(data.analysis);
-                    }
-                } catch (error) {
-                    console.error('Content analysis failed:', error);
-                }
-            };
-            
-            function showContentAnalysis(analysis) {
-                const summaryDiv = document.getElementById('video-summary');
-                const keyTopicsDiv = document.getElementById('key-topics');
-                const topicsList = document.getElementById('topics-list');
-                
-                if (summaryDiv && analysis.summary) {
-                    summaryDiv.innerHTML = `<p style="font-size: 14px; line-height: 1.4; color: #1d1d1f;">${analysis.summary}</p>`;
-                }
-                
-                if (keyTopicsDiv && topicsList && analysis.keyTopics) {
-                    keyTopicsDiv.style.display = 'block';
-                    topicsList.innerHTML = analysis.keyTopics.map(topic => 
-                        `<span style="padding: 4px 8px; background: #007aff; color: white; border-radius: 12px; font-size: 11px; font-weight: 500;">${topic.trim()}</span>`
-                    ).join('');
-                }
-            }
-            
-            // SRT Generation functionality
-            const generateSRTButton = document.getElementById('generateSRTButton');
-            if (generateSRTButton) {
-                generateSRTButton.addEventListener('click', async function() {
-                    this.disabled = true;
-                    this.innerHTML = '<span class="windows-spinner"></span>Generating...';
-                    
-                    try {
-                        const response = await fetch('/api/generate-srt', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                videoTitle: '<%= video ? video.title : "" %>',
-                                courseName: courseName,
-                                videoId: videoId
-                            })
-                        });
-                        
-                        const data = await response.json();
-                        if (data.status === 'processing') {
-                            this.innerHTML = '<span>🔄</span> Processing...';
-                            
-                            const checkProgress = setInterval(async () => {
-                                try {
-                                    const progressResponse = await fetch(`/api/srt-progress/<%= video ? video.title : "" %>`);
-                                    const progressData = await progressResponse.json();
-                                    
-                                    if (progressData.status === 'completed') {
-                                        clearInterval(checkProgress);
-                                        this.innerHTML = '<span>✅</span> Ready';
-                                        this.disabled = false;
-                                        setTimeout(() => location.reload(), 1000);
-                                    } else if (progressData.status === 'failed') {
-                                        clearInterval(checkProgress);
-                                        this.innerHTML = '<span>❌</span> Failed';
-                                        this.disabled = false;
-                                    }
-                                } catch (err) {
-                                    console.error('Progress check failed:', err);
-                                }
-                            }, 3000);
-                        } else {
-                            this.innerHTML = '<span>✅</span> Ready';
-                            this.disabled = false;
-                        }
-                    } catch (error) {
-                        console.error('SRT generation failed:', error);
-                        this.innerHTML = '<span>❌</span> Failed';
-                        this.disabled = false;
-                    }
-                });
-            }
-            
-            // Todo management functions
-            window.refreshTodos = async function() {
-                const todoContainer = document.getElementById('todo-container');
-                todoContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; padding: 20px; color: #86868b; font-size: 14px;"><div style="width: 12px; height: 12px; border: 2px solid #007aff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></div><span>Regenerating tasks...</span></div>';
-                
-                try {
-                    const response = await fetch('/api/ai/generate-todos', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            videoTitle: '<%= video ? video.title : "" %>',
-                            videoId: videoId
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success && data.todos) {
-                        renderTodos(data.todos);
-                        localStorage.setItem(`todos_${videoId}`, JSON.stringify(data.todos));
-                    }
-                } catch (error) {
-                    console.error('Todo refresh failed:', error);
-                    todoContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff3b30; font-size: 14px;">Failed to generate todos</div>';
-                }
-            };
-            
-            function renderTodos(todos) {
-                const todoContainer = document.getElementById('todo-container');
-                
-                if (!todos || todos.length === 0) {
-                    todoContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #86868b; font-size: 14px;">No todos available</div>';
-                    return;
-                }
-                
-                let html = '';
-                todos.forEach((todo, index) => {
-                    const isCompleted = localStorage.getItem(`todo_${videoId}_${index}`) === 'true';
-                    html += `
-                        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 8px; background: rgba(255,255,255,0.5); border-radius: 12px; border: 1px solid #f2f2f7;">
-                            <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleTodo(${index})" style="margin-top: 2px; accent-color: #007aff;">
-                            <div style="flex: 1;">
-                                <div style="font-size: 14px; font-weight: 500; color: #1d1d1f; margin-bottom: 4px;">${todo.task}</div>
-                                <div style="display: flex; gap: 8px; align-items: center;">
-                                    <span style="font-size: 11px; padding: 2px 6px; border-radius: 8px; background: ${todo.priority === 'high' ? '#ff3b30' : todo.priority === 'medium' ? '#ff9500' : '#30d158'}; color: white;">${todo.priority}</span>
-                                    <span style="font-size: 11px; color: #86868b;">${todo.estimated_time}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                todoContainer.innerHTML = html;
-                updateTodoProgress();
-            }
-            
-            window.toggleTodo = function(index) {
-                const checkbox = event.target;
-                localStorage.setItem(`todo_${videoId}_${index}`, checkbox.checked.toString());
-                updateTodoProgress();
-            };
-            
-            function updateTodoProgress() {
-                const checkboxes = document.querySelectorAll('#todo-container input[type="checkbox"]');
-                const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
-                const total = checkboxes.length;
-                const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-                
-                document.getElementById('todo-progress').textContent = `${completed}/${total} completed`;
-                document.getElementById('todo-progress-bar').style.width = `${percentage}%`;
-            }
-            
-            // Initialize chat history and auto-features
-            loadChatHistory();
-            
-            // Auto-analyze video content and generate todos
-            setTimeout(() => {
-                analyzeVideoContent();
-                generateVideoTodos();
-            }, 2000);
-            
             function showKeyHint(text) {
-                keyHint.textContent = text;
-                keyHint.classList.add('visible');
-                setTimeout(() => keyHint.classList.remove('visible'), 1000);
+                if (keyHint) {
+                    keyHint.textContent = text;
+                    keyHint.classList.add('visible');
+                    setTimeout(() => keyHint.classList.remove('visible'), 1000);
+                }
             }
 
             function markVideoAsWatched() {
@@ -1409,6 +300,8 @@
                         badge.innerHTML = '✓ Watched';
                     }
                     
+                    updateVideoCount();
+                    
                     if (window.gamificationSystem) {
                         window.gamificationSystem.onVideoCompleted({
                             videoId, courseName,
@@ -1422,21 +315,34 @@
 
             // Event listeners
             if (markWatchedButton) {
-                markWatchedButton.addEventListener('click', markVideoAsWatched);
+                markWatchedButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Mark watched button clicked');
+                    markVideoAsWatched();
+                });
+            } else {
+                console.log('Mark watched button not found');
             }
             
             if (prevButton) {
-                prevButton.addEventListener('click', async () => {
+                prevButton.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    console.log('Previous button clicked');
                     try {
                         const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${encodeURIComponent(courseName)}&direction=prev`);
                         if (response.ok) {
                             const prevVideo = await response.json();
+                            console.log('Previous video:', prevVideo);
                             window.location.href = `/videos/${encodeURIComponent(courseName)}/${prevVideo._id}`;
+                        } else {
+                            console.error('No previous video found');
                         }
                     } catch (error) {
                         console.error('Error getting previous video:', error);
                     }
                 });
+            } else {
+                console.log('Previous button not found');
             }
             
             if (nextButton) {
@@ -1453,9 +359,8 @@
                 });
             }
 
-            // Keyboard shortcuts - Fixed
+            // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
-                const videoPlayer = document.getElementById('videoPlayer');
                 if (!videoPlayer || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
 
                 const key = e.key.toLowerCase();
@@ -1515,10 +420,132 @@
                 });
             }
 
+            // Floating Chatbot Functions
+            window.showFloatingChatbot = function() {
+                const chatbot = document.getElementById('floating-chatbot');
+                const trigger = document.getElementById('chatbot-trigger');
+                
+                if (chatbot) {
+                    chatbot.style.display = 'flex';
+                }
+                if (trigger) {
+                    trigger.style.display = 'none';
+                }
+                
+                setTimeout(() => {
+                    const input = document.getElementById('floating-chat-input');
+                    if (input) input.focus();
+                }, 300);
+            };
+            
+            window.toggleFloatingChatbot = function() {
+                const chatbot = document.getElementById('floating-chatbot');
+                const trigger = document.getElementById('chatbot-trigger');
+                
+                if (chatbot) {
+                    chatbot.style.display = 'none';
+                }
+                if (trigger) {
+                    trigger.style.display = 'flex';
+                }
+            };
+
+            window.sendFloatingChatMessage = async function() {
+                const input = document.getElementById('floating-chat-input');
+                const messages = document.getElementById('floating-chat-messages');
+                
+                if (!input || !messages) return;
+                
+                const message = input.value.trim();
+                if (!message) return;
+                
+                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                messages.innerHTML += `
+                    <div class="chat-message user">
+                        <div class="message-content">${message}</div>
+                        <div class="message-meta">You • ${time}</div>
+                    </div>
+                `;
+                
+                input.value = '';
+                messages.scrollTop = messages.scrollHeight;
+                
+                try {
+                    const response = await fetch('/api/ai/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            message, 
+                            aiModel: 'nova-pro',
+                            context: {
+                                videoTitle: '<%= video ? video.title : "" %>',
+                                courseName: courseName,
+                                videoId: videoId
+                            }
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    if (data.success) {
+                        messages.innerHTML += `
+                            <div class="chat-message bot">
+                                <div class="message-content">${data.response}</div>
+                                <div class="message-meta">AI • ${botTime}</div>
+                            </div>
+                        `;
+                    } else {
+                        messages.innerHTML += `
+                            <div class="chat-message bot">
+                                <div class="message-content">Sorry, I couldn't process that.</div>
+                                <div class="message-meta">System • ${botTime}</div>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    messages.innerHTML += `
+                        <div class="chat-message bot">
+                            <div class="message-content">Connection error. Please try again.</div>
+                            <div class="message-meta">System • ${botTime}</div>
+                        </div>
+                    `;
+                }
+                
+                messages.scrollTop = messages.scrollHeight;
+            };
+
+            // Enter key for chat
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'floating-chat-input') {
+                    e.preventDefault();
+                    sendFloatingChatMessage();
+                }
+            });
+
+            // Quiz function
+            window.startVideoQuiz = async function() {
+                try {
+                    const response = await fetch(`/api/quizzes/${videoId}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.quiz && window.quizSystem) {
+                        window.quizSystem.startQuiz('video-specific', data.quiz);
+                    } else if (window.quizSystem) {
+                        window.quizSystem.startQuiz('terraform');
+                    }
+                } catch (error) {
+                    console.error('Error loading quiz:', error);
+                }
+            };
+
             // SRT Generation
             const generateSRTButton = document.getElementById('generateSRTButton');
             if (generateSRTButton) {
-                generateSRTButton.addEventListener('click', async function() {
+                generateSRTButton.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    console.log('Generate SRT button clicked');
                     this.disabled = true;
                     this.innerHTML = '<span>⏳</span> Generating...';
                     
@@ -1536,26 +563,6 @@
                         const data = await response.json();
                         if (data.status === 'processing') {
                             this.innerHTML = '<span>🔄</span> Processing...';
-                            
-                            const checkProgress = setInterval(async () => {
-                                try {
-                                    const progressResponse = await fetch(`/api/srt-progress/<%= video ? video.title : "" %>`);
-                                    const progressData = await progressResponse.json();
-                                    
-                                    if (progressData.status === 'completed') {
-                                        clearInterval(checkProgress);
-                                        this.innerHTML = '<span>✅</span> Ready';
-                                        this.disabled = false;
-                                        setTimeout(() => location.reload(), 1000);
-                                    } else if (progressData.status === 'failed') {
-                                        clearInterval(checkProgress);
-                                        this.innerHTML = '<span>❌</span> Failed';
-                                        this.disabled = false;
-                                    }
-                                } catch (err) {
-                                    console.error('Progress check failed:', err);
-                                }
-                            }, 3000);
                         } else {
                             this.innerHTML = '<span>✅</span> Ready';
                             this.disabled = false;
@@ -1566,7 +573,35 @@
                         this.disabled = false;
                     }
                 });
+            } else {
+                console.log('Generate SRT button not found');
             }
+
+            // Fetch and update video count
+            async function updateVideoCount() {
+                try {
+                    const response = await fetch(`/api/videos/course/${encodeURIComponent(courseName)}/count`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const progressText = document.getElementById('videoProgress');
+                        if (progressText) {
+                            progressText.textContent = `${data.data.watched}/${data.data.total} videos`;
+                        }
+                        
+                        const progressFill = document.querySelector('.progress-fill');
+                        if (progressFill && data.data.total > 0) {
+                            const percentage = Math.round((data.data.watched / data.data.total) * 100);
+                            progressFill.style.width = `${percentage}%`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching video count:', error);
+                }
+            }
+            
+            // Update count on page load
+            updateVideoCount();
         });
     </script>
 </body>

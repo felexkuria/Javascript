@@ -163,3 +163,14 @@ exports.addVideo = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
+exports.getVideoCount = async (req, res) => {
+  try {
+    const { courseName } = req.params;
+    const userId = req.user?.email || 'guest';
+    const count = await dynamoVideoService.getVideoCount(courseName, userId);
+    res.json({ success: true, data: count });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};

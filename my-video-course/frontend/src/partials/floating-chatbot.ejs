@@ -1,0 +1,29 @@
+<!-- Floating AI Chatbot -->
+<div id="floating-chatbot" class="floating-chatbot">
+    <div class="chatbot-header">
+        <div class="chatbot-title">
+            <span class="chatbot-icon">🤖</span>
+            <span>AI Assistant</span>
+            <span class="ai-model" id="ai-model">Nova Pro</span>
+        </div>
+        <button class="chatbot-toggle" onclick="toggleFloatingChatbot()">−</button>
+    </div>
+    <div class="chatbot-body" id="chatbot-body">
+        <div class="chat-messages" id="floating-chat-messages">
+            <div class="chat-message bot animate-message-in">
+                <div class="message-content">Hi! I'm your AI learning assistant. I can help explain concepts from this video. What would you like to know?</div>
+                <div class="message-meta">AI Assistant • Just now</div>
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="floating-chat-input" placeholder="Ask about the video content..." maxlength="500">
+            <button onclick="sendFloatingChatMessage()" id="send-btn" class="interactive-button">📤</button>
+        </div>
+    </div>
+</div>
+
+<!-- Chatbot Trigger Button -->
+<button id="chatbot-trigger" class="chatbot-trigger" onclick="showFloatingChatbot()">
+    💬
+    <span class="notification-dot" id="chat-notification" style="display: none;"></span>
+</button>
