@@ -116,6 +116,7 @@
         // Role tab switching
         document.getElementById('studentTab').addEventListener('click', () => {
             selectedRole = 'student';
+            console.log('Selected role:', selectedRole);
             document.getElementById('studentTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all bg-white dark:bg-gray-600 text-apple-blue shadow-sm';
             document.getElementById('teacherTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all text-gray-500 dark:text-gray-400';
             document.getElementById('teacherNote').classList.add('hidden');
@@ -124,6 +125,7 @@
         
         document.getElementById('teacherTab').addEventListener('click', () => {
             selectedRole = 'teacher';
+            console.log('Selected role:', selectedRole);
             document.getElementById('teacherTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all bg-white dark:bg-gray-600 text-apple-blue shadow-sm';
             document.getElementById('studentTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all text-gray-500 dark:text-gray-400';
             document.getElementById('teacherNote').classList.remove('hidden');
@@ -149,6 +151,8 @@
             loginBtn.textContent = 'Signing in...';
             
             try {
+                console.log('Login attempt:', { email, requestedRole: selectedRole });
+                
                 const response = await fetch('/api/auth/signin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -156,22 +160,29 @@
                 });
                 
                 const data = await response.json();
+                console.log('Login response:', data);
                 
                 if (data.success) {
                     localStorage.setItem('accessToken', data.accessToken);
                     localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('selectedRole', selectedRole);
                     
-                    if (selectedRole === 'teacher' && !data.user.roles.includes('teacher')) {
+                    // Show success message based on role
+                    if (selectedRole === 'teacher' && data.user.isTeacher) {
+                        console.log('Redirecting to teacher dashboard');
+                    } else if (selectedRole === 'teacher' && !data.user.isTeacher) {
                         alert('Teacher access requested. Admin approval required.');
-                        window.location.href = '/dashboard';
                     } else {
-                        // Force reload to ensure session is updated with new role
-                        window.location.href = '/dashboard';
+                        console.log('Redirecting to student dashboard');
                     }
+                    
+                    // Always redirect to dashboard - backend will handle role-based rendering
+                    window.location.href = '/dashboard';
                 } else {
                     alert(data.error);
                 }
             } catch (error) {
+                console.error('Login error:', error);
                 alert('Login failed: ' + error.message);
             } finally {
                 loginBtn.disabled = false;

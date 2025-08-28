@@ -43,11 +43,11 @@ class DynamoVideoService {
   }
 
   // Get all courses for a specific user
-  async getAllCourses(userId = 'default_user') {
+  async getAllCourses(userId, isTeacher = false) {
     // Always try DynamoDB first
     if (this.isDynamoAvailable()) {
       try {
-        const courses = await dynamodb.getAllCourses();
+        const courses = await dynamodb.getAllCourses(userId, isTeacher);
         if (courses && courses.length > 0) {
           // Filter and personalize courses for the user
           return await this.personalizeCoursesForUser(courses, userId);
@@ -57,20 +57,24 @@ class DynamoVideoService {
       }
     }
 
-    // Fallback to localStorage only if DynamoDB fails
-    const localStorage = this.getLocalStorage();
-    const courses = [];
-    
-    for (const courseName of Object.keys(localStorage)) {
-      const videos = localStorage[courseName] || [];
-      courses.push({
-        name: courseName,
-        videos,
-        offlineMode: true
-      });
+    // Fallback to localStorage for engineerfelex@gmail.com
+    if (userId === 'engineerfelex@gmail.com') {
+      const localStorage = this.getLocalStorage();
+      const courses = [];
+      
+      for (const courseName of Object.keys(localStorage)) {
+        const videos = localStorage[courseName] || [];
+        courses.push({
+          name: courseName,
+          videos,
+          offlineMode: true
+        });
+      }
+      return courses;
     }
 
-    return courses;
+    // For other users, return empty courses (they'll see DynamoDB courses above)
+    return [];
   }
 
   // Personalize courses with user-specific data
@@ -88,11 +92,11 @@ class DynamoVideoService {
   }
 
   // Get videos for a specific course with user personalization
-  async getVideosForCourse(courseName, userId = 'default_user') {
+  async getVideosForCourse(courseName, userId) {
     // Always try DynamoDB first
     if (this.isDynamoAvailable()) {
       try {
-        const videos = await dynamodb.getVideosForCourse(courseName);
+        const videos = await dynamodb.getVideosForCourse(courseName, userId);
         if (videos && videos.length > 0) {
           return await this.personalizeVideosForUser(videos, userId);
         }
@@ -101,9 +105,14 @@ class DynamoVideoService {
       }
     }
 
-    // Fallback to localStorage only if DynamoDB fails
-    const localStorage = this.getLocalStorage();
-    return localStorage[courseName] || [];
+    // Fallback to localStorage only for engineerfelex@gmail.com
+    if (userId === 'engineerfelex@gmail.com') {
+      const localStorage = this.getLocalStorage();
+      return localStorage[courseName] || [];
+    }
+
+    // New users get empty videos
+    return [];
   }
 
   // Personalize videos with user-specific watch status
@@ -124,7 +133,7 @@ class DynamoVideoService {
   }
 
   // Update video watch status for specific user
-  async updateVideoWatchStatus(courseName, videoId, watched, userId = 'default_user') {
+  async updateVideoWatchStatus(courseName, videoId, watched, userId) {
     // Always use DynamoDB for user-specific data
     if (this.isDynamoAvailable()) {
       try {
@@ -173,7 +182,7 @@ class DynamoVideoService {
   }
 
   // Get user gamification data
-  async getUserGamificationData(userId = 'default_user') {
+  async getUserGamificationData(userId) {
     if (this.isDynamoAvailable()) {
       try {
         const data = await dynamodb.getGamificationData(userId);
@@ -185,13 +194,33 @@ class DynamoVideoService {
       }
     }
 
-    // Fallback to localStorage
-    const gamificationData = this.getGamificationData();
-    return gamificationData[userId] || null;
+    // Fallback to localStorage only for engineerfelex@gmail.com
+    if (userId === 'engineerfelex@gmail.com') {
+      const gamificationData = this.getGamificationData();
+      return gamificationData['default_user'] || null;
+    }
+
+    // New users get default empty data
+    return {
+      userStats: {
+        totalPoints: 0,
+        videosWatched: {},
+        coursesCompleted: 0,
+        currentLevel: 1,
+        experiencePoints: 0
+      },
+      achievements: [],
+      streakData: {
+        currentStreak: 0,
+        longestStreak: 0,
+        lastActiveDate: null,
+        streakDates: []
+      }
+    };
   }
 
   // Update user gamification data
-  async updateUserGamificationData(userId = 'default_user', data) {
+  async updateUserGamificationData(userId, data) {
     if (this.isDynamoAvailable()) {
       try {
         const success = await dynamodb.saveGamificationData(userId, data);

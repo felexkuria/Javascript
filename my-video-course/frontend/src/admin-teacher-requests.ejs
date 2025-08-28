@@ -4,51 +4,350 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Requests - Admin Panel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.47059;
+            font-weight: 400;
+            letter-spacing: -0.022em;
+        }
+        
+        .dark body {
+            background: #000;
+            color: #f5f5f7;
+        }
+        
+        .header {
+            background: white;
+            border-bottom: 1px solid #d2d2d7;
+            padding: 20px 0;
+        }
+        
+        .dark .header {
+            background: #1d1d1f;
+            border-bottom-color: #424245;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1d1d1f;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .dark .header-title {
+            color: #f5f5f7;
+        }
+        
+        .badge {
+            background: #ff3b30;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-secondary {
+            background: #f2f2f7;
+            color: #1d1d1f;
+        }
+        
+        .dark .btn-secondary {
+            background: #2c2c2e;
+            color: #f5f5f7;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e5ea;
+            transform: translateY(-1px);
+        }
+        
+        .dark .btn-secondary:hover {
+            background: #3a3a3c;
+        }
+        
+        .btn-danger {
+            background: #ff3b30;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #d70015;
+            transform: translateY(-1px);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+        
+        .dark .section {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .section-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid #f2f2f7;
+        }
+        
+        .dark .section-header {
+            border-bottom-color: #2c2c2e;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .dark .section-title {
+            color: #f5f5f7;
+        }
+        
+        .request-item {
+            padding: 24px 32px;
+            border-bottom: 1px solid #f2f2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dark .request-item {
+            border-bottom-color: #2c2c2e;
+        }
+        
+        .request-item:last-child {
+            border-bottom: none;
+        }
+        
+        .request-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 4px;
+        }
+        
+        .dark .request-info h3 {
+            color: #f5f5f7;
+        }
+        
+        .request-email {
+            font-size: 14px;
+            color: #86868b;
+            margin-bottom: 4px;
+        }
+        
+        .request-date {
+            font-size: 12px;
+            color: #86868b;
+        }
+        
+        .request-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-approve {
+            background: #30d158;
+            color: white;
+        }
+        
+        .btn-approve:hover {
+            background: #28cd4f;
+            transform: translateY(-1px);
+        }
+        
+        .btn-reject {
+            background: #ff3b30;
+            color: white;
+        }
+        
+        .btn-reject:hover {
+            background: #d70015;
+            transform: translateY(-1px);
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-approved {
+            background: rgba(48, 209, 88, 0.1);
+            color: #30d158;
+        }
+        
+        .status-rejected {
+            background: rgba(255, 59, 48, 0.1);
+            color: #ff3b30;
+        }
+        
+        .empty-state {
+            padding: 60px 32px;
+            text-align: center;
+            color: #86868b;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 22px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        
+        .dark .theme-toggle {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .request-item {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+            
+            .request-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 font-sans">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <header class="bg-white shadow-sm border-b">
-            <div class="max-w-7xl mx-auto px-4 py-4">
-                <div class="flex justify-between items-center">
-                    <h1 class="text-2xl font-semibold text-gray-900">Teacher Access Requests</h1>
-                    <div class="flex items-center space-x-4">
-                        <a href="/dashboard" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
-                            Back to Dashboard
-                        </a>
-                        <button id="logoutBtn" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                            Logout
-                        </button>
-                    </div>
-                </div>
+<body>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+    
+    <header class="header">
+        <div class="header-content">
+            <h1 class="header-title">
+                👥 Teacher Access Requests
+                <span id="requestBadge" class="badge" style="display: none;">0</span>
+            </h1>
+            <div class="header-actions">
+                <a href="/dashboard" class="btn btn-secondary">
+                    ← Back to Dashboard
+                </a>
+                <button id="logoutBtn" class="btn btn-danger">
+                    Logout
+                </button>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <!-- Pending Requests -->
-            <div class="bg-white rounded-lg shadow-sm border">
-                <div class="px-6 py-4 border-b">
-                    <h2 class="text-lg font-semibold text-gray-900">Pending Requests</h2>
-                </div>
-                <div id="pendingRequests" class="divide-y">
-                    <!-- Requests will be loaded here -->
-                </div>
+    <div class="container">
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Pending Requests</h2>
             </div>
+            <div id="pendingRequests">
+                <!-- Requests will be loaded here -->
+            </div>
+        </div>
 
-            <!-- Processed Requests -->
-            <div class="bg-white rounded-lg shadow-sm border mt-8">
-                <div class="px-6 py-4 border-b">
-                    <h2 class="text-lg font-semibold text-gray-900">Processed Requests</h2>
-                </div>
-                <div id="processedRequests" class="divide-y">
-                    <!-- Processed requests will be loaded here -->
-                </div>
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Processed Requests</h2>
+            </div>
+            <div id="processedRequests">
+                <!-- Processed requests will be loaded here -->
             </div>
         </div>
     </div>
 
     <script>
+        // Theme management
+        function initTheme() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.classList.toggle('dark', newTheme === 'dark');
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        initTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
         document.addEventListener('DOMContentLoaded', () => {
             loadTeacherRequests();
         });
@@ -76,13 +375,13 @@
         }
         
         function updateBadge(count) {
-            const badge = document.createElement('span');
-            badge.className = 'ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full';
-            badge.textContent = count;
-            const title = document.querySelector('h1');
-            const existingBadge = title.querySelector('span');
-            if (existingBadge) existingBadge.remove();
-            if (count > 0) title.appendChild(badge);
+            const badge = document.getElementById('requestBadge');
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
         }
 
         function renderRequests(requests) {
@@ -92,23 +391,26 @@
             // Render pending requests
             const pendingContainer = document.getElementById('pendingRequests');
             if (pending.length === 0) {
-                pendingContainer.innerHTML = '<div class="p-6 text-gray-500 text-center">No pending requests</div>';
+                pendingContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <div>No pending requests</div>
+                    </div>
+                `;
             } else {
                 pendingContainer.innerHTML = pending.map(request => `
-                    <div class="p-6 flex justify-between items-center">
-                        <div>
-                            <h3 class="font-medium text-gray-900">${request.name}</h3>
-                            <p class="text-sm text-gray-500">${request.email}</p>
-                            <p class="text-xs text-gray-400">Requested: ${new Date(request.requestedAt).toLocaleDateString()}</p>
+                    <div class="request-item">
+                        <div class="request-info">
+                            <h3>${request.name}</h3>
+                            <div class="request-email">${request.email}</div>
+                            <div class="request-date">Requested: ${new Date(request.requestedAt).toLocaleDateString()}</div>
                         </div>
-                        <div class="flex space-x-2">
-                            <button onclick="approveRequest('${request._id}')" 
-                                    class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
-                                Approve
+                        <div class="request-actions">
+                            <button onclick="approveRequest('${request._id}')" class="btn btn-approve">
+                                ✓ Approve
                             </button>
-                            <button onclick="rejectRequest('${request._id}')" 
-                                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                                Reject
+                            <button onclick="rejectRequest('${request._id}')" class="btn btn-reject">
+                                ✕ Reject
                             </button>
                         </div>
                     </div>
@@ -118,24 +420,25 @@
             // Render processed requests
             const processedContainer = document.getElementById('processedRequests');
             if (processed.length === 0) {
-                processedContainer.innerHTML = '<div class="p-6 text-gray-500 text-center">No processed requests</div>';
+                processedContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <div>No processed requests</div>
+                    </div>
+                `;
             } else {
                 processedContainer.innerHTML = processed.map(request => `
-                    <div class="p-6 flex justify-between items-center">
-                        <div>
-                            <h3 class="font-medium text-gray-900">${request.name}</h3>
-                            <p class="text-sm text-gray-500">${request.email}</p>
-                            <p class="text-xs text-gray-400">
+                    <div class="request-item">
+                        <div class="request-info">
+                            <h3>${request.name}</h3>
+                            <div class="request-email">${request.email}</div>
+                            <div class="request-date">
                                 ${request.status === 'approved' ? 'Approved' : 'Rejected'}: 
                                 ${new Date(request.reviewedAt).toLocaleDateString()}
-                            </p>
+                            </div>
                         </div>
-                        <span class="px-3 py-1 text-xs rounded-full ${
-                            request.status === 'approved' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                        }">
-                            ${request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        <span class="status-badge status-${request.status}">
+                            ${request.status}
                         </span>
                     </div>
                 `).join('');
@@ -165,7 +468,6 @@
 
                 const data = await response.json();
                 if (data.success) {
-                    alert(`Request ${action} successfully`);
                     loadTeacherRequests();
                 } else {
                     alert('Failed to process request: ' + data.error);

@@ -147,7 +147,7 @@ class DynamoDBService {
     }
   }
 
-  async getVideosForCourse(courseName) {
+  async getVideosForCourse(courseName, userId = 'engineerfelex@gmail.com') {
     if (!this.isConnected) return null;
 
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
@@ -155,42 +155,92 @@ class DynamoDBService {
     try {
       const params = {
         TableName: `video-course-videos-${environment}`,
-        KeyConditionExpression: 'courseName = :courseName',
+        FilterExpression: 'courseName = :courseName',
         ExpressionAttributeValues: {
           ':courseName': courseName
         }
       };
 
-      const result = await this.docClient.send(new QueryCommand(params));
-      return result.Items || [];
+      const result = await this.docClient.send(new ScanCommand(params));
+      const videos = result.Items || [];
+      
+      // Remove duplicates by title+order combination and sort by order then title
+      const uniqueVideos = videos.filter((video, index, self) => 
+        index === self.findIndex(v => v.title === video.title && v.sectionTitle === video.sectionTitle)
+      );
+      
+      return uniqueVideos.sort((a, b) => {
+        // Sort by section order first, then by video order, then by title
+        const sectionOrderA = a.sectionOrder || 0;
+        const sectionOrderB = b.sectionOrder || 0;
+        if (sectionOrderA !== sectionOrderB) {
+          return sectionOrderA - sectionOrderB;
+        }
+        
+        const orderA = a.order || 0;
+        const orderB = b.order || 0;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        
+        const titleA = (a.title || '').toLowerCase();
+        const titleB = (b.title || '').toLowerCase();
+        return titleA.localeCompare(titleB);
+      });
     } catch (error) {
       console.error('Error getting videos from DynamoDB:', error);
       return null;
     }
   }
 
-  async getAllCourses() {
+  async getAllCourses(userId = null, isTeacher = false) {
     if (!this.isConnected) return null;
 
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
     try {
-      const params = {
+      // First try to get courses from the courses table
+      const coursesParams = {
+        TableName: `video-course-courses-${environment}`
+      };
+
+      const coursesResult = await this.docClient.send(new ScanCommand(coursesParams));
+      const courses = [];
+      
+      // Process courses from courses table
+      for (const courseItem of coursesResult.Items || []) {
+        // Load videos for all courses, let getVideosForCourse handle user filtering
+        const videos = await this.getVideosForCourse(courseItem.courseName, userId);
+        
+        courses.push({
+          name: courseItem.courseName,
+          title: courseItem.title,
+          description: courseItem.description,
+          totalVideos: courseItem.totalVideos,
+          videos: videos || [],
+          offlineMode: false
+        });
+      }
+      
+      // Also get courses from videos table (for backward compatibility)
+      const videosParams = {
         TableName: `video-course-videos-${environment}`,
         ProjectionExpression: 'courseName'
       };
 
-      const result = await this.docClient.send(new ScanCommand(params));
-      const courseNames = [...new Set(result.Items.map(item => item.courseName))];
+      const videosResult = await this.docClient.send(new ScanCommand(videosParams));
+      const videosCourseNames = [...new Set(videosResult.Items.map(item => item.courseName))];
       
-      const courses = [];
-      for (const courseName of courseNames) {
-        const videos = await this.getVideosForCourse(courseName);
-        courses.push({
-          name: courseName,
-          videos: videos || [],
-          offlineMode: false
-        });
+      // Add any courses that are only in videos table
+      for (const courseName of videosCourseNames) {
+        if (!courses.find(c => c.name === courseName)) {
+          const videos = await this.getVideosForCourse(courseName, userId);
+          courses.push({
+            name: courseName,
+            videos: videos || [],
+            offlineMode: false
+          });
+        }
       }
 
       return courses;
@@ -200,18 +250,36 @@ class DynamoDBService {
     }
   }
 
-  async updateVideoWatchStatus(courseName, videoId, watched) {
+  async updateVideoWatchStatus(courseName, videoId, watched, userId = 'engineerfelex@gmail.com') {
     if (!this.isConnected) return false;
 
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
     try {
-      const params = {
+      // Find the video first using scan since table structure varies
+      const findParams = {
         TableName: `video-course-videos-${environment}`,
-        Key: {
-          courseName: courseName,
-          videoId: videoId
-        },
+        FilterExpression: 'courseName = :courseName AND videoId = :videoId',
+        ExpressionAttributeValues: {
+          ':courseName': courseName,
+          ':videoId': videoId
+        }
+      };
+
+      const findResult = await this.docClient.send(new ScanCommand(findParams));
+      if (!findResult.Items || findResult.Items.length === 0) {
+        console.error('Video not found for watch status update');
+        return false;
+      }
+
+      const video = findResult.Items[0];
+      
+      // Update using the actual key structure
+      const updateParams = {
+        TableName: `video-course-videos-${environment}`,
+        Key: video.userId ? 
+          { userId: video.userId, videoId: videoId } : 
+          { courseName: courseName, videoId: videoId },
         UpdateExpression: 'SET watched = :watched, watchedAt = :watchedAt, updatedAt = :updatedAt',
         ExpressionAttributeValues: {
           ':watched': watched,
@@ -220,7 +288,7 @@ class DynamoDBService {
         }
       };
 
-      await this.docClient.send(new UpdateCommand(params));
+      await this.docClient.send(new UpdateCommand(updateParams));
       return true;
     } catch (error) {
       console.error('Error updating video watch status in DynamoDB:', error);
@@ -229,7 +297,7 @@ class DynamoDBService {
   }
 
   // Gamification operations
-  async saveGamificationData(userId, data) {
+  async saveGamificationData(userId = 'engineerfelex@gmail.com', data) {
     if (!this.isConnected) return false;
 
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
@@ -252,7 +320,7 @@ class DynamoDBService {
     }
   }
 
-  async getGamificationData(userId) {
+  async getGamificationData(userId = 'engineerfelex@gmail.com') {
     if (!this.isConnected) return null;
 
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
@@ -368,10 +436,10 @@ class DynamoDBService {
         }
       }
 
-      // Migrate gamification data
+      // Migrate gamification data to engineerfelex@gmail.com
       let gamificationCount = 0;
       for (const [userId, data] of Object.entries(gamificationData)) {
-        await this.saveGamificationData(userId, data);
+        await this.saveGamificationData('engineerfelex@gmail.com', data);
         gamificationCount++;
       }
 

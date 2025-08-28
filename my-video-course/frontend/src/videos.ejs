@@ -1,55 +1,170 @@
-<%- include('partials/header', { title: 'All Videos' }) %>
-
-<main class="max-w-7xl mx-auto px-3 py-4 sm:px-4 sm:py-6">
-  <div class="mb-6">
-    <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-2">All Videos</h1>
-    <p class="text-sm text-gray-600 dark:text-gray-400">Browse all available videos</p>
-  </div>
-
-  <div class="space-y-3">
-    <% if (videos && videos.length > 0) { %>
-      <% videos.forEach((video, index) => { %>
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200">
-          <div class="flex items-center space-x-4">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8 5v10l7-5-7-5z"/>
-                </svg>
-              </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Videos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .stat {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #007aff;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #86868b;
+            margin-top: 4px;
+        }
+        
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .video-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
+        }
+        
+        .video-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .video-card.watched {
+            border-left: 4px solid #30d158;
+        }
+        
+        .video-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+        
+        .video-course {
+            font-size: 14px;
+            color: #86868b;
+            margin-bottom: 16px;
+        }
+        
+        .video-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-watched {
+            background: #30d158;
+            color: white;
+        }
+        
+        .status-unwatched {
+            background: #ff3b30;
+            color: white;
+        }
+        
+        .watch-btn {
+            padding: 8px 16px;
+            background: #007aff;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .watch-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">All Videos</h1>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value"><%= totalVideos %></div>
+                    <div class="stat-label">Total Videos</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value"><%= watchedVideos %></div>
+                    <div class="stat-label">Watched</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value"><%= Math.round((watchedVideos/totalVideos)*100) %>%</div>
+                    <div class="stat-label">Progress</div>
+                </div>
             </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                <%= video.title %>
-              </h3>
-              <div class="flex items-center mt-1 space-x-3">
-                <span class="text-xs text-gray-500 dark:text-gray-400">
-                  <%= video.courseName %>
-                </span>
-                <% if (video.duration) { %>
-                  <span class="text-xs text-gray-500 dark:text-gray-400">
-                    <%= video.duration %>
-                  </span>
-                <% } %>
-              </div>
-            </div>
-            <div class="flex-shrink-0">
-              <a href="/videos/<%= video.courseName %>/<%= video._id %>" 
-                 class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
-                Watch
-              </a>
-            </div>
-          </div>
         </div>
-      <% }) %>
-    <% } else { %>
-      <div class="text-center py-12">
-        <div class="text-4xl mb-4">🎥</div>
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No videos available</h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Check back later for new videos</p>
-      </div>
-    <% } %>
-  </div>
-</main>
-
-<%- include('partials/footer') %>
+        
+        <div class="videos-grid">
+            <% videos.forEach(video => { %>
+                <div class="video-card <%= video.watched ? 'watched' : '' %>">
+                    <h3 class="video-title"><%= video.title %></h3>
+                    <p class="video-course">Course: <%= video.courseName %></p>
+                    
+                    <div class="video-status">
+                        <span class="status-badge <%= video.watched ? 'status-watched' : 'status-unwatched' %>">
+                            <%= video.watched ? '✓ Watched' : '○ Unwatched' %>
+                        </span>
+                        <a href="/course/<%= encodeURIComponent(video.courseName) %>/video/<%= video._id || video.videoId %>" class="watch-btn">
+                            Watch
+                        </a>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</body>
+</html>

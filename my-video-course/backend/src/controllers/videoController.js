@@ -21,13 +21,13 @@ const dynamoVideoService = require('../services/dynamoVideoService');
 
 exports.getVideos = async (req, res) => {
   try {
-    const userId = req.user?.email || 'default_user';
+    const userId = req.user?.email || 'guest';
     const courses = await dynamoVideoService.getAllCourses(userId);
     const allVideos = courses.flatMap(course => course.videos);
     const totalVideos = allVideos.length;
     const watchedVideos = allVideos.filter(video => video.watched).length;
 
-    res.render('index', { videos: allVideos, totalVideos, watchedVideos });
+    res.render('videos', { videos: allVideos, totalVideos, watchedVideos });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -35,7 +35,7 @@ exports.getVideos = async (req, res) => {
 
 exports.getAllVideos = async (req, res) => {
   try {
-    const userId = req.user?.email || 'default_user';
+    const userId = req.user?.email || 'guest';
     const courses = await dynamoVideoService.getAllCourses(userId);
     const videos = courses.flatMap(course => course.videos);
     
@@ -47,7 +47,7 @@ exports.getAllVideos = async (req, res) => {
 
 exports.getVideoById = async (req, res) => {
   try {
-    const userId = req.user?.email || 'default_user';
+    const userId = req.user?.email || 'guest';
     const courses = await dynamoVideoService.getAllCourses(userId);
     const allVideos = courses.flatMap(course => course.videos);
     const video = allVideos.find(v => v._id.toString() === req.params.id);
@@ -79,7 +79,7 @@ exports.getVideoById = async (req, res) => {
 exports.markVideoAsWatched = async (req, res) => {
   try {
     const videoId = req.params.id;
-    const userId = req.user?.email || 'default_user';
+    const userId = req.user?.email || 'guest';
     const courses = await dynamoVideoService.getAllCourses(userId);
     const allVideos = courses.flatMap(course => course.videos);
     const video = allVideos.find(v => v._id.toString() === videoId);
@@ -108,7 +108,7 @@ exports.markVideoAsWatched = async (req, res) => {
 exports.getVideosByCourse = async (req, res) => {
   try {
     const { courseName } = req.params;
-    const userId = req.user?.email || 'default_user';
+    const userId = req.user?.email || 'guest';
     const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
     res.json({ success: true, data: videos });
   } catch (err) {
@@ -119,7 +119,7 @@ exports.getVideosByCourse = async (req, res) => {
 exports.getVideo = async (req, res) => {
   try {
     const { courseName, videoId } = req.params;
-    const userId = req.user?.email || 'default_user';
+    const userId = req.user?.email || 'guest';
     const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
     const video = videos.find(v => v._id.toString() === videoId);
     if (!video) {
@@ -134,7 +134,7 @@ exports.getVideo = async (req, res) => {
 exports.markWatched = async (req, res) => {
   try {
     const { courseName, videoId } = req.params;
-    const userId = req.user?.email || 'default_user';
+    const userId = req.user?.email || 'guest';
     const success = await dynamoVideoService.updateVideoWatchStatus(courseName, videoId, true, userId);
     if (!success) {
       return res.status(404).json({ success: false, error: 'Video not found' });

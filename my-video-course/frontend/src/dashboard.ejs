@@ -1,338 +1,735 @@
-<%- include('partials/header', { title: 'Dashboard' }) %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Video Course Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.47059;
+            font-weight: 400;
+            letter-spacing: -0.022em;
+        }
+        
+        .dark body {
+            background: #000;
+            color: #f5f5f7;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+        
+        .header-content h1 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+        
+        .dark .header-content h1 {
+            color: #f5f5f7;
+        }
+        
+        .header-content p {
+            font-size: 21px;
+            color: #86868b;
+            margin-bottom: 16px;
+        }
+        
+        .role-switcher {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .role-link {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .role-link.active {
+            background: #007aff;
+            color: white;
+        }
+        
+        .role-link:not(.active) {
+            background: #f2f2f7;
+            color: #1d1d1f;
+        }
+        
+        .dark .role-link:not(.active) {
+            background: #2c2c2e;
+            color: #f5f5f7;
+        }
+        
+        .stats-panel {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+        
+        .dark .stats-panel {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .stat-icon.level { background: #30d158; }
+        .stat-icon.points { background: #ff9500; }
+        .stat-icon.streak { background: #ff3b30; }
+        
+        .stat-content {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .dark .stat-value {
+            color: #f5f5f7;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #86868b;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-left: auto;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #f2f2f7;
+            color: #1d1d1f;
+        }
+        
+        .dark .btn-secondary {
+            background: #2c2c2e;
+            color: #f5f5f7;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e5ea;
+            transform: translateY(-1px);
+        }
+        
+        .dark .btn-secondary:hover {
+            background: #3a3a3c;
+        }
+        
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        
+        .course-card {
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .dark .course-card {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+        }
+        
+        .dark .course-card:hover {
+            box-shadow: 0 8px 40px rgba(255,255,255,0.08);
+        }
+        
+        .course-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #007aff, #5856d6);
+        }
+        
+        .course-content {
+            padding: 24px;
+        }
+        
+        .course-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+        
+        .dark .course-title {
+            color: #f5f5f7;
+        }
+        
+        .course-description {
+            font-size: 14px;
+            color: #86868b;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            height: 60px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        
+        .progress-section {
+            margin-bottom: 20px;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .progress-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .progress-count {
+            font-size: 12px;
+            font-weight: 500;
+            color: #86868b;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #f2f2f7;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .dark .progress-bar {
+            background: #2c2c2e;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #30d158;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        .course-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-enroll {
+            flex: 1;
+            background: #30d158;
+            color: white;
+            text-align: center;
+        }
+        
+        .btn-enroll:hover {
+            background: #28cd4f;
+        }
+        
+        .btn-enroll:disabled {
+            background: #86868b;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-start {
+            flex: 1;
+            background: #007aff;
+            color: white;
+            text-align: center;
+        }
+        
+        .btn-start:hover {
+            background: #0056b3;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .dark .empty-state {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        }
+        
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .empty-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+        
+        .dark .empty-title {
+            color: #f5f5f7;
+        }
+        
+        .empty-message {
+            color: #86868b;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 22px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        
+        .dark .theme-toggle {
+            background: #1d1d1f;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .stats-panel {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .actions {
+                margin-left: 0;
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>Learning Dashboard</h1>
+                <p>Discover courses and track your progress</p>
+                <% if (user && user.isTeacher) { %>
+                <div class="role-switcher">
+                    <a href="/teacher/dashboard" class="role-link">Teacher View</a>
+                    <span class="role-link active">Student View</span>
+                </div>
+                <% } %>
+            </div>
+        </div>
+        
+        <div class="stats-panel">
+            <div class="stat-item">
+                <div class="stat-icon level user-level"><%= (gamificationData && gamificationData.userStats && gamificationData.userStats.currentLevel) || 1 %></div>
+                <div class="stat-content">
+                    <div class="stat-value">Level <%= (gamificationData && gamificationData.userStats && gamificationData.userStats.currentLevel) || 1 %></div>
+                    <div class="stat-label">Current Level</div>
+                </div>
+            </div>
+            
+            <div class="stat-item">
+                <div class="stat-icon points">🏆</div>
+                <div class="stat-content">
+                    <div class="stat-value user-points"><%= (gamificationData && gamificationData.userStats && gamificationData.userStats.totalPoints) || 0 %></div>
+                    <div class="stat-label">Total Points</div>
+                </div>
+            </div>
+            
+            <div class="stat-item">
+                <div class="stat-icon streak">🔥</div>
+                <div class="stat-content">
+                    <div class="stat-value user-streak"><%= (gamificationData && gamificationData.streakData && gamificationData.streakData.currentStreak) || 0 %></div>
+                    <div class="stat-label">Day Streak</div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button id="syncButton" class="btn btn-primary">
+                    <span>🔄</span> Sync
+                </button>
+                <button id="fixAllThumbnailsButton" class="btn btn-secondary">
+                    <span>🖼️</span> Fix Thumbnails
+                </button>
+            </div>
+        </div>
 
-<main class="max-w-7xl mx-auto px-4 py-6">
-  <div class="mb-8">
-    <div class="flex justify-between items-center">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">🎓 Learning Dashboard</h1>
-        <% if (user && user.isTeacher) { %>
-        <div class="flex space-x-2 mt-2">
-          <a href="/teacher/dashboard" class="text-blue-600 hover:text-blue-800 text-sm px-3 py-1 bg-blue-50 rounded-lg">Teacher View</a>
-          <span class="text-gray-600 text-sm px-3 py-1 bg-gray-100 rounded-lg">Student View</span>
+        <% if (courses && courses.length > 0) { %>
+        <div class="courses-grid">
+            <% courses.forEach(course => { %>
+            <div class="course-card">
+                <img src="https://uploads.teachablecdn.com/attachments/e2FDxVHOSIKe60ZmL6ki_Teachable+Course+Thumbnail.png" 
+                     alt="<%= course.name %>" class="course-image">
+                
+                <div class="course-content">
+                    <h2 class="course-title"><%= course.name %></h2>
+                    <p class="course-description">Loading description...</p>
+                    
+                    <% 
+                        const videos = course.videos || [];
+                        const sortedVideos = videos.length > 0 ? [...videos].sort((a, b) => {
+                            const aNum = parseInt((a.title || '').match(/\\d+/)) || 0;
+                            const bNum = parseInt((b.title || '').match(/\\d+/)) || 0;
+                            return aNum - bNum;
+                        }) : [];
+                        const totalVideos = sortedVideos.length;
+                        const watchedVideos = sortedVideos.filter(v => v && v.watched).length;
+                        const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
+                    %>
+                    
+                    <div class="progress-section">
+                        <div class="progress-header">
+                            <span class="progress-label">Progress</span>
+                            <span class="progress-count"><%= watchedVideos %>/<%= totalVideos %></span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: <%= watchedPercent %>%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="course-actions">
+                        <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
+                                class="btn btn-enroll enroll-btn" 
+                                data-course-id="<%= course._id || course.name %>">
+                            Enroll
+                        </button>
+                        <a href="/course/<%= course.name %>" class="btn btn-start">
+                            Start Learning
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+        </div>
+        <% } else { %>
+        <div class="empty-state">
+            <div class="empty-icon">📚</div>
+            <h3 class="empty-title">No courses found</h3>
+            <p class="empty-message">Add videos to the public/videos directory to get started.</p>
         </div>
         <% } %>
-        <p class="text-gray-600 dark:text-gray-400">Discover courses and track your progress</p>
-      </div>
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 transition-colors">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold user-level">1</div>
-            <span class="text-sm font-medium">Level</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🏆</span>
-            <div>
-              <span class="font-bold user-points text-lg text-gray-900 dark:text-white">0</span>
-              <span class="text-sm text-gray-500 dark:text-gray-400 block">points</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🔥</span>
-            <div>
-              <span class="font-bold user-streak text-lg text-gray-900 dark:text-white">0</span>
-              <span class="text-sm text-gray-500 dark:text-gray-400 block">streak</span>
-            </div>
-          </div>
-        </div>
-        <div class="flex gap-2">
-          <button id="syncButton" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors">
-            <i class="fas fa-sync-alt mr-2"></i>Sync
-          </button>
-          <button id="fixAllThumbnailsButton" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors">
-            <i class="fas fa-image mr-2"></i>Fix Thumbnails
-          </button>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    <% if (courses && courses.length > 0) { %>
-      <% courses.forEach(course => { %>
-        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg overflow-hidden hover:shadow-lg transition-all">
-          <div class="relative">
-            <img src="https://uploads.teachablecdn.com/attachments/e2FDxVHOSIKe60ZmL6ki_Teachable+Course+Thumbnail.png" 
-                 alt="<%= course.name %>" class="w-full h-48 object-cover">
-          </div>
-          <div class="p-6">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3 truncate" title="<%= course.name %>">
-              <%= course.name %>
-            </h2>
-            <p class="course-description text-gray-600 dark:text-gray-400 mb-4 text-sm leading-relaxed h-16 overflow-hidden">
-              Loading description...
-            </p>
-            
-            <% 
-              // Ensure videos array exists and calculate progress
-              const videos = course.videos || [];
-              const sortedVideos = videos.length > 0 ? [...videos].sort((a, b) => {
-                const aNum = parseInt((a.title || '').match(/\d+/)) || 0;
-                const bNum = parseInt((b.title || '').match(/\d+/)) || 0;
-                return aNum - bNum;
-              }) : [];
-              const totalVideos = sortedVideos.length;
-              const watchedVideos = sortedVideos.filter(v => v && v.watched).length;
-              const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
-            %>
-            <div class="mb-4">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Progress</span>
-                <span class="text-xs font-medium text-gray-500 dark:text-gray-400"><%= watchedVideos %>/<%= totalVideos %></span>
-              </div>
-              <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-green-500" style="width: <%= watchedPercent %>%"></div>
-              </div>
-              <% if (totalVideos === 0) { %>
-                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">No videos loaded yet</p>
-              <% } %>
-            </div>
-            
-            <div class="space-y-2">
-              <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
-                      class="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded transition-colors enroll-btn" 
-                      data-course-id="<%= course._id || course.name %>">
-                Enroll
-              </button>
-              <a href="/course/<%= course.name %>" class="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded transition-colors">
-                <span>Start Learning</span>
-                <i class="fas fa-arrow-right ml-2"></i>
-              </a>
-            </div>
-          </div>
-        </div>
-      <% }); %>
-    <% } else { %>
-      <div class="col-span-full text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <h3 class="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">No courses found</h3>
-        <p class="text-gray-500 dark:text-gray-400">Add videos to the public/videos directory to get started.</p>
-      </div>
-    <% } %>
-  </div>
-</main>
-
-<script src="/js/gamification.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Load AI course descriptions with caching
-  const courseCards = document.querySelectorAll('.course-description');
-  courseCards.forEach(async (desc, index) => {
-    const courseName = desc.closest('.card').querySelector('h2').textContent.trim();
-    const cacheKey = `course_description_${courseName}`;
-    
-    const cachedDescription = localStorage.getItem(cacheKey);
-    if (cachedDescription) {
-      desc.textContent = cachedDescription;
-      return;
-    }
-    
-    desc.textContent = 'Generating description...';
-    
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      
-      const response = await fetch(`/api/course/description/${encodeURIComponent(courseName)}`, {
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.description && data.description.trim()) {
-          desc.textContent = data.description;
-          localStorage.setItem(cacheKey, data.description);
-        } else {
-          throw new Error('Empty description');
+    <!-- Gamification script removed to prevent override -->
+    <script>
+        // Theme management
+        function initTheme() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
         }
-      } else {
-        throw new Error(`HTTP ${response.status}`);
-      }
-    } catch (error) {
-      // Fallback descriptions
-      const courseNameLower = courseName.toLowerCase();
-      if (courseNameLower.includes('davinci') || courseNameLower.includes('video')) {
-        desc.textContent = 'Master professional video editing with DaVinci Resolve. Learn color grading, audio editing, and advanced techniques.';
-      } else if (courseNameLower.includes('aws')) {
-        desc.textContent = 'Complete AWS cloud computing course. Build scalable solutions with hands-on labs covering EC2, S3, Lambda, and more.';
-      } else if (courseNameLower.includes('devops')) {
-        desc.textContent = 'Ultimate DevOps course! Master CI/CD pipelines, Docker, Kubernetes, and infrastructure automation.';
-      } else if (courseNameLower.includes('terraform')) {
-        desc.textContent = 'Master Infrastructure as Code with Terraform! Learn to provision cloud resources across AWS, Azure, and GCP.';
-      } else {
-        desc.textContent = `Complete ${courseName} course with practical exercises and real-world projects.`;
-      }
-      
-      localStorage.setItem(cacheKey, desc.textContent);
-    }
-  });
-  
-  // Sync button
-  document.getElementById('syncButton').addEventListener('click', async function() {
-    this.disabled = true;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Syncing...';
-    
-    const statusDiv = document.createElement('div');
-    statusDiv.className = 'fixed bottom-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded';
-    statusDiv.textContent = 'Syncing with database...';
-    document.body.appendChild(statusDiv);
-    
-    try {
-      const response = await fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
-        statusDiv.textContent = 'Sync completed!';
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
-        statusDiv.textContent = 'Sync failed: ' + (result.error || 'Unknown error');
-      }
-    } catch (error) {
-      statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
-      statusDiv.textContent = 'Error: ' + error.message;
-    } finally {
-      this.disabled = false;
-      this.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Sync';
-      setTimeout(() => {
-        if (document.body.contains(statusDiv)) {
-          document.body.removeChild(statusDiv);
-        }
-      }, 5000);
-    }
-  });
-  
-  // Fix thumbnails button
-  document.getElementById('fixAllThumbnailsButton').addEventListener('click', async function() {
-    this.disabled = true;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Fixing...';
-    
-    const statusDiv = document.createElement('div');
-    statusDiv.className = 'fixed bottom-4 right-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded';
-    statusDiv.textContent = 'Fixing thumbnails...';
-    document.body.appendChild(statusDiv);
-    
-    try {
-      const courses = document.querySelectorAll('.course-description');
-      let totalFixed = 0;
-      
-      for (const desc of courses) {
-        const courseName = desc.closest('.card').querySelector('h2').textContent.trim();
         
-        try {
-          const response = await fetch(`/api/thumbnails/fix/${encodeURIComponent(courseName)}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
-          
-          const data = await response.json();
-          if (data.success) {
-            totalFixed += data.fixedCount;
-            statusDiv.textContent = `Fixed ${totalFixed} thumbnails...`;
-          }
-        } catch (err) {
-          console.warn(`Failed to fix thumbnails for ${courseName}:`, err);
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.classList.toggle('dark', newTheme === 'dark');
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
         }
-      }
-      
-      statusDiv.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded';
-      statusDiv.textContent = `Fixed ${totalFixed} thumbnails!`;
-      
-      setTimeout(() => {
-        if (document.body.contains(statusDiv)) {
-          document.body.removeChild(statusDiv);
+        
+        initTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load AI course descriptions with caching
+            const courseCards = document.querySelectorAll('.course-description');
+            courseCards.forEach(async (desc, index) => {
+                const courseName = desc.closest('.course-card').querySelector('.course-title').textContent.trim();
+                const cacheKey = `course_description_${courseName}`;
+                
+                const cachedDescription = localStorage.getItem(cacheKey);
+                if (cachedDescription) {
+                    desc.textContent = cachedDescription;
+                    return;
+                }
+                
+                desc.textContent = 'Generating description...';
+                
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+                    
+                    const response = await fetch(`/api/course/description/${encodeURIComponent(courseName)}`, {
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.description && data.description.trim()) {
+                            desc.textContent = data.description;
+                            localStorage.setItem(cacheKey, data.description);
+                        } else {
+                            throw new Error('Empty description');
+                        }
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    // Fallback descriptions
+                    const courseNameLower = courseName.toLowerCase();
+                    if (courseNameLower.includes('davinci') || courseNameLower.includes('video')) {
+                        desc.textContent = 'Master professional video editing with DaVinci Resolve. Learn color grading, audio editing, and advanced techniques.';
+                    } else if (courseNameLower.includes('aws')) {
+                        desc.textContent = 'Complete AWS cloud computing course. Build scalable solutions with hands-on labs covering EC2, S3, Lambda, and more.';
+                    } else if (courseNameLower.includes('devops')) {
+                        desc.textContent = 'Ultimate DevOps course! Master CI/CD pipelines, Docker, Kubernetes, and infrastructure automation.';
+                    } else if (courseNameLower.includes('terraform')) {
+                        desc.textContent = 'Master Infrastructure as Code with Terraform! Learn to provision cloud resources across AWS, Azure, and GCP.';
+                    } else {
+                        desc.textContent = `Complete ${courseName} course with practical exercises and real-world projects.`;
+                    }
+                    
+                    localStorage.setItem(cacheKey, desc.textContent);
+                }
+            });
+            
+            // Sync button
+            document.getElementById('syncButton').addEventListener('click', async function() {
+                this.disabled = true;
+                this.innerHTML = '<span>⏳</span> Syncing...';
+                
+                try {
+                    const response = await fetch('/api/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.innerHTML = '<span>✅</span> Synced!';
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        this.innerHTML = '<span>❌</span> Failed';
+                    }
+                } catch (error) {
+                    this.innerHTML = '<span>❌</span> Error';
+                } finally {
+                    setTimeout(() => {
+                        this.disabled = false;
+                        this.innerHTML = '<span>🔄</span> Sync';
+                    }, 2000);
+                }
+            });
+            
+            // Fix thumbnails button
+            document.getElementById('fixAllThumbnailsButton').addEventListener('click', async function() {
+                this.disabled = true;
+                this.innerHTML = '<span>⏳</span> Fixing...';
+                
+                try {
+                    const courses = document.querySelectorAll('.course-description');
+                    let totalFixed = 0;
+                    
+                    for (const desc of courses) {
+                        const courseName = desc.closest('.course-card').querySelector('.course-title').textContent.trim();
+                        
+                        try {
+                            const response = await fetch(`/api/thumbnails/fix/${encodeURIComponent(courseName)}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                            
+                            const data = await response.json();
+                            if (data.success) {
+                                totalFixed += data.fixedCount;
+                            }
+                        } catch (err) {
+                            console.warn(`Failed to fix thumbnails for ${courseName}:`, err);
+                        }
+                    }
+                    
+                    this.innerHTML = `<span>✅</span> Fixed ${totalFixed}`;
+                    if (totalFixed > 0) {
+                        setTimeout(() => location.reload(), 2000);
+                    }
+                    
+                } catch (error) {
+                    this.innerHTML = '<span>❌</span> Error';
+                } finally {
+                    setTimeout(() => {
+                        this.disabled = false;
+                        this.innerHTML = '<span>🖼️</span> Fix Thumbnails';
+                    }, 3000);
+                }
+            });
+        });
+
+        // Enrollment functionality
+        async function enrollInCourse(courseId) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Please login to enroll in courses');
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const button = document.querySelector(`[data-course-id="${courseId}"]`);
+                const originalText = button.textContent;
+                button.disabled = true;
+                button.textContent = 'Enrolling...';
+
+                const response = await fetch('/api/enrollments', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ courseId })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    button.textContent = 'Enrolled ✓';
+                    button.style.background = '#86868b';
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Enrollment error:', error);
+                alert('Failed to enroll: ' + error.message);
+                button.disabled = false;
+                button.textContent = originalText;
+            }
         }
-        if (totalFixed > 0) location.reload();
-      }, 3000);
-      
-    } catch (error) {
-      statusDiv.className = 'fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded';
-      statusDiv.textContent = 'Error: ' + error.message;
-      
-      setTimeout(() => {
-        if (document.body.contains(statusDiv)) {
-          document.body.removeChild(statusDiv);
-        }
-      }, 5000);
-    } finally {
-      this.disabled = false;
-      this.innerHTML = '<i class="fas fa-image mr-2"></i>Fix Thumbnails';
-    }
-  });
-});
 
-// Enrollment functionality
-async function enrollInCourse(courseId) {
-  try {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      alert('Please login to enroll in courses');
-      window.location.href = '/login';
-      return;
-    }
+        // Check enrollment status on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
 
-    const button = document.querySelector(`[data-course-id="${courseId}"]`);
-    const originalText = button.textContent;
-    button.disabled = true;
-    button.textContent = 'Enrolling...';
-
-    const response = await fetch('/api/enrollments', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ courseId })
-    });
-
-    const data = await response.json();
-    
-    if (data.success) {
-      button.textContent = 'Enrolled ✓';
-      button.classList.remove('bg-green-600', 'hover:bg-green-700');
-      button.classList.add('bg-gray-500');
-      alert('Successfully enrolled in course!');
-    } else {
-      throw new Error(data.error);
-    }
-  } catch (error) {
-    console.error('Enrollment error:', error);
-    alert('Failed to enroll: ' + error.message);
-    button.disabled = false;
-    button.textContent = originalText;
-  }
-}
-
-// Check enrollment status on page load
-document.addEventListener('DOMContentLoaded', async () => {
-  const token = localStorage.getItem('accessToken');
-  if (!token) return;
-
-  const enrollButtons = document.querySelectorAll('.enroll-btn');
-  
-  for (const button of enrollButtons) {
-    const courseId = button.dataset.courseId;
-    try {
-      const response = await fetch(`/api/enrollments/check/${courseId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      const data = await response.json();
-      if (data.success && data.data.enrolled) {
-        button.textContent = 'Enrolled ✓';
-        button.disabled = true;
-        button.classList.remove('bg-green-600', 'hover:bg-green-700');
-        button.classList.add('bg-gray-500');
-      }
-    } catch (error) {
-      console.error('Error checking enrollment:', error);
-    }
-  }
-});
-</script>
-
-<%- include('partials/footer') %>
+            const enrollButtons = document.querySelectorAll('.enroll-btn');
+            
+            for (const button of enrollButtons) {
+                const courseId = button.dataset.courseId;
+                try {
+                    const response = await fetch(`/api/enrollments/check/${courseId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success && data.data.enrolled) {
+                        button.textContent = 'Enrolled ✓';
+                        button.disabled = true;
+                        button.style.background = '#86868b';
+                    }
+                } catch (error) {
+                    console.error('Error checking enrollment:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

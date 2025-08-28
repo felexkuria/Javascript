@@ -102,16 +102,16 @@ class GamificationSystem {
   }
 
   // Initialize the gamification system
-  initializeSystem() {
+  async initializeSystem() {
     this.createFloatingPointsContainer();
     this.createAchievementNotification();
-    this.loadFromMongoDB().then(() => {
-      this.updateProgressDisplay();
-      this.checkTimeBasedAchievements();
-    });
     
-    // Also sync immediately with localStorage
-    setTimeout(() => this.syncWithLocalStorageVideos(), 1000);
+    // Load data from DynamoDB
+    this.userStats = await this.loadUserStats();
+    this.streakData = await this.loadStreakData();
+    
+    this.updateProgressDisplay();
+    this.checkTimeBasedAchievements();
   }
 
   // Load user achievements from localStorage
@@ -120,10 +120,25 @@ class GamificationSystem {
     return saved ? JSON.parse(saved) : [];
   }
 
-  // Load user statistics
-  loadUserStats() {
-    const saved = localStorage.getItem('user_stats');
-    return saved ? JSON.parse(saved) : {
+  // Load user statistics from DynamoDB
+  async loadUserStats() {
+    try {
+      const response = await fetch('/api/gamification/load');
+      if (response.ok) {
+        const data = await response.json();
+        return data.userStats || {
+          totalPoints: 0,
+          videosWatched: 0,
+          coursesCompleted: 0,
+          keyboardShortcutsUsed: 0,
+          currentLevel: 1,
+          experiencePoints: 0
+        };
+      }
+    } catch (error) {
+      console.warn('Failed to load user stats from DynamoDB:', error);
+    }
+    return {
       totalPoints: 0,
       videosWatched: 0,
       coursesCompleted: 0,
@@ -133,10 +148,23 @@ class GamificationSystem {
     };
   }
 
-  // Load streak data
-  loadStreakData() {
-    const saved = localStorage.getItem('learning_streak');
-    return saved ? JSON.parse(saved) : {
+  // Load streak data from DynamoDB
+  async loadStreakData() {
+    try {
+      const response = await fetch('/api/gamification/load');
+      if (response.ok) {
+        const data = await response.json();
+        return data.streakData || {
+          currentStreak: 0,
+          longestStreak: 0,
+          lastActiveDate: null,
+          streakDates: []
+        };
+      }
+    } catch (error) {
+      console.warn('Failed to load streak data from DynamoDB:', error);
+    }
+    return {
       currentStreak: 0,
       longestStreak: 0,
       lastActiveDate: null,
@@ -149,9 +177,21 @@ class GamificationSystem {
     localStorage.setItem('user_achievements', JSON.stringify(this.achievements));
   }
 
-  // Save user stats
-  saveUserStats() {
-    localStorage.setItem('user_stats', JSON.stringify(this.userStats));
+  // Save user stats to DynamoDB
+  async saveUserStats() {
+    try {
+      await fetch('/api/gamification/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userStats: this.userStats,
+          streakData: this.streakData,
+          achievements: this.achievements
+        })
+      });
+    } catch (error) {
+      console.warn('Failed to save user stats to DynamoDB:', error);
+    }
   }
 
   // Save streak data
@@ -580,23 +620,29 @@ class GamificationSystem {
 
   // Update progress display in UI
   updateProgressDisplay() {
-    // Update points display
+    // Don't override if server has already rendered the data
     const pointsElements = document.querySelectorAll('.user-points');
     pointsElements.forEach(el => {
-      const points = this.userStats.totalPoints || 0;
-      el.textContent = points.toLocaleString();
+      if (el.textContent === '0' || el.textContent === '') {
+        const points = this.userStats.totalPoints || 0;
+        el.textContent = points.toLocaleString();
+      }
     });
     
     // Update level display
     const levelElements = document.querySelectorAll('.user-level');
     levelElements.forEach(el => {
-      el.textContent = this.userStats.currentLevel || 1;
+      if (el.textContent === '1' || el.textContent === '') {
+        el.textContent = this.userStats.currentLevel || 1;
+      }
     });
     
     // Update streak display
     const streakElements = document.querySelectorAll('.user-streak');
     streakElements.forEach(el => {
-      el.textContent = this.streakData.currentStreak || 0;
+      if (el.textContent === '0' || el.textContent === '') {
+        el.textContent = this.streakData.currentStreak || 0;
+      }
     });
   }
 
@@ -692,6 +738,7 @@ class GamificationSystem {
 }
 
 // Initialize gamification system when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   window.gamificationSystem = new GamificationSystem();
+  await window.gamificationSystem.initializeSystem();
 });
