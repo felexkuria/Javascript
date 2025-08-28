@@ -17,8 +17,8 @@ terraform/.terraform/
 terraform/.terraform.lock.hcl
 terraform/terraform.tfstate*
 terraform/terraform.tfvars
-terraform/terraform.tfvars
 terraform/terraform.tfvars.example
+terraform/terraform.tfvars*
 *.tfplan
 *.tfstate*
 
