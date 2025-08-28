@@ -132,6 +132,14 @@ class AuthController {
         token: result.accessToken 
       };
       
+      console.log('✅ Session set:', {
+        email,
+        roles: user.roles,
+        currentRole,
+        requestedRole: req.body.requestedRole,
+        isTeacher: user.roles.includes('teacher')
+      });
+      
       // Return tokens for API usage
       const redirectUrl = currentRole === 'teacher' ? '/dashboard' : '/dashboard';
       
