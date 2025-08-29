@@ -30,18 +30,21 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Build, tag, and push image to Amazon ECR
+    - name: Build, tag, and push Docker image
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build for linux/amd64 platform
+        # Ensure buildx exists
         docker buildx create --use --name multiarch || true
+        
+        # Build & push image
         docker buildx build --platform linux/amd64 \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
           --push .
+        
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
     - name: Setup Terraform
@@ -62,22 +65,33 @@ jobs:
       working-directory: ./terraform
       run: terraform apply -auto-approve -var-file="terraform.tfvars"
 
-    - name: Trigger Instance Refresh
+    - name: Trigger Safe Instance Refresh
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      env:
+        AWS_REGION: ${{ env.AWS_REGION }}
       run: |
+        set -e  # Exit on error
+
         ASG_NAME=$(cd terraform && terraform output -raw autoscaling_group_name)
-        
-        # Check if refresh is already in progress
+
+        # Fetch latest refresh status
         CURRENT_STATUS=$(aws autoscaling describe-instance-refreshes \
           --auto-scaling-group-name $ASG_NAME \
           --max-items 1 \
-          --query 'InstanceRefreshes[0].Status' --output text 2>/dev/null || echo "None")
-        
-        if [ "$CURRENT_STATUS" = "InProgress" ]; then
-          echo "⚠️ Instance refresh already in progress. Skipping..."
-        elif [ "$CURRENT_STATUS" = "Pending" ]; then
-          echo "⚠️ Instance refresh pending. Skipping..."
-        else
-          echo "🔄 Starting new instance refresh..."
-          aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME
+          --query 'InstanceRefreshes[0].Status' \
+          --output text 2>/dev/null || echo "None")
+
+        echo "Current instance refresh status: $CURRENT_STATUS"
+
+        if [[ "$CURRENT_STATUS" == "InProgress" ]] || [[ "$CURRENT_STATUS" == "Pending" ]]; then
+          echo "⚠️ Instance refresh already $CURRENT_STATUS. Waiting..."
+          # Wait for current refresh to complete (max 15 min)
+          aws autoscaling wait instance-refresh-complete --auto-scaling-group-name $ASG_NAME || true
         fi
+
+        echo "🔄 Starting new instance refresh..."
+        # Start new refresh safely
+        aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME || \
+          echo "⚠️ Could not start instance refresh, possibly blocked by recent refresh. Skipping..."
+
+    
