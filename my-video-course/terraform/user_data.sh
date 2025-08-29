@@ -44,8 +44,8 @@ EOF
 # Login to ECR
 aws ecr get-login-password --region ${aws_region} | docker login --username AWS --password-stdin 767397885043.dkr.ecr.${aws_region}.amazonaws.com
 
-# Pull the working image
-docker pull 767397885043.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:945e4decc4b9ac879ea0344f1431b2f74b48d6ac
+# Pull the latest image
+docker pull 767397885043.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
 
 # Run the container
 docker run -d \
@@ -53,4 +53,4 @@ docker run -d \
   -p 3000:3000 \
   --env-file .env \
   --restart unless-stopped \
-  767397885043.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:945e4decc4b9ac879ea0344f1431b2f74b48d6ac
+  767397885043.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
