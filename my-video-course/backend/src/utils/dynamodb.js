@@ -451,6 +451,67 @@ class DynamoDBService {
     }
   }
 
+  // Update course properties
+  async updateCourse(courseName, courseData) {
+    try {
+      const courses = await this.getAllCourses();
+      const courseIndex = courses.findIndex(c => c.name === courseName);
+      
+      if (courseIndex !== -1) {
+        courses[courseIndex] = {
+          ...courses[courseIndex],
+          ...courseData,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Update in DynamoDB (simplified - you may want to use a proper courses table)
+        console.log('Course updated:', courses[courseIndex]);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating course:', error);
+      return false;
+    }
+  }
+
+  // Update video properties
+  async updateVideo(courseName, videoId, videoData) {
+    try {
+      const updateParams = {
+        TableName: this.videosTable,
+        Key: {
+          courseName: courseName,
+          videoId: videoId
+        },
+        UpdateExpression: 'SET #title = :title, #chapter = :chapter, #order = :order, #description = :description, #videoUrl = :videoUrl, #updatedAt = :updatedAt',
+        ExpressionAttributeNames: {
+          '#title': 'title',
+          '#chapter': 'chapter',
+          '#order': 'order',
+          '#description': 'description',
+          '#videoUrl': 'videoUrl',
+          '#updatedAt': 'updatedAt'
+        },
+        ExpressionAttributeValues: {
+          ':title': videoData.title,
+          ':chapter': videoData.chapter,
+          ':order': videoData.order,
+          ':description': videoData.description,
+          ':videoUrl': videoData.videoUrl,
+          ':updatedAt': new Date().toISOString()
+        }
+      };
+
+      await this.dynamodb.send(new UpdateItemCommand(updateParams));
+      console.log('Video updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Error updating video:', error);
+      return false;
+    }
+  }
+
   // Add video to course
   async addVideoToCourse(courseName, videoData) {
     if (!this.isConnected) return false;

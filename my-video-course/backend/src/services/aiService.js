@@ -56,10 +56,7 @@ class AIService {
       const payload = {
         messages: [{
           role: 'user',
-          content: [{
-            type: 'text',
-            text: `Context: ${JSON.stringify(context)}\n\nPrompt: ${prompt}`
-          }]
+          content: `Context: ${JSON.stringify(context)}\n\nPrompt: ${prompt}`
         }],
         inferenceConfig: {
           maxTokens: 2000,
@@ -155,6 +152,28 @@ class AIService {
       keyTopics: response.split('Key topics:')[1]?.split('Difficulty:')[0]?.trim().split('\n') || ['Key concepts'],
       difficulty: response.split('Difficulty:')[1]?.trim() || 'Intermediate'
     };
+  }
+
+  async generateCaptionsFromSRT(srtContent, videoTitle) {
+    const prompt = `Improve these video captions for "${videoTitle}". Fix grammar, add punctuation, and make them more readable while keeping timestamps intact.`;
+    
+    const context = { videoTitle, srtLength: srtContent.length };
+    const response = await this.generateWithNovaPro(prompt + '\n\nSRT Content:\n' + srtContent.slice(0, 3000), context);
+    
+    return response || srtContent; // Return improved SRT or original if AI fails
+  }
+
+  async summarizeFromSRT(srtContent, videoTitle) {
+    // Extract text from SRT
+    const textOnly = srtContent
+      .split('\n')
+      .filter(line => !line.match(/^\d+$/) && !line.match(/\d{2}:\d{2}:\d{2}/) && line.trim())
+      .join(' ');
+    
+    const prompt = `Create a concise summary (100 words) of this video transcript: "${videoTitle}"`;
+    
+    const context = { videoTitle, transcriptLength: textOnly.length };
+    return await this.generateWithNovaPro(prompt + '\n\nTranscript:\n' + textOnly.slice(0, 4000), context);
   }
 
   async fallbackToGemini(prompt, context) {

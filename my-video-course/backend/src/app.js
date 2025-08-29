@@ -102,7 +102,25 @@ const simpleAdminAuth = (req, res, next) => {
 // Course API - Enhanced for admin
 const courseController = require('./controllers/courseController');
 app.post('/api/courses', teacherOrAdminAuth, (req, res) => courseController.createCourse(req, res));
-app.put('/api/courses/:id', teacherOrAdminAuth, (req, res) => courseController.updateCourse(req, res));
+app.put('/api/courses/:id', teacherOrAdminAuth, async (req, res) => {
+  try {
+    const courseId = decodeURIComponent(req.params.id);
+    const courseData = req.body;
+    
+    // Update course in DynamoDB
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    const success = await dynamoVideoService.updateCourse(courseId, courseData);
+    
+    if (success) {
+      res.json({ success: true, message: 'Course updated successfully' });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to update course' });
+    }
+  } catch (error) {
+    console.error('Course update error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 app.delete('/api/courses/:id', teacherOrAdminAuth, (req, res) => courseController.deleteCourse(req, res));
 app.post('/api/courses/:courseId/upload-video', teacherOrAdminAuth, courseController.upload.single('video'), (req, res) => courseController.uploadVideo(req, res));
 app.get('/api/courses', (req, res) => courseController.getAllCourses(req, res));
@@ -112,6 +130,26 @@ app.use('/api/upload', teacherOrAdminAuth, require('./routes/api/upload'));
 app.use('/api/system', adminAuth, require('./routes/api/system'));
 app.use('/api/videos/fix-numbering', adminAuth, require('./routes/api/videos-fix'));
 app.use('/api/videos-manage', teacherOrAdminAuth, require('./routes/api/videos-manage'));
+
+// Update video endpoint
+app.put('/api/videos/:courseName/:videoId', teacherOrAdminAuth, async (req, res) => {
+  try {
+    const { courseName, videoId } = req.params;
+    const videoData = req.body;
+    
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    const success = await dynamoVideoService.updateVideo(courseName, videoId, videoData);
+    
+    if (success) {
+      res.json({ success: true, message: 'Video updated successfully' });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to update video' });
+    }
+  } catch (error) {
+    console.error('Video update error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Admin API Routes
 app.use('/api/admin-auth', require('./routes/api/admin-auth'));

@@ -167,7 +167,7 @@
                             </div>
                         </div>
                         
-                        <div style="display: flex; gap: 12px;">
+                        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
                             <button class="btn" onclick="editCourse('${course.name || course._id}')" style="flex: 1;">
                                 Edit Course
                             </button>
@@ -175,13 +175,300 @@
                                 Upload Video
                             </button>
                         </div>
+                        
+                        <button class="btn" onclick="showVideos('${course.name || course._id}')" style="background: #ff9500; font-size: 14px; padding: 8px 16px;">
+                            📹 Manage Videos (${videoCount})
+                        </button>
                     </div>
                 `;
             }).join('');
         }
         
         function editCourse(courseId) {
-            window.location.href = `/course/${encodeURIComponent(courseId)}`;
+            const course = serverCourses.find(c => (c.name || c._id) === courseId);
+            showEditModal(course);
+        }
+        
+        function showEditModal(course) {
+            const modal = document.createElement('div');
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;" onclick="closeModal(event)">
+                    <div style="background: white; border-radius: 18px; padding: 32px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
+                        <h2 style="margin-bottom: 24px; font-size: 24px; font-weight: 600;">Edit Course: ${course.title || course.name}</h2>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Course Name:</label>
+                            <input type="text" id="courseName" value="${course.name || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Course Title:</label>
+                            <input type="text" id="courseTitle" value="${course.title || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Description:</label>
+                            <textarea id="courseDescription" rows="4" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; resize: vertical;">${course.description || ''}</textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Category:</label>
+                            <input type="text" id="courseCategory" value="${course.category || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Instructor:</label>
+                            <input type="text" id="courseInstructor" value="${course.instructor || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Difficulty Level:</label>
+                            <select id="courseDifficulty" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                                <option value="Beginner" ${course.difficulty === 'Beginner' ? 'selected' : ''}>Beginner</option>
+                                <option value="Intermediate" ${course.difficulty === 'Intermediate' ? 'selected' : ''}>Intermediate</option>
+                                <option value="Advanced" ${course.difficulty === 'Advanced' ? 'selected' : ''}>Advanced</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Tags (comma-separated):</label>
+                            <input type="text" id="courseTags" value="${course.tags ? course.tags.join(', ') : ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 24px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
+                            <h4 style="margin-bottom: 12px; font-size: 16px;">Course Statistics:</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; font-size: 14px;">
+                                <div><strong>Videos:</strong> ${course.videos ? course.videos.length : 0}</div>
+                                <div><strong>Created:</strong> ${course.createdAt ? new Date(course.createdAt).toLocaleDateString() : 'N/A'}</div>
+                                <div><strong>Updated:</strong> ${course.updatedAt ? new Date(course.updatedAt).toLocaleDateString() : 'N/A'}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                            <button onclick="closeModal()" style="padding: 12px 24px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer;">Cancel</button>
+                            <button onclick="saveCourse('${course.name || course._id}')" style="padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer;">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        async function saveCourse(courseId) {
+            const courseData = {
+                name: document.getElementById('courseName').value.trim(),
+                title: document.getElementById('courseTitle').value.trim(),
+                description: document.getElementById('courseDescription').value.trim(),
+                category: document.getElementById('courseCategory').value.trim(),
+                instructor: document.getElementById('courseInstructor').value.trim(),
+                difficulty: document.getElementById('courseDifficulty').value,
+                tags: document.getElementById('courseTags').value.split(',').map(t => t.trim()).filter(t => t)
+            };
+            
+            try {
+                const response = await fetch(`/api/courses/${encodeURIComponent(courseId)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-key': 'admin123'
+                    },
+                    body: JSON.stringify(courseData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Course updated successfully!');
+                    closeModal();
+                    location.reload();
+                } else {
+                    alert('Failed to update course: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('Failed to save course: ' + error.message);
+            }
+        }
+        
+        function showVideos(courseId) {
+            const course = serverCourses.find(c => (c.name || c._id) === courseId);
+            const videos = course.videos || [];
+            
+            const modal = document.createElement('div');
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;" onclick="closeModal(event)">
+                    <div style="background: white; border-radius: 18px; padding: 32px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
+                        <h2 style="margin-bottom: 24px; font-size: 24px; font-weight: 600;">Manage Videos: ${course.title || course.name}</h2>
+                        
+                        <div id="videosList">
+                            ${videos.map(video => `
+                                <div style="border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin-bottom: 12px; background: #f8f9fa;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                        <div style="flex: 1;">
+                                            <h4 style="margin-bottom: 4px; font-size: 16px;">${video.title}</h4>
+                                            <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+                                                Chapter: ${video.chapter || video.sectionTitle || 'N/A'} | Order: ${video.order || 'N/A'}
+                                            </div>
+                                            <div style="font-size: 11px; color: #888;">
+                                                ID: ${video._id} | Created: ${video.createdAt ? new Date(video.createdAt).toLocaleDateString() : 'N/A'}
+                                            </div>
+                                        </div>
+                                        <button onclick="editVideo('${courseId}', '${video._id}')" style="padding: 6px 12px; background: #007aff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                            Edit
+                                        </button>
+                                    </div>
+                                    <div style="font-size: 11px; color: #666; word-break: break-all;">
+                                        URL: ${video.videoUrl || 'No URL'}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                            <button onclick="closeModal()" style="padding: 12px 24px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer;">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function editVideo(courseId, videoId) {
+            const course = serverCourses.find(c => (c.name || c._id) === courseId);
+            const video = course.videos.find(v => v._id === videoId);
+            
+            const modal = document.createElement('div');
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1001; display: flex; align-items: center; justify-content: center;" onclick="closeModal(event)">
+                    <div style="background: white; border-radius: 18px; padding: 32px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
+                        <h2 style="margin-bottom: 24px; font-size: 24px; font-weight: 600;">Edit Video: ${video.title}</h2>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Title:</label>
+                            <input type="text" id="videoTitle" value="${video.title || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Chapter/Section:</label>
+                            <input type="text" id="videoChapter" value="${video.chapter || video.sectionTitle || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Order:</label>
+                            <input type="number" id="videoOrder" value="${video.order || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Description:</label>
+                            <textarea id="videoDescription" rows="3" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">${video.description || ''}</textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Video URL:</label>
+                            <input type="url" id="videoUrl" value="${video.videoUrl || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Replace Video File:</label>
+                            <input type="file" id="newVideoFile" accept="video/*" style="width: 100%; padding: 12px; border: 2px dashed #007aff; border-radius: 12px; background: #f8f9fa;">
+                            <div style="font-size: 12px; color: #888; margin-top: 4px;">Leave empty to keep current video</div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <button onclick="generateSummary('${videoId}')" style="width: 100%; padding: 12px; background: #ff9500; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                🤖 Generate AI Summary
+                            </button>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                            <button onclick="closeModal()" style="padding: 12px 24px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer;">Cancel</button>
+                            <button onclick="saveVideo('${courseId}', '${videoId}')" style="padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer;">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        async function saveVideo(courseId, videoId) {
+            const videoData = {
+                title: document.getElementById('videoTitle').value.trim(),
+                chapter: document.getElementById('videoChapter').value.trim(),
+                order: parseInt(document.getElementById('videoOrder').value) || 0,
+                description: document.getElementById('videoDescription').value.trim(),
+                videoUrl: document.getElementById('videoUrl').value.trim()
+            };
+            
+            const newFile = document.getElementById('newVideoFile').files[0];
+            
+            try {
+                // If new file selected, upload it first
+                if (newFile) {
+                    const formData = new FormData();
+                    formData.append('video', newFile);
+                    formData.append('courseName', courseId);
+                    formData.append('title', videoData.title);
+                    formData.append('chapter', videoData.chapter);
+                    
+                    const uploadResponse = await fetch('/api/videos/upload', {
+                        method: 'POST',
+                        headers: { 'x-admin-key': 'admin123' },
+                        body: formData
+                    });
+                    
+                    const uploadResult = await uploadResponse.json();
+                    if (uploadResult.success) {
+                        videoData.videoUrl = uploadResult.videoUrl;
+                    }
+                }
+                
+                // Update video metadata
+                const response = await fetch(`/api/videos/${encodeURIComponent(courseId)}/${videoId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-key': 'admin123'
+                    },
+                    body: JSON.stringify(videoData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Video updated successfully!');
+                    closeModal();
+                    location.reload();
+                } else {
+                    alert('Failed to update video: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('Failed to save video: ' + error.message);
+            }
+        }
+        
+        async function generateSummary(videoId) {
+            try {
+                const response = await fetch(`/api/ai/analyze-content`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-key': 'admin123'
+                    },
+                    body: JSON.stringify({ videoId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('videoDescription').value = result.analysis;
+                    alert('AI summary generated!');
+                } else {
+                    alert('Failed to generate summary');
+                }
+            } catch (error) {
+                alert('Error generating summary: ' + error.message);
+            }
         }
         
         function uploadVideo(courseId) {

@@ -59,21 +59,47 @@ async function processWithWhisper(videoUrl, courseName, videoTitle, s3Bucket) {
         exec(`whisper "${audioFile}" --model base --output_format srt --output_dir "${tempDir}"`, async (error) => {
           if (error) throw error;
           
-          // Upload SRT to S3
-          const srtContent = fs.readFileSync(srtFile, 'utf8');
-          await s3Client.send(new PutObjectCommand({
-            Bucket: s3Bucket,
-            Key: `captions/${courseName}/${videoTitle}.srt`,
-            Body: srtContent,
-            ContentType: 'text/plain'
-          }));
+          // Read and improve SRT with AI
+          const rawSrtContent = fs.readFileSync(srtFile, 'utf8');
+          
+          try {
+            const aiService = require('./services/aiService');
+            const improvedSrt = await aiService.generateCaptionsFromSRT(rawSrtContent, videoTitle);
+            const summary = await aiService.summarizeFromSRT(rawSrtContent, videoTitle);
+            
+            // Upload improved SRT to S3
+            await s3Client.send(new PutObjectCommand({
+              Bucket: s3Bucket,
+              Key: `captions/${courseName}/${videoTitle}.srt`,
+              Body: improvedSrt,
+              ContentType: 'text/plain'
+            }));
+            
+            // Upload summary as metadata
+            await s3Client.send(new PutObjectCommand({
+              Bucket: s3Bucket,
+              Key: `summaries/${courseName}/${videoTitle}.txt`,
+              Body: summary,
+              ContentType: 'text/plain'
+            }));
+            
+            console.log(`AI-improved SRT and summary generated for ${courseName}/${videoTitle}`);
+          } catch (aiError) {
+            console.error('AI processing failed, using raw SRT:', aiError);
+            
+            // Upload raw SRT as fallback
+            await s3Client.send(new PutObjectCommand({
+              Bucket: s3Bucket,
+              Key: `captions/${courseName}/${videoTitle}.srt`,
+              Body: rawSrtContent,
+              ContentType: 'text/plain'
+            }));
+          }
           
           // Cleanup
           fs.unlinkSync(videoFile);
           fs.unlinkSync(audioFile);
           fs.unlinkSync(srtFile);
-          
-          console.log(`Whisper SRT generated for ${courseName}/${videoTitle}`);
         });
       });
     });
@@ -97,6 +123,6 @@ async function processWithTranscribe(videoUrl, courseName, videoTitle, s3Bucket)
   console.log(`Transcribe job started for ${courseName}/${videoTitle}`);
 }
 
-app.listen(8080, () => {
-  console.log('Caption service running on port 8080');
+app.listen(8081, () => {
+  console.log('Caption service running on port 8081');
 });
