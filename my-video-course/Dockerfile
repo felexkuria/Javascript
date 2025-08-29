@@ -2,15 +2,20 @@ FROM node:18-slim
 
 WORKDIR /app
 
-# Copy backend package files
+# Install curl for health check
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Copy backend package files and install dependencies
 COPY backend/package*.json ./backend/
 RUN cd backend && npm ci --only=production
 
 # Copy application code
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
+COPY data/ ./data/
+COPY public/ ./public/
 
-# Set working directory to backend
+# Set working directory to backend for execution
 WORKDIR /app/backend
 
 # Health check
@@ -19,4 +24,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["node", "src/server.js"]
