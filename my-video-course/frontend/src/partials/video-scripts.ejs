@@ -1,4 +1,6 @@
 <script>
+
+
 document.addEventListener('DOMContentLoaded', function() {
     const videoPlayer = document.getElementById('videoPlayer');
     const markWatchedButton = document.getElementById('markWatchedButton');
@@ -335,6 +337,30 @@ document.addEventListener('DOMContentLoaded', function() {
     initTheme();
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
+    // Load cached todos
+    async function loadCachedTodos() {
+        try {
+            const response = await fetch(`/api/todos/${encodeURIComponent('<%= video ? video.title : "" %>')}`);
+            const data = await response.json();
+            
+            if (data.success && data.todos.length > 0) {
+                const todoContainer = document.querySelector('.todo-list');
+                if (todoContainer) {
+                    todoContainer.innerHTML = data.todos.map(todo => `
+                        <div class="todo-item ${todo.completed ? 'completed' : ''}">
+                            <span class="todo-checkbox ${todo.completed ? 'checked' : ''}">✓</span>
+                            <span class="todo-text">${todo.task}</span>
+                            ${todo.completed ? `<span class="todo-date">${new Date(todo.completedAt).toLocaleDateString()}</span>` : ''}
+                            <span class="todo-source">From SRT analysis</span>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading cached todos:', error);
+        }
+    }
+
     // Initialize animations
     setTimeout(() => {
         const progressBars = document.querySelectorAll('.progress-fill-animated');
@@ -344,6 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 bar.style.width = width + '%';
             }
         });
+        loadCachedTodos();
     }, 500);
 });
 </script>

@@ -13,6 +13,18 @@
             transition: all 0.3s ease;
         }
         body.dark { background: #000; color: #f5f5f7; }
+        body.dark .course-card { background: #1c1c1e !important; }
+        body.dark .course-title { color: #f5f5f7; }
+        body.dark .course-description { color: #a1a1a6; }
+        body.dark .stat-label { color: #a1a1a6; }
+        body.dark input { background: #2c2c2e; color: #f5f5f7; border-color: #48484a; }
+        body.dark code { background: #2c2c2e; color: #f5f5f7; }
+        body.dark [style*="background: white"] { background: #1c1c1e !important; color: #f5f5f7; }
+        body.dark [style*="border: 1px solid #ddd"] { border-color: #48484a !important; }
+        body.dark [style*="background: #f8f9fa"] { background: #2c2c2e !important; color: #f5f5f7; }
+        body.dark [style*="background: #e9ecef"] { background: #48484a !important; }
+        body.dark [style*="color: #666"] { color: #a1a1a6 !important; }
+        body.dark [style*="color: #888"] { color: #8e8e93 !important; }
         .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
         .header { text-align: center; margin-bottom: 60px; }
         .header h1 { font-size: 48px; font-weight: 600; margin-bottom: 16px; }
@@ -155,9 +167,14 @@
                             </div>
                         </div>
                         
-                        <button class="btn" onclick="editCourse('${course.name || course._id}')">
-                            Edit Course
-                        </button>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn" onclick="editCourse('${course.name || course._id}')" style="flex: 1;">
+                                Edit Course
+                            </button>
+                            <button class="btn" onclick="uploadVideo('${course.name || course._id}')" style="flex: 1; background: #30d158;">
+                                Upload Video
+                            </button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -165,6 +182,165 @@
         
         function editCourse(courseId) {
             window.location.href = `/course/${encodeURIComponent(courseId)}`;
+        }
+        
+        function uploadVideo(courseId) {
+            showUploadModal(courseId);
+        }
+        
+        function showUploadModal(courseId) {
+            const modal = document.createElement('div');
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;" onclick="closeModal(event)">
+                    <div style="background: white; border-radius: 18px; padding: 32px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
+                        <h2 style="margin-bottom: 24px; font-size: 24px; font-weight: 600;">Upload Video to ${courseId}</h2>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Video File:</label>
+                            <input type="file" id="videoFile" accept="video/*" style="width: 100%; padding: 12px; border: 2px dashed #007aff; border-radius: 12px; background: #f8f9fa;">
+                            <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                                📁 Looking for .mp4 files? Check: <code>/frontend/public/videos/</code>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Video Title:</label>
+                            <input type="text" id="videoTitle" placeholder="Enter video title" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Chapter (optional):</label>
+                            <input type="text" id="videoChapter" placeholder="e.g., Chapter 1" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        
+                        <div id="uploadProgress" style="display: none; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Uploading...</span>
+                                <span id="progressPercent">0%</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #f2f2f7; border-radius: 4px; overflow: hidden;">
+                                <div id="progressBar" style="height: 100%; background: #007aff; width: 0%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                            <button onclick="closeModal()" style="padding: 12px 24px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer;">Cancel</button>
+                            <button onclick="startUpload('${courseId}')" id="uploadBtn" style="padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer;">Upload to S3</button>
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 16px; background: #f8f9fa; border-radius: 8px; font-size: 14px; color: #666;">
+                            <strong>CLI Workflow:</strong><br>
+                            <div style="margin: 8px 0;">
+                                <strong>1. Compress video:</strong><br>
+                                <code style="background: #e9ecef; padding: 2px 4px; border-radius: 4px; display: block; margin: 4px 0;">ffmpeg -i input.mp4 -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 128k compressed.mp4</code>
+                            </div>
+                            <div style="margin: 8px 0;">
+                                <strong>2. Upload to S3:</strong><br>
+                                <code style="background: #e9ecef; padding: 2px 4px; border-radius: 4px; display: block; margin: 4px 0;">aws s3 cp compressed.mp4 s3://your-bucket/videos/${courseId}/</code>
+                            </div>
+                            <div style="margin: 8px 0; font-size: 12px; color: #888;">
+                                💡 Tip: Use CRF 18-28 (lower = better quality, larger file)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.querySelector('[style*="position: fixed"]');
+            if (modal) modal.remove();
+        }
+        
+        async function startUpload(courseId) {
+            const fileInput = document.getElementById('videoFile');
+            const titleInput = document.getElementById('videoTitle');
+            const chapterInput = document.getElementById('videoChapter');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            const file = fileInput.files[0];
+            const title = titleInput.value.trim();
+            
+            if (!file) {
+                alert('Please select a video file');
+                return;
+            }
+            
+            if (!title) {
+                alert('Please enter a video title');
+                return;
+            }
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            progressDiv.style.display = 'block';
+            
+            try {
+                // Generate S3 key
+                const timestamp = Date.now();
+                const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_');
+                const s3Key = `videos/${courseId}/${timestamp}_${sanitizedTitle}.${file.name.split('.').pop()}`;
+                
+
+                
+                // Upload via backend (avoids CORS issues)
+                const formData = new FormData();
+                formData.append('video', file);
+                formData.append('courseName', courseId);
+                formData.append('title', title);
+                formData.append('chapter', chapterInput.value.trim());
+                
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressBar.style.width = percent + '%';
+                        progressPercent.textContent = percent + '%';
+                    }
+                });
+                
+                xhr.onload = function() {
+                    console.log('Upload response status:', xhr.status);
+                    
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            alert('Video uploaded successfully!');
+                            closeModal();
+                            location.reload();
+                        } else {
+                            alert('Upload failed: ' + (response.error || 'Unknown error'));
+                        }
+                    } else {
+                        alert('Upload failed with status: ' + xhr.status);
+                    }
+                    
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Upload to S3';
+                };
+                
+                xhr.onerror = function() {
+                    alert('Network error during upload');
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Upload to S3';
+                };
+                
+                xhr.open('POST', '/api/videos/upload');
+                xhr.setRequestHeader('x-admin-key', 'admin123');
+                xhr.send(formData);
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Upload failed: ' + error.message);
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload to S3';
+            }
         }
         
         function toggleTheme() {

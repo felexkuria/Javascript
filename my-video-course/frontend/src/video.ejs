@@ -87,6 +87,67 @@
             color: #f5f5f7;
         }
         
+        .dark #keyTopics h4 {
+            color: #f5f5f7;
+        }
+        
+        .dark .sidebar-card {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .dark #refreshTodos {
+            background: #2c2c2e;
+            color: #f5f5f7;
+        }
+        
+        .dark #refreshTodos:hover {
+            background: #3a3a3c;
+        }
+        
+        .dark .loading-skeleton .skeleton-line {
+            background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 50%, #2c2c2e 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        .dark .loading-spinner {
+            border-color: #2c2c2e !important;
+            border-top-color: #007aff !important;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: #86868b;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-10px); opacity: 1; }
+        }
+        
         .shortcuts-mini {
             flex: 1;
         }
@@ -156,7 +217,51 @@
         <div class="main-content">
             <div class="video-main">
                 <%- include('partials/video-player', { video, courseName, isYouTube }) %>
+
+                
                 <%- include('partials/video-controls', { video, courseName, isFirstVideo, isLastVideo, watchedVideos, totalVideos, watchedPercent }) %>
+                
+                <!-- Video Summary & AI Section -->
+                <div class="sidebar-card" style="margin-top: 24px;">
+                    <div style="display: grid; gap: 24px;">
+                        <!-- Video Summary -->
+                        <div>
+                            <h3 class="sidebar-title">📝 Video Summary</h3>
+                            <div id="videoSummary" style="font-size: 14px; line-height: 1.5; color: #86868b; margin-bottom: 16px; max-height: 128px; overflow-y: auto;">
+                                <div class="loading-skeleton">
+                                    <div class="skeleton-line"></div>
+                                    <div class="skeleton-line short"></div>
+                                </div>
+                            </div>
+                            <div id="keyTopics">
+                                <h4 style="font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 8px;">🔑 Key Topics:</h4>
+                                <div id="topicsList" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- AI Todos -->
+                        <div style="border-top: 1px solid #f2f2f7; padding-top: 24px;">
+                            <h3 class="sidebar-title">🤖 AI Todos</h3>
+                            <div id="todoContainer" style="max-height: 200px; overflow-y: auto; margin-bottom: 16px;">
+                                <div id="todoLoading" style="text-align: center; padding: 16px 0; font-size: 14px; color: #86868b;">
+                                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                                        <div class="loading-spinner" style="width: 16px; height: 16px; border: 2px solid #f2f2f7; border-top: 2px solid #007aff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></div>
+                                        <span>AI analyzing content...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span id="todoProgress" style="font-size: 12px; color: #86868b;">0/0 completed</span>
+                                <button id="refreshTodos" style="font-size: 11px; padding: 4px 8px; background: #f2f2f7; color: #1d1d1f; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">
+                                    🔄 Refresh
+                                </button>
+                            </div>
+                            <div style="width: 100%; height: 6px; background: #f2f2f7; border-radius: 3px; overflow: hidden;">
+                                <div id="todoProgressBar" style="height: 100%; background: #30d158; border-radius: 3px; width: 0%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Chapters Sidebar -->
@@ -470,6 +575,20 @@
                 input.value = '';
                 messages.scrollTop = messages.scrollHeight;
                 
+                // Add typing indicator
+                const typingId = 'typing-' + Date.now();
+                messages.innerHTML += `
+                    <div class="chat-message bot" id="${typingId}">
+                        <div class="message-content">
+                            <div class="typing-indicator">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                        <div class="message-meta">Nova Pro • typing...</div>
+                    </div>
+                `;
+                messages.scrollTop = messages.scrollHeight;
+                
                 try {
                     const response = await fetch('/api/ai/chat', {
                         method: 'POST',
@@ -488,27 +607,44 @@
                     const data = await response.json();
                     const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     
+                    // Remove typing indicator
+                    document.getElementById(typingId)?.remove();
+                    
                     if (data.success) {
+                        // Parse markdown-like formatting
+                        let formattedResponse = data.response
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/`(.*?)`/g, '<code style="background: #f2f2f7; padding: 2px 4px; border-radius: 4px; font-family: SF Mono, Monaco, monospace;">$1</code>')
+                            .replace(/```([\s\S]*?)```/g, '<pre style="background: #f2f2f7; padding: 12px; border-radius: 8px; overflow-x: auto; font-family: SF Mono, Monaco, monospace; margin: 8px 0;"><code>$1</code></pre>')
+                            .replace(/\n/g, '<br>');
+                        
                         messages.innerHTML += `
                             <div class="chat-message bot">
-                                <div class="message-content">${data.response}</div>
-                                <div class="message-meta">AI • ${botTime}</div>
+                                <div class="message-content">${formattedResponse}</div>
+                                <div class="message-meta">
+                                    <span>🤖 Nova Pro • ${botTime}</span>
+                                    <button onclick="copyMessage(this)" style="margin-left: 8px; padding: 2px 6px; background: #f2f2f7; border: none; border-radius: 4px; font-size: 10px; cursor: pointer;">📋</button>
+                                </div>
                             </div>
                         `;
                     } else {
                         messages.innerHTML += `
                             <div class="chat-message bot">
                                 <div class="message-content">Sorry, I couldn't process that.</div>
-                                <div class="message-meta">System • ${botTime}</div>
+                                <div class="message-meta">🤖 Nova Pro • ${botTime}</div>
                             </div>
                         `;
                     }
                 } catch (error) {
+                    // Remove typing indicator on error
+                    document.getElementById(typingId)?.remove();
+                    
                     const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     messages.innerHTML += `
                         <div class="chat-message bot">
                             <div class="message-content">Connection error. Please try again.</div>
-                            <div class="message-meta">System • ${botTime}</div>
+                            <div class="message-meta">🤖 Nova Pro • ${botTime}</div>
                         </div>
                     `;
                 }
@@ -600,8 +736,75 @@
                 }
             }
             
-            // Update count on page load
+            // Copy message function
+            window.copyMessage = function(button) {
+                const messageContent = button.closest('.chat-message').querySelector('.message-content').innerText;
+                navigator.clipboard.writeText(messageContent).then(() => {
+                    button.textContent = '✓';
+                    setTimeout(() => button.textContent = '📋', 1000);
+                });
+            };
+            
+            // Load cached todos from DynamoDB
+            async function loadCachedTodos() {
+                try {
+                    const videoTitle = '<%= video ? video.title : "" %>';
+                    const response = await fetch(`/api/todos/${encodeURIComponent(videoTitle)}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.todos.length > 0) {
+                        const todoContainer = document.getElementById('todo-container');
+                        if (todoContainer) {
+                            renderCachedTodos(data.todos);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading cached todos:', error);
+                }
+            }
+            
+            function renderCachedTodos(todos) {
+                const todoContainer = document.getElementById('todo-container');
+                if (!todoContainer) return;
+                
+                let html = '';
+                todos.forEach((todo, index) => {
+                    html += `
+                        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 8px; background: rgba(255,255,255,0.5); border-radius: 12px; border: 1px solid #f2f2f7;">
+                            <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleCachedTodo('${todo.id}', this.checked)" style="margin-top: 2px; accent-color: #007aff;">
+                            <div style="flex: 1;">
+                                <div style="font-size: 14px; font-weight: 500; color: #1d1d1f; margin-bottom: 4px;">${todo.task}</div>
+                                <div style="font-size: 11px; color: #86868b;">${todo.completed && todo.completedAt ? 'Completed: ' + new Date(todo.completedAt).toLocaleDateString() : 'From SRT analysis'}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                todoContainer.innerHTML = html;
+                
+                // Update progress
+                const completed = todos.filter(t => t.completed).length;
+                const total = todos.length;
+                const progressText = document.getElementById('todo-progress');
+                const progressBar = document.getElementById('todo-progress-bar');
+                
+                if (progressText) {
+                    progressText.textContent = `${completed}/${total} completed`;
+                }
+                if (progressBar && total > 0) {
+                    const percentage = Math.round((completed / total) * 100);
+                    progressBar.style.width = `${percentage}%`;
+                }
+            }
+            
+            window.toggleCachedTodo = function(todoId, completed) {
+                // Update local state and sync to backend if needed
+                console.log('Todo toggled:', todoId, completed);
+            };
+            
+            // Update count and load todos on page load
             updateVideoCount();
+            loadCachedTodos();
         });
     </script>
 </body>

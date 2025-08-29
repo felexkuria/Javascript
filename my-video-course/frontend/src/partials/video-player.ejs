@@ -9,7 +9,7 @@
         <% } else { %>
         <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video">
             <% if (video.isS3Video) { %>
-            <source src="<%= video.fullVideoUrl %>" type="video/mp4" />
+            <source src="<%- video.fullVideoUrl %>" type="video/mp4" />
             <% } else { %>
             <source src="/videos/<%= courseName %>/file/<%= video._id %>" type="video/mp4" />
             <% } %>

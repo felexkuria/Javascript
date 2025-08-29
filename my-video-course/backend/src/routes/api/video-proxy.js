@@ -5,16 +5,16 @@ const s3VideoService = require('../../services/s3VideoService');
 router.get('/:courseName/:videoId', async (req, res) => {
   try {
     const { courseName, videoId } = req.params;
-    const videoService = require('../../services/videoService');
+    const dynamoVideoService = require('../../services/dynamoVideoService');
     const https = require('https');
     
-    const video = await videoService.getVideoById(courseName, videoId);
+    const video = await dynamoVideoService.getVideoById(courseName, videoId);
     if (!video || !video.videoUrl) {
       return res.status(404).send('Video not found');
     }
 
     if (s3VideoService.isS3Video(video.videoUrl)) {
-      const signedUrl = s3VideoService.generateSignedUrl(video.videoUrl, 3600);
+      const signedUrl = await s3VideoService.generateSignedUrl(video.videoUrl, 3600);
       
       // Stream video from S3
       const request = https.get(signedUrl, (s3Response) => {
@@ -32,6 +32,7 @@ router.get('/:courseName/:videoId', async (req, res) => {
 
     res.status(400).send('Not an S3 video');
   } catch (error) {
+    console.error('Video proxy error:', error);
     res.status(500).send('Server error');
   }
 });

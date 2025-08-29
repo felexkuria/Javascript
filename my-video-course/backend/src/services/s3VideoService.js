@@ -1,4 +1,5 @@
-const { S3Client } = require('@aws-sdk/client-s3');
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 class S3VideoService {
   constructor() {
@@ -6,7 +7,7 @@ class S3VideoService {
     this.bucketName = process.env.S3_BUCKET_NAME;
   }
 
-  generateSignedUrl(videoUrl, expiresIn = 3600) {
+  async generateSignedUrl(videoUrl, expiresIn = 3600) {
     try {
       if (!videoUrl || !videoUrl.includes('amazonaws.com')) {
         return videoUrl;
@@ -16,12 +17,12 @@ class S3VideoService {
       if (urlParts.length < 2) return videoUrl;
 
       const key = urlParts[1];
-      const signedUrl = this.s3.getSignedUrl('getObject', {
+      const command = new GetObjectCommand({
         Bucket: this.bucketName,
-        Key: key,
-        Expires: expiresIn
+        Key: key
       });
       
+      const signedUrl = await getSignedUrl(this.s3, command, { expiresIn });
       return signedUrl;
     } catch (error) {
       console.error('Error generating signed URL:', error);
@@ -29,7 +30,7 @@ class S3VideoService {
     }
   }
 
-  processVideoUrl(video, userRole = 'student', courseName = '') {
+  async processVideoUrl(video, userRole = 'student', courseName = '') {
     if (!video.videoUrl) return video;
 
     if (video.isYouTube) {
@@ -37,7 +38,8 @@ class S3VideoService {
       video.embedUrl = `https://www.youtube.com/embed/${video.youtubeId}?enablejsapi=1`;
     } else if (this.isS3Video(video.videoUrl)) {
       video.isS3Video = true;
-      video.fullVideoUrl = `/api/video-proxy/${courseName}/${video._id}`;
+      // Generate direct signed URL for video element
+      video.fullVideoUrl = await this.generateSignedUrl(video.videoUrl, 3600);
     } else {
       video.fullVideoUrl = video.videoUrl;
     }

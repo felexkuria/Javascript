@@ -451,6 +451,32 @@ class DynamoDBService {
     }
   }
 
+  // Add video to course
+  async addVideoToCourse(courseName, videoData) {
+    if (!this.isConnected) return false;
+
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+
+    try {
+      const params = {
+        TableName: `video-course-videos-${environment}`,
+        Item: {
+          courseName: courseName,
+          videoId: Date.now().toString(),
+          ...videoData,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      await this.docClient.send(new PutCommand(params));
+      return true;
+    } catch (error) {
+      console.error('Error adding video to DynamoDB:', error);
+      return false;
+    }
+  }
+
   isAvailable() {
     return this.isConnected;
   }

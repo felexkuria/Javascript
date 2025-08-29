@@ -218,7 +218,7 @@ class WebController {
 
       const s3VideoService = require('../services/s3VideoService');
       const userRole = req.user?.isTeacher ? 'teacher' : 'student';
-      video = s3VideoService.processVideoUrl(video, userRole, courseName);
+      video = await s3VideoService.processVideoUrl(video, userRole, courseName);
 
       const watchedVideos = videos.filter(v => v.watched).length;
       const totalVideos = videos.length;

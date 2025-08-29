@@ -61,8 +61,10 @@ class AIService {
             text: `Context: ${JSON.stringify(context)}\n\nPrompt: ${prompt}`
           }]
         }],
-        max_tokens: 1000,
-        temperature: 0.7
+        inferenceConfig: {
+          maxTokens: 2000,
+          temperature: 0.9
+        }
       };
 
       const command = new InvokeModelCommand({
@@ -175,12 +177,12 @@ class AIService {
 
   staticFallback(prompt, context) {
     if (prompt.includes('course description')) {
-      return `This comprehensive course covers essential topics in ${context.courseName}. Perfect for learners looking to master key concepts through hands-on practice and real-world examples.`;
+      return `This comprehensive course covers essential topics in ${context.courseName || 'the subject'}. Perfect for learners looking to master key concepts through hands-on practice and real-world examples.`;
     }
     if (prompt.includes('David J. Malan')) {
-      return "That's a great question! Let me break this down for you step by step. Think of it like...";
+      return 'That\'s a great question! Let me break this down for you step by step. Think of it like...';
     }
-    return "I'm here to help you learn! Could you rephrase your question?";
+    return 'I\'m here to help you learn! Could you rephrase your question?';
   }
 }
 
