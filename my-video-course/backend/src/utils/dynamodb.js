@@ -43,7 +43,7 @@ class DynamoDBService {
     try {
       // Create Videos table
       await this.createTable({
-        TableName: `video-course-videos-${environment}`,
+        TableName: `video-course-app-videos-${environment}`,
         KeySchema: [
           { AttributeName: 'courseName', KeyType: 'HASH' },
           { AttributeName: 'videoId', KeyType: 'RANGE' }
@@ -57,7 +57,7 @@ class DynamoDBService {
 
       // Create Gamification table
       await this.createTable({
-        TableName: `video-course-gamification-${environment}`,
+        TableName: `video-course-app-gamification-${environment}`,
         KeySchema: [
           { AttributeName: 'userId', KeyType: 'HASH' }
         ],
@@ -69,7 +69,7 @@ class DynamoDBService {
 
       // Create Users table
       await this.createTable({
-        TableName: `video-course-users-${environment}`,
+        TableName: `video-course-app-users-${environment}`,
         KeySchema: [
           { AttributeName: 'email', KeyType: 'HASH' }
         ],
@@ -81,7 +81,7 @@ class DynamoDBService {
 
       // Create Courses table
       await this.createTable({
-        TableName: `video-course-courses-${environment}`,
+        TableName: `video-course-app-courses-${environment}`,
         KeySchema: [
           { AttributeName: 'courseName', KeyType: 'HASH' }
         ],
@@ -129,7 +129,7 @@ class DynamoDBService {
 
     try {
       const params = {
-        TableName: `video-course-videos-${environment}`,
+        TableName: `video-course-app-videos-${environment}`,
         Item: {
           courseName: video.courseName,
           videoId: video._id.toString(),
@@ -154,7 +154,7 @@ class DynamoDBService {
 
     try {
       const params = {
-        TableName: `video-course-videos-${environment}`,
+        TableName: `video-course-app-videos-${environment}`,
         FilterExpression: 'courseName = :courseName',
         ExpressionAttributeValues: {
           ':courseName': courseName
@@ -201,7 +201,7 @@ class DynamoDBService {
     try {
       // First try to get courses from the courses table
       const coursesParams = {
-        TableName: `video-course-courses-${environment}`
+        TableName: `video-course-app-courses-${environment}`
       };
 
       const coursesResult = await this.docClient.send(new ScanCommand(coursesParams));
@@ -224,7 +224,7 @@ class DynamoDBService {
       
       // Also get courses from videos table (for backward compatibility)
       const videosParams = {
-        TableName: `video-course-videos-${environment}`,
+        TableName: `video-course-app-videos-${environment}`,
         ProjectionExpression: 'courseName'
       };
 
@@ -258,7 +258,7 @@ class DynamoDBService {
     try {
       // Find the video first using scan since table structure varies
       const findParams = {
-        TableName: `video-course-videos-${environment}`,
+        TableName: `video-course-app-videos-${environment}`,
         FilterExpression: 'courseName = :courseName AND videoId = :videoId',
         ExpressionAttributeValues: {
           ':courseName': courseName,
@@ -276,7 +276,7 @@ class DynamoDBService {
       
       // Update using the actual key structure
       const updateParams = {
-        TableName: `video-course-videos-${environment}`,
+        TableName: `video-course-app-videos-${environment}`,
         Key: video.userId ? 
           { userId: video.userId, videoId: videoId } : 
           { courseName: courseName, videoId: videoId },
@@ -304,7 +304,7 @@ class DynamoDBService {
 
     try {
       const params = {
-        TableName: `video-course-gamification-${environment}`,
+        TableName: `video-course-app-gamification-${environment}`,
         Item: {
           userId: userId,
           ...data,
@@ -327,7 +327,7 @@ class DynamoDBService {
 
     try {
       const params = {
-        TableName: `video-course-gamification-${environment}`,
+        TableName: `video-course-app-gamification-${environment}`,
         Key: { userId: userId }
       };
 
@@ -347,7 +347,7 @@ class DynamoDBService {
 
     try {
       const params = {
-        TableName: `video-course-courses-${environment}`,
+        TableName: `video-course-app-courses-${environment}`,
         Item: {
           courseName: course.name,
           ...course,
@@ -380,7 +380,7 @@ class DynamoDBService {
       }));
 
       const params = {
-        TableName: `video-course-users-${environment}`,
+        TableName: `video-course-app-users-${environment}`,
         Item: {
           ...sanitizedUser,
           createdAt: sanitizedUser.createdAt || new Date().toISOString(),
@@ -403,7 +403,7 @@ class DynamoDBService {
 
     try {
       const params = {
-        TableName: `video-course-users-${environment}`,
+        TableName: `video-course-app-users-${environment}`,
         Key: { email: email }
       };
 
@@ -520,7 +520,7 @@ class DynamoDBService {
 
     try {
       const params = {
-        TableName: `video-course-videos-${environment}`,
+        TableName: `video-course-app-videos-${environment}`,
         Item: {
           courseName: courseName,
           videoId: Date.now().toString(),
