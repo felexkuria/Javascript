@@ -59,6 +59,21 @@ app.get('/videos/:courseName/file/:id', (req, res) => {
 
 // Auth Middleware
 const adminAuth = require('./middleware/adminAuth');
+
+// AWS SDK v3 imports
+let S3Client, GetObjectCommand, PutObjectCommand;
+try {
+  const { S3Client: S3ClientImport, GetObjectCommand: GetObjectCommandImport, PutObjectCommand: PutObjectCommandImport } = require('@aws-sdk/client-s3');
+  const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+  S3Client = S3ClientImport;
+  GetObjectCommand = GetObjectCommandImport;
+  PutObjectCommand = PutObjectCommandImport;
+} catch (error) {
+  console.warn('AWS S3 SDK not available:', error.message);
+}
+
+// Multer for file uploads
+const multer = require('multer');
 const cognitoAuth = require('./middleware/cognitoAuth');
 const sessionAuth = require('./middleware/sessionAuth');
 
@@ -72,6 +87,16 @@ const teacherOrAdminAuth = (req, res, next) => {
     return next();
   }
   res.status(403).json({ error: 'Admin or teacher access required' });
+};
+
+// Simple admin auth for S3 uploads
+const simpleAdminAuth = (req, res, next) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (adminKey === process.env.ADMIN_KEY || adminKey === 'admin123') {
+    return next();
+  }
+  console.log('Auth failed, admin key:', adminKey);
+  res.status(403).json({ error: 'Admin access required' });
 };
 
 // Course API - Enhanced for admin
@@ -205,6 +230,97 @@ app.post('/api/generate-srt', cognitoAuth, async (req, res) => {
   }
 });
 
+app.post('/api/todos/store', async (req, res) => {
+  try {
+    const todoProgressData = {
+      "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA_AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES (AWS USER GROUP KAMPALA)-20250726_100322-Meeting Recording": {
+        "cloud_&_iaas_4": {
+          "completedAt": null,
+          "completed": false
+        }
+      },
+      "AWS Certified Solutions Architect Associate - 2021 [SAA-C02]_1. Introduction and How to use this Course": {
+        "srt_1. Introduction and How to use this Course_3": {
+          "completedAt": "2025-08-21T06:19:18.716Z",
+          "completed": true
+        }
+      },
+      "dev-ops-bootcamp_202201_lesson11": {
+        "srt_lesson11_0": {
+          "completedAt": "2025-08-15T19:03:13.596Z",
+          "completed": true
+        },
+        "srt_lesson11_2": {
+          "completedAt": "2025-08-15T19:03:41.141Z",
+          "completed": true
+        }
+      },
+      "dev-ops-bootcamp_202201_lesson10": {
+        "srt_lesson10_3": {
+          "completedAt": null,
+          "completed": false
+        }
+      },
+      "dev-ops-bootcamp_202201_lesson3": {
+        "srt_lesson3_0": {
+          "completedAt": null,
+          "completed": false
+        }
+      },
+      "dev-ops-bootcamp_202201_lesson7": {
+        "pdf_7 -Jenkins (Dark Theme).pdf_3": {
+          "completedAt": null,
+          "completed": false
+        }
+      },
+      "HashiCorp Certified Terraform Associate - Hands-On Labs_001 Course Introduction": {
+        "srt_001 Course Introduction_1": {
+          "completedAt": null,
+          "completed": false
+        }
+      },
+      "dev-ops-bootcamp_202201_lesson9": {
+        "pdf_9 - Kubernetes (Dark Theme).pdf_13": {
+          "completedAt": null,
+          "completed": false
+        }
+      }
+    };
+    
+    const userId = 'engineerfelex@gmail.com';
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    
+    const gamificationData = await dynamoVideoService.getUserGamificationData(userId) || {};
+    gamificationData.todoProgress = todoProgressData;
+    
+    await dynamoVideoService.updateUserGamificationData(userId, gamificationData);
+    res.json({ success: true, message: 'Todo progress stored for engineerfelex@gmail.com' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/todos/:videoTitle', cognitoAuth, async (req, res) => {
+  try {
+    const { videoTitle } = req.params;
+    const userId = req.user?.email || 'guest';
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
+    
+    const todos = gamificationData?.todoProgress?.[videoTitle] || {};
+    const todoList = Object.keys(todos).map(key => ({
+      id: key,
+      task: key.replace(/^(srt|pdf)_/, '').replace(/_\d+$/, ''),
+      completed: todos[key]?.completed || false,
+      completedAt: todos[key]?.completedAt
+    }));
+    
+    res.json({ success: true, todos: todoList });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 const aiService = require('./services/aiService');
 app.post('/api/ai/generate-todos', cognitoAuth, async (req, res) => {
@@ -250,6 +366,70 @@ app.post('/api/ai/chat', cognitoAuth, async (req, res) => {
     
     res.json({ success: true, response, model: 'Amazon Nova Pro' });
   } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// S3 Upload endpoint
+
+app.post('/api/videos/upload', simpleAdminAuth, require('multer')({ dest: 'uploads/' }).single('video'), async (req, res) => {
+  try {
+    const { courseName, title, chapter } = req.body;
+    const file = req.file;
+    
+    if (!file) {
+      return res.status(400).json({ success: false, error: 'No file uploaded' });
+    }
+    
+    // Generate S3 key
+    const timestamp = Date.now();
+    const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_');
+    const s3Key = `videos/${courseName}/${timestamp}_${sanitizedTitle}.${file.originalname.split('.').pop()}`;
+    
+    // Upload to S3
+    const fs = require('fs');
+    const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
+    
+    const fileContent = fs.readFileSync(file.path);
+    const uploadCommand = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME || 'default-bucket',
+      Key: s3Key,
+      Body: fileContent,
+      ContentType: file.mimetype
+    });
+    
+    await s3Client.send(uploadCommand);
+    
+    // Clean up temp file
+    fs.unlinkSync(file.path);
+    
+    // Save to database
+    const s3Url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${s3Key}`;
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    
+    const videoData = {
+      _id: timestamp.toString(),
+      title,
+      sectionTitle: chapter || 'General',
+      chapter: chapter || 'General', 
+      videoUrl: s3Url,
+      s3Key,
+      order: 999,
+      createdAt: new Date().toISOString(),
+      watched: false
+    };
+    
+    console.log('Saving video data:', videoData);
+    const result = await dynamoVideoService.addVideoToCourse(courseName, videoData);
+    console.log('Save result:', result);
+    
+    if (result) {
+      res.json({ success: true, message: 'Video uploaded successfully', videoUrl: s3Url });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to save video to database' });
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

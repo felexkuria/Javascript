@@ -127,8 +127,8 @@ class DynamoVideoService {
   }
 
   // Get a specific video by ID
-  async getVideoById(courseName, videoId) {
-    const videos = await this.getVideosForCourse(courseName);
+  async getVideoById(courseName, videoId, userId = 'guest') {
+    const videos = await this.getVideosForCourse(courseName, userId);
     return videos.find(v => v._id && v._id.toString() === videoId);
   }
 
@@ -292,6 +292,38 @@ class DynamoVideoService {
     } catch (error) {
       console.error('Error counting videos:', error);
       return { total: 0, watched: 0 };
+    }
+  }
+
+  // Add video to course
+  async addVideoToCourse(courseName, videoData) {
+    if (this.isDynamoAvailable()) {
+      try {
+        return await dynamodb.addVideoToCourse(courseName, videoData);
+      } catch (error) {
+        console.error('DynamoDB error adding video:', error);
+      }
+    }
+    
+    // Fallback to localStorage
+    try {
+      const localStorage = this.getLocalStorage();
+      if (!localStorage[courseName]) {
+        localStorage[courseName] = [];
+      }
+      
+      const newVideo = {
+        _id: Date.now().toString(),
+        ...videoData,
+        createdAt: new Date().toISOString()
+      };
+      
+      localStorage[courseName].push(newVideo);
+      fs.writeFileSync(this.localStoragePath, JSON.stringify(localStorage, null, 2));
+      return true;
+    } catch (error) {
+      console.error('Error adding video to localStorage:', error);
+      return false;
     }
   }
 
