@@ -9,6 +9,13 @@ systemctl start docker
 systemctl enable docker
 usermod -a -G docker ec2-user
 
+# Wait for Docker to be ready
+sleep 10
+while ! docker info >/dev/null 2>&1; do
+  echo "Waiting for Docker to start..."
+  sleep 5
+done
+
 # Install AWS CLI v2
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
