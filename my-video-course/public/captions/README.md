@@ -1,1 +1,1 @@
-This directory contains caption files for videos. Caption files should be named with the video ID and have a .vtt extension.
+This directory contains caption files for videos. Caption files should be named with the video ID and have a .vtt extension. and srt
