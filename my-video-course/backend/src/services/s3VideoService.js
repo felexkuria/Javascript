@@ -40,6 +40,11 @@ class S3VideoService {
       video.isS3Video = true;
       // Generate direct signed URL for video element
       video.fullVideoUrl = await this.generateSignedUrl(video.videoUrl, 3600);
+    } else if (this.isRelativeUrl(video.videoUrl)) {
+      // Convert relative URLs from old MongoDB data to S3 URLs
+      const s3Url = this.convertToS3Url(video.videoUrl);
+      video.isS3Video = true;
+      video.fullVideoUrl = await this.generateSignedUrl(s3Url, 3600);
     } else {
       video.fullVideoUrl = video.videoUrl;
     }
@@ -53,6 +58,17 @@ class S3VideoService {
       videoUrl.includes('s3.') || 
       videoUrl.startsWith('https://s3')
     );
+  }
+
+  isRelativeUrl(videoUrl) {
+    return videoUrl && !videoUrl.startsWith('http') && !videoUrl.startsWith('/');
+  }
+
+  convertToS3Url(relativeUrl) {
+    // Convert relative URLs like "dev-ops-bootcamp_202201/[TutsNode.com] - DevOps Bootcamp/lesson98.mp4"
+    // to full S3 URLs
+    const cleanUrl = relativeUrl.replace(/\[TutsNode\.com\]\s*-\s*/, '');
+    return `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/videos/${cleanUrl}`;
   }
 }
 
