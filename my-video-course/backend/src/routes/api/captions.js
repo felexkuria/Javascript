@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { srtToVtt } = require('../utils/captionConverter');
-const dynamoVideoService = require('../services/dynamoVideoService');
+const { srtToVtt } = require('../../utils/captionConverter');
+const dynamoVideoService = require('../../services/dynamoVideoService');
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
@@ -70,7 +70,7 @@ async function triggerCaptionGeneration(courseName, videoTitle) {
     
     // Send request to EC2 instance
     try {
-      const response = await fetch('http://localhost:8080/generate-captions', {
+      const response = await fetch('http://localhost:8081/generate-captions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -327,6 +327,30 @@ class DynamoVideoService {
     }
   }
 
+  // Update course properties
+  async updateCourse(courseName, courseData) {
+    if (this.isDynamoAvailable()) {
+      try {
+        return await dynamodb.updateCourse(courseName, courseData);
+      } catch (error) {
+        console.error('DynamoDB error updating course:', error);
+      }
+    }
+    return false;
+  }
+
+  // Update video properties
+  async updateVideo(courseName, videoId, videoData) {
+    if (this.isDynamoAvailable()) {
+      try {
+        return await dynamodb.updateVideo(courseName, videoId, videoData);
+      } catch (error) {
+        console.error('DynamoDB error updating video:', error);
+      }
+    }
+    return false;
+  }
+
   // Health check
   async healthCheck() {
     const status = {
