@@ -66,4 +66,18 @@ jobs:
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       run: |
         ASG_NAME=$(cd terraform && terraform output -raw autoscaling_group_name)
-        aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME
+        
+        # Check if refresh is already in progress
+        CURRENT_STATUS=$(aws autoscaling describe-instance-refreshes \
+          --auto-scaling-group-name $ASG_NAME \
+          --max-items 1 \
+          --query 'InstanceRefreshes[0].Status' --output text 2>/dev/null || echo "None")
+        
+        if [ "$CURRENT_STATUS" = "InProgress" ]; then
+          echo "⚠️ Instance refresh already in progress. Skipping..."
+        elif [ "$CURRENT_STATUS" = "Pending" ]; then
+          echo "⚠️ Instance refresh pending. Skipping..."
+        else
+          echo "🔄 Starting new instance refresh..."
+          aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME
+        fi
