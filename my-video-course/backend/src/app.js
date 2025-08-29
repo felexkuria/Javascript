@@ -120,6 +120,7 @@ app.use('/api/admin', cognitoAuth, require('./routes/api/admin'));
 // Protected API Routes
 app.use('/api/videos', cognitoAuth, require('./routes/api/videos'));
 app.use('/api/video-proxy', cognitoAuth, require('./routes/api/video-proxy'));
+app.use('/api/captions', require('./routes/api/captions'));
 app.use('/api/gamification', cognitoAuth, require('./routes/api/gamification'));
 app.use('/api/quizzes', cognitoAuth, require('./routes/api/quizzes'));
 app.use('/api/ai', cognitoAuth, require('./routes/api/ai'));
