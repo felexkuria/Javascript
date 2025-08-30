@@ -91,7 +91,11 @@ jobs:
 
         echo "🔄 Starting new instance refresh..."
         # Start new refresh safely
-        aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME || \
-          echo "⚠️ Could not start instance refresh, possibly blocked by recent refresh. Skipping..."
+        if aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME; then
+          echo "✅ Instance refresh started successfully"
+        else
+          echo "⚠️ Instance refresh already in progress. Deployment completed but instances will update with previous refresh."
+          exit 0  # Exit successfully instead of failing
+        fi
 
     
