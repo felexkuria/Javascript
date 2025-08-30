@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Upload Center - Teacher Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.47059;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+        }
+        
+        .header p {
+            font-size: 21px;
+            color: #86868b;
+        }
+        
+        .os-detection {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .os-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .os-name {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .os-detected {
+            color: #30d158;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .upload-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .method-card {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+        
+        .method-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .method-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .method-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .method-desc {
+            color: #86868b;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #f2f2f7;
+            color: #1d1d1f;
+        }
+        
+        .script-section {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .script-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .script-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .copy-btn {
+            background: #30d158;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .script-content {
+            background: #1d1d1f;
+            color: #f5f5f7;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+        
+        .instructions {
+            background: #f2f2f7;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        
+        .instructions h4 {
+            margin-bottom: 12px;
+            color: #1d1d1f;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            color: #86868b;
+        }
+        
+        .status-section {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .upload-status {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .status-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .upload-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📹 Video Upload Center</h1>
+            <p>Seamlessly upload your course videos to the platform</p>
+        </div>
+
+        <div class="os-detection" id="osDetection">
+            <div class="os-icon" id="osIcon">🖥️</div>
+            <div class="os-name" id="osName">Detecting your system...</div>
+            <div class="os-detected">✅ System detected automatically</div>
+        </div>
+
+        <div class="upload-methods">
+            <div class="method-card">
+                <div class="method-icon">🚀</div>
+                <div class="method-title">Bulk Script Upload</div>
+                <div class="method-desc">Upload multiple videos from your local folder using our automated script</div>
+                <button class="btn btn-primary" onclick="showScript()">Get Upload Script</button>
+            </div>
+
+            <div class="method-card">
+                <div class="method-icon">📤</div>
+                <div class="method-title">Direct Web Upload</div>
+                <div class="method-desc">Upload individual videos directly through the web interface</div>
+                <a href="/upload" class="btn btn-secondary">Web Upload</a>
+            </div>
+        </div>
+
+        <div class="script-section" id="scriptSection" style="display: none;">
+            <div class="script-header">
+                <div class="script-title" id="scriptTitle">Upload Script for Your System</div>
+                <button class="copy-btn" onclick="copyScript()">📋 Copy Script</button>
+            </div>
+            
+            <div class="script-content" id="scriptContent">
+                <!-- Script content will be inserted here -->
+            </div>
+            
+            <div class="instructions" id="instructions">
+                <!-- Instructions will be inserted here -->
+            </div>
+        </div>
+
+        <div class="status-section">
+            <h3>📊 Upload Status</h3>
+            <div class="upload-status" id="uploadStatus">
+                <div class="status-icon">⏳</div>
+                <div>Monitoring for new uploads...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Detect operating system
+        function detectOS() {
+            const userAgent = navigator.userAgent;
+            const platform = navigator.platform;
+            
+            let os = 'Unknown';
+            let icon = '🖥️';
+            
+            if (userAgent.indexOf('Win') !== -1) {
+                os = 'Windows';
+                icon = '🪟';
+            } else if (userAgent.indexOf('Mac') !== -1) {
+                os = 'macOS';
+                icon = '🍎';
+            } else if (userAgent.indexOf('Linux') !== -1) {
+                os = 'Linux';
+                icon = '🐧';
+            }
+            
+            document.getElementById('osIcon').textContent = icon;
+            document.getElementById('osName').textContent = os;
+            
+            return os;
+        }
+
+        // Show appropriate script based on OS
+        function showScript() {
+            const os = detectOS();
+            const scriptSection = document.getElementById('scriptSection');
+            const scriptTitle = document.getElementById('scriptTitle');
+            const scriptContent = document.getElementById('scriptContent');
+            const instructions = document.getElementById('instructions');
+            
+            scriptSection.style.display = 'block';
+            scriptTitle.textContent = `Upload Script for ${os}`;
+            
+            if (os === 'Windows') {
+                scriptContent.innerHTML = `# PowerShell Script for Windows
+$S3_BUCKET = "video-course-bucket-047ad47c"
+$S3_PREFIX = "videos/dev-ops-bootcamp_202201/"
+$LOCAL_VIDEO_PATH = Get-Location
+
+Write-Host "🎬 Syncing videos from: $LOCAL_VIDEO_PATH"
+
+$videoFiles = Get-ChildItem -Recurse -Include *.mp4,*.mkv,*.avi,*.mov
+
+foreach ($file in $videoFiles) {
+    $s3Key = "$S3_PREFIX$($file.Name)"
+    Write-Host "⬆️ Uploading: $($file.Name)"
+    aws s3 cp "$($file.FullName)" "s3://$S3_BUCKET/$s3Key"
+}
+
+Write-Host "✅ Sync completed!"`;
+                
+                instructions.innerHTML = `
+                    <h4>📋 Windows Setup Instructions:</h4>
+                    <ol>
+                        <li>Install AWS CLI: <code>winget install Amazon.AWSCLI</code></li>
+                        <li>Configure AWS: <code>aws configure</code></li>
+                        <li>Navigate to your video folder in PowerShell</li>
+                        <li>Save script as <code>sync.ps1</code></li>
+                        <li>Run: <code>Set-ExecutionPolicy RemoteSigned</code></li>
+                        <li>Execute: <code>.\\sync.ps1</code></li>
+                    </ol>
+                `;
+            } else if (os === 'macOS') {
+                scriptContent.innerHTML = `#!/bin/bash
+# macOS Upload Script
+S3_BUCKET="video-course-bucket-047ad47c"
+S3_PREFIX="videos/dev-ops-bootcamp_202201/"
+LOCAL_VIDEO_PATH="$(pwd)"
+
+echo "🎬 Syncing videos from: $LOCAL_VIDEO_PATH"
+
+find . -maxdepth 2 -type f \\( -name "*.mp4" -o -name "*.mkv" -o -name "*.avi" -o -name "*.mov" \\) | while read file; do
+    filename=$(basename "$file")
+    s3_key="${S3_PREFIX}${filename}"
+    
+    echo "⬆️ Uploading: $filename"
+    aws s3 cp "$file" "s3://$S3_BUCKET/$s3_key"
+done
+
+echo "✅ Sync completed!"`;
+                
+                instructions.innerHTML = `
+                    <h4>📋 macOS Setup Instructions:</h4>
+                    <ol>
+                        <li>Install AWS CLI: <code>brew install awscli</code></li>
+                        <li>Configure AWS: <code>aws configure</code></li>
+                        <li>Navigate to your video folder in Terminal</li>
+                        <li>Save script as <code>sync.sh</code></li>
+                        <li>Make executable: <code>chmod +x sync.sh</code></li>
+                        <li>Execute: <code>./sync.sh</code></li>
+                    </ol>
+                `;
+            } else {
+                scriptContent.innerHTML = `# Linux Upload Script
+#!/bin/bash
+S3_BUCKET="video-course-bucket-047ad47c"
+S3_PREFIX="videos/dev-ops-bootcamp_202201/"
+
+echo "🎬 Starting upload..."
+aws s3 sync . "s3://$S3_BUCKET/$S3_PREFIX" --include="*.mp4" --include="*.mkv" --include="*.avi"
+echo "✅ Upload completed!"`;
+                
+                instructions.innerHTML = `
+                    <h4>📋 Linux Setup Instructions:</h4>
+                    <ol>
+                        <li>Install AWS CLI: <code>sudo apt install awscli</code></li>
+                        <li>Configure AWS: <code>aws configure</code></li>
+                        <li>Save script as <code>sync.sh</code></li>
+                        <li>Make executable: <code>chmod +x sync.sh</code></li>
+                        <li>Execute: <code>./sync.sh</code></li>
+                    </ol>
+                `;
+            }
+            
+            scriptSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Copy script to clipboard
+        function copyScript() {
+            const scriptContent = document.getElementById('scriptContent').textContent;
+            navigator.clipboard.writeText(scriptContent).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            detectOS();
+        });
+    </script>
+</body>
+</html>
