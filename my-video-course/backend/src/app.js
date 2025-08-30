@@ -51,6 +51,21 @@ app.use('/api/sync', require('./routes/api/sync'));
 app.use('/api/migrate', require('./routes/api/migrate'));
 app.use('/api/dynamodb', require('./routes/api/dynamodb'));
 
+// Public gamification stats endpoint
+app.get('/api/gamification/stats', async (req, res) => {
+  try {
+    const gamificationManager = require('./services/gamificationManager');
+    const userId = req.query.userId || 'default_user';
+    const userData = await gamificationManager.getUserData(userId);
+    res.json({ 
+      success: true, 
+      data: userData
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Video streaming routes (NO AUTH REQUIRED for direct file access)
 app.get('/videos/:courseName/file/:id', (req, res) => {
   const webController = require('./controllers/webController');
@@ -159,7 +174,12 @@ app.use('/api/admin', cognitoAuth, require('./routes/api/admin'));
 app.use('/api/videos', cognitoAuth, require('./routes/api/videos'));
 app.use('/api/video-proxy', cognitoAuth, require('./routes/api/video-proxy'));
 app.use('/api/captions', require('./routes/api/captions'));
-app.use('/api/gamification', cognitoAuth, require('./routes/api/gamification'));
+
+// Gamification routes - stats endpoint public, others protected
+const gamificationRouter = require('./routes/api/gamification');
+app.get('/api/gamification/stats', gamificationRouter);
+app.use('/api/gamification', cognitoAuth, gamificationRouter);
+
 app.use('/api/quizzes', cognitoAuth, require('./routes/api/quizzes'));
 app.use('/api/ai', cognitoAuth, require('./routes/api/ai'));
 app.use('/api/users', cognitoAuth, require('./routes/api/users'));
