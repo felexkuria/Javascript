@@ -111,6 +111,19 @@
         initTheme();
         document.getElementById('themeToggle').addEventListener('click', toggleTheme);
         
+        // Check for existing login on page load
+        function checkExistingLogin() {
+            const accessToken = localStorage.getItem('accessToken');
+            const user = localStorage.getItem('user');
+            
+            if (accessToken && user) {
+                console.log('Found existing login, redirecting...');
+                window.location.href = '/dashboard';
+            }
+        }
+        
+        checkExistingLogin();
+        
         let selectedRole = 'student';
         
         // Role tab switching
