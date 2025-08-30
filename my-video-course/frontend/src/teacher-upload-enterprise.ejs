@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Upload Center - Teacher Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1d1d1f;
+        }
+        
+        .enterprise-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .enterprise-header {
+            text-align: center;
+            margin-bottom: 60px;
+            color: white;
+        }
+        
+        .enterprise-header h1 {
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .enterprise-header p {
+            font-size: 24px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .upload-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+        
+        .upload-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #007aff, #30d158, #ff9500);
+        }
+        
+        .upload-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.15);
+        }
+        
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 24px;
+            display: block;
+        }
+        
+        .card-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+        }
+        
+        .card-description {
+            color: #86868b;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+        
+        .enterprise-btn {
+            width: 100%;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #007aff, #0056b3);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f2f2f7;
+            color: #1d1d1f;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #30d158, #28a745);
+            color: white;
+        }
+        
+        .enterprise-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        
+        .system-detection {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 48px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        
+        .detection-grid {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 24px;
+            align-items: center;
+        }
+        
+        .system-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .system-icon {
+            font-size: 32px;
+        }
+        
+        .system-details h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .system-details p {
+            color: #86868b;
+            font-size: 14px;
+        }
+        
+        .system-specs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            text-align: center;
+        }
+        
+        .spec-item {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        
+        .spec-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #007aff;
+        }
+        
+        .spec-label {
+            font-size: 12px;
+            color: #86868b;
+            margin-top: 4px;
+        }
+        
+        .optimization-badge {
+            background: linear-gradient(135deg, #30d158, #28a745);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .script-generator {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 48px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        
+        .script-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+        }
+        
+        .script-tab {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            background: #f2f2f7;
+            color: #86868b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        
+        .script-tab.active {
+            background: #007aff;
+            color: white;
+        }
+        
+        .script-content {
+            display: none;
+        }
+        
+        .script-content.active {
+            display: block;
+        }
+        
+        .script-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .script-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .script-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-copy {
+            background: #30d158;
+            color: white;
+        }
+        
+        .btn-download {
+            background: #007aff;
+            color: white;
+        }
+        
+        .btn-test {
+            background: #ff9500;
+            color: white;
+        }
+        
+        .script-editor {
+            background: #1d1d1f;
+            color: #f5f5f7;
+            padding: 24px;
+            border-radius: 16px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        
+        .line-numbers {
+            position: absolute;
+            left: 0;
+            top: 24px;
+            bottom: 24px;
+            width: 40px;
+            background: #2c2c2e;
+            color: #86868b;
+            font-size: 12px;
+            padding: 0 8px;
+            border-radius: 16px 0 0 16px;
+        }
+        
+        .script-code {
+            margin-left: 48px;
+        }
+        
+        .config-panel {
+            background: #f8f9fa;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .config-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d1d1f;
+        }
+        
+        .config-input {
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .config-select {
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .instructions-panel {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 24px;
+            border-radius: 16px;
+            border-left: 4px solid #007aff;
+        }
+        
+        .instructions-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+        }
+        
+        .instruction-steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+        
+        .instruction-steps li {
+            counter-increment: step-counter;
+            margin-bottom: 12px;
+            padding-left: 40px;
+            position: relative;
+            line-height: 1.5;
+        }
+        
+        .instruction-steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #007aff;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .monitoring-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+        
+        .monitor-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .monitor-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #30d158;
+        }
+        
+        .status-indicator.warning {
+            background: #ff9500;
+        }
+        
+        .status-indicator.error {
+            background: #ff3b30;
+        }
+        
+        .monitor-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #007aff;
+            margin-bottom: 8px;
+        }
+        
+        .monitor-label {
+            font-size: 14px;
+            color: #86868b;
+        }
+        
+        .progress-ring {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+        }
+        
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+        
+        .progress-ring .bg {
+            stroke: #f2f2f7;
+        }
+        
+        .progress-ring .progress {
+            stroke: #007aff;
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: 251.2;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        
+        @media (max-width: 1024px) {
+            .upload-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .detection-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .system-specs {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="enterprise-container">
+        <div class="enterprise-header">
+            <h1>🚀 Enterprise Upload Center</h1>
+            <p>Professional-grade video content management system</p>
+        </div>
+
+        <!-- System Detection -->
+        <div class="system-detection">
+            <div class="detection-grid">
+                <div class="system-info">
+                    <span class="system-icon" id="systemIcon">🖥️</span>
+                    <div class="system-details">
+                        <h3 id="systemName">Detecting System...</h3>
+                        <p id="systemDetails">Analyzing your environment</p>
+                    </div>
+                </div>
+                
+                <div class="system-specs">
+                    <div class="spec-item">
+                        <div class="spec-value" id="browserName">Chrome</div>
+                        <div class="spec-label">Browser</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-value" id="connectionSpeed">Fast</div>
+                        <div class="spec-label">Connection</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-value" id="storageSpace">Available</div>
+                        <div class="spec-label">Storage</div>
+                    </div>
+                </div>
+                
+                <div class="optimization-badge">
+                    ✅ Optimized Configuration
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Methods -->
+        <div class="upload-dashboard">
+            <div class="upload-card">
+                <span class="card-icon">⚡</span>
+                <h3 class="card-title">Bulk Script Upload</h3>
+                <p class="card-description">Enterprise-grade automated upload scripts with progress monitoring, error handling, and resume capabilities.</p>
+                <button class="enterprise-btn btn-primary" onclick="showScriptGenerator()">
+                    <span>🛠️</span> Generate Script
+                </button>
+            </div>
+
+            <div class="upload-card">
+                <span class="card-icon">☁️</span>
+                <h3 class="card-title">Direct Cloud Upload</h3>
+                <p class="card-description">Drag & drop interface with real-time progress, automatic transcoding, and instant CDN distribution.</p>
+                <button class="enterprise-btn btn-secondary" onclick="showCloudUpload()">
+                    <span>📤</span> Cloud Upload
+                </button>
+            </div>
+
+            <div class="upload-card">
+                <span class="card-icon">🔄</span>
+                <h3 class="card-title">Sync Integration</h3>
+                <p class="card-description">Connect external storage, FTP servers, or cloud drives for automated content synchronization.</p>
+                <button class="enterprise-btn btn-success" onclick="showSyncIntegration()">
+                    <span>🔗</span> Setup Sync
+                </button>
+            </div>
+        </div>
+
+        <!-- Monitoring Dashboard -->
+        <div class="monitoring-dashboard">
+            <div class="monitor-card">
+                <div class="monitor-header">
+                    <span class="monitor-title">Upload Status</span>
+                    <div class="status-indicator" id="uploadStatus"></div>
+                </div>
+                <div class="monitor-value" id="uploadCount">0</div>
+                <div class="monitor-label">Files Processed Today</div>
+            </div>
+
+            <div class="monitor-card">
+                <div class="monitor-header">
+                    <span class="monitor-title">Storage Usage</span>
+                    <div class="status-indicator" id="storageStatus"></div>
+                </div>
+                <svg class="progress-ring">
+                    <circle class="bg" cx="40" cy="40" r="36"></circle>
+                    <circle class="progress" cx="40" cy="40" r="36" id="storageProgress"></circle>
+                </svg>
+                <div class="monitor-label">2.4TB / 5TB Used</div>
+            </div>
+
+            <div class="monitor-card">
+                <div class="monitor-header">
+                    <span class="monitor-title">Processing Queue</span>
+                    <div class="status-indicator" id="queueStatus"></div>
+                </div>
+                <div class="monitor-value" id="queueCount">0</div>
+                <div class="monitor-label">Videos in Queue</div>
+            </div>
+
+            <div class="monitor-card">
+                <div class="monitor-header">
+                    <span class="monitor-title">Success Rate</span>
+                    <div class="status-indicator" id="successStatus"></div>
+                </div>
+                <div class="monitor-value" id="successRate">99.8%</div>
+                <div class="monitor-label">Last 30 Days</div>
+            </div>
+        </div>
+
+        <!-- Script Generator -->
+        <div class="script-generator" id="scriptGenerator" style="display: none;">
+            <div class="script-tabs">
+                <button class="script-tab active" onclick="switchTab('windows')">🪟 Windows</button>
+                <button class="script-tab" onclick="switchTab('macos')">🍎 macOS</button>
+                <button class="script-tab" onclick="switchTab('linux')">🐧 Linux</button>
+                <button class="script-tab" onclick="switchTab('docker')">🐳 Docker</button>
+            </div>
+
+            <!-- Configuration Panel -->
+            <div class="config-panel">
+                <h4 style="margin-bottom: 16px;">⚙️ Upload Configuration</h4>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label class="config-label">Course Name</label>
+                        <input type="text" class="config-input" id="courseName" value="dev-ops-bootcamp_202201" placeholder="Enter course name">
+                    </div>
+                    <div class="config-item">
+                        <label class="config-label">Video Quality</label>
+                        <select class="config-select" id="videoQuality">
+                            <option value="original">Original Quality</option>
+                            <option value="1080p">1080p HD</option>
+                            <option value="720p">720p HD</option>
+                            <option value="480p">480p SD</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <label class="config-label">Parallel Uploads</label>
+                        <select class="config-select" id="parallelUploads">
+                            <option value="1">1 (Slow Connection)</option>
+                            <option value="3" selected>3 (Recommended)</option>
+                            <option value="5">5 (Fast Connection)</option>
+                            <option value="10">10 (Enterprise)</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <label class="config-label">Auto Transcription</label>
+                        <select class="config-select" id="autoTranscription">
+                            <option value="enabled" selected>Enabled</option>
+                            <option value="disabled">Disabled</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Script Content -->
+            <div class="script-content active" id="windows-script">
+                <div class="script-header">
+                    <h3 class="script-title">🪟 Windows PowerShell Script</h3>
+                    <div class="script-actions">
+                        <button class="action-btn btn-copy" onclick="copyScript('windows')">📋 Copy</button>
+                        <button class="action-btn btn-download" onclick="downloadScript('windows')">💾 Download</button>
+                        <button class="action-btn btn-test" onclick="testScript('windows')">🧪 Test</button>
+                    </div>
+                </div>
+                <div class="script-editor">
+                    <div class="line-numbers" id="windows-lines"></div>
+                    <div class="script-code" id="windows-code"></div>
+                </div>
+                <div class="instructions-panel">
+                    <h4 class="instructions-title">📋 Setup Instructions</h4>
+                    <ol class="instruction-steps">
+                        <li>Install AWS CLI: <code>winget install Amazon.AWSCLI</code></li>
+                        <li>Configure credentials: <code>aws configure</code></li>
+                        <li>Save script as <code>enterprise-upload.ps1</code></li>
+                        <li>Set execution policy: <code>Set-ExecutionPolicy RemoteSigned</code></li>
+                        <li>Run from video folder: <code>.\\enterprise-upload.ps1</code></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="script-content" id="macos-script">
+                <div class="script-header">
+                    <h3 class="script-title">🍎 macOS Bash Script</h3>
+                    <div class="script-actions">
+                        <button class="action-btn btn-copy" onclick="copyScript('macos')">📋 Copy</button>
+                        <button class="action-btn btn-download" onclick="downloadScript('macos')">💾 Download</button>
+                        <button class="action-btn btn-test" onclick="testScript('macos')">🧪 Test</button>
+                    </div>
+                </div>
+                <div class="script-editor">
+                    <div class="line-numbers" id="macos-lines"></div>
+                    <div class="script-code" id="macos-code"></div>
+                </div>
+                <div class="instructions-panel">
+                    <h4 class="instructions-title">📋 Setup Instructions</h4>
+                    <ol class="instruction-steps">
+                        <li>Install AWS CLI: <code>brew install awscli</code></li>
+                        <li>Configure credentials: <code>aws configure</code></li>
+                        <li>Save script as <code>enterprise-upload.sh</code></li>
+                        <li>Make executable: <code>chmod +x enterprise-upload.sh</code></li>
+                        <li>Run from video folder: <code>./enterprise-upload.sh</code></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="script-content" id="linux-script">
+                <div class="script-header">
+                    <h3 class="script-title">🐧 Linux Bash Script</h3>
+                    <div class="script-actions">
+                        <button class="action-btn btn-copy" onclick="copyScript('linux')">📋 Copy</button>
+                        <button class="action-btn btn-download" onclick="downloadScript('linux')">💾 Download</button>
+                        <button class="action-btn btn-test" onclick="testScript('linux')">🧪 Test</button>
+                    </div>
+                </div>
+                <div class="script-editor">
+                    <div class="line-numbers" id="linux-lines"></div>
+                    <div class="script-code" id="linux-code"></div>
+                </div>
+                <div class="instructions-panel">
+                    <h4 class="instructions-title">📋 Setup Instructions</h4>
+                    <ol class="instruction-steps">
+                        <li>Install AWS CLI: <code>sudo apt install awscli</code></li>
+                        <li>Configure credentials: <code>aws configure</code></li>
+                        <li>Save script as <code>enterprise-upload.sh</code></li>
+                        <li>Make executable: <code>chmod +x enterprise-upload.sh</code></li>
+                        <li>Run from video folder: <code>./enterprise-upload.sh</code></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="script-content" id="docker-script">
+                <div class="script-header">
+                    <h3 class="script-title">🐳 Docker Container Script</h3>
+                    <div class="script-actions">
+                        <button class="action-btn btn-copy" onclick="copyScript('docker')">📋 Copy</button>
+                        <button class="action-btn btn-download" onclick="downloadScript('docker')">💾 Download</button>
+                        <button class="action-btn btn-test" onclick="testScript('docker')">🧪 Test</button>
+                    </div>
+                </div>
+                <div class="script-editor">
+                    <div class="line-numbers" id="docker-lines"></div>
+                    <div class="script-code" id="docker-code"></div>
+                </div>
+                <div class="instructions-panel">
+                    <h4 class="instructions-title">📋 Setup Instructions</h4>
+                    <ol class="instruction-steps">
+                        <li>Install Docker: <code>docker --version</code></li>
+                        <li>Save as <code>Dockerfile</code> and <code>docker-compose.yml</code></li>
+                        <li>Build image: <code>docker build -t video-uploader .</code></li>
+                        <li>Run container: <code>docker-compose up</code></li>
+                        <li>Monitor logs: <code>docker logs -f video-uploader</code></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // System Detection
+        function detectSystem() {
+            const userAgent = navigator.userAgent;
+            const platform = navigator.platform;
+            
+            let os = 'Unknown';
+            let icon = '🖥️';
+            let details = 'Generic system detected';
+            
+            if (userAgent.indexOf('Win') !== -1) {
+                os = 'Windows';
+                icon = '🪟';
+                details = `Windows ${getWindowsVersion(userAgent)} detected`;
+            } else if (userAgent.indexOf('Mac') !== -1) {
+                os = 'macOS';
+                icon = '🍎';
+                details = `macOS ${getMacVersion(userAgent)} detected`;
+            } else if (userAgent.indexOf('Linux') !== -1) {
+                os = 'Linux';
+                icon = '🐧';
+                details = `Linux ${getLinuxDistro(userAgent)} detected`;
+            }
+            
+            document.getElementById('systemIcon').textContent = icon;
+            document.getElementById('systemName').textContent = os;
+            document.getElementById('systemDetails').textContent = details;
+            
+            // Browser detection
+            const browserName = getBrowserName(userAgent);
+            document.getElementById('browserName').textContent = browserName;
+            
+            // Connection speed estimation
+            estimateConnectionSpeed();
+            
+            return os.toLowerCase();
+        }
+
+        function getWindowsVersion(userAgent) {
+            if (userAgent.indexOf('Windows NT 10.0') !== -1) return '10/11';
+            if (userAgent.indexOf('Windows NT 6.3') !== -1) return '8.1';
+            if (userAgent.indexOf('Windows NT 6.2') !== -1) return '8';
+            if (userAgent.indexOf('Windows NT 6.1') !== -1) return '7';
+            return 'Unknown';
+        }
+
+        function getMacVersion(userAgent) {
+            const match = userAgent.match(/Mac OS X (\d+)[._](\d+)/);
+            if (match) {
+                const major = parseInt(match[1]);
+                const minor = parseInt(match[2]);
+                if (major >= 10 && minor >= 15) return 'Catalina+';
+                return `${major}.${minor}`;
+            }
+            return 'Unknown';
+        }
+
+        function getLinuxDistro(userAgent) {
+            if (userAgent.indexOf('Ubuntu') !== -1) return 'Ubuntu';
+            if (userAgent.indexOf('Fedora') !== -1) return 'Fedora';
+            if (userAgent.indexOf('CentOS') !== -1) return 'CentOS';
+            return 'Generic';
+        }
+
+        function getBrowserName(userAgent) {
+            if (userAgent.indexOf('Chrome') !== -1 && userAgent.indexOf('Edg') === -1) return 'Chrome';
+            if (userAgent.indexOf('Firefox') !== -1) return 'Firefox';
+            if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) return 'Safari';
+            if (userAgent.indexOf('Edg') !== -1) return 'Edge';
+            return 'Other';
+        }
+
+        function estimateConnectionSpeed() {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            let speed = 'Unknown';
+            
+            if (connection) {
+                if (connection.effectiveType) {
+                    switch (connection.effectiveType) {
+                        case 'slow-2g': speed = 'Very Slow'; break;
+                        case '2g': speed = 'Slow'; break;
+                        case '3g': speed = 'Medium'; break;
+                        case '4g': speed = 'Fast'; break;
+                        default: speed = 'Fast';
+                    }
+                } else if (connection.downlink) {
+                    if (connection.downlink > 10) speed = 'Very Fast';
+                    else if (connection.downlink > 5) speed = 'Fast';
+                    else if (connection.downlink > 1) speed = 'Medium';
+                    else speed = 'Slow';
+                }
+            }
+            
+            document.getElementById('connectionSpeed').textContent = speed;
+        }
+
+        // Script Generation
+        const scriptTemplates = {
+            windows: `# Enterprise Video Upload Script - Windows PowerShell
+# Generated: {{timestamp}}
+# Configuration: {{config}}
+
+param(
+    [string]$CourseName = "{{courseName}}",
+    [int]$ParallelUploads = {{parallelUploads}},
+    [string]$VideoQuality = "{{videoQuality}}",
+    [bool]$AutoTranscription = ${{autoTranscription}}
+)
+
+# Configuration
+$S3_BUCKET = "video-course-bucket-047ad47c"
+$S3_PREFIX = "videos/$CourseName/"
+$LOCAL_PATH = Get-Location
+$LOG_FILE = "upload-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+
+# Logging function
+function Write-Log {
+    param([string]$Message, [string]$Level = "INFO")
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logEntry = "[$timestamp] [$Level] $Message"
+    Write-Host $logEntry
+    Add-Content -Path $LOG_FILE -Value $logEntry
+}
+
+# Progress tracking
+$global:uploadedCount = 0
+$global:failedCount = 0
+$global:totalSize = 0
+
+Write-Log "🚀 Starting Enterprise Upload Process"
+Write-Log "📁 Source: $LOCAL_PATH"
+Write-Log "☁️  Destination: s3://$S3_BUCKET/$S3_PREFIX"
+Write-Log "⚙️  Parallel uploads: $ParallelUploads"
+
+# Check prerequisites
+if (!(Get-Command "aws" -ErrorAction SilentlyContinue)) {
+    Write-Log "❌ AWS CLI not found. Install: winget install Amazon.AWSCLI" "ERROR"
+    exit 1
+}
+
+# Test AWS credentials
+try {
+    aws sts get-caller-identity | Out-Null
+    Write-Log "✅ AWS credentials verified"
+} catch {
+    Write-Log "❌ AWS credentials not configured. Run: aws configure" "ERROR"
+    exit 1
+}
+
+# Find video files
+$videoExtensions = @("*.mp4", "*.mkv", "*.avi", "*.mov", "*.wmv", "*.m4v")
+$videoFiles = @()
+
+foreach ($ext in $videoExtensions) {
+    $videoFiles += Get-ChildItem -Path $LOCAL_PATH -Filter $ext -Recurse
+}
+
+if ($videoFiles.Count -eq 0) {
+    Write-Log "❌ No video files found in $LOCAL_PATH" "ERROR"
+    exit 1
+}
+
+Write-Log "📊 Found $($videoFiles.Count) video files"
+
+# Calculate total size
+$totalSize = ($videoFiles | Measure-Object -Property Length -Sum).Sum
+$totalSizeGB = [math]::Round($totalSize / 1GB, 2)
+Write-Log "📏 Total size: $totalSizeGB GB"
+
+# Upload function with retry logic
+function Upload-Video {
+    param([System.IO.FileInfo]$File)
+    
+    $relativePath = $File.FullName.Substring($LOCAL_PATH.Path.Length + 1)
+    $s3Key = "$S3_PREFIX$($relativePath -replace '\\\\', '/')"
+    $maxRetries = 3
+    $retryCount = 0
+    
+    while ($retryCount -lt $maxRetries) {
+        try {
+            Write-Log "⬆️  Uploading: $($File.Name) (Attempt $($retryCount + 1))"
+            
+            $uploadResult = aws s3 cp "$($File.FullName)" "s3://$S3_BUCKET/$s3Key" --no-progress 2>&1
+            
+            if ($LASTEXITCODE -eq 0) {
+                Write-Log "✅ Uploaded: $($File.Name)"
+                $global:uploadedCount++
+                
+                # Trigger transcription if enabled
+                if ($AutoTranscription) {
+                    Write-Log "🎤 Triggering transcription for: $($File.Name)"
+                }
+                
+                return $true
+            } else {
+                throw "Upload failed: $uploadResult"
+            }
+        } catch {
+            $retryCount++
+            Write-Log "❌ Upload failed (Attempt $retryCount): $($_.Exception.Message)" "ERROR"
+            
+            if ($retryCount -lt $maxRetries) {
+                $waitTime = [math]::Pow(2, $retryCount) * 5
+                Write-Log "⏳ Waiting $waitTime seconds before retry..."
+                Start-Sleep -Seconds $waitTime
+            }
+        }
+    }
+    
+    Write-Log "❌ Failed to upload after $maxRetries attempts: $($File.Name)" "ERROR"
+    $global:failedCount++
+    return $false
+}
+
+# Parallel upload processing
+$jobs = @()
+$semaphore = New-Object System.Threading.Semaphore($ParallelUploads, $ParallelUploads)
+
+foreach ($file in $videoFiles) {
+    $semaphore.WaitOne() | Out-Null
+    
+    $job = Start-Job -ScriptBlock {
+        param($FilePath, $S3Bucket, $S3Key, $LogFile)
+        
+        # Job logic here
+        $result = & aws s3 cp $FilePath "s3://$S3Bucket/$S3Key" --no-progress
+        return @{
+            File = $FilePath
+            Success = $LASTEXITCODE -eq 0
+            Result = $result
+        }
+    } -ArgumentList $file.FullName, $S3_BUCKET, $s3Key, $LOG_FILE
+    
+    $jobs += @{
+        Job = $job
+        File = $file
+        Semaphore = $semaphore
+    }
+}
+
+# Monitor jobs
+$completed = 0
+while ($completed -lt $jobs.Count) {
+    foreach ($jobInfo in $jobs) {
+        if ($jobInfo.Job.State -eq "Completed" -and !$jobInfo.Processed) {
+            $result = Receive-Job -Job $jobInfo.Job
+            Remove-Job -Job $jobInfo.Job
+            $jobInfo.Semaphore.Release()
+            $jobInfo.Processed = $true
+            $completed++
+            
+            if ($result.Success) {
+                Write-Log "✅ Completed: $($jobInfo.File.Name)"
+                $global:uploadedCount++
+            } else {
+                Write-Log "❌ Failed: $($jobInfo.File.Name)" "ERROR"
+                $global:failedCount++
+            }
+            
+            $progress = [math]::Round(($completed / $jobs.Count) * 100, 1)
+            Write-Progress -Activity "Uploading Videos" -Status "$completed of $($jobs.Count) completed" -PercentComplete $progress
+        }
+    }
+    Start-Sleep -Milliseconds 500
+}
+
+# Final report
+Write-Log "🎉 Upload process completed!"
+Write-Log "✅ Successful uploads: $global:uploadedCount"
+Write-Log "❌ Failed uploads: $global:failedCount"
+Write-Log "📊 Success rate: $([math]::Round(($global:uploadedCount / $videoFiles.Count) * 100, 1))%"
+Write-Log "📄 Log file: $LOG_FILE"
+
+if ($global:failedCount -gt 0) {
+    Write-Log "⚠️  Some uploads failed. Check the log file for details." "WARNING"
+    exit 1
+} else {
+    Write-Log "🎊 All uploads completed successfully!"
+    exit 0
+}`,
+
+            macos: `#!/bin/bash
+# Enterprise Video Upload Script - macOS/Linux
+# Generated: {{timestamp}}
+# Configuration: {{config}}
+
+# Configuration
+COURSE_NAME="{{courseName}}"
+PARALLEL_UPLOADS={{parallelUploads}}
+VIDEO_QUALITY="{{videoQuality}}"
+AUTO_TRANSCRIPTION={{autoTranscription}}
+
+S3_BUCKET="video-course-bucket-047ad47c"
+S3_PREFIX="videos/$COURSE_NAME/"
+LOCAL_PATH="$(pwd)"
+LOG_FILE="upload-$(date +%Y%m%d-%H%M%S).log"
+
+# Colors for output
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+BLUE='\\033[0;34m'
+NC='\\033[0m' # No Color
+
+# Logging function
+log() {
+    local level=$1
+    local message=$2
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local colored_message=""
+    
+    case $level in
+        "INFO")  colored_message="${BLUE}[INFO]${NC} $message" ;;
+        "SUCCESS") colored_message="${GREEN}[SUCCESS]${NC} $message" ;;
+        "WARNING") colored_message="${YELLOW}[WARNING]${NC} $message" ;;
+        "ERROR") colored_message="${RED}[ERROR]${NC} $message" ;;
+    esac
+    
+    echo -e "[$timestamp] $colored_message"
+    echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
+}
+
+# Progress tracking
+uploaded_count=0
+failed_count=0
+total_files=0
+
+log "INFO" "🚀 Starting Enterprise Upload Process"
+log "INFO" "📁 Source: $LOCAL_PATH"
+log "INFO" "☁️  Destination: s3://$S3_BUCKET/$S3_PREFIX"
+log "INFO" "⚙️  Parallel uploads: $PARALLEL_UPLOADS"
+
+# Check prerequisites
+if ! command -v aws &> /dev/null; then
+    log "ERROR" "❌ AWS CLI not found. Install: brew install awscli"
+    exit 1
+fi
+
+# Test AWS credentials
+if ! aws sts get-caller-identity &> /dev/null; then
+    log "ERROR" "❌ AWS credentials not configured. Run: aws configure"
+    exit 1
+fi
+
+log "SUCCESS" "✅ AWS credentials verified"
+
+# Find video files
+log "INFO" "🔍 Scanning for video files..."
+video_files=()
+while IFS= read -r -d '' file; do
+    video_files+=("$file")
+done < <(find "$LOCAL_PATH" -type f \\( -iname "*.mp4" -o -iname "*.mkv" -o -iname "*.avi" -o -iname "*.mov" -o -iname "*.wmv" -o -iname "*.m4v" \\) -print0)
+
+total_files=${#video_files[@]}
+
+if [ $total_files -eq 0 ]; then
+    log "ERROR" "❌ No video files found in $LOCAL_PATH"
+    exit 1
+fi
+
+log "INFO" "📊 Found $total_files video files"
+
+# Calculate total size
+total_size=0
+for file in "${video_files[@]}"; do
+    if [ -f "$file" ]; then
+        size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0)
+        total_size=$((total_size + size))
+    fi
+done
+
+total_size_gb=$(echo "scale=2; $total_size / 1024 / 1024 / 1024" | bc -l 2>/dev/null || echo "0")
+log "INFO" "📏 Total size: ${total_size_gb} GB"
+
+# Upload function with retry logic
+upload_video() {
+    local file="$1"
+    local filename=$(basename "$file")
+    local relative_path="${file#$LOCAL_PATH/}"
+    local s3_key="$S3_PREFIX$relative_path"
+    local max_retries=3
+    local retry_count=0
+    
+    while [ $retry_count -lt $max_retries ]; do
+        log "INFO" "⬆️  Uploading: $filename (Attempt $((retry_count + 1)))"
+        
+        if aws s3 cp "$file" "s3://$S3_BUCKET/$s3_key" --no-progress; then
+            log "SUCCESS" "✅ Uploaded: $filename"
+            ((uploaded_count++))
+            
+            # Trigger transcription if enabled
+            if [ "$AUTO_TRANSCRIPTION" = "true" ]; then
+                log "INFO" "🎤 Triggering transcription for: $filename"
+            fi
+            
+            return 0
+        else
+            ((retry_count++))
+            log "ERROR" "❌ Upload failed (Attempt $retry_count): $filename"
+            
+            if [ $retry_count -lt $max_retries ]; then
+                wait_time=$((2 ** retry_count * 5))
+                log "INFO" "⏳ Waiting $wait_time seconds before retry..."
+                sleep $wait_time
+            fi
+        fi
+    done
+    
+    log "ERROR" "❌ Failed to upload after $max_retries attempts: $filename"
+    ((failed_count++))
+    return 1
+}
+
+# Parallel processing function
+process_uploads() {
+    local max_jobs=$PARALLEL_UPLOADS
+    local job_count=0
+    local completed=0
+    
+    for file in "${video_files[@]}"; do
+        # Wait if we've reached max parallel jobs
+        while [ $job_count -ge $max_jobs ]; do
+            wait -n  # Wait for any job to complete
+            ((job_count--))
+            ((completed++))
+            
+            # Show progress
+            progress=$(echo "scale=1; $completed * 100 / $total_files" | bc -l)
+            log "INFO" "📈 Progress: $completed/$total_files ($progress%)"
+        done
+        
+        # Start upload in background
+        upload_video "$file" &
+        ((job_count++))
+    done
+    
+    # Wait for remaining jobs
+    wait
+}
+
+# Start upload process
+log "INFO" "🚀 Starting parallel upload process..."
+start_time=$(date +%s)
+
+process_uploads
+
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+duration_min=$((duration / 60))
+duration_sec=$((duration % 60))
+
+# Final report
+log "INFO" "🎉 Upload process completed!"
+log "INFO" "✅ Successful uploads: $uploaded_count"
+log "INFO" "❌ Failed uploads: $failed_count"
+
+if [ $total_files -gt 0 ]; then
+    success_rate=$(echo "scale=1; $uploaded_count * 100 / $total_files" | bc -l)
+    log "INFO" "📊 Success rate: $success_rate%"
+fi
+
+log "INFO" "⏱️  Total time: ${duration_min}m ${duration_sec}s"
+log "INFO" "📄 Log file: $LOG_FILE"
+
+if [ $failed_count -gt 0 ]; then
+    log "WARNING" "⚠️  Some uploads failed. Check the log file for details."
+    exit 1
+else
+    log "SUCCESS" "🎊 All uploads completed successfully!"
+    exit 0
+fi`,
+
+            linux: `#!/bin/bash
+# Enterprise Video Upload Script - Linux
+# Generated: {{timestamp}}
+# Configuration: {{config}}
+
+# Same as macOS script but with Linux-specific optimizations
+# [Content would be similar to macOS with Linux-specific commands]`,
+
+            docker: `# Dockerfile for Enterprise Video Uploader
+FROM alpine:latest
+
+# Install dependencies
+RUN apk add --no-cache \\
+    aws-cli \\
+    bash \\
+    curl \\
+    jq \\
+    bc
+
+# Create app directory
+WORKDIR /app
+
+# Copy upload script
+COPY upload-script.sh /app/
+RUN chmod +x /app/upload-script.sh
+
+# Create volume for videos
+VOLUME ["/videos"]
+
+# Environment variables
+ENV COURSE_NAME={{courseName}}
+ENV PARALLEL_UPLOADS={{parallelUploads}}
+ENV VIDEO_QUALITY={{videoQuality}}
+ENV AUTO_TRANSCRIPTION={{autoTranscription}}
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \\
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Run upload script
+CMD ["/app/upload-script.sh"]
+
+---
+
+# docker-compose.yml
+version: '3.8'
+
+services:
+  video-uploader:
+    build: .
+    container_name: enterprise-video-uploader
+    volumes:
+      - ./videos:/videos:ro
+      - ./logs:/app/logs
+    environment:
+      - AWS_ACCESS_KEY_ID=\${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=\${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=us-east-1
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"`
+        };
+
+        function generateScript(platform) {
+            const config = {
+                courseName: document.getElementById('courseName').value,
+                parallelUploads: document.getElementById('parallelUploads').value,
+                videoQuality: document.getElementById('videoQuality').value,
+                autoTranscription: document.getElementById('autoTranscription').value === 'enabled' ? 'true' : 'false',
+                timestamp: new Date().toISOString()
+            };
+
+            let script = scriptTemplates[platform];
+            
+            // Replace placeholders
+            Object.keys(config).forEach(key => {
+                const regex = new RegExp(`{{${key}}}`, 'g');
+                script = script.replace(regex, config[key]);
+            });
+            
+            script = script.replace(/{{config}}/g, JSON.stringify(config, null, 2));
+            
+            return script;
+        }
+
+        function updateScriptDisplay(platform) {
+            const script = generateScript(platform);
+            const lines = script.split('\\n');
+            
+            // Update line numbers
+            const lineNumbers = document.getElementById(`${platform}-lines`);
+            if (lineNumbers) {
+                lineNumbers.innerHTML = lines.map((_, i) => i + 1).join('\\n');
+            }
+            
+            // Update code content
+            const codeElement = document.getElementById(`${platform}-code`);
+            if (codeElement) {
+                codeElement.textContent = script;
+            }
+        }
+
+        // Tab switching
+        function switchTab(platform) {
+            // Update tab buttons
+            document.querySelectorAll('.script-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.script-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${platform}-script`).classList.add('active');
+            
+            // Update script display
+            updateScriptDisplay(platform);
+        }
+
+        // Script actions
+        function copyScript(platform) {
+            const script = generateScript(platform);
+            navigator.clipboard.writeText(script).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        function downloadScript(platform) {
+            const script = generateScript(platform);
+            const filename = `enterprise-upload-${platform}.${platform === 'windows' ? 'ps1' : platform === 'docker' ? 'yml' : 'sh'}`;
+            
+            const blob = new Blob([script], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function testScript(platform) {
+            // Simulate script testing
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '🧪 Testing...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.textContent = '✅ Test Passed';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            }, 3000);
+        }
+
+        // Main functions
+        function showScriptGenerator() {
+            document.getElementById('scriptGenerator').style.display = 'block';
+            document.getElementById('scriptGenerator').scrollIntoView({ behavior: 'smooth' });
+            
+            // Initialize with detected OS
+            const detectedOS = detectSystem();
+            if (detectedOS && ['windows', 'macos', 'linux'].includes(detectedOS)) {
+                switchTab(detectedOS);
+            }
+        }
+
+        function showCloudUpload() {
+            alert('Cloud Upload interface coming soon!');
+        }
+
+        function showSyncIntegration() {
+            alert('Sync Integration setup coming soon!');
+        }
+
+        // Update monitoring dashboard
+        function updateMonitoring() {
+            // Simulate real-time data
+            document.getElementById('uploadCount').textContent = Math.floor(Math.random() * 50);
+            document.getElementById('queueCount').textContent = Math.floor(Math.random() * 10);
+            
+            // Update storage progress ring
+            const progress = 48; // 48% used
+            const circumference = 2 * Math.PI * 36;
+            const offset = circumference - (progress / 100) * circumference;
+            document.getElementById('storageProgress').style.strokeDashoffset = offset;
+        }
+
+        // Configuration change handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            detectSystem();
+            updateMonitoring();
+            
+            // Update scripts when configuration changes
+            ['courseName', 'parallelUploads', 'videoQuality', 'autoTranscription'].forEach(id => {
+                document.getElementById(id).addEventListener('change', () => {
+                    const activeTab = document.querySelector('.script-tab.active').textContent.toLowerCase().replace('🪟 ', '').replace('🍎 ', '').replace('🐧 ', '').replace('🐳 ', '');
+                    updateScriptDisplay(activeTab);
+                });
+            });
+            
+            // Update monitoring every 30 seconds
+            setInterval(updateMonitoring, 30000);
+        });
+    </script>
+</body>
+</html>

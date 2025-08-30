@@ -208,6 +208,7 @@
     </style>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.24.min.js"></script>
     <script src="/js/aws-identity-pool.js"></script>
+    <script src="/js/video-quiz-functions.js"></script>
 </head>
 <body>
     <button class="theme-toggle" id="themeToggle">🌙</button>
@@ -839,10 +840,15 @@
                     console.log('🎬 Loading video with Identity Pool:', videoKey);
                     
                     // Initialize AWS Identity Pool
+                    if (!window.awsIdentityPool) {
+                        console.error('❌ AWS Identity Pool not loaded');
+                        throw new Error('Identity Pool script not loaded');
+                    }
+                    
                     const initialized = await window.awsIdentityPool.initialize();
                     if (!initialized) {
                         console.error('❌ Failed to initialize Identity Pool');
-                        return;
+                        throw new Error('Identity Pool initialization failed');
                     }
                     
                     // Generate signed URL
