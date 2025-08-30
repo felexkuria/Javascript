@@ -206,8 +206,7 @@
             }
         }
     </style>
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.24.min.js"></script>
-    <script src="/js/aws-identity-pool.js"></script>
+    <script src="/js/aws-identity-pool-v3.js"></script>
     <script src="/js/video-quiz-functions.js"></script>
 </head>
 <body>
@@ -828,48 +827,40 @@
                 console.log('Todo toggled:', todoId, completed);
             };
             
-            // Initialize secure video loading with Identity Pool
+            // Initialize secure video loading
             async function initSecureVideo() {
                 const videoPlayer = document.getElementById('videoPlayer');
                 if (!videoPlayer) return;
                 
-                const videoKey = '<%= video ? video.s3Key || video.videoUrl : "" %>';
+                const videoKey = '<%= video ? video.s3Key || "videos/dev-ops-bootcamp_202201/lesson2.mp4" : "" %>';
                 if (!videoKey) return;
                 
                 try {
-                    console.log('🎬 Loading video with Identity Pool:', videoKey);
+                    console.log('🎬 Loading video with backend signed URL:', videoKey);
                     
-                    // Initialize AWS Identity Pool
-                    if (!window.awsIdentityPool) {
-                        console.error('❌ AWS Identity Pool not loaded');
-                        throw new Error('Identity Pool script not loaded');
+                    const response = await fetch('/api/videos/stream-url', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ videoKey })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        videoPlayer.src = data.streamUrl;
+                        console.log('✅ Video loaded with backend signed URL');
+                    } else {
+                        throw new Error('Failed to get signed URL');
                     }
-                    
-                    const initialized = await window.awsIdentityPool.initialize();
-                    if (!initialized) {
-                        console.error('❌ Failed to initialize Identity Pool');
-                        throw new Error('Identity Pool initialization failed');
-                    }
-                    
-                    // Generate signed URL
-                    const signedUrl = await window.awsIdentityPool.generateSignedUrl(videoKey);
-                    
-                    // Set video source
-                    videoPlayer.src = signedUrl;
-                    
-                    console.log('✅ Video loaded with Identity Pool');
                     
                 } catch (error) {
-                    console.error('❌ Identity Pool video loading failed:', error);
-                    
-                    // Fallback to backend-generated URL
-                    console.log('🔄 Falling back to backend URL generation');
+                    console.error('❌ Backend video loading failed:', error);
+                    console.log('🔄 Using direct S3 URL as last resort');
                     videoPlayer.src = '<%= video ? video.videoUrl : "" %>';
                 }
             }
             
-            // Initialize secure video loading
-            initSecureVideo();
+            // Initialize secure video loading with delay
+            setTimeout(initSecureVideo, 2000);
             
             // Update count and load todos on page load
             updateVideoCount();

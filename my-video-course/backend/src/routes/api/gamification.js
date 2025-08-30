@@ -33,6 +33,21 @@ router.post('/sync', async (req, res) => {
   }
 });
 
+router.get('/load', async (req, res) => {
+  try {
+    const userId = req.user?.email || req.session?.user?.email || req.query.userId || 'default_user';
+    const userData = await gamificationManager.getUserData(userId);
+    res.json({
+      success: true,
+      achievements: userData.achievements || [],
+      userStats: userData.stats || {},
+      streakData: { currentStreak: userData.streak || 0 }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/keyboard-shortcut', async (req, res) => {
   try {
     const userId = req.user?.email || req.session?.user?.email || 'default_user';

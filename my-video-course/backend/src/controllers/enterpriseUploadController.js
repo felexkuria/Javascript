@@ -388,187 +388,50 @@ Write-EnterpriseLog "🎉 Enterprise Upload Process Completed" "SUCCESS"`;
     getMacScript(config) {
         return `#!/bin/bash
 # Enterprise Video Upload Script - macOS
-# Auto-generated for user: {{userId}}
 # Generated: {{timestamp}}
 
-# Configuration
 COURSE_NAME="{{courseName}}"
 PARALLEL_UPLOADS={{parallelUploads}}
-VIDEO_QUALITY="{{videoQuality}}"
-AUTO_TRANSCRIPTION={{autoTranscription}}
-
-# Enterprise settings
 S3_BUCKET="video-course-bucket-047ad47c"
-S3_PREFIX="videos/$COURSE_NAME/"
-LOCAL_PATH="$(pwd)"
-LOG_FILE="enterprise-upload-$(date +%Y%m%d-%H%M%S).log"
-PROGRESS_FILE="upload-progress.json"
+S3_PREFIX="videos/\$COURSE_NAME/"
+LOCAL_PATH="\$(pwd)"
+LOG_FILE="enterprise-upload-\$(date +%Y%m%d-%H%M%S).log"
 
-# Enhanced logging with JSON structure
-log_enterprise() {
-    local level=$1
-    local message=$2
-    local data=$3
-    local timestamp=$(date -u +"%Y-%m-%d %H:%M:%S")
-    
-    # Create JSON log entry
-    local json_log=$(jq -n \\
-        --arg ts "$timestamp" \\
-        --arg lvl "$level" \\
-        --arg msg "$message" \\
-        --arg usr "{{userId}}" \\
-        --argjson data "\${data:-{}}" \\
-        '{timestamp: $ts, level: $lvl, message: $msg, user: $usr, data: $data}')
-    
-    echo "$json_log" >> "$LOG_FILE"
-    
-    # Console output with colors
-    case $level in
-        "SUCCESS") echo -e "\\033[32m[$timestamp] [SUCCESS] $message\\033[0m" ;;
-        "ERROR") echo -e "\\033[31m[$timestamp] [ERROR] $message\\033[0m" ;;
-        "WARNING") echo -e "\\033[33m[$timestamp] [WARNING] $message\\033[0m" ;;
-        *) echo "[$timestamp] [INFO] $message" ;;
-    esac
-}
+echo "🚀 Enterprise Upload Started"
+echo "📁 Source: \$LOCAL_PATH"
+echo "☁️  Destination: s3://\$S3_BUCKET/\$S3_PREFIX"
 
-# Progress tracking with JSON output
-update_progress() {
-    local completed=$1
-    local total=$2
-    local failed=\${3:-0}
-    local current_file=${4:-""}
-    
-    local percentage=0
-    if [ $total -gt 0 ]; then
-        percentage=$(echo "scale=2; $completed * 100 / $total" | bc -l)
-    fi
-    
-    local progress_json=$(jq -n \\
-        --arg completed "$completed" \\
-        --arg total "$total" \\
-        --arg failed "$failed" \\
-        --arg percentage "$percentage" \\
-        --arg current "$current_file" \\
-        --arg timestamp "$(date -u +"%Y-%m-%d %H:%M:%S")" \\
-        '{completed: ($completed | tonumber), total: ($total | tonumber), failed: ($failed | tonumber), percentage: ($percentage | tonumber), currentFile: $current, timestamp: $timestamp}')
-    
-    echo "$progress_json" > "$PROGRESS_FILE"
-}
+# Find video files
+video_files=()
+while IFS= read -r -d '' file; do
+    video_files+=("\$file")
+done < <(find "\$LOCAL_PATH" -type f \\( -iname "*.mp4" -o -iname "*.mkv" -o -iname "*.avi" \\) -print0)
 
-# System information gathering
-gather_system_info() {
-    local os_version=$(sw_vers -productVersion 2>/dev/null || echo "Unknown")
-    local cpu_count=$(sysctl -n hw.ncpu 2>/dev/null || echo "Unknown")
-    local memory_gb=$(echo "scale=2; $(sysctl -n hw.memsize 2>/dev/null || echo 0) / 1024 / 1024 / 1024" | bc -l)
-    
-    local system_info=$(jq -n \\
-        --arg os "$os_version" \\
-        --arg cpu "$cpu_count" \\
-        --arg mem "$memory_gb" \\
-        '{osVersion: $os, cpuCount: ($cpu | tonumber), memoryGB: ($mem | tonumber)}')
-    
-    log_enterprise "INFO" "System Information Gathered" "$system_info"
-}
+echo "📊 Found \${#video_files[@]} video files"
 
-# Enhanced upload function
-upload_enterprise() {
-    local file="$1"
-    local filename=$(basename "$file")
-    local relative_path="${file#$LOCAL_PATH/}"
-    local s3_key="$S3_PREFIX$relative_path"
-    local max_retries=5
-    local retry_count=0
+# Upload function
+upload_video() {
+    local file="\$1"
+    local filename=\$(basename "\$file")
+    local s3_key="\$S3_PREFIX\$filename"
     
-    # Pre-upload validation
-    if [ ! -s "$file" ]; then
-        log_enterprise "WARNING" "Skipping empty file: $filename"
+    echo "⬆️  Uploading: \$filename"
+    
+    if aws s3 cp "\$file" "s3://\$S3_BUCKET/\$s3_key" --no-progress; then
+        echo "✅ Uploaded: \$filename"
+        return 0
+    else
+        echo "❌ Failed: \$filename"
         return 1
     fi
-    
-    # Check if file exists in S3
-    if aws s3 ls "s3://$S3_BUCKET/$s3_key" >/dev/null 2>&1; then
-        log_enterprise "INFO" "File already exists in S3: $filename"
-        return 0
-    fi
-    
-    while [ $retry_count -lt $max_retries ]; do
-        local start_time=$(date +%s)
-        local file_size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null)
-        
-        log_enterprise "INFO" "Starting upload: $filename (Attempt $((retry_count + 1)))" \\
-            "{\\"fileSize\\": $file_size, \\"s3Key\\": \\"$s3_key\\", \\"attempt\\": $((retry_count + 1))}"
-        
-        if aws s3 cp "$file" "s3://$S3_BUCKET/$s3_key" --no-progress; then
-            local end_time=$(date +%s)
-            local duration=$((end_time - start_time))
-            local speed=0
-            
-            if [ $duration -gt 0 ] && [ $file_size -gt 0 ]; then
-                speed=$(echo "scale=2; $file_size / $duration / 1024 / 1024" | bc -l)
-            fi
-            
-            log_enterprise "SUCCESS" "Upload successful: $filename" \\
-                "{\\"duration\\": $duration, \\"speed\\": \\"${speed} MB/s\\", \\"fileSize\\": $file_size}"
-            
-            # Trigger post-upload processing
-            if [ "$AUTO_TRANSCRIPTION" = "true" ]; then
-                trigger_post_processing "$s3_key" "$filename"
-            fi
-            
-            return 0
-        else
-            ((retry_count++))
-            local wait_time=$((2 ** retry_count * 5))
-            if [ $wait_time -gt 300 ]; then
-                wait_time=300  # Max 5 minutes
-            fi
-            
-            log_enterprise "ERROR" "Upload failed (Attempt $retry_count): $filename" \\
-                "{\\"attempt\\": $retry_count, \\"nextRetryIn\\": $wait_time}"
-            
-            if [ $retry_count -lt $max_retries ]; then
-                log_enterprise "INFO" "Waiting $wait_time seconds before retry..."
-                sleep $wait_time
-            fi
-        fi
-    done
-    
-    log_enterprise "ERROR" "Failed to upload after $max_retries attempts: $filename"
-    return 1
 }
 
-# Post-upload processing
-trigger_post_processing() {
-    local s3_key="$1"
-    local filename="$2"
-    
-    log_enterprise "INFO" "Triggering post-upload processing for: $filename"
-    
-    # API call to sync with DynamoDB
-    local api_url="https://skool.shopmultitouch.com/api/videos/sync"
-    local json_payload=$(jq -n \\
-        --arg key "$s3_key" \\
-        --arg name "$filename" \\
-        --arg course "$COURSE_NAME" \\
-        '{s3Key: $key, fileName: $name, courseName: $course}')
-    
-    if curl -s -X POST "$api_url" \\
-        -H "Content-Type: application/json" \\
-        -d "$json_payload" >/dev/null; then
-        log_enterprise "SUCCESS" "Successfully triggered API sync for: $filename"
-    else
-        log_enterprise "WARNING" "API sync failed for: $filename"
-    fi
-}
+# Process uploads
+for file in "\${video_files[@]}"; do
+    upload_video "\$file"
+done
 
-# Main execution
-log_enterprise "INFO" "🚀 Enterprise Upload Process Started" \\
-    "{\\"courseName\\": \\"$COURSE_NAME\\", \\"parallelUploads\\": $PARALLEL_UPLOADS, \\"videoQuality\\": \\"$VIDEO_QUALITY\\", \\"autoTranscription\\": \\"$AUTO_TRANSCRIPTION\\"}"
-
-gather_system_info
-
-# Continue with enhanced upload logic...
-log_enterprise "SUCCESS" "🎉 Enterprise Upload Process Completed"`;
+echo "🎉 Upload completed!"`;
     }
 
     getLinuxScript(config) {

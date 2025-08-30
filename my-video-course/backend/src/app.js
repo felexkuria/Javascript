@@ -72,6 +72,85 @@ app.get('/videos/:courseName/file/:id', (req, res) => {
   webController.streamVideo(req, res);
 });
 
+// Public video API endpoints (NO AUTH REQUIRED)
+app.get('/api/videos/localStorage', async (req, res) => {
+  try {
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    const courses = await dynamoVideoService.getAllCourses();
+    
+    const localStorageFormat = {};
+    courses.forEach(course => {
+      localStorageFormat[course.name] = {
+        videos: course.videos || []
+      };
+    });
+    
+    res.json(localStorageFormat);
+  } catch (error) {
+    console.error('Error getting localStorage format:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/videos/stream-url', async (req, res) => {
+  try {
+    const { videoKey } = req.body;
+    
+    if (!S3Client || !GetObjectCommand) {
+      return res.status(500).json({ success: false, error: 'AWS SDK not available' });
+    }
+    
+    const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+    const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
+    const command = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME || 'video-course-bucket-047ad47c',
+      Key: videoKey
+    });
+    
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    
+    res.json({ success: true, streamUrl: signedUrl });
+  } catch (error) {
+    console.error('Error generating stream URL:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/gamification/load', async (req, res) => {
+  try {
+    const gamificationManager = require('./services/gamificationManager');
+    const userId = req.query.userId || 'default_user';
+    const userData = await gamificationManager.getUserData(userId);
+    res.json({
+      success: true,
+      achievements: userData.achievements || [],
+      userStats: userData.stats || {},
+      streakData: { currentStreak: userData.streak || 0 }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/gamification/sync', async (req, res) => {
+  try {
+    const { achievements, userStats, streakData } = req.body;
+    const userId = req.query.userId || 'default_user';
+
+    const gamificationManager = require('./services/gamificationManager');
+    const updates = {
+      achievements: achievements || [],
+      stats: userStats || {},
+      streak: streakData?.currentStreak || 0
+    };
+
+    await gamificationManager.updateUserData(userId, updates);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Auth Middleware
 const adminAuth = require('./middleware/adminAuth');
 
