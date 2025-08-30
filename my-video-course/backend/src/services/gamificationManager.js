@@ -154,6 +154,34 @@ class GamificationManager {
     return await this.updateUserData(userId, updates);
   }
 
+  async recordCourseCompletion(userId, courseName) {
+    const userData = await this.getUserData(userId);
+    const stats = userData.stats || {};
+    
+    const updates = {
+      stats: {
+        ...stats,
+        coursesCompleted: (stats.coursesCompleted || 0) + 1
+      }
+    };
+
+    // Award achievement for course completion
+    const courseAchievement = {
+      id: `course_completed_${courseName}_${Date.now()}`,
+      title: 'Course Completed!',
+      description: `Completed ${courseName}`,
+      earnedAt: new Date().toISOString(),
+      points: 500
+    };
+    
+    updates.achievements = [...(userData.achievements || []), courseAchievement];
+    
+    // Award bonus points for course completion
+    await this.awardPoints(userId, 500, `completing course: ${courseName}`);
+    
+    return await this.updateUserData(userId, updates);
+  }
+
   async recordQuizCompletion(userId, score, totalQuestions) {
     const userData = await this.getUserData(userId);
     const stats = userData.stats || {};
