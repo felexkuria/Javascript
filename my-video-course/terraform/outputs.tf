@@ -88,12 +88,3 @@ output "dynamodb_table_arns" {
   }
 }
 
-output "subtitle_processing" {
-  description = "Subtitle processing Lambda functions"
-  value = {
-    start_transcribe_arn = aws_lambda_function.start_transcribe.arn
-    postprocess_arn      = aws_lambda_function.postprocess_subtitles.arn
-    start_transcribe_name = aws_lambda_function.start_transcribe.function_name
-    postprocess_name      = aws_lambda_function.postprocess_subtitles.function_name
-  }
-}
