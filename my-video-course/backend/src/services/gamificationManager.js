@@ -19,6 +19,18 @@ class GamificationManager {
   }
 
   async getUserData(userId = 'default_user') {
+    // Use DynamoDB service for production
+    const dynamoService = require('../utils/dynamodb');
+    if (dynamoService.isAvailable()) {
+      try {
+        const userData = await dynamoService.getGamificationData(userId);
+        if (userData) {
+          return userData;
+        }
+      } catch (error) {
+        console.error('DynamoDB gamification read error:', error);
+      }
+    }
     // Try MongoDB first
     if (mongoose.connection.readyState === 1) {
       try {
@@ -63,7 +75,17 @@ class GamificationManager {
     const userData = await this.getUserData(userId);
     const updatedData = { ...userData, ...updates, updatedAt: new Date().toISOString() };
 
-    // Save to MongoDB
+    // Save to DynamoDB first (production)
+    const dynamoService = require('../utils/dynamodb');
+    if (dynamoService.isAvailable()) {
+      try {
+        await dynamoService.saveGamificationData(userId, updatedData);
+      } catch (error) {
+        console.error('DynamoDB gamification save error:', error);
+      }
+    }
+
+    // Save to MongoDB as backup
     if (mongoose.connection.readyState === 1) {
       try {
         const collection = mongoose.connection.collection('gamification');
@@ -77,7 +99,7 @@ class GamificationManager {
       }
     }
 
-    // Save to local file
+    // Save to local file as fallback
     try {
       const allData = JSON.parse(fs.readFileSync(this.gamificationFile, 'utf8'));
       allData[userId] = updatedData;
