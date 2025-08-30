@@ -484,26 +484,33 @@ class GamificationSystem {
 
   // Show achievement notification
   showAchievementNotification(achievement) {
-    const notification = document.getElementById('achievement-notification');
-    notification.innerHTML = `
-      <div class="achievement-content">
-        <div class="achievement-icon">${achievement.icon}</div>
-        <div class="achievement-text">
-          <div class="achievement-title">Achievement Unlocked!</div>
-          <div class="achievement-name">${achievement.name}</div>
-          <div class="achievement-points">+${achievement.points} points</div>
-        </div>
-      </div>
-    `;
+    // Use existing achievement popup
+    const popup = document.getElementById('achievement-popup');
+    const icon = document.getElementById('achievement-icon');
+    const title = document.getElementById('achievement-title');
+    const name = document.getElementById('achievement-name');
+    const points = document.getElementById('achievement-points');
     
-    notification.classList.add('show');
-    
-    // Play achievement sound (if available)
-    this.playAchievementSound();
-    
-    setTimeout(() => {
-      notification.classList.remove('show');
-    }, 4000);
+    if (popup && icon && title && name && points) {
+      icon.textContent = achievement.icon;
+      title.textContent = 'Achievement Unlocked!';
+      name.textContent = achievement.name;
+      points.textContent = `+${achievement.points} points`;
+      
+      popup.classList.add('show');
+      
+      // Play achievement sound
+      this.playAchievementSound();
+      
+      // Trigger confetti for major achievements
+      if (achievement.points >= 100) {
+        this.triggerConfetti();
+      }
+      
+      setTimeout(() => {
+        popup.classList.remove('show');
+      }, 4000);
+    }
   }
 
   // Update learning streak
@@ -549,13 +556,11 @@ class GamificationSystem {
     this.checkAchievement('speed_demon');
     this.checkTimeBasedAchievements();
     
-    // Check if chapter is completed
-    if (videoData.isLastInChapter) {
-      this.checkAchievement('chapter_master', { chapterCompleted: true });
-    }
+    // Always check for chapter master achievement when video is completed
+    this.checkAchievement('chapter_master', { chapterCompleted: true });
     
     // Check if course is completed
-    if (videoData.isLastVideo) {
+    if (videoData.isLastVideo || videoData.courseCompleted) {
       this.userStats.coursesCompleted++;
       this.checkAchievement('course_conqueror', { courseCompleted: true });
     }
