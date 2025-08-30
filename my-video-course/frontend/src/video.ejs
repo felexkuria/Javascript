@@ -827,6 +827,44 @@
                 console.log('Todo toggled:', todoId, completed);
             };
             
+            // Initialize secure video loading with Identity Pool
+            async function initSecureVideo() {
+                const videoPlayer = document.getElementById('videoPlayer');
+                if (!videoPlayer) return;
+                
+                const videoKey = '<%= video ? video.s3Key || video.videoUrl : "" %>';
+                if (!videoKey) return;
+                
+                try {
+                    console.log('🎬 Loading video with Identity Pool:', videoKey);
+                    
+                    // Initialize AWS Identity Pool
+                    const initialized = await window.awsIdentityPool.initialize();
+                    if (!initialized) {
+                        console.error('❌ Failed to initialize Identity Pool');
+                        return;
+                    }
+                    
+                    // Generate signed URL
+                    const signedUrl = await window.awsIdentityPool.generateSignedUrl(videoKey);
+                    
+                    // Set video source
+                    videoPlayer.src = signedUrl;
+                    
+                    console.log('✅ Video loaded with Identity Pool');
+                    
+                } catch (error) {
+                    console.error('❌ Identity Pool video loading failed:', error);
+                    
+                    // Fallback to backend-generated URL
+                    console.log('🔄 Falling back to backend URL generation');
+                    videoPlayer.src = '<%= video ? video.videoUrl : "" %>';
+                }
+            }
+            
+            // Initialize secure video loading
+            initSecureVideo();
+            
             // Update count and load todos on page load
             updateVideoCount();
             loadCachedTodos();
