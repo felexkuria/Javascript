@@ -45,15 +45,15 @@ class GamificationManager {
     // Fallback to local file
     try {
       const data = JSON.parse(fs.readFileSync(this.gamificationFile, 'utf8'));
-      return data[userId] || this.getDefaultUserData();
+      return data[userId] || this.getDefaultUserData(userId);
     } catch (error) {
       return this.getDefaultUserData();
     }
   }
 
-  getDefaultUserData() {
+  getDefaultUserData(userId = 'default_user') {
     return {
-      userId: 'default_user',
+      userId: userId,
       level: 1,
       totalPoints: 0,
       streak: 0,
