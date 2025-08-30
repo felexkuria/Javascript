@@ -694,4 +694,16 @@ class GamificationSystem {
 // Initialize gamification system when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   window.gamificationSystem = new GamificationSystem();
+  
+  // Add updateStats method for compatibility
+  window.gamificationSystem.updateStats = function(newStats) {
+    if (newStats.totalPoints !== undefined) {
+      this.userStats.totalPoints = newStats.totalPoints;
+    }
+    if (newStats.level !== undefined) {
+      this.userStats.currentLevel = newStats.level;
+    }
+    this.updateProgressDisplay();
+    this.saveUserStats();
+  };
 });

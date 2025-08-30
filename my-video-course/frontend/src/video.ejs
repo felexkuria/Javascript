@@ -206,7 +206,7 @@
             }
         }
     </style>
-    <script src="/js/aws-identity-pool-v3.js"></script>
+
     <script src="/js/video-quiz-functions.js"></script>
 </head>
 <body>
@@ -832,7 +832,17 @@
                 const videoPlayer = document.getElementById('videoPlayer');
                 if (!videoPlayer) return;
                 
-                const videoKey = '<%= video ? video.s3Key || "videos/dev-ops-bootcamp_202201/lesson2.mp4" : "" %>';
+                let videoKey = '<%= video ? video.s3Key || "" : "" %>';
+                if (!videoKey) {
+                    const videoUrl = '<%= video ? video.videoUrl : "" %>';
+                    if (videoUrl.includes('s3.')) {
+                        const urlParts = videoUrl.split('/');
+                        videoKey = urlParts.slice(3).join('/');
+                    }
+                }
+                if (videoKey && videoKey.startsWith('videos/videos/')) {
+                    videoKey = videoKey.replace('videos/videos/', 'videos/');
+                }
                 if (!videoKey) return;
                 
                 try {
