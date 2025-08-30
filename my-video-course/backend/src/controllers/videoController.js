@@ -157,13 +157,13 @@ exports.markWatched = async (req, res) => {
     
     // Check if course is completed
     const allVideos = await dynamoVideoService.getVideosForCourse(courseName, userId);
-    const watchedCount = allVideos.filter(v => v.watched).length;
+    const watchedCount = allVideos.filter(v => v.watched).length + 1; // +1 for current video
     const totalCount = allVideos.length;
     
     let courseCompleted = false;
-    if (watchedCount === totalCount) {
+    if (watchedCount >= totalCount && totalCount > 0) {
       courseCompleted = true;
-      await gamificationManager.awardPoints(userId, 500, `completing course: ${courseName}`);
+      await gamificationManager.recordCourseCompletion(userId, courseName);
     }
     
     res.json({ 

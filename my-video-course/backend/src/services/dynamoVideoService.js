@@ -137,7 +137,10 @@ class DynamoVideoService {
     // Always use DynamoDB for user-specific data
     if (this.isDynamoAvailable()) {
       try {
-        // Update user's gamification data with watch status
+        // Update the actual video watch status in DynamoDB
+        const success = await dynamodb.updateVideoWatchStatus(courseName, videoId, watched, userId);
+        
+        // Also update user's gamification data with watch status
         const userGamification = await this.getUserGamificationData(userId) || {
           userStats: { videosWatched: {}, totalPoints: 0, currentLevel: 1 }
         };
@@ -150,11 +153,9 @@ class DynamoVideoService {
         }
         
         userGamification.userStats.videosWatched[videoId] = watched;
+        await this.updateUserGamificationData(userId, userGamification);
         
-        const success = await this.updateUserGamificationData(userId, userGamification);
-        if (success) {
-          return true;
-        }
+        return success;
       } catch (error) {
         console.error('DynamoDB error, falling back to localStorage:', error);
       }
