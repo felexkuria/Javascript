@@ -169,6 +169,7 @@ app.put('/api/videos/:courseName/:videoId', teacherOrAdminAuth, async (req, res)
 // Admin API Routes
 app.use('/api/admin-auth', require('./routes/api/admin-auth'));
 app.use('/api/admin', cognitoAuth, require('./routes/api/admin'));
+app.use('/api/enterprise-upload', require('./routes/api/enterprise-upload'));
 
 // Protected API Routes
 app.use('/api/videos', cognitoAuth, require('./routes/api/videos'));
@@ -179,6 +180,8 @@ app.use('/api/captions', require('./routes/api/captions'));
 const gamificationRouter = require('./routes/api/gamification');
 app.get('/api/gamification/stats', gamificationRouter);
 app.use('/api/gamification', cognitoAuth, gamificationRouter);
+app.use('/api/gamification', cognitoAuth, require('./routes/api/gamification-missing'));
+app.use('/api/videos', cognitoAuth, require('./routes/api/videos-missing'));
 
 app.use('/api/quizzes', cognitoAuth, require('./routes/api/quizzes'));
 app.use('/api/ai', cognitoAuth, require('./routes/api/ai'));
