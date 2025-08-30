@@ -35,6 +35,16 @@ router.get('/vtt/:courseName/:videoId', async (req, res) => {
       `captions/${courseName}/${videoId}.vtt`
     ];
     
+    // For lesson1, try the known timestamp version
+    if (videoFilename === 'lesson1') {
+      possibleKeys.push(`videos/${courseName}/lesson1__1756579046.vtt`);
+    }
+    
+    // Try common timestamp patterns
+    possibleKeys.push(`videos/${courseName}/${videoFilename}__1756579046.vtt`);
+    possibleKeys.push(`videos/${courseName}/${videoFilename}__1756575209.vtt`);
+    possibleKeys.push(`videos/${courseName}/${videoFilename}__1756585495.vtt`);
+    
     // Try to find existing VTT file
     for (const vttKey of possibleKeys) {
       try {
