@@ -9,3 +9,72 @@
         </div>
     </div>
 </div>
+
+<style>
+.achievement-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #30d158, #007aff);
+    color: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transform: translateX(400px);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 10000;
+    min-width: 300px;
+    backdrop-filter: blur(20px);
+}
+
+.achievement-popup.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.achievement-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.achievement-icon {
+    font-size: 48px;
+    animation: bounce 0.6s ease-in-out;
+}
+
+.achievement-text {
+    flex: 1;
+}
+
+.achievement-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    opacity: 0.9;
+}
+
+.achievement-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.achievement-points {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+@keyframes bounce {
+    0%, 20%, 60%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    80% { transform: translateY(-5px); }
+}
+
+.dark .achievement-popup {
+    background: linear-gradient(135deg, #1d1d1f, #2c2c2e);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+</style>
