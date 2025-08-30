@@ -476,9 +476,15 @@
                     
                     <% 
                         const videos = course.videos || [];
-                        const totalVideos = videos.length;
+                        // Sort videos by number in title (critical for proper ordering)
+                        const sortedVideos = videos.length > 0 ? [...videos].sort((a, b) => {
+                            const aNum = parseInt((a.title || '').match(/\d+/)) || 0;
+                            const bNum = parseInt((b.title || '').match(/\d+/)) || 0;
+                            return aNum - bNum;
+                        }) : [];
+                        const totalVideos = sortedVideos.length;
                         // Use user-specific watch status from DynamoDB
-                        const watchedVideos = videos.filter(v => {
+                        const watchedVideos = sortedVideos.filter(v => {
                             if (!v || !v._id) return false;
                             // Check if video is watched for this specific user
                             return v.watched === true;
