@@ -336,14 +336,14 @@ app.post('/api/mark-watched', cognitoAuth, async (req, res) => {
   }
 });
 
-app.get('/api/next-video', cognitoAuth, async (req, res) => {
+app.get('/api/next-video', async (req, res) => {
   try {
     const { currentVideoId, courseName, direction } = req.query;
-    const userId = req.user?.email || 'guest';
+    const userId = req.user?.email || req.session?.user?.email || 'guest';
     const dynamoVideoService = require('./services/dynamoVideoService');
     const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
     
-    const currentIndex = videos.findIndex(v => v._id.toString() === currentVideoId);
+    const currentIndex = videos.findIndex(v => v._id && v._id.toString() === currentVideoId);
     let targetVideo = null;
     
     if (direction === 'prev' && currentIndex > 0) {

@@ -26,6 +26,8 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.879.0",
+    "@aws-sdk/lib-dynamodb": "^3.879.0",
     "form-data": "^4.0.4",
     "node-fetch": "^3.3.2"
   }

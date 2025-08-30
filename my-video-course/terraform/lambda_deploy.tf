@@ -43,6 +43,16 @@ resource "aws_iam_role_policy" "lambda_policy" {
       {
         Effect = "Allow"
         Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem"
+        ]
+        Resource = "arn:aws:dynamodb:*:*:table/video-course-app-*"
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
           "s3:GetObject",
           "s3:PutObject",
           "s3:CopyObject"
@@ -83,6 +93,24 @@ resource "aws_lambda_function" "postprocess_subtitles" {
   source_code_hash = data.archive_file.postprocess_zip.output_base64sha256
 }
 
+# Lambda function to add video to DynamoDB
+resource "aws_lambda_function" "add_video_to_db" {
+  filename         = data.archive_file.add_video_to_db_zip.output_path
+  function_name    = "video-course-add-video-to-db"
+  role            = aws_iam_role.lambda_role.arn
+  handler         = "add_video_to_db.lambda_handler"
+  runtime         = "python3.9"
+  timeout         = 30
+  
+  source_code_hash = data.archive_file.add_video_to_db_zip.output_base64sha256
+  
+  environment {
+    variables = {
+      NODE_ENV = var.environment
+    }
+  }
+}
+
 # Lambda permissions for S3
 resource "aws_lambda_permission" "s3_invoke_start_transcribe" {
   statement_id  = "AllowExecutionFromS3Bucket"
@@ -100,6 +128,14 @@ resource "aws_lambda_permission" "s3_invoke_postprocess" {
   source_arn    = "arn:aws:s3:::video-course-bucket-047ad47c"
 }
 
+resource "aws_lambda_permission" "s3_invoke_add_video" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.add_video_to_db.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = "arn:aws:s3:::video-course-bucket-047ad47c"
+}
+
 # S3 bucket notification for video uploads
 resource "aws_s3_bucket_notification" "video_upload" {
   bucket = "video-course-bucket-047ad47c"
@@ -109,5 +145,26 @@ resource "aws_s3_bucket_notification" "video_upload" {
     events             = ["s3:ObjectCreated:*"]
     filter_prefix      = "videos/dev-ops-bootcamp_202201/"
     filter_suffix      = ".mp4"
+  }
+  
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.add_video_to_db.arn
+    events             = ["s3:ObjectCreated:*"]
+    filter_prefix      = "videos/"
+    filter_suffix      = ".mov"
+  }
+  
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.add_video_to_db.arn
+    events             = ["s3:ObjectCreated:*"]
+    filter_prefix      = "videos/"
+    filter_suffix      = ".avi"
+  }
+  
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.add_video_to_db.arn
+    events             = ["s3:ObjectCreated:*"]
+    filter_prefix      = "videos/"
+    filter_suffix      = ".webm"
   }
 }

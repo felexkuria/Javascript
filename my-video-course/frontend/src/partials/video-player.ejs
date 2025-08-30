@@ -17,7 +17,7 @@
             <track label="English" kind="subtitles" srclang="en" src="/captions/<%= courseName %>/<%= video._id %>" default />
             <% } %>
             <track id="autoCaption" label="Auto-Generated" kind="subtitles" srclang="en" 
-                   src="/api/captions/vtt/<%= encodeURIComponent(courseName) %>/<%= encodeURIComponent(video.title) %>" default />
+                   src="/api/captions/vtt/<%= encodeURIComponent(courseName) %>/<%= video._id %>" default />
         </video>
         <% } %>
         
