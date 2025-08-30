@@ -86,7 +86,7 @@ class DynamoVideoService {
       ...course,
       videos: course.videos.map(video => ({
         ...video,
-        watched: watchedVideos[video._id] || video.watched || false
+        watched: watchedVideos[video._id] === true || watchedVideos[video._id?.toString()] === true || false
       }))
     }));
   }

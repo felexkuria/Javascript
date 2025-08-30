@@ -476,13 +476,13 @@
                     
                     <% 
                         const videos = course.videos || [];
-                        const sortedVideos = videos.length > 0 ? [...videos].sort((a, b) => {
-                            const aNum = parseInt((a.title || '').match(/\\d+/)) || 0;
-                            const bNum = parseInt((b.title || '').match(/\\d+/)) || 0;
-                            return aNum - bNum;
-                        }) : [];
-                        const totalVideos = sortedVideos.length;
-                        const watchedVideos = sortedVideos.filter(v => v && v.watched).length;
+                        const totalVideos = videos.length;
+                        // Use user-specific watch status from DynamoDB
+                        const watchedVideos = videos.filter(v => {
+                            if (!v || !v._id) return false;
+                            // Check if video is watched for this specific user
+                            return v.watched === true;
+                        }).length;
                         const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
                     %>
                     
