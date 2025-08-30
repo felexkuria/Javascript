@@ -89,7 +89,7 @@ class AWSIdentityPool {
             }
         };
 
-        const result = await this.cognitoIdentity.getId(params).promise();
+        const result = await this.cognitoIdentity.getId(params);
         return result.IdentityId;
     }
 
@@ -101,7 +101,7 @@ class AWSIdentityPool {
             }
         };
 
-        const result = await this.cognitoIdentity.getCredentialsForIdentity(params).promise();
+        const result = await this.cognitoIdentity.getCredentialsForIdentity(params);
         
         return new AWS.Credentials({
             accessKeyId: result.Credentials.AccessKeyId,
