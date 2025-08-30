@@ -83,13 +83,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Extract base course name (remove timestamp suffix)
+    const baseCourse = courseName.split('_')[0];
+    
     if (prevButton) {
         prevButton.addEventListener('click', async () => {
             try {
-                const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${encodeURIComponent(courseName)}&direction=prev`);
+                const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${baseCourse}&direction=prev`);
                 if (response.ok) {
                     const prevVideo = await response.json();
-                    window.location.href = `/videos/${encodeURIComponent(courseName)}/${prevVideo._id}`;
+                    window.location.href = `/videos/${baseCourse}/${prevVideo._id}`;
+                } else {
+                    console.error('Previous video not found');
                 }
             } catch (error) {
                 console.error('Error getting previous video:', error);
@@ -100,10 +105,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (nextButton) {
         nextButton.addEventListener('click', async () => {
             try {
-                const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${encodeURIComponent(courseName)}&direction=next`);
+                const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${baseCourse}&direction=next`);
                 if (response.ok) {
                     const nextVideo = await response.json();
-                    window.location.href = `/videos/${encodeURIComponent(courseName)}/${nextVideo._id}?autoplay=true`;
+                    window.location.href = `/videos/${baseCourse}/${nextVideo._id}?autoplay=true`;
+                } else {
+                    console.error('Next video not found');
                 }
             } catch (error) {
                 console.error('Error getting next video:', error);

@@ -113,16 +113,24 @@
         
         // Check for existing login on page load
         function checkExistingLogin() {
-            const accessToken = localStorage.getItem('accessToken');
-            const user = localStorage.getItem('user');
-            
-            if (accessToken && user) {
-                console.log('Found existing login, redirecting...');
-                window.location.href = '/dashboard';
+            // Prevent infinite loops
+            if (window.location.pathname === '/login' && !sessionStorage.getItem('loginCheck')) {
+                sessionStorage.setItem('loginCheck', 'true');
+                
+                const accessToken = localStorage.getItem('accessToken');
+                const user = localStorage.getItem('user');
+                
+                if (accessToken && user) {
+                    console.log('Found existing login, redirecting...');
+                    window.location.href = '/dashboard';
+                }
             }
         }
         
-        checkExistingLogin();
+        // Only check on login page
+        if (window.location.pathname === '/login') {
+            checkExistingLogin();
+        }
         
         let selectedRole = 'student';
         
