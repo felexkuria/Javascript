@@ -134,13 +134,46 @@ exports.getVideo = async (req, res) => {
 exports.markWatched = async (req, res) => {
   try {
     const { courseName, videoId } = req.params;
-    const userId = req.user?.email || 'guest';
-    const success = await dynamoVideoService.updateVideoWatchStatus(courseName, videoId, true, userId);
-    if (!success) {
+    const userId = req.user?.email || req.session?.user?.email || 'guest';
+    
+    // Get video details first
+    const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
+    const video = videos.find(v => v._id.toString() === videoId);
+    
+    if (!video) {
       return res.status(404).json({ success: false, error: 'Video not found' });
     }
-    res.json({ success: true, message: 'Video marked as watched' });
+    
+    // Update watch status
+    const success = await dynamoVideoService.updateVideoWatchStatus(courseName, videoId, true, userId);
+    if (!success) {
+      return res.status(404).json({ success: false, error: 'Failed to update watch status' });
+    }
+    
+    // Award gamification points
+    const gamificationManager = require('../services/gamificationManager');
+    await gamificationManager.recordVideoWatch(userId, courseName, video.title);
+    await gamificationManager.updateStreak(userId);
+    
+    // Check if course is completed
+    const allVideos = await dynamoVideoService.getVideosForCourse(courseName, userId);
+    const watchedCount = allVideos.filter(v => v.watched).length;
+    const totalCount = allVideos.length;
+    
+    let courseCompleted = false;
+    if (watchedCount === totalCount) {
+      courseCompleted = true;
+      await gamificationManager.awardPoints(userId, 500, `completing course: ${courseName}`);
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Video marked as watched',
+      courseCompleted,
+      progress: { watched: watchedCount, total: totalCount }
+    });
   } catch (err) {
+    console.error('Error marking video as watched:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 };

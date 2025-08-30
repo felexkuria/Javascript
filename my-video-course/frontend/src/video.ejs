@@ -392,10 +392,9 @@
             }
 
             function markVideoAsWatched() {
-                fetch('/api/mark-watched', {
+                fetch(`/api/videos/${encodeURIComponent(courseName)}/${videoId}/watch`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ videoId, courseName })
+                    headers: { 'Content-Type': 'application/json' }
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -464,6 +463,26 @@
                 });
             }
 
+            // Award points for keyboard shortcuts
+            async function awardKeyboardPoints(action) {
+                try {
+                    const response = await fetch('/api/gamification/keyboard-shortcut', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action })
+                    });
+                    const data = await response.json();
+                    if (data.success && window.gamificationSystem) {
+                        window.gamificationSystem.updateStats({
+                            totalPoints: data.points,
+                            level: data.level
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error awarding keyboard points:', error);
+                }
+            }
+
             // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
                 if (!videoPlayer || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
@@ -480,6 +499,7 @@
                             videoPlayer.requestFullscreen();
                             showKeyHint('Fullscreen');
                         }
+                        awardKeyboardPoints('fullscreen');
                         break;
                     case 'j':
                         e.preventDefault();
@@ -487,6 +507,7 @@
                             videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
                             showKeyHint('⏪ -10s');
                         }
+                        awardKeyboardPoints('seek_backward');
                         break;
                     case 'k':
                     case ' ':
@@ -498,6 +519,7 @@
                             videoPlayer.pause();
                             showKeyHint('⏸️ Pause');
                         }
+                        awardKeyboardPoints('play_pause');
                         break;
                     case 'l':
                         e.preventDefault();
@@ -505,6 +527,7 @@
                             videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 10);
                             showKeyHint('⏩ +10s');
                         }
+                        awardKeyboardPoints('seek_forward');
                         break;
                 }
             });
