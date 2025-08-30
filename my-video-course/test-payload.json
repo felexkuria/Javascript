@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "video-course-bucket-047ad47c"
+        },
+        "object": {
+          "key": "videos/dev-ops-bootcamp_202201/test-transcribe.mp4"
+        }
+      }
+    }
+  ]
+}

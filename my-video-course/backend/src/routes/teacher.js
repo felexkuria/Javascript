@@ -13,4 +13,8 @@ router.get('/dashboard', sessionAuth, teacherAuth, (req, res) => {
   res.render('teacher-dashboard', { user: req.user });
 });
 
+router.get('/upload-center', sessionAuth, teacherAuth, (req, res) => {
+  res.render('teacher-upload-center', { user: req.user });
+});
+
 module.exports = router;

@@ -31,23 +31,23 @@ data "aws_iam_role" "existing_ec2_role" {
 # Existing Load Balancer (if exists)
 data "aws_lb" "existing" {
   count = var.create_alb ? 0 : 1
-  name  = var.existing_alb_name
+  arn   = "arn:aws:elasticloadbalancing:us-east-1:767397885043:loadbalancer/app/video-course-app-alb/df6da37405dfe86b"
 }
 
 # Existing Auto Scaling Group (if exists)
 data "aws_autoscaling_group" "existing" {
   count = var.create_asg ? 0 : 1
-  name  = var.existing_asg_name
+  name  = "video-course-app-asg"
 }
 
 # Existing Security Groups (if they exist)
 data "aws_security_group" "existing_alb_sg" {
   count = var.create_security_groups ? 0 : 1
-  name  = var.existing_alb_sg_name
+  id    = "sg-0b49a8604369c68a9"
 }
 
 data "aws_security_group" "existing_ec2_sg" {
   count = var.create_security_groups ? 0 : 1
-  name  = var.existing_ec2_sg_name
+  id    = "sg-0459a70ee2fda5644"
 }
 

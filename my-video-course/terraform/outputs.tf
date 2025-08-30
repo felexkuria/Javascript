@@ -63,6 +63,11 @@ output "cognito_user_pool_client_id" {
   value       = local.cognito_client_id
 }
 
+output "cognito_identity_pool_id" {
+  description = "Cognito Identity Pool ID"
+  value       = aws_cognito_identity_pool.main.id
+}
+
 
 
 output "target_group_arn" {
