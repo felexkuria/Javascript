@@ -21,7 +21,10 @@ const dynamoVideoService = require('../services/dynamoVideoService');
 
 exports.getVideos = async (req, res) => {
   try {
-    const userId = req.user?.email || 'guest';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const courses = await dynamoVideoService.getAllCourses(userId);
     const allVideos = courses.flatMap(course => course.videos);
     const totalVideos = allVideos.length;
@@ -35,7 +38,10 @@ exports.getVideos = async (req, res) => {
 
 exports.getAllVideos = async (req, res) => {
   try {
-    const userId = req.user?.email || 'guest';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const courses = await dynamoVideoService.getAllCourses(userId);
     const videos = courses.flatMap(course => course.videos);
     
@@ -47,7 +53,10 @@ exports.getAllVideos = async (req, res) => {
 
 exports.getVideoById = async (req, res) => {
   try {
-    const userId = req.user?.email || 'guest';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const courses = await dynamoVideoService.getAllCourses(userId);
     const allVideos = courses.flatMap(course => course.videos);
     const video = allVideos.find(v => v._id.toString() === req.params.id);
@@ -79,7 +88,10 @@ exports.getVideoById = async (req, res) => {
 exports.markVideoAsWatched = async (req, res) => {
   try {
     const videoId = req.params.id;
-    const userId = req.user?.email || 'guest';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const courses = await dynamoVideoService.getAllCourses(userId);
     const allVideos = courses.flatMap(course => course.videos);
     const video = allVideos.find(v => v._id.toString() === videoId);
@@ -108,7 +120,10 @@ exports.markVideoAsWatched = async (req, res) => {
 exports.getVideosByCourse = async (req, res) => {
   try {
     const { courseName } = req.params;
-    const userId = req.user?.email || 'guest';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
     res.json({ success: true, data: videos });
   } catch (err) {
@@ -119,7 +134,10 @@ exports.getVideosByCourse = async (req, res) => {
 exports.getVideo = async (req, res) => {
   try {
     const { courseName, videoId } = req.params;
-    const userId = req.user?.email || 'guest';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
     const video = videos.find(v => v._id.toString() === videoId);
     if (!video) {
@@ -200,7 +218,10 @@ exports.addVideo = async (req, res) => {
 exports.getVideoCount = async (req, res) => {
   try {
     const { courseName } = req.params;
-    const userId = req.user?.email || 'guest';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const count = await dynamoVideoService.getVideoCount(courseName, userId);
     res.json({ success: true, data: count });
   } catch (err) {

@@ -28,74 +28,64 @@ router.get('/vtt/:courseName/:videoId', async (req, res) => {
       videoFilename = video.videoUrl.split('/').pop().replace('.mp4', '');
     }
     
-    // Try multiple caption file naming patterns
+    // Try multiple caption file naming patterns in S3
     const possibleKeys = [
+      `videos/${videoFilename}.vtt`,
+      `videos/${videoFilename}.srt`,
       `videos/${courseName}/${videoFilename}.vtt`,
+      `videos/${courseName}/${videoFilename}.srt`,
+      `captions/${videoFilename}.vtt`,
+      `captions/${videoFilename}.srt`,
       `captions/${courseName}/${videoFilename}.vtt`,
-      `captions/${courseName}/${videoId}.vtt`
+      `captions/${courseName}/${videoFilename}.srt`,
+      `captions/${courseName}/${videoId}.vtt`,
+      `captions/${courseName}/${videoId}.srt`
     ];
     
-    // For lesson1, try the known timestamp version
-    if (videoFilename === 'lesson1') {
-      possibleKeys.push(`videos/${courseName}/lesson1__1756579046.vtt`);
+    // Add timestamp patterns for dev-ops-bootcamp
+    if (courseName.includes('dev-ops-bootcamp')) {
+      const timestamps = ['1756578844', '1756579046', '1756575209', '1756585495'];
+      timestamps.forEach(ts => {
+        possibleKeys.push(`videos/${videoFilename}__${ts}.vtt`);
+        possibleKeys.push(`videos/${videoFilename}__${ts}.srt`);
+        possibleKeys.push(`videos/${courseName}/${videoFilename}__${ts}.vtt`);
+        possibleKeys.push(`videos/${courseName}/${videoFilename}__${ts}.srt`);
+      });
     }
     
-    // Try common timestamp patterns
-    possibleKeys.push(`videos/${courseName}/${videoFilename}__1756579046.vtt`);
-    possibleKeys.push(`videos/${courseName}/${videoFilename}__1756575209.vtt`);
-    possibleKeys.push(`videos/${courseName}/${videoFilename}__1756585495.vtt`);
+    // Check DynamoDB cache first
+    const cachedCaption = await dynamoVideoService.getCachedCaption(courseName, videoId);
+    if (cachedCaption) {
+      res.setHeader('Content-Type', 'text/vtt');
+      return res.send(cachedCaption);
+    }
     
-    // Try to find existing VTT file
-    for (const vttKey of possibleKeys) {
+    // Try to find caption files in S3
+    for (const captionKey of possibleKeys) {
       try {
-        const vttUrl = await getSignedUrl(s3Client, new GetObjectCommand({
+        const response = await s3Client.send(new GetObjectCommand({
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: vttKey
-        }), { expiresIn: 3600 });
+          Key: captionKey
+        }));
         
-        return res.redirect(vttUrl);
+        const content = await response.Body.transformToString();
+        let vttContent = content;
+        
+        if (captionKey.endsWith('.srt')) {
+          vttContent = srtToVtt(content);
+        }
+        
+        // Cache in DynamoDB for faster future loading
+        await dynamoVideoService.cacheCaption(courseName, videoId, vttContent);
+        
+        res.setHeader('Content-Type', 'text/vtt');
+        return res.send(vttContent);
       } catch (error) {
         continue; // Try next key
       }
     }
     
-    // No VTT found, try SRT files
-    const possibleSrtKeys = [
-      `videos/${courseName}/${videoFilename}.srt`,
-      `captions/${courseName}/${videoFilename}.srt`,
-      `captions/${courseName}/${videoId}.srt`
-    ];
-    
-    for (const srtKey of possibleSrtKeys) {
-      try {
-        const srtResponse = await s3Client.send(new GetObjectCommand({
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: srtKey
-        }));
-        
-        const srtContent = await srtResponse.Body.transformToString();
-        const vttContent = srtToVtt(srtContent);
-        
-        // Save VTT to S3 using video ID
-        const newVttKey = `captions/${courseName}/${videoId}.vtt`;
-        await s3Client.send(new PutObjectCommand({
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: newVttKey,
-          Body: vttContent,
-          ContentType: 'text/vtt'
-        }));
-        
-        res.setHeader('Content-Type', 'text/vtt');
-        return res.send(vttContent);
-      } catch (srtError) {
-        continue; // Try next SRT key
-      }
-    }
-    
-    // No captions found, trigger generation
-    triggerCaptionGeneration(courseName, video.title, videoId);
-    
-    // Return empty VTT for now
+    // No captions found in S3, return empty VTT
     res.setHeader('Content-Type', 'text/vtt');
     res.send('WEBVTT\n\n');
     
@@ -105,33 +95,6 @@ router.get('/vtt/:courseName/:videoId', async (req, res) => {
   }
 });
 
-async function triggerCaptionGeneration(courseName, videoTitle, videoId) {
-  const videos = await dynamoVideoService.getVideosForCourse(courseName);
-  const video = videos.find(v => v._id && v._id.toString() === videoId);
-  
-  if (video && video.videoUrl) {
-    console.log(`Triggering caption generation for: ${video.videoUrl}`);
-    
-    // Send request to EC2 instance
-    try {
-      const response = await fetch('http://localhost:8081/generate-captions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          videoUrl: video.videoUrl,
-          courseName,
-          videoTitle,
-          s3Bucket: process.env.S3_BUCKET_NAME
-        })
-      });
-      
-      if (response.ok) {
-        console.log('Caption generation triggered successfully');
-      }
-    } catch (error) {
-      console.error('Failed to trigger caption generation:', error);
-    }
-  }
-}
+
 
 module.exports = router;

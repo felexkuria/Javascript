@@ -18,10 +18,33 @@
         <% } %>
         
         <!-- Interactive overlay -->
-        <div class="video-overlay" id="videoOverlay">
+        <div class="video-overlay" id="videoOverlay" style="display: none;">
             <div class="play-button" id="playButton">
                 <span>▶</span>
             </div>
         </div>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoPlayer = document.getElementById('videoPlayer');
+            const overlay = document.getElementById('videoOverlay');
+            const playButton = document.getElementById('playButton');
+            
+            if (videoPlayer && overlay && playButton) {
+                playButton.addEventListener('click', function() {
+                    videoPlayer.play();
+                    overlay.style.display = 'none';
+                });
+                
+                videoPlayer.addEventListener('play', function() {
+                    overlay.style.display = 'none';
+                });
+                
+                videoPlayer.addEventListener('pause', function() {
+                    overlay.style.display = 'flex';
+                });
+            }
+        });
+        </script>
     </div>
 </div>

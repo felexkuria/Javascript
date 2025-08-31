@@ -1,4 +1,4 @@
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, UpdateItemCommand } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, ScanCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
 
 class DynamoDBService {
@@ -87,6 +87,20 @@ class DynamoDBService {
         ],
         AttributeDefinitions: [
           { AttributeName: 'courseName', AttributeType: 'S' }
+        ],
+        BillingMode: 'PAY_PER_REQUEST'
+      });
+
+      // Create Captions table
+      await this.createTable({
+        TableName: `video-course-app-captions-${environment}`,
+        KeySchema: [
+          { AttributeName: 'courseName', KeyType: 'HASH' },
+          { AttributeName: 'videoId', KeyType: 'RANGE' }
+        ],
+        AttributeDefinitions: [
+          { AttributeName: 'courseName', AttributeType: 'S' },
+          { AttributeName: 'videoId', AttributeType: 'S' }
         ],
         BillingMode: 'PAY_PER_REQUEST'
       });
@@ -303,11 +317,22 @@ class DynamoDBService {
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
     try {
+      // Sanitize data to convert ObjectIds to strings
+      const sanitizedData = JSON.parse(JSON.stringify(data, (key, value) => {
+        if (value && typeof value === 'object' && value.constructor && value.constructor.name === 'ObjectId') {
+          return value.toString();
+        }
+        if (value instanceof Date) {
+          return value.toISOString();
+        }
+        return value;
+      }));
+
       const params = {
         TableName: `video-course-app-gamification-${environment}`,
         Item: {
           userId: userId,
-          ...data,
+          ...sanitizedData,
           updatedAt: new Date().toISOString()
         }
       };
@@ -477,34 +502,31 @@ class DynamoDBService {
 
   // Update video properties
   async updateVideo(courseName, videoId, videoData) {
+    if (!this.isConnected) return false;
+
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+
     try {
       const updateParams = {
-        TableName: this.videosTable,
+        TableName: `video-course-app-videos-${environment}`,
         Key: {
           courseName: courseName,
           videoId: videoId
         },
-        UpdateExpression: 'SET #title = :title, #chapter = :chapter, #order = :order, #description = :description, #videoUrl = :videoUrl, #updatedAt = :updatedAt',
+        UpdateExpression: 'SET #captionUrl = :captionUrl, #s3CaptionKey = :s3CaptionKey, #updatedAt = :updatedAt',
         ExpressionAttributeNames: {
-          '#title': 'title',
-          '#chapter': 'chapter',
-          '#order': 'order',
-          '#description': 'description',
-          '#videoUrl': 'videoUrl',
+          '#captionUrl': 'captionUrl',
+          '#s3CaptionKey': 's3CaptionKey',
           '#updatedAt': 'updatedAt'
         },
         ExpressionAttributeValues: {
-          ':title': videoData.title,
-          ':chapter': videoData.chapter,
-          ':order': videoData.order,
-          ':description': videoData.description,
-          ':videoUrl': videoData.videoUrl,
+          ':captionUrl': videoData.captionUrl,
+          ':s3CaptionKey': videoData.s3CaptionKey,
           ':updatedAt': new Date().toISOString()
         }
       };
 
-      await this.dynamodb.send(new UpdateItemCommand(updateParams));
-      console.log('Video updated successfully');
+      await this.docClient.send(new UpdateCommand(updateParams));
       return true;
     } catch (error) {
       console.error('Error updating video:', error);

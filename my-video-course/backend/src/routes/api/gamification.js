@@ -4,7 +4,10 @@ const gamificationManager = require('../../services/gamificationManager');
 
 router.get('/stats', async (req, res) => {
   try {
-    const userId = req.user?.email || req.session?.user?.email || req.query.userId || 'default_user';
+    const userId = req.user?.email || req.session?.user?.email || req.query.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const userData = await gamificationManager.getUserData(userId);
     res.json({ 
       success: true, 
@@ -18,7 +21,10 @@ router.get('/stats', async (req, res) => {
 router.post('/sync', async (req, res) => {
   try {
     const { achievements, userStats, streakData } = req.body;
-    const userId = req.user?.email || req.session?.user?.email || 'default_user';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
 
     const updates = {
       achievements: achievements || [],
@@ -35,7 +41,10 @@ router.post('/sync', async (req, res) => {
 
 router.get('/load', async (req, res) => {
   try {
-    const userId = req.user?.email || req.session?.user?.email || req.query.userId || 'default_user';
+    const userId = req.user?.email || req.session?.user?.email || req.query.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const userData = await gamificationManager.getUserData(userId);
     res.json({
       success: true,
@@ -50,7 +59,10 @@ router.get('/load', async (req, res) => {
 
 router.post('/keyboard-shortcut', async (req, res) => {
   try {
-    const userId = req.user?.email || req.session?.user?.email || 'default_user';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const { action } = req.body;
     
     let points = 0;
