@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= video ? video.title : 'Video' %> - <%= courseName %></title>
+    <link rel="stylesheet" href="/css/video-performance.css">
     <%- include('partials/interactive-styles') %>
     <%- include('partials/video-styles') %>
     <%- include('partials/chatbot-styles') %>
@@ -208,6 +209,7 @@
     </style>
 
     <script src="/js/video-quiz-functions.js"></script>
+    <link rel="preload" as="image" href="/thumbnails/<%= video ? video._id : '' %>.jpg">
 </head>
 <body>
     <button class="theme-toggle" id="themeToggle">🌙</button>
@@ -827,10 +829,11 @@
                 console.log('Todo toggled:', todoId, completed);
             };
             
-            // Initialize secure video loading
-            async function initSecureVideo() {
+            // Optimized video loading for better LCP
+            function initSecureVideo() {
                 const videoPlayer = document.getElementById('videoPlayer');
-                if (!videoPlayer) return;
+                const videoSource = document.getElementById('videoSource');
+                if (!videoPlayer || !videoSource) return;
                 
                 let videoKey = '<%= video ? video.s3Key || "" : "" %>';
                 if (!videoKey) {
@@ -845,32 +848,34 @@
                 }
                 if (!videoKey) return;
                 
-                try {
-                    console.log('🎬 Loading video with backend signed URL:', videoKey);
-                    
-                    const response = await fetch('/api/videos/stream-url', {
+                // Use requestIdleCallback for non-blocking execution
+                const loadVideo = () => {
+                    fetch('/api/videos/stream-url', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ videoKey })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        videoSource.src = data.streamUrl;
+                        videoPlayer.load();
+                    })
+                    .catch(error => {
+                        console.error('Video loading failed:', error);
+                        videoSource.src = '<%= video ? video.videoUrl : "" %>';
+                        videoPlayer.load();
                     });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        videoPlayer.src = data.streamUrl;
-                        console.log('✅ Video loaded with backend signed URL');
-                    } else {
-                        throw new Error('Failed to get signed URL');
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ Backend video loading failed:', error);
-                    console.log('🔄 Using direct S3 URL as last resort');
-                    videoPlayer.src = '<%= video ? video.videoUrl : "" %>';
+                };
+                
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(loadVideo);
+                } else {
+                    setTimeout(loadVideo, 0);
                 }
             }
             
-            // Initialize secure video loading with delay
-            setTimeout(initSecureVideo, 2000);
+            // Initialize video loading
+            initSecureVideo();
             
             // Update count and load todos on page load
             updateVideoCount();

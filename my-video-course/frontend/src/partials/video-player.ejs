@@ -7,12 +7,8 @@
                 allowfullscreen>
         </iframe>
         <% } else { %>
-        <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video">
-            <% if (video.isS3Video) { %>
-            <source src="<%- video.fullVideoUrl %>" type="video/mp4" />
-            <% } else { %>
-            <source src="/videos/<%= courseName %>/file/<%= video._id %>" type="video/mp4" />
-            <% } %>
+        <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video" preload="metadata" poster="/thumbnails/<%= video._id %>.jpg">
+            <source src="data:video/mp4;base64," type="video/mp4" id="videoSource">
             <% if (video.captionsUrl) { %>
             <track label="English" kind="subtitles" srclang="en" src="/captions/<%= courseName %>/<%= video._id %>" default />
             <% } %>
