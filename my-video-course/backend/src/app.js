@@ -533,6 +533,14 @@ app.post('/api/ai/chat', cognitoAuth, async (req, res) => {
       }
     }
     
+    // Check cache first
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    const cachedResponse = await dynamoVideoService.getCachedAIResponse(message, enrichedContext);
+    
+    if (cachedResponse) {
+      return res.json({ success: true, response: cachedResponse, model: 'Amazon Nova Pro (cached)' });
+    }
+    
     let response;
     if (teachingStyle === 'david-malan') {
       response = await aiService.generateDavidMalanResponse(message, enrichedContext);
@@ -541,8 +549,15 @@ app.post('/api/ai/chat', cognitoAuth, async (req, res) => {
       response = await aiService.generateDavidMalanResponse(message, enrichedContext);
     }
     
-    res.json({ success: true, response, model: 'Amazon Nova Pro' });
+    // Ensure response is a string
+    const responseText = typeof response === 'string' ? response : String(response || 'I apologize, but I encountered an issue processing that request.');
+    
+    // Cache the response
+    await dynamoVideoService.cacheAIResponse(message, enrichedContext, responseText);
+    
+    res.json({ success: true, response: responseText, model: 'Amazon Nova Pro' });
   } catch (error) {
+    console.error('AI chat error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
