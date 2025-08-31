@@ -225,21 +225,20 @@
                 
                 <%- include('partials/video-controls', { video, courseName, isFirstVideo, isLastVideo, watchedVideos, totalVideos, watchedPercent }) %>
                 
+
+                
                 <!-- Video Summary & AI Section -->
                 <div class="sidebar-card" style="margin-top: 24px;">
                     <div style="display: grid; gap: 24px;">
                         <!-- Video Summary -->
                         <div>
-                            <h3 class="sidebar-title">📝 Video Summary</h3>
-                            <div id="videoSummary" style="font-size: 14px; line-height: 1.5; color: #86868b; margin-bottom: 16px; max-height: 128px; overflow-y: auto;">
-                                <div class="loading-skeleton">
-                                    <div class="skeleton-line"></div>
-                                    <div class="skeleton-line short"></div>
-                                </div>
+                            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                                <button onclick="loadSummary()" style="padding: 6px 12px; background: #007aff; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">📝 Summary</button>
+                                <button onclick="loadQuiz()" style="padding: 6px 12px; background: #34c759; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">🧠 Quiz</button>
+                                <button onclick="loadTodos()" style="padding: 6px 12px; background: #ff9500; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">✅ Todo</button>
                             </div>
-                            <div id="keyTopics">
-                                <h4 style="font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 8px;">🔑 Key Topics:</h4>
-                                <div id="topicsList" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                            <div id="learningContent" style="font-size: 14px; line-height: 1.5; color: #86868b; margin-bottom: 16px; max-height: 200px; overflow-y: auto;">
+                                <div style="text-align: center; padding: 20px; color: #86868b;">Click a button above to generate AI content from SRT captions</div>
                             </div>
                         </div>
                         
@@ -459,7 +458,11 @@
                         const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${encodeURIComponent(courseName)}&direction=next`);
                         if (response.ok) {
                             const nextVideo = await response.json();
-                            window.location.href = `/videos/${encodeURIComponent(courseName)}/${nextVideo._id}?autoplay=true`;
+                            if (nextVideo && nextVideo._id) {
+                                window.location.href = `/videos/${encodeURIComponent(courseName)}/${nextVideo._id}?autoplay=true`;
+                            } else {
+                                console.error('Next video has no valid ID:', nextVideo);
+                            }
                         }
                     } catch (error) {
                         console.error('Error getting next video:', error);
@@ -877,6 +880,95 @@
             // Initialize video loading
             initSecureVideo();
             
+            // Learning API functions
+            window.loadSummary = async function() {
+                const content = document.getElementById('learningContent');
+                content.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Generating summary from SRT...</div>';
+                
+                try {
+                    const response = await fetch(`/api/learning/summary/${encodeURIComponent(courseName)}/${videoId}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        content.innerHTML = `<div style="color: #1d1d1f;"><strong>📝 Summary:</strong><br>${data.summary}</div>`;
+                    } else {
+                        content.innerHTML = '<div style="color: #ff3b30;">❌ Failed to generate summary</div>';
+                    }
+                } catch (error) {
+                    content.innerHTML = '<div style="color: #ff3b30;">❌ Error loading summary</div>';
+                }
+            };
+            
+            window.loadQuiz = async function() {
+                const content = document.getElementById('learningContent');
+                content.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Generating quiz from SRT...</div>';
+                
+                try {
+                    const response = await fetch(`/api/learning/quiz/${encodeURIComponent(courseName)}/${videoId}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.quiz.length > 0) {
+                        let html = '<div style="color: #1d1d1f;"><strong>🧠 Quiz Questions:</strong><br><br>';
+                        data.quiz.forEach((q, i) => {
+                            html += `<div style="margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px;">`;
+                            html += `<div style="font-weight: 600; margin-bottom: 8px;">${i+1}. ${q.question}</div>`;
+                            q.options.forEach((option, j) => {
+                                html += `<div style="margin: 4px 0; padding: 4px 8px; background: white; border-radius: 4px; cursor: pointer;" onclick="showAnswer(${i}, ${j}, ${q.correct})">${String.fromCharCode(65+j)}. ${option}</div>`;
+                            });
+                            html += `<div id="answer${i}" style="display: none; margin-top: 8px; padding: 8px; background: #e8f5e8; border-radius: 4px; font-size: 12px;"><strong>Answer:</strong> ${q.options[q.correct]}<br><strong>Explanation:</strong> ${q.explanation}</div>`;
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                        content.innerHTML = html;
+                    } else {
+                        content.innerHTML = '<div style="color: #ff3b30;">❌ Failed to generate quiz</div>';
+                    }
+                } catch (error) {
+                    content.innerHTML = '<div style="color: #ff3b30;">❌ Error loading quiz</div>';
+                }
+            };
+            
+            window.loadTodos = async function() {
+                const content = document.getElementById('learningContent');
+                content.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Generating todos from SRT...</div>';
+                
+                try {
+                    const response = await fetch(`/api/learning/todo/${encodeURIComponent(courseName)}/${videoId}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.todo.length > 0) {
+                        let html = '<div style="color: #1d1d1f;"><strong>✅ Learning Tasks:</strong><br><br>';
+                        data.todo.forEach((task, i) => {
+                            const priorityColor = task.priority === 'high' ? '#ff3b30' : task.priority === 'medium' ? '#ff9500' : '#34c759';
+                            html += `<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px;">`;
+                            html += `<input type="checkbox" style="accent-color: #007aff;">`;
+                            html += `<div style="flex: 1;">`;
+                            html += `<div style="font-weight: 500; margin-bottom: 4px;">${task.task}</div>`;
+                            html += `<div style="font-size: 11px; color: #86868b;">Priority: <span style="color: ${priorityColor}; font-weight: 600;">${task.priority}</span> • Time: ${task.estimated_time}</div>`;
+                            html += '</div></div>';
+                        });
+                        html += '</div>';
+                        content.innerHTML = html;
+                    } else {
+                        content.innerHTML = '<div style="color: #ff3b30;">❌ Failed to generate todos</div>';
+                    }
+                } catch (error) {
+                    content.innerHTML = '<div style="color: #ff3b30;">❌ Error loading todos</div>';
+                }
+            };
+            
+            window.showAnswer = function(questionIndex, selectedOption, correctOption) {
+                const answerDiv = document.getElementById(`answer${questionIndex}`);
+                if (answerDiv) {
+                    answerDiv.style.display = 'block';
+                    if (selectedOption === correctOption) {
+                        answerDiv.style.background = '#e8f5e8';
+                    } else {
+                        answerDiv.style.background = '#ffebee';
+                    }
+                }
+            };
+
             // Update count and load todos on page load
             updateVideoCount();
             loadCachedTodos();

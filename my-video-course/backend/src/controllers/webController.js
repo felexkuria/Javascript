@@ -30,7 +30,10 @@ class WebController {
       }
       
       console.log('✅ Rendering student dashboard');
-      const userId = user?.email || 'guest';
+      const userId = user?.email;
+      if (!userId) {
+        return res.status(401).redirect('/login');
+      }
       console.log('🔍 User ID:', userId);
       const courses = await dynamoVideoService.getAllCourses(userId);
       const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
@@ -220,7 +223,14 @@ class WebController {
       const userRole = req.user?.isTeacher ? 'teacher' : 'student';
       video = await s3VideoService.processVideoUrl(video, userRole, courseName);
 
-      const watchedVideos = videos.filter(v => v.watched).length;
+      // Get user-specific watch data from DynamoDB
+      const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
+      const userWatchedVideos = gamificationData?.userStats?.videosWatched || {};
+      
+      // Count watched videos based on user data
+      const watchedVideos = videos.filter(v => 
+        userWatchedVideos[v._id] || userWatchedVideos[v._id?.toString()] || v.watched
+      ).length;
       const totalVideos = videos.length;
       const watchedPercent = Math.round((watchedVideos / totalVideos) * 100);
 

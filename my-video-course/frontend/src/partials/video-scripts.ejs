@@ -83,8 +83,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Extract base course name (remove timestamp suffix)
-    const baseCourse = courseName.split('_')[0];
+    // Use full course name for navigation
+    const baseCourse = courseName;
     
     if (prevButton) {
         prevButton.addEventListener('click', async () => {

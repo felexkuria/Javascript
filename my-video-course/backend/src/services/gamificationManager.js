@@ -89,9 +89,10 @@ class GamificationManager {
     if (mongoose.connection.readyState === 1) {
       try {
         const collection = mongoose.connection.collection('gamification');
+        const { _id, ...dataWithoutId } = updatedData;
         await collection.updateOne(
           { userId },
-          { $set: updatedData },
+          { $set: dataWithoutId },
           { upsert: true }
         );
       } catch (error) {

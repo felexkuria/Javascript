@@ -51,11 +51,14 @@ app.use('/api/sync', require('./routes/api/sync'));
 app.use('/api/migrate', require('./routes/api/migrate'));
 app.use('/api/dynamodb', require('./routes/api/dynamodb'));
 
-// Public gamification stats endpoint
+// Gamification stats endpoint (requires auth)
 app.get('/api/gamification/stats', async (req, res) => {
   try {
     const gamificationManager = require('./services/gamificationManager');
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const userData = await gamificationManager.getUserData(userId);
     res.json({ 
       success: true, 
@@ -119,7 +122,10 @@ app.post('/api/videos/stream-url', async (req, res) => {
 app.get('/api/gamification/load', async (req, res) => {
   try {
     const gamificationManager = require('./services/gamificationManager');
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const userData = await gamificationManager.getUserData(userId);
     res.json({
       success: true,
@@ -135,7 +141,10 @@ app.get('/api/gamification/load', async (req, res) => {
 app.post('/api/gamification/sync', async (req, res) => {
   try {
     const { achievements, userStats, streakData } = req.body;
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
 
     const gamificationManager = require('./services/gamificationManager');
     const updates = {
@@ -254,6 +263,7 @@ app.use('/api/enterprise-upload', require('./routes/api/enterprise-upload'));
 app.use('/api/videos', cognitoAuth, require('./routes/api/videos'));
 app.use('/api/video-proxy', cognitoAuth, require('./routes/api/video-proxy'));
 app.use('/api/captions', require('./routes/api/captions'));
+app.use('/api/learning', require('./routes/api/learning'));
 
 // Gamification routes - stats endpoint public, others protected
 const gamificationRouter = require('./routes/api/gamification');
@@ -339,11 +349,19 @@ app.post('/api/mark-watched', cognitoAuth, async (req, res) => {
 app.get('/api/next-video', async (req, res) => {
   try {
     const { currentVideoId, courseName, direction } = req.query;
-    const userId = req.user?.email || req.session?.user?.email || 'guest';
+    const userId = req.user?.email || req.session?.user?.email;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const dynamoVideoService = require('./services/dynamoVideoService');
     const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
     
+    console.log(`🔍 Navigation: ${direction} from ${currentVideoId} in ${courseName}`);
+    console.log(`📹 Found ${videos.length} videos`);
+    
     const currentIndex = videos.findIndex(v => v._id && v._id.toString() === currentVideoId);
+    console.log(`📍 Current index: ${currentIndex}`);
+    
     let targetVideo = null;
     
     if (direction === 'prev' && currentIndex > 0) {
@@ -352,12 +370,16 @@ app.get('/api/next-video', async (req, res) => {
       targetVideo = videos[currentIndex + 1];
     }
     
-    if (targetVideo) {
+    console.log(`🎯 Target video:`, targetVideo?._id, targetVideo?.title);
+    
+    if (targetVideo && targetVideo._id) {
       res.json(targetVideo);
     } else {
+      console.log('❌ No valid target video found');
       res.status(404).json({ error: 'No video found' });
     }
   } catch (error) {
+    console.error('Navigation error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -497,12 +519,26 @@ app.post('/api/ai/analyze-content', cognitoAuth, async (req, res) => {
 app.post('/api/ai/chat', cognitoAuth, async (req, res) => {
   try {
     const { message, context, teachingStyle } = req.body;
-    let response;
     
+    // Enrich context with SRT content if available
+    let enrichedContext = { ...context };
+    if (context?.videoId && context?.courseName) {
+      try {
+        const srtContent = await getSRTContent(context.courseName, context.videoId);
+        if (srtContent) {
+          enrichedContext.transcript = srtContent.slice(0, 3000); // Limit size
+        }
+      } catch (error) {
+        console.log('No SRT content available for enrichment');
+      }
+    }
+    
+    let response;
     if (teachingStyle === 'david-malan') {
-      response = await aiService.generateDavidMalanResponse(message, context);
+      response = await aiService.generateDavidMalanResponse(message, enrichedContext);
     } else {
-      response = await aiService.generateWithNovaPro(message, context);
+      // Default to David Malan style for better explanations
+      response = await aiService.generateDavidMalanResponse(message, enrichedContext);
     }
     
     res.json({ success: true, response, model: 'Amazon Nova Pro' });
@@ -510,6 +546,41 @@ app.post('/api/ai/chat', cognitoAuth, async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+async function getSRTContent(courseName, videoId) {
+  const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+  const s3Client = new S3Client({ region: process.env.AWS_REGION });
+  
+  const timestamps = ['1756578844', '1756579046', '1756575209', '1756585495'];
+  const dynamoVideoService = require('./services/dynamoVideoService');
+  const videos = await dynamoVideoService.getVideosForCourse(courseName);
+  const video = videos.find(v => v._id && v._id.toString() === videoId);
+  
+  if (!video?.s3Key) return null;
+  
+  const videoFilename = video.s3Key.split('/').pop().replace('.mp4', '');
+  
+  for (const timestamp of timestamps) {
+    try {
+      const srtKey = `videos/${courseName}/${videoFilename}__${timestamp}.srt`;
+      const response = await s3Client.send(new GetObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: srtKey
+      }));
+      
+      const srtContent = await response.Body.transformToString();
+      // Extract text only from SRT
+      return srtContent
+        .split('\n')
+        .filter(line => !line.match(/^\d+$/) && !line.match(/\d{2}:\d{2}:\d{2}/) && line.trim())
+        .join(' ');
+    } catch (error) {
+      continue;
+    }
+  }
+  
+  return null;
+}
 
 // S3 Upload endpoint
 

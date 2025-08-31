@@ -77,18 +77,35 @@ class DynamoVideoService {
     return [];
   }
 
-  // Personalize courses with user-specific data
+  // Personalize courses with user-specific data and proper sorting
   async personalizeCoursesForUser(courses, userId) {
     const userGamification = await this.getUserGamificationData(userId);
     const watchedVideos = userGamification?.userStats?.videosWatched || {};
     
-    return courses.map(course => ({
-      ...course,
-      videos: course.videos.map(video => ({
+    return courses.map(course => {
+      const personalizedVideos = course.videos.map(video => ({
         ...video,
         watched: !!(watchedVideos[video._id] || watchedVideos[video._id?.toString()] || video.watched)
-      }))
-    }));
+      }));
+      
+      // Sort videos numerically by lesson number
+      const sortedVideos = personalizedVideos.sort((a, b) => {
+        const aMatch = a.title?.match(/lesson(\d+)/i) || a._id?.match(/lesson(\d+)/i);
+        const bMatch = b.title?.match(/lesson(\d+)/i) || b._id?.match(/lesson(\d+)/i);
+        
+        if (aMatch && bMatch) {
+          return parseInt(aMatch[1], 10) - parseInt(bMatch[1], 10);
+        }
+        
+        // Fallback to alphabetical sorting
+        return (a.title || a._id || '').localeCompare(b.title || b._id || '');
+      });
+      
+      return {
+        ...course,
+        videos: sortedVideos
+      };
+    });
   }
 
   // Get videos for a specific course with user personalization
@@ -115,15 +132,28 @@ class DynamoVideoService {
     return [];
   }
 
-  // Personalize videos with user-specific watch status
+  // Personalize videos with user-specific watch status and proper sorting
   async personalizeVideosForUser(videos, userId) {
     const userGamification = await this.getUserGamificationData(userId);
     const watchedVideos = userGamification?.userStats?.videosWatched || {};
     
-    return videos.map(video => ({
+    const personalizedVideos = videos.map(video => ({
       ...video,
       watched: !!(watchedVideos[video._id] || watchedVideos[video._id?.toString()] || video.watched)
     }));
+    
+    // Sort videos numerically by lesson number
+    return personalizedVideos.sort((a, b) => {
+      const aMatch = a.title?.match(/lesson(\d+)/i) || a._id?.match(/lesson(\d+)/i);
+      const bMatch = b.title?.match(/lesson(\d+)/i) || b._id?.match(/lesson(\d+)/i);
+      
+      if (aMatch && bMatch) {
+        return parseInt(aMatch[1], 10) - parseInt(bMatch[1], 10);
+      }
+      
+      // Fallback to alphabetical sorting
+      return (a.title || a._id || '').localeCompare(b.title || b._id || '');
+    });
   }
 
   // Get a specific video by ID
@@ -350,6 +380,100 @@ class DynamoVideoService {
       }
     }
     return false;
+  }
+
+  // Caption caching methods
+  async getCachedCaption(courseName, videoId) {
+    if (!this.isConnected) return null;
+    
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    
+    try {
+      const params = {
+        TableName: `video-course-app-captions-${environment}`,
+        Key: { 
+          courseName: courseName,
+          videoId: videoId 
+        }
+      };
+      
+      const result = await this.docClient.send(new GetCommand(params));
+      return result.Item?.captionContent || null;
+    } catch (error) {
+      console.error('Error getting cached caption:', error);
+      return null;
+    }
+  }
+  
+  async cacheCaption(courseName, videoId, captionContent) {
+    if (!this.isConnected) return false;
+    
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    
+    try {
+      const params = {
+        TableName: `video-course-app-captions-${environment}`,
+        Item: {
+          courseName: courseName,
+          videoId: videoId,
+          captionContent: captionContent,
+          cachedAt: new Date().toISOString()
+        }
+      };
+      
+      await this.docClient.send(new PutCommand(params));
+      return true;
+    } catch (error) {
+      console.error('Error caching caption:', error);
+      return false;
+    }
+  }
+
+  // Learning content caching
+  async getCachedLearningContent(courseName, videoId, type) {
+    if (!this.isDynamoAvailable()) return null;
+    
+    try {
+      const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+      const { GetCommand } = require('@aws-sdk/lib-dynamodb');
+      
+      const params = {
+        TableName: `video-course-app-captions-${environment}`,
+        Key: { 
+          courseName: courseName,
+          videoId: `${videoId}_${type}` // summary, quiz, or todo
+        }
+      };
+      
+      const result = await dynamodb.docClient.send(new GetCommand(params));
+      return result.Item?.captionContent || null;
+    } catch (error) {
+      return null;
+    }
+  }
+  
+  async cacheLearningContent(courseName, videoId, type, content) {
+    if (!this.isDynamoAvailable()) return false;
+    
+    try {
+      const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+      const { PutCommand } = require('@aws-sdk/lib-dynamodb');
+      
+      const params = {
+        TableName: `video-course-app-captions-${environment}`,
+        Item: {
+          courseName: courseName,
+          videoId: `${videoId}_${type}`,
+          captionContent: JSON.stringify(content),
+          cachedAt: new Date().toISOString()
+        }
+      };
+      
+      await dynamodb.docClient.send(new PutCommand(params));
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   // Health check

@@ -56,7 +56,9 @@ class AIService {
       const payload = {
         messages: [{
           role: 'user',
-          content: `Context: ${JSON.stringify(context)}\n\nPrompt: ${prompt}`
+          content: [{
+            text: `Context: ${JSON.stringify(context)}\n\nPrompt: ${prompt}`
+          }]
         }],
         inferenceConfig: {
           maxTokens: 2000,
@@ -72,10 +74,12 @@ class AIService {
 
       const response = await this.client.send(command);
       const result = JSON.parse(new TextDecoder().decode(response.body));
-      const content = result.content[0].text;
+      const content = result.content?.[0]?.text || result.output?.message || result.message || 'Response not available';
       
-      this.cache.set(cacheKey, content);
-      return content;
+      // Ensure we return a string
+      const finalContent = typeof content === 'string' ? content : String(content);
+      this.cache.set(cacheKey, finalContent);
+      return finalContent;
     } catch (error) {
       console.error('Nova Pro error:', error);
       return await this.fallbackToGemini(prompt, context);
@@ -95,20 +99,58 @@ class AIService {
   }
 
   async generateTodoFromVideo(videoTitle, transcript = '') {
-    const prompt = `Extract 3-5 actionable learning tasks from this video: "${videoTitle}". Format as JSON array with {task, priority, estimated_time}.`;
+    const prompt = `Based on this DevOps/Cloud video "${videoTitle}" and transcript, create 4-5 specific, actionable learning tasks. Focus on practical skills, hands-on practice, and real-world application. Format as JSON array with {task, priority, estimated_time}. Make tasks specific to the content, not generic.`;
     
-    const context = { videoTitle, transcript: transcript.slice(0, 1000) };
+    const context = { videoTitle, transcript: transcript.slice(0, 2000) };
     const response = await this.generateWithNovaPro(prompt, context);
     
     try {
-      return JSON.parse(response);
+      const parsed = JSON.parse(response);
+      return Array.isArray(parsed) ? parsed : [
+        { task: `Set up lab environment for ${videoTitle.replace(/lesson\d+/i, '').trim()}`, priority: 'high', estimated_time: '45 min' },
+        { task: 'Follow along with hands-on examples', priority: 'high', estimated_time: '60 min' },
+        { task: 'Document key commands and configurations', priority: 'medium', estimated_time: '20 min' },
+        { task: 'Practice troubleshooting common issues', priority: 'medium', estimated_time: '30 min' },
+        { task: 'Create personal reference notes', priority: 'low', estimated_time: '15 min' }
+      ];
     } catch {
       return [
-        { task: `Watch and understand: ${videoTitle}`, priority: 'high', estimated_time: '30 min' },
-        { task: 'Take notes on key concepts', priority: 'medium', estimated_time: '15 min' },
-        { task: 'Practice examples shown', priority: 'high', estimated_time: '45 min' }
+        { task: `Set up lab environment for ${videoTitle.replace(/lesson\d+/i, '').trim()}`, priority: 'high', estimated_time: '45 min' },
+        { task: 'Follow along with hands-on examples', priority: 'high', estimated_time: '60 min' },
+        { task: 'Document key commands and configurations', priority: 'medium', estimated_time: '20 min' },
+        { task: 'Practice troubleshooting common issues', priority: 'medium', estimated_time: '30 min' },
+        { task: 'Create personal reference notes', priority: 'low', estimated_time: '15 min' }
       ];
     }
+  }
+
+  async generateTodoFromSRT(srtContent, videoTitle) {
+    const textOnly = srtContent
+      .split('\n')
+      .filter(line => !line.match(/^\d+$/) && !line.match(/\d{2}:\d{2}:\d{2}/) && line.trim())
+      .join(' ');
+    
+    const result = await this.generateTodoFromVideo(videoTitle, textOnly);
+    return Array.isArray(result) ? result : [
+      { task: `Watch and understand: ${videoTitle}`, priority: 'high', estimated_time: '30 min' },
+      { task: 'Take notes on key concepts', priority: 'medium', estimated_time: '15 min' },
+      { task: 'Practice examples shown', priority: 'high', estimated_time: '45 min' }
+    ];
+  }
+
+  async generateQuizFromSRT(srtContent, videoTitle) {
+    const textOnly = srtContent
+      .split('\n')
+      .filter(line => !line.match(/^\d+$/) && !line.match(/\d{2}:\d{2}:\d{2}/) && line.trim())
+      .join(' ');
+    
+    const result = await this.generateQuizFromVideo(videoTitle, textOnly);
+    return Array.isArray(result) ? result : [{
+      question: `What is the main topic of ${videoTitle}?`,
+      options: ['Basic concepts', 'Advanced techniques', 'Practical examples', 'All of the above'],
+      correct: 3,
+      explanation: 'This video covers comprehensive content including concepts, techniques, and examples.'
+    }];
   }
 
   async generateQuizFromVideo(videoTitle, transcript = '') {
@@ -138,7 +180,16 @@ class AIService {
       tone: 'encouraging and clear'
     };
 
-    return await this.generateWithNovaPro(prompt, malanContext);
+    try {
+      return await this.generateWithNovaPro(prompt, malanContext);
+    } catch (error) {
+      console.error('David Malan response error:', error);
+      return this.staticMalanResponse(question, context);
+    }
+  }
+  
+  staticMalanResponse(question, context) {
+    return `That's a great question! Let me break this down for you step by step. Think of it like building with LEGO blocks - each concept connects to create something bigger. ${context?.transcript ? 'Based on the video content, ' : ''}the key thing to remember is that learning happens one step at a time. What specifically would you like me to clarify?`;
   }
 
   async analyzeVideoContent(videoTitle, transcript = '') {
@@ -173,7 +224,9 @@ class AIService {
     const prompt = `Create a concise summary (100 words) of this video transcript: "${videoTitle}"`;
     
     const context = { videoTitle, transcriptLength: textOnly.length };
-    return await this.generateWithNovaPro(prompt + '\n\nTranscript:\n' + textOnly.slice(0, 4000), context);
+    const result = await this.generateWithNovaPro(prompt + '\n\nTranscript:\n' + textOnly.slice(0, 4000), context);
+    const summary = typeof result === 'string' ? result : `Summary for ${videoTitle}: This video covers key concepts and practical examples.`;
+    return summary;
   }
 
   async fallbackToGemini(prompt, context) {
@@ -187,7 +240,8 @@ class AIService {
       
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
-      return response.text();
+      const text = response.text();
+      return typeof text === 'string' ? text : String(text);
     } catch (error) {
       console.error('Gemini fallback failed:', error);
       return this.staticFallback(prompt, context);
