@@ -1,0 +1,47 @@
+/* Video Performance Optimizations */
+.video-container {
+    contain: layout style paint;
+    will-change: transform;
+}
+
+.interactive-video {
+    width: 100%;
+    height: auto;
+    background: #000;
+    border-radius: 12px;
+    contain: layout style paint;
+}
+
+/* Optimize video loading states */
+.interactive-video[poster] {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjJGMkY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM4Njg2OEIiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkxvYWRpbmcuLi48L3RleHQ+Cjwvc3ZnPgo=');
+    background-size: cover;
+    background-position: center;
+}
+
+/* Reduce layout shifts */
+.video-section {
+    min-height: 400px;
+}
+
+/* Optimize animations */
+.animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Critical CSS for above-the-fold content */
+.video-container,
+.video-header {
+    critical: true;
+}
