@@ -4,7 +4,13 @@ const aiService = require('../../services/aiService');
 const dynamoVideoService = require('../../services/dynamoVideoService');
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 
-const s3Client = new S3Client({ region: process.env.AWS_REGION });
+const s3Client = new S3Client({ 
+  region: process.env.AWS_REGION || 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
 
 // Generate quiz for video
 router.get('/quiz/:courseName/:videoId', async (req, res) => {
@@ -70,16 +76,32 @@ router.get('/todo/:courseName/:videoId', async (req, res) => {
     }
 
     let srtContent = '';
-    if (video.s3CaptionKey) {
+    
+    // Try multiple SRT file patterns
+    const srtKeys = [
+      video.s3CaptionKey,
+      `videos/${courseName}/${video.title}__1756583768.srt`,
+      `videos/${courseName}/${video.title}__1756578844.srt`,
+      `videos/${courseName}/${video.title}__1756579046.srt`,
+      `videos/${courseName}/${video.title}__1756575209.srt`
+    ].filter(Boolean);
+    
+    for (const srtKey of srtKeys) {
       try {
         const response = await s3Client.send(new GetObjectCommand({
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: video.s3CaptionKey
+          Bucket: process.env.S3_BUCKET_NAME || 'video-course-bucket-047ad47c',
+          Key: srtKey
         }));
         srtContent = await response.Body.transformToString();
+        console.log(`✅ Found SRT: ${srtKey}`);
+        break;
       } catch (error) {
-        console.log('No SRT found, using title only');
+        continue;
       }
+    }
+    
+    if (!srtContent) {
+      console.log('❌ No SRT found for any pattern, using title only');
     }
 
     const todo = srtContent 

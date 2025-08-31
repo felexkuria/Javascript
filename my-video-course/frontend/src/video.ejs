@@ -227,42 +227,25 @@
                 
 
                 
-                <!-- Video Summary & AI Section -->
+                <!-- AI Todos Section -->
                 <div class="sidebar-card" style="margin-top: 24px;">
-                    <div style="display: grid; gap: 24px;">
-                        <!-- Video Summary -->
-                        <div>
-                            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                                <button onclick="loadSummary()" style="padding: 6px 12px; background: #007aff; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">📝 Summary</button>
-                                <button onclick="loadQuiz()" style="padding: 6px 12px; background: #34c759; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">🧠 Quiz</button>
-                                <button onclick="loadTodos()" style="padding: 6px 12px; background: #ff9500; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">✅ Todo</button>
-                            </div>
-                            <div id="learningContent" style="font-size: 14px; line-height: 1.5; color: #86868b; margin-bottom: 16px; max-height: 200px; overflow-y: auto;">
-                                <div style="text-align: center; padding: 20px; color: #86868b;">Click a button above to generate AI content from SRT captions</div>
+                    <h3 class="sidebar-title">🤖 AI Todos</h3>
+                    <div id="todoContainer" style="max-height: 200px; overflow-y: auto; margin-bottom: 16px;">
+                        <div id="todoLoading" style="text-align: center; padding: 16px 0; font-size: 14px; color: #86868b;">
+                            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                                <div class="loading-spinner" style="width: 16px; height: 16px; border: 2px solid #f2f2f7; border-top: 2px solid #007aff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></div>
+                                <span>AI analyzing content...</span>
                             </div>
                         </div>
-                        
-                        <!-- AI Todos -->
-                        <div style="border-top: 1px solid #f2f2f7; padding-top: 24px;">
-                            <h3 class="sidebar-title">🤖 AI Todos</h3>
-                            <div id="todoContainer" style="max-height: 200px; overflow-y: auto; margin-bottom: 16px;">
-                                <div id="todoLoading" style="text-align: center; padding: 16px 0; font-size: 14px; color: #86868b;">
-                                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
-                                        <div class="loading-spinner" style="width: 16px; height: 16px; border: 2px solid #f2f2f7; border-top: 2px solid #007aff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></div>
-                                        <span>AI analyzing content...</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <span id="todoProgress" style="font-size: 12px; color: #86868b;">0/0 completed</span>
-                                <button id="refreshTodos" style="font-size: 11px; padding: 4px 8px; background: #f2f2f7; color: #1d1d1f; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">
-                                    🔄 Refresh
-                                </button>
-                            </div>
-                            <div style="width: 100%; height: 6px; background: #f2f2f7; border-radius: 3px; overflow: hidden;">
-                                <div id="todoProgressBar" style="height: 100%; background: #30d158; border-radius: 3px; width: 0%; transition: width 0.3s ease;"></div>
-                            </div>
-                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span id="todoProgress" style="font-size: 12px; color: #86868b;">0/0 completed</span>
+                        <button id="refreshTodos" onclick="loadAITodos()" style="font-size: 11px; padding: 4px 8px; background: #f2f2f7; color: #1d1d1f; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #f2f2f7; border-radius: 3px; overflow: hidden;">
+                        <div id="todoProgressBar" style="height: 100%; background: #30d158; border-radius: 3px; width: 0%; transition: width 0.3s ease;"></div>
                     </div>
                 </div>
             </div>
@@ -641,8 +624,18 @@
                     document.getElementById(typingId)?.remove();
                     
                     if (data.success) {
+                        // Ensure response is a string
+                        let responseText = '';
+                        if (typeof data.response === 'string') {
+                            responseText = data.response;
+                        } else if (data.response && typeof data.response === 'object') {
+                            responseText = JSON.stringify(data.response);
+                        } else {
+                            responseText = String(data.response || 'No response available');
+                        }
+                        
                         // Parse markdown-like formatting
-                        let formattedResponse = data.response
+                        let formattedResponse = responseText
                             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                             .replace(/\*(.*?)\*/g, '<em>$1</em>')
                             .replace(/`(.*?)`/g, '<code style="background: #f2f2f7; padding: 2px 4px; border-radius: 4px; font-family: SF Mono, Monaco, monospace;">$1</code>')
@@ -901,25 +894,32 @@
             
             window.loadQuiz = async function() {
                 const content = document.getElementById('learningContent');
-                content.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Generating quiz from SRT...</div>';
+                content.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Generating interactive quiz from SRT...</div>';
                 
                 try {
                     const response = await fetch(`/api/learning/quiz/${encodeURIComponent(courseName)}/${videoId}`);
                     const data = await response.json();
                     
                     if (data.success && data.quiz.length > 0) {
-                        let html = '<div style="color: #1d1d1f;"><strong>🧠 Quiz Questions:</strong><br><br>';
-                        data.quiz.forEach((q, i) => {
-                            html += `<div style="margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px;">`;
-                            html += `<div style="font-weight: 600; margin-bottom: 8px;">${i+1}. ${q.question}</div>`;
-                            q.options.forEach((option, j) => {
-                                html += `<div style="margin: 4px 0; padding: 4px 8px; background: white; border-radius: 4px; cursor: pointer;" onclick="showAnswer(${i}, ${j}, ${q.correct})">${String.fromCharCode(65+j)}. ${option}</div>`;
+                        // Use the existing interactive quiz system
+                        if (window.quizSystem) {
+                            content.innerHTML = '<div style="color: #34c759; text-align: center; padding: 20px;"><strong>✅ Interactive Quiz Ready!</strong><br><br><button onclick="window.quizSystem.startQuiz(\'srt-generated\', window.currentSRTQuiz)" style="padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">🎯 Start Interactive Quiz</button></div>';
+                            window.currentSRTQuiz = data.quiz;
+                        } else {
+                            // Fallback to simple display
+                            let html = '<div style="color: #1d1d1f;"><strong>🧠 Quiz Questions:</strong><br><br>';
+                            data.quiz.forEach((q, i) => {
+                                html += `<div style="margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px;">`;
+                                html += `<div style="font-weight: 600; margin-bottom: 8px;">${i+1}. ${q.question}</div>`;
+                                q.options.forEach((option, j) => {
+                                    html += `<div style="margin: 4px 0; padding: 4px 8px; background: white; border-radius: 4px; cursor: pointer;" onclick="showAnswer(${i}, ${j}, ${q.correct})">${String.fromCharCode(65+j)}. ${option}</div>`;
+                                });
+                                html += `<div id="answer${i}" style="display: none; margin-top: 8px; padding: 8px; background: #e8f5e8; border-radius: 4px; font-size: 12px;"><strong>Answer:</strong> ${q.options[q.correct]}<br><strong>Explanation:</strong> ${q.explanation}</div>`;
+                                html += '</div>';
                             });
-                            html += `<div id="answer${i}" style="display: none; margin-top: 8px; padding: 8px; background: #e8f5e8; border-radius: 4px; font-size: 12px;"><strong>Answer:</strong> ${q.options[q.correct]}<br><strong>Explanation:</strong> ${q.explanation}</div>`;
                             html += '</div>';
-                        });
-                        html += '</div>';
-                        content.innerHTML = html;
+                            content.innerHTML = html;
+                        }
                     } else {
                         content.innerHTML = '<div style="color: #ff3b30;">❌ Failed to generate quiz</div>';
                     }
@@ -928,32 +928,41 @@
                 }
             };
             
-            window.loadTodos = async function() {
-                const content = document.getElementById('learningContent');
-                content.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Generating todos from SRT...</div>';
+            window.loadAITodos = async function() {
+                const container = document.getElementById('todoContainer');
+                container.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Generating todos from SRT...</div>';
                 
                 try {
                     const response = await fetch(`/api/learning/todo/${encodeURIComponent(courseName)}/${videoId}`);
                     const data = await response.json();
                     
                     if (data.success && data.todo.length > 0) {
-                        let html = '<div style="color: #1d1d1f;"><strong>✅ Learning Tasks:</strong><br><br>';
+                        let html = '';
                         data.todo.forEach((task, i) => {
                             const priorityColor = task.priority === 'high' ? '#ff3b30' : task.priority === 'medium' ? '#ff9500' : '#34c759';
-                            html += `<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px;">`;
-                            html += `<input type="checkbox" style="accent-color: #007aff;">`;
+                            html += `<div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 8px; background: rgba(255,255,255,0.5); border-radius: 12px; border: 1px solid #f2f2f7;">`;
+                            html += `<input type="checkbox" style="margin-top: 2px; accent-color: #007aff;">`;
                             html += `<div style="flex: 1;">`;
-                            html += `<div style="font-weight: 500; margin-bottom: 4px;">${task.task}</div>`;
+                            html += `<div style="font-size: 14px; font-weight: 500; color: #1d1d1f; margin-bottom: 4px;">${task.task}</div>`;
                             html += `<div style="font-size: 11px; color: #86868b;">Priority: <span style="color: ${priorityColor}; font-weight: 600;">${task.priority}</span> • Time: ${task.estimated_time}</div>`;
                             html += '</div></div>';
                         });
-                        html += '</div>';
-                        content.innerHTML = html;
+                        container.innerHTML = html;
+                        
+                        // Update progress
+                        const progressText = document.getElementById('todoProgress');
+                        const progressBar = document.getElementById('todoProgressBar');
+                        if (progressText) {
+                            progressText.textContent = `0/${data.todo.length} completed`;
+                        }
+                        if (progressBar) {
+                            progressBar.style.width = '0%';
+                        }
                     } else {
-                        content.innerHTML = '<div style="color: #ff3b30;">❌ Failed to generate todos</div>';
+                        container.innerHTML = '<div style="color: #ff3b30; text-align: center; padding: 20px;">❌ Failed to generate todos</div>';
                     }
                 } catch (error) {
-                    content.innerHTML = '<div style="color: #ff3b30;">❌ Error loading todos</div>';
+                    container.innerHTML = '<div style="color: #ff3b30; text-align: center; padding: 20px;">❌ Error loading todos</div>';
                 }
             };
             
@@ -971,7 +980,7 @@
 
             // Update count and load todos on page load
             updateVideoCount();
-            loadCachedTodos();
+            loadAITodos();
         });
     </script>
 </body>

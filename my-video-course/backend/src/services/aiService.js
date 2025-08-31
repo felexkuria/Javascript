@@ -62,7 +62,7 @@ class AIService {
         }],
         inferenceConfig: {
           maxTokens: 2000,
-          temperature: 0.9
+          temperature: 0.7
         }
       };
 
@@ -74,14 +74,21 @@ class AIService {
 
       const response = await this.client.send(command);
       const result = JSON.parse(new TextDecoder().decode(response.body));
-      const content = result.content?.[0]?.text || result.output?.message || result.message || 'Response not available';
       
-      // Ensure we return a string
-      const finalContent = typeof content === 'string' ? content : String(content);
+      const content = result.output?.message?.content?.[0]?.text || result.content?.[0]?.text || result.output?.message || result.message || 'Response not available';
+      
+      // Ensure we return a clean string
+      let finalContent = typeof content === 'string' ? content : String(content);
+      
+      // Clean up any object references that might have leaked through
+      if (finalContent.includes('[object Object]')) {
+        finalContent = 'I apologize, but I encountered an issue processing that request. Could you please rephrase your question?';
+      }
+      
       this.cache.set(cacheKey, finalContent);
       return finalContent;
     } catch (error) {
-      console.error('Nova Pro error:', error);
+      console.error('Nova Pro error:', error.message);
       return await this.fallbackToGemini(prompt, context);
     }
   }
@@ -154,19 +161,25 @@ class AIService {
   }
 
   async generateQuizFromVideo(videoTitle, transcript = '') {
-    const prompt = `Create 3 multiple-choice quiz questions about "${videoTitle}". Return JSON array with {question, options, correct, explanation}.`;
+    const prompt = `Based on this DevOps/Cloud video "${videoTitle}" and transcript, create 4-5 technical quiz questions. Focus on practical knowledge, commands, concepts, and troubleshooting. Return JSON array with {question, options, correct, explanation}. Make questions specific to the content.`;
     
-    const context = { videoTitle, transcript: transcript.slice(0, 1500) };
+    const context = { videoTitle, transcript: transcript.slice(0, 3000) };
     const response = await this.generateWithNovaPro(prompt, context);
     
     try {
-      return JSON.parse(response);
+      const parsed = JSON.parse(response);
+      return Array.isArray(parsed) ? parsed : [{
+        question: `What is the main concept covered in "${videoTitle}"?`,
+        options: ['Configuration management', 'Container orchestration', 'Infrastructure automation', 'All of the above'],
+        correct: 3,
+        explanation: 'This video covers comprehensive DevOps/Cloud concepts and practical implementations.'
+      }];
     } catch {
       return [{
-        question: `What is the main topic covered in "${videoTitle}"?`,
-        options: ['Basic concepts', 'Advanced techniques', 'Practical examples', 'All of the above'],
+        question: `What is the main concept covered in "${videoTitle}"?`,
+        options: ['Configuration management', 'Container orchestration', 'Infrastructure automation', 'All of the above'],
         correct: 3,
-        explanation: 'This video covers comprehensive content including concepts, techniques, and examples.'
+        explanation: 'This video covers comprehensive DevOps/Cloud concepts and practical implementations.'
       }];
     }
   }

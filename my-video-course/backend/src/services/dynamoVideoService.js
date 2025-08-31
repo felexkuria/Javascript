@@ -476,6 +476,55 @@ class DynamoVideoService {
     }
   }
 
+  // AI chat response caching
+  async getCachedAIResponse(message, context) {
+    if (!this.isDynamoAvailable()) return null;
+    
+    try {
+      const cacheKey = Buffer.from(message + JSON.stringify(context)).toString('base64').slice(0, 50);
+      const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+      const { GetCommand } = require('@aws-sdk/lib-dynamodb');
+      
+      const params = {
+        TableName: `video-course-app-captions-${environment}`,
+        Key: { 
+          courseName: 'ai_chat',
+          videoId: cacheKey
+        }
+      };
+      
+      const result = await dynamodb.docClient.send(new GetCommand(params));
+      return result.Item?.captionContent || null;
+    } catch (error) {
+      return null;
+    }
+  }
+  
+  async cacheAIResponse(message, context, response) {
+    if (!this.isDynamoAvailable()) return false;
+    
+    try {
+      const cacheKey = Buffer.from(message + JSON.stringify(context)).toString('base64').slice(0, 50);
+      const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+      const { PutCommand } = require('@aws-sdk/lib-dynamodb');
+      
+      const params = {
+        TableName: `video-course-app-captions-${environment}`,
+        Item: {
+          courseName: 'ai_chat',
+          videoId: cacheKey,
+          captionContent: response,
+          cachedAt: new Date().toISOString()
+        }
+      };
+      
+      await dynamodb.docClient.send(new PutCommand(params));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
   // Health check
   async healthCheck() {
     const status = {
