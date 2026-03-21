@@ -25,25 +25,27 @@
     <%- extraStyles %>
   <% } %>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 font-inter min-h-screen transition-colors">
-  <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 transition-colors">
+<body class="bg-gray-50 dark:bg-[#001E2B] font-inter min-h-screen transition-colors text-gray-900 dark:text-[#E7EEEB]">
+  <nav class="bg-white dark:bg-[#001E2B]/95 backdrop-blur-md border-b border-gray-200 dark:border-[#133A41] px-4 py-3 sticky top-0 z-50 transition-colors">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div class="flex items-center gap-6">
-        <a href="/" class="text-xl font-bold text-gray-900 dark:text-white transition-colors">🎓 Learning Platform</a>
-        <div class="hidden md:flex items-center gap-4">
-          <a href="/" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Dashboard</a>
-          <a href="/profile" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Progress</a>
+        <a href="/" class="flex items-center gap-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">
+          <span class="text-[#00ED64]">🍃</span> MongoDB <span class="font-normal text-gray-500 dark:text-gray-400">Academy</span>
+        </a>
+        <div class="hidden md:flex items-center gap-6">
+          <a href="/" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#00ED64] transition-colors border-b-2 border-transparent hover:border-[#00ED64] py-1">Dashboard</a>
+          <a href="/profile" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#00ED64] transition-colors border-b-2 border-transparent hover:border-[#00ED64] py-1">My Career Path</a>
         </div>
       </div>
       <div class="flex items-center gap-4">
         <button id="theme-toggle" class="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors" title="Toggle theme">
           <i class="fas fa-moon"></i>
         </button>
-        <div class="hidden sm:flex items-center gap-3 bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2 transition-colors">
-          <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold user-level">1</div>
-          <span class="text-sm font-medium text-gray-900 dark:text-white user-points">0</span>
-          <span class="text-sm">🔥</span>
-          <span class="text-sm font-medium text-gray-900 dark:text-white user-streak">0</span>
+        <div class="hidden sm:flex items-center gap-3 bg-gray-50 dark:bg-[#023430] rounded-full border border-transparent dark:border-[#00ED64]/20 px-4 py-1.5 transition-colors">
+          <div class="w-6 h-6 bg-[#00ED64] rounded-full flex items-center justify-center text-[#001E2B] text-[10px] font-black user-level shadow-sm">1</div>
+          <span class="text-sm font-semibold text-gray-900 dark:text-[#E7EEEB] user-points">0</span>
+          <span class="text-sm">⚡</span>
+          <span class="text-sm font-semibold text-gray-900 dark:text-[#E7EEEB] user-streak">0</span>
         </div>
         <button class="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
           <i class="fas fa-bars"></i>

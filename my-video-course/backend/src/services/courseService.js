@@ -1,4 +1,4 @@
-const videoService = require('./videoService');
+// Purged legacy videoService
 const dynamoVideoService = require('./dynamoVideoService');
 const dynamodb = require('../utils/dynamodb');
 const path = require('path');
@@ -30,7 +30,7 @@ class CourseService {
         return fs.statSync(path.join(videoDir, folder)).isDirectory();
       });
 
-      const localStorage = videoService.getLocalStorage();
+      const localStorage = dynamoVideoService.getLocalStorage();
       const courses = [];
 
       for (const courseFolder of courseFolders) {
@@ -64,7 +64,7 @@ class CourseService {
       })));
       
       // Fallback to localStorage
-      const localStorage = videoService.getLocalStorage();
+      const localStorage = dynamoVideoService.getLocalStorage();
       const allVideos = [];
       
       Object.keys(localStorage).forEach(courseName => {
@@ -91,7 +91,7 @@ class CourseService {
   async getCourseByName(courseName) {
     try {
       const decodedCourseName = decodeURIComponent(courseName);
-      const videos = await videoService.getVideosForCourse(decodedCourseName);
+      const videos = await dynamoVideoService.getVideosForCourse(decodedCourseName, 'guest');
       
       if (!videos || videos.length === 0) {
         return null;

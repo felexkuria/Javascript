@@ -53,7 +53,7 @@ module "security" {
   create_ec2_role        = var.create_ec2_role
   create_cognito_role    = var.create_cognito ? var.create_cognito_role : false
   s3_bucket_arn          = module.storage.s3_bucket_arn
-  dynamodb_table_arns    = [
+  dynamodb_table_arns = [
     module.storage.dynamodb_videos_arn,
     module.storage.dynamodb_gamification_arn,
     module.storage.dynamodb_users_arn
@@ -103,14 +103,14 @@ module "compute" {
   min_size                  = var.min_size
   max_size                  = var.max_size
   desired_capacity          = var.desired_capacity
-  user_data_base64          = base64encode(templatefile("${path.module}/user_data.sh", {
-    aws_region               = var.aws_region
-    s3_bucket_name           = module.storage.s3_bucket_name
-    account_id               = data.aws_caller_identity.current.account_id
-    gemini_api_key           = var.gemini_api_key
-    nova_api_key             = var.nova_api_key
-    cognito_user_pool_id     = module.security.cognito_user_pool_id
-    cognito_client_id        = module.security.cognito_client_id
+  user_data_base64 = base64encode(templatefile("${path.module}/user_data.sh", {
+    aws_region           = var.aws_region
+    s3_bucket_name       = module.storage.s3_bucket_name
+    account_id           = data.aws_caller_identity.current.account_id
+    gemini_api_key       = var.gemini_api_key
+    nova_api_key         = var.nova_api_key
+    cognito_user_pool_id = module.security.cognito_user_pool_id
+    cognito_client_id    = module.security.cognito_client_id
   }))
 }
 

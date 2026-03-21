@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const thumbnailGenerator = require('./thumbnailGenerator');
-const videoService = require('./videoService');
+const dynamoVideoService = require('./dynamoVideoService');
 
 async function generateAllThumbnails() {
   try {
@@ -31,7 +31,7 @@ async function generateAllThumbnails() {
       console.log(`Processing course: ${courseName}`);
       
       // Get videos for the course
-      const videos = await videoService.getVideosForCourse(courseName);
+      const videos = await dynamoVideoService.getVideosForCourse(courseName, 'guest');
       
       if (!videos || videos.length === 0) {
         console.log(`No videos found for course: ${courseName}`);

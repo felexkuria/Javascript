@@ -1,8 +1,6 @@
-const videoService = require('../services/videoService');
 const dynamoVideoService = require('../services/dynamoVideoService');
 const path = require('path');
 const fs = require('fs');
-const mongoose = require('mongoose');
 
 class WebController {
   async redirectToDashboard(req, res) {
@@ -412,7 +410,7 @@ class WebController {
         return res.status(400).send('Invalid video ID');
       }
 
-      const video = await videoService.getVideoById(courseName, id);
+      const video = await dynamoVideoService.getVideoById(courseName, id);
       if (!video || !video.captionsUrl) {
         return res.status(404).send('No captions available');
       }
@@ -470,7 +468,7 @@ class WebController {
       const courseName = decodeURIComponent(req.params.courseName);
       const id = req.params.id;
 
-      const video = await videoService.getVideoById(courseName, id);
+      const video = await dynamoVideoService.getVideoById(courseName, id);
       if (!video) {
         return res.status(404).send('Video not found');
       }

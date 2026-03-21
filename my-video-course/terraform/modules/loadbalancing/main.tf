@@ -139,7 +139,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   threshold           = "70"
   alarm_description   = "This metric monitors ec2 cpu utilization"
   alarm_actions       = var.scale_up_policy_arns
-  
+
   dimensions = {
     AutoScalingGroupName = var.asg_name
   }
@@ -157,7 +157,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
   threshold           = "30"
   alarm_description   = "This metric monitors ec2 cpu utilization"
   alarm_actions       = var.scale_down_policy_arns
-  
+
   dimensions = {
     AutoScalingGroupName = var.asg_name
   }

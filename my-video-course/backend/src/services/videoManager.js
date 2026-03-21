@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId;
+const dynamoVideoService = require('./dynamoVideoService');
 
 class VideoManager {
   constructor() {
@@ -86,7 +85,7 @@ class VideoManager {
         this.traverseDirectory(filePath, videos, courseName, file);
       } else if (file.toLowerCase().endsWith('.mp4')) {
         const relativePath = path.relative(this.videoDir, filePath);
-        const videoId = new ObjectId();
+        const videoId = Date.now().toString() + '-' + Math.random().toString(36).substr(2, 5);
         
         videos.push({
           _id: videoId,
@@ -204,24 +203,11 @@ class VideoManager {
   }
 
   async saveCourseData(courseName, videos) {
-    // Save to localStorage
-    const videoService = require('./videoService');
-    const localStorage = videoService.getLocalStorage();
-    localStorage[courseName] = videos;
-    videoService.saveLocalStorage(localStorage);
-    console.log(`💾 Saved ${videos.length} videos to localStorage`);
-    
-    // Save to MongoDB if connected
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const courseCollection = mongoose.connection.collection(courseName);
-        await courseCollection.deleteMany({});
-        await courseCollection.insertMany(videos);
-        console.log(`🗄️ Saved ${videos.length} videos to MongoDB`);
-      } catch (error) {
-        console.error('❌ MongoDB save failed:', error.message);
-      }
+    // Save to localStorage/DynamoDB via the unified service
+    for (const video of videos) {
+      await dynamoVideoService.addVideoToCourse(courseName, video);
     }
+    console.log(`💾 Saved ${videos.length} videos to DynamoDB/LocalStorage`);
   }
 
   async generateCourseSummary(courseName, videos) {

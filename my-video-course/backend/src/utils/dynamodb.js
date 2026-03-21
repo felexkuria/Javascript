@@ -26,7 +26,7 @@ class DynamoDBService {
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
         };
       }
-      
+      this.dynamodb = new DynamoDBClient(config);
       console.log(`✅ DynamoDB initialized (Region: ${config.region}, Key: ${config.credentials ? config.credentials.accessKeyId.substring(0, 5) + '...' : 'IAM Role'})`);
       this.docClient = DynamoDBDocumentClient.from(this.dynamodb);
       this.isConnected = true;

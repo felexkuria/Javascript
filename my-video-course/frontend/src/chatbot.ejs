@@ -1,80 +1,67 @@
-<%- include('partials/header', { title: 'Course Chatbot', extraStyles: `
+<%- include('partials/header', { title: 'AI Assistant', extraStyles: `
 <style>
   body {
-    background-color: #1a202c; /* Dark background */
-    color: #e2e8f0; /* Light text */
+    background-color: #001E2B;
+    color: #E7EEEB;
+    font-family: 'Inter', sans-serif;
   }
   .chat-container {
-    height: calc(100vh - 200px);
-    background-color: #2d3748; /* Darker background for chat */
+    height: calc(100vh - 250px);
+    background-color: rgba(2, 52, 48, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 0;
   }
   .message {
-    animation: fadeIn 0.3s ease-in;
+    animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .message .bg-white {
-    background-color: #4a5568; /* Darker message background */
+  .message .bg-mongo-green {
+    background-color: #00ED64;
+    color: #001E2B;
   }
-  .message .text-gray-800 {
-    color: #e2e8f0; /* Light text for messages */
-  }
-  .typing-indicator {
-    animation: pulse 1.5s infinite;
+  .message .bg-mongo-slate {
+    background-color: #001E2B;
+    border: 1px solid rgba(0, 237, 100, 0.2);
+    color: #E7EEEB;
   }
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @keyframes pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 </style>
 ` }) %>
 
 <main class="flex-grow px-4 py-8 md:px-8">
   <div class="max-w-4xl mx-auto">
-    <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-      <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
-        <h1 class="text-2xl font-bold mb-2">🤖 Course Assistant</h1>
-        <p class="text-blue-100">
-          Ask me anything about your video courses! I'll explain concepts like
-          David J. Malan from CS50.
+    <div class="bg-[#023430] border border-[#00ED64]/20 rounded-2xl shadow-2xl overflow-hidden mt-4">
+      <div class="bg-gradient-to-r from-[#00ED64] to-[#00684A] p-8">
+        <h1 class="text-3xl font-black text-[#001E2B] mb-2">🍃 AI Academy Assistant</h1>
+        <p class="text-[#001E2B]/80 font-medium">
+          Ask me anything about your course content. I'll explain complex concepts with modern clarity.
         </p>
       </div>
 
       <div
         id="chatContainer"
-        class="chat-container overflow-y-auto p-6"
+        class="chat-container overflow-y-auto p-6 space-y-6"
       >
         <div class="message mb-4">
           <div class="flex items-start">
             <div
-              class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0"
+              class="bg-[#00ED64] text-[#001E2B] rounded-xl w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg"
             >
-              🤖
+              🍃
             </div>
-            <div class="bg-gray-700 rounded-lg p-4 shadow-sm max-w-3xl">
-              <p class="text-gray-300">
+            <div class="bg-[#001E2B] border border-[#00ED64]/20 rounded-2xl p-6 shadow-xl max-w-3xl">
+              <p class="text-[#E7EEEB]/90 font-medium leading-relaxed">
                 Hello! I'm your course assistant. I have knowledge from all your
                 video courses and can explain concepts in an engaging, David J.
                 Malan style. Try asking me:
               </p>
-              <ul class="mt-2 text-sm text-gray-400">
-                <li>• "Explain Git like David J. Malan"</li>
-                <li>• "What is Kubernetes in simple terms?"</li>
-                <li>• "How does DevOps work?"</li>
-                <li>• "Explain AWS architecture"</li>
+              <ul class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-[#00ED64]/70 italic">
+                <li>🍃 "Explain Git architecture"</li>
+                <li>🍃 "What is a Cluster in MongoDB?"</li>
+                <li>🍃 "How does the Event Loop work?"</li>
+                <li>🍃 "Explain AWS IAM roles"</li>
               </ul>
               <p class="text-gray-300 mt-4">
                 Additionally, I can help you manage your tasks. Here's a sample of what you can do:
@@ -90,27 +77,28 @@
         </div>
       </div>
 
-      <div class="border-t bg-gray-800 p-4">
-        <div class="flex gap-3 mb-2">
+      <div class="border-t border-[#00ED64]/10 bg-[#001E2B] p-6">
+        <div class="flex gap-4">
           <input
             type="text"
             id="messageInput"
-            placeholder="Ask me about any concept from your courses..."
-            class="flex-1 border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ask your technical questions here..."
+            class="flex-1 bg-[#023430] border border-[#00ED64]/20 rounded-xl px-6 py-3 text-[#E7EEEB] placeholder-[#E7EEEB]/30 focus:outline-none focus:ring-2 focus:ring-[#00ED64]/50 transition-all font-medium"
           />
           <button
             id="sendButton"
-            class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+            class="bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] px-8 py-3 rounded-xl font-black hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] transition-all flex items-center gap-2"
           >
-            Send
+            <span>Send</span>
+            <i class="fas fa-paper-plane text-xs"></i>
           </button>
         </div>
-        <div class="flex justify-end">
+        <div class="mt-4 flex justify-end">
           <button
             id="clearHistoryButton"
-            class="text-xs text-gray-400 hover:text-red-500 transition-colors"
+            class="text-xs font-bold uppercase tracking-widest text-[#E7EEEB]/20 hover:text-red-400 transition-colors"
           >
-            Clear Chat History
+            Clear History
           </button>
         </div>
       </div>
@@ -143,17 +131,17 @@
       <div class="flex items-start ${isUser ? "justify-end" : ""}">
         ${
           !isUser
-            ? '<div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">🤖</div>'
+            ? '<div class="bg-[#00ED64] text-[#001E2B] rounded-xl w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg">🍃</div>'
             : ""
         }
         <div class="${
-          isUser ? "bg-blue-500 text-white ml-12" : "bg-white text-gray-800"
-        } rounded-lg p-4 shadow-sm max-w-3xl">
+          isUser ? "bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] ml-12 font-bold" : "bg-[#001E2B] text-[#E7EEEB] border border-[#00ED64]/20"
+        } rounded-2xl p-4 shadow-xl max-w-3xl leading-relaxed">
           ${content}
         </div>
         ${
           isUser
-            ? '<div class="bg-gray-400 text-white rounded-full w-8 h-8 flex items-center justify-center ml-3 flex-shrink-0">👤</div>'
+            ? '<div class="bg-[#00684A] text-[#00ED64] border border-[#00ED64]/30 rounded-xl w-10 h-10 flex items-center justify-center ml-4 flex-shrink-0 shadow-lg">👤</div>'
             : ""
         }
       </div>
@@ -186,9 +174,14 @@
       typingDiv.className = "message mb-4";
       typingDiv.innerHTML = `
       <div class="flex items-start">
-        <div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">🤖</div>
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-          <div class="typing-indicator text-gray-500">Thinking like David J. Malan...</div>
+        <div class="bg-[#00ED64] text-[#001E2B] rounded-xl w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg">🍃</div>
+        <div class="bg-[#001E2B] border border-[#00ED64]/20 rounded-2xl p-6 shadow-xl">
+          <div class="flex gap-2 items-center">
+            <div class="w-2 h-2 bg-[#00ED64] rounded-full animate-bounce"></div>
+            <div class="w-2 h-2 bg-[#00ED64] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+            <div class="w-2 h-2 bg-[#00ED64] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+            <span class="text-xs font-bold text-[#00ED64] ml-2 tracking-widest uppercase">Thinking...</span>
+          </div>
         </div>
       </div>
     `;

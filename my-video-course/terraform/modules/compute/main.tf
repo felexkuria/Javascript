@@ -4,11 +4,11 @@ resource "aws_ecr_repository" "main" {
   name                 = "${var.app_name}-repo"
   image_tag_mutability = "MUTABLE"
   force_delete         = true
-  
+
   image_scanning_configuration {
     scan_on_push = true
   }
-  
+
   tags = {
     Name = "${var.app_name}-ecr"
   }
@@ -21,15 +21,15 @@ resource "aws_launch_template" "app" {
   image_id      = var.ami_id
   instance_type = var.instance_type
   key_name      = var.key_pair_name
-  
+
   vpc_security_group_ids = var.security_group_ids
-  
+
   iam_instance_profile {
     name = var.iam_instance_profile_name
   }
-  
+
   user_data = var.user_data_base64
-  
+
   tag_specifications {
     resource_type = "instance"
     tags = {
@@ -47,17 +47,17 @@ resource "aws_launch_template" "app" {
 
 # Auto Scaling Group
 resource "aws_autoscaling_group" "app" {
-  count               = var.create_asg ? 1 : 0
-  name                = "${var.app_name}-asg"
-  vpc_zone_identifier = var.subnet_ids
-  target_group_arns   = var.target_group_arns
-  health_check_type   = "ELB"
+  count                     = var.create_asg ? 1 : 0
+  name                      = "${var.app_name}-asg"
+  vpc_zone_identifier       = var.subnet_ids
+  target_group_arns         = var.target_group_arns
+  health_check_type         = "ELB"
   health_check_grace_period = 300
-  
+
   min_size         = var.min_size
   max_size         = var.max_size
   desired_capacity = var.desired_capacity
-  
+
   launch_template {
     id      = aws_launch_template.app[0].id
     version = "$Latest"

@@ -3,9 +3,7 @@ const multerS3 = require('multer-s3');
 const { S3Client } = require('@aws-sdk/client-s3');
 const path = require('path');
 const fs = require('fs');
-const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId;
-const videoService = require('../services/videoService');
+const dynamoVideoService = require('../services/dynamoVideoService');
 const thumbnailGenerator = require('../services/thumbnailGenerator');
 
 class UploadController {
@@ -80,37 +78,28 @@ class UploadController {
         return res.status(400).json({ error: 'No video URL provided' });
       }
 
-      const videoId = new ObjectId();
+      const videoId = Date.now().toString();
       const videoDoc = {
         _id: videoId,
+        id: videoId,
         title,
         description,
         videoUrl,
         section: courseId,
+        courseName: courseId,
         watched: false,
         watchedAt: null
       };
 
-      // Save to MongoDB if connected
-      if (mongoose.connection.readyState) {
-        try {
-          const courseCollection = mongoose.connection.collection(courseId);
-          await courseCollection.insertOne(videoDoc);
-          console.log(`Video saved to MongoDB: ${title}`);
-        } catch (dbErr) {
-          console.error('Error saving to MongoDB:', dbErr);
-        }
+      // Save to DynamoDB/LocalStorage via the unified service
+      const result = await dynamoVideoService.addVideoToCourse(courseId, videoDoc);
+      
+      if (result) {
+        console.log(`Video saved to database: ${title}`);
+        res.status(200).json({ success: true, redirectUrl: `/course/${courseId}` });
+      } else {
+        res.status(500).json({ error: 'Failed to save video to database' });
       }
-
-      // Save to localStorage
-      const localStorage = videoService.getLocalStorage();
-      if (!localStorage[courseId]) {
-        localStorage[courseId] = [];
-      }
-      localStorage[courseId].push(videoDoc);
-      videoService.saveLocalStorage(localStorage);
-
-      res.status(200).json({ success: true, redirectUrl: `/course/${courseId}` });
     } catch (err) {
       console.error('Error processing upload:', err);
       res.status(500).json({ error: 'Error processing upload' });
@@ -127,7 +116,7 @@ class UploadController {
         return res.status(400).send('No video file uploaded');
       }
 
-      const videoId = new ObjectId();
+      const videoId = Date.now().toString();
       let videoUrl;
 
       if (videoFile.location) {
@@ -152,34 +141,25 @@ class UploadController {
 
       const videoDoc = {
         _id: videoId,
+        id: videoId,
         title,
         description,
         videoUrl,
         section: courseId,
+        courseName: courseId,
         watched: false,
         watchedAt: null
       };
 
-      // Save to MongoDB if connected
-      if (mongoose.connection.readyState) {
-        try {
-          const courseCollection = mongoose.connection.collection(courseId);
-          await courseCollection.insertOne(videoDoc);
-        } catch (dbErr) {
-          console.error('Error saving to MongoDB:', dbErr);
-        }
+      // Save to DynamoDB/LocalStorage via the unified service
+      const result = await dynamoVideoService.addVideoToCourse(courseId, videoDoc);
+      
+      if (result) {
+        console.log(`Video uploaded: ${title} -> ${videoUrl}`);
+        res.redirect(`/course/${encodeURIComponent(courseId)}`);
+      } else {
+        res.status(500).send('Failed to save uploaded video to database');
       }
-
-      // Save to localStorage
-      const localStorage = videoService.getLocalStorage();
-      if (!localStorage[courseId]) {
-        localStorage[courseId] = [];
-      }
-      localStorage[courseId].push(videoDoc);
-      videoService.saveLocalStorage(localStorage);
-
-      console.log(`Video uploaded: ${title} -> ${videoUrl}`);
-      res.redirect(`/course/${encodeURIComponent(courseId)}`);
     } catch (err) {
       console.error('Error uploading file:', err);
       res.status(500).send('Error uploading file: ' + err.message);

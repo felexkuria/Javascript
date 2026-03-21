@@ -53,8 +53,8 @@ resource "aws_cognito_user_pool" "main" {
   count = var.create_cognito ? 1 : 0
   name  = "${var.app_name}-user-pool"
 
-  username_attributes        = ["email"]
-  auto_verified_attributes   = ["email"]
+  username_attributes      = ["email"]
+  auto_verified_attributes = ["email"]
 
   password_policy {
     minimum_length    = 8
@@ -78,9 +78,9 @@ resource "aws_cognito_user_pool" "main" {
 }
 
 resource "aws_cognito_user_pool_client" "main" {
-  count        = var.create_cognito ? 1 : 0
-  name         = "${var.app_name}-client"
-  user_pool_id = aws_cognito_user_pool.main[0].id
+  count           = var.create_cognito ? 1 : 0
+  name            = "${var.app_name}-client"
+  user_pool_id    = aws_cognito_user_pool.main[0].id
   generate_secret = false
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",
@@ -92,8 +92,8 @@ resource "aws_cognito_user_pool_client" "main" {
 # IAM Roles
 resource "aws_iam_role" "ec2_role" {
   count = var.create_ec2_role ? 1 : 0
-  name = "${var.app_name}-ec2-role"
-  
+  name  = "${var.app_name}-ec2-role"
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
