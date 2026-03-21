@@ -51,3 +51,8 @@ variable "enable_https" {
   type    = bool
   default = true
 }
+
+variable "create_route53_records" {
+  type    = bool
+  default = true
+}

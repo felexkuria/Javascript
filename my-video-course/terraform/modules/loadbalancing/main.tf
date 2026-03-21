@@ -46,7 +46,8 @@ resource "aws_acm_certificate" "cert" {
 
 resource "aws_route53_record" "cert_validation" {
   for_each = var.create_alb && var.enable_https ? {
-    for dvo in aws_acm_certificate.cert[0].domain_validation_options : dvo.domain_name => {
+    # Using splat [*] to safely handle zero-count without index errors
+    for dvo in flatten(aws_acm_certificate.cert[*].domain_validation_options) : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
       type   = dvo.resource_record_type
@@ -69,7 +70,7 @@ resource "aws_acm_certificate_validation" "cert" {
 
 # Route 53 Record for ALB
 resource "aws_route53_record" "app" {
-  count   = var.create_alb && var.domain_name != null ? 1 : 0
+  count   = var.create_alb && var.domain_name != null && var.create_route53_records ? 1 : 0
   zone_id = var.hosted_zone_id
   name    = var.domain_name
   type    = "A"
@@ -82,30 +83,32 @@ resource "aws_route53_record" "app" {
 }
 
 # Listeners
-resource "aws_lb_listener" "http" {
-  count             = var.create_alb ? 1 : 0
+# HTTP Listener - Conditional Forward or Redirect
+resource "aws_lb_listener" "http_redirect" {
+  count             = var.create_alb && var.enable_https ? 1 : 0
   load_balancer_arn = aws_lb.app[0].arn
   port              = "80"
   protocol          = "HTTP"
 
-  dynamic "default_action" {
-    for_each = var.enable_https ? [1] : []
-    content {
-      type = "redirect"
-      redirect {
-        port        = "443"
-        protocol    = "HTTPS"
-        status_code = "HTTP_301"
-      }
+  default_action {
+    type = "redirect"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
     }
   }
+}
 
-  dynamic "default_action" {
-    for_each = var.enable_https ? [] : [1]
-    content {
-      type             = "forward"
-      target_group_arn = aws_lb_target_group.app[0].arn
-    }
+resource "aws_lb_listener" "http_forward" {
+  count             = var.create_alb && !var.enable_https ? 1 : 0
+  load_balancer_arn = aws_lb.app[0].arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app[0].arn
   }
 }
 
