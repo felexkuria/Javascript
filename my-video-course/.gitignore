@@ -6,6 +6,11 @@ yarn-error.log*
 
 mongodb_data/*
 mongodb_data/diagnostic.data/*
+mongodb_data/metrics.interim
+mongodb_data/storage.bson
+mongodb_data/WiredTiger*
+mongodb_data/WiredTiger.lock
+mongodb_data/WiredTiger.turtle
 # Environment variables
 .env
 .env.local
