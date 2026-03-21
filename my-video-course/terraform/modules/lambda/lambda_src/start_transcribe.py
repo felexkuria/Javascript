@@ -5,11 +5,12 @@ transcribe = boto3.client('transcribe')
 def lambda_handler(event, context):
     """
     IMPORTANT: This Lambda is triggered via an SNS Topic (Fan-Out pattern).
-    The S3 event is wrapped inside the SNS message. Do not revert to direct S3 parsing
-    unless you also revert the Terraform SNS configuration.
+    CRITICAL: This Lambda MUST parse the SNS 'Message' field.
+    Your Terraform is configured with SNS Fan-Out (to avoid S3 overlap errors).
+    Do NOT revert this to direct S3 parsing or the Lambda will fail.
     """
     try:
-        # SNS sends the S3 event inside a 'Message' field
+        # Extract the S3 event from the SNS wrapper
         sns_message = event['Records'][0]['Sns']['Message']
         s3_event = json.loads(sns_message)
         rec = s3_event['Records'][0]['s3']
