@@ -105,9 +105,6 @@ module "compute" {
   max_size                  = var.max_size
   desired_capacity          = var.desired_capacity
   user_data_base64          = base64encode(templatefile("${path.module}/user_data.sh", {
-    mongodb_uri              = var.mongodb_uri
-    aws_access_key_id        = var.aws_access_key_id
-    aws_secret_access_key    = var.aws_secret_access_key
     aws_region               = var.aws_region
     s3_bucket_name           = module.storage.s3_bucket_name
     account_id               = data.aws_caller_identity.current.account_id

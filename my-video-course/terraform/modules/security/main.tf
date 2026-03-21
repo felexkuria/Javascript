@@ -139,6 +139,12 @@ resource "aws_iam_role_policy_attachment" "ec2_dynamodb" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
+resource "aws_iam_role_policy_attachment" "ec2_s3" {
+  count      = var.create_ec2_role ? 1 : 0
+  role       = aws_iam_role.ec2_role[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
 # Cognito Identity Pool
 resource "aws_cognito_identity_pool" "main" {
   count                            = var.create_cognito ? 1 : 0
