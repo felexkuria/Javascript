@@ -2,177 +2,177 @@ const dynamoVideoService = require('../services/dynamoVideoService');
 const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 
 class EnterpriseUploadController {
-    constructor() {
-        this.s3Client = new S3Client({ region: 'us-east-1' });
-        this.bucketName = 'video-course-bucket-047ad47c';
-    }
+  constructor() {
+    this.s3Client = new S3Client({ region: 'us-east-1' });
+    this.bucketName = 'video-course-bucket-047ad47c';
+  }
 
-    async getUploadStats(req, res) {
-        try {
-            const userId = req.user?.email || 'guest';
+  async getUploadStats(req, res) {
+    try {
+      const userId = req.user?.email || 'guest';
             
-            // Get upload statistics
-            const stats = await this.calculateUploadStats();
+      // Get upload statistics
+      const stats = await this.calculateUploadStats();
             
-            res.json({
-                success: true,
-                data: {
-                    uploadCount: stats.todayUploads,
-                    storageUsed: stats.storageUsed,
-                    storageTotal: stats.storageTotal,
-                    queueCount: stats.processingQueue,
-                    successRate: stats.successRate,
-                    recentUploads: stats.recentUploads
-                }
-            });
-        } catch (error) {
-            console.error('Error getting upload stats:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get upload statistics'
-            });
+      res.json({
+        success: true,
+        data: {
+          uploadCount: stats.todayUploads,
+          storageUsed: stats.storageUsed,
+          storageTotal: stats.storageTotal,
+          queueCount: stats.processingQueue,
+          successRate: stats.successRate,
+          recentUploads: stats.recentUploads
         }
+      });
+    } catch (error) {
+      console.error('Error getting upload stats:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get upload statistics'
+      });
     }
+  }
 
-    async generateUploadScript(req, res) {
-        try {
-            const { platform, config } = req.body;
-            const userId = req.user?.email || 'guest';
+  async generateUploadScript(req, res) {
+    try {
+      const { platform, config } = req.body;
+      const userId = req.user?.email || 'guest';
             
-            const script = await this.createCustomScript(platform, config, userId);
+      const script = await this.createCustomScript(platform, config, userId);
             
-            res.json({
-                success: true,
-                data: {
-                    script: script,
-                    filename: this.getScriptFilename(platform),
-                    instructions: this.getSetupInstructions(platform)
-                }
-            });
-        } catch (error) {
-            console.error('Error generating script:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to generate upload script'
-            });
+      res.json({
+        success: true,
+        data: {
+          script: script,
+          filename: this.getScriptFilename(platform),
+          instructions: this.getSetupInstructions(platform)
         }
+      });
+    } catch (error) {
+      console.error('Error generating script:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate upload script'
+      });
     }
+  }
 
-    async testUploadConnection(req, res) {
-        try {
-            const { platform, config } = req.body;
+  async testUploadConnection(req, res) {
+    try {
+      const { platform, config } = req.body;
             
-            // Test AWS credentials and S3 access
-            const testResult = await this.performConnectionTest(config);
+      // Test AWS credentials and S3 access
+      const testResult = await this.performConnectionTest(config);
             
-            res.json({
-                success: true,
-                data: {
-                    connectionStatus: testResult.status,
-                    latency: testResult.latency,
-                    bandwidth: testResult.bandwidth,
-                    recommendations: testResult.recommendations
-                }
-            });
-        } catch (error) {
-            console.error('Error testing connection:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Connection test failed'
-            });
+      res.json({
+        success: true,
+        data: {
+          connectionStatus: testResult.status,
+          latency: testResult.latency,
+          bandwidth: testResult.bandwidth,
+          recommendations: testResult.recommendations
         }
+      });
+    } catch (error) {
+      console.error('Error testing connection:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Connection test failed'
+      });
     }
+  }
 
-    async monitorUploads(req, res) {
-        try {
-            const userId = req.user?.email || 'guest';
+  async monitorUploads(req, res) {
+    try {
+      const userId = req.user?.email || 'guest';
             
-            // Get real-time upload monitoring data
-            const monitoring = await this.getUploadMonitoring(userId);
+      // Get real-time upload monitoring data
+      const monitoring = await this.getUploadMonitoring(userId);
             
-            res.json({
-                success: true,
-                data: monitoring
-            });
-        } catch (error) {
-            console.error('Error getting monitoring data:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get monitoring data'
-            });
-        }
+      res.json({
+        success: true,
+        data: monitoring
+      });
+    } catch (error) {
+      console.error('Error getting monitoring data:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get monitoring data'
+      });
     }
+  }
 
-    async calculateUploadStats() {
-        try {
-            // Get S3 bucket statistics
-            const listParams = {
-                Bucket: this.bucketName,
-                Prefix: 'videos/'
-            };
+  async calculateUploadStats() {
+    try {
+      // Get S3 bucket statistics
+      const listParams = {
+        Bucket: this.bucketName,
+        Prefix: 'videos/'
+      };
 
-            const command = new ListObjectsV2Command(listParams);
-            const response = await this.s3Client.send(command);
+      const command = new ListObjectsV2Command(listParams);
+      const response = await this.s3Client.send(command);
             
-            const objects = response.Contents || [];
-            const totalSize = objects.reduce((sum, obj) => sum + (obj.Size || 0), 0);
+      const objects = response.Contents || [];
+      const totalSize = objects.reduce((sum, obj) => sum + (obj.Size || 0), 0);
             
-            // Calculate today's uploads (mock data for now)
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+      // Calculate today's uploads (mock data for now)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
             
-            const todayUploads = objects.filter(obj => 
-                obj.LastModified && obj.LastModified >= today
-            ).length;
+      const todayUploads = objects.filter(obj => 
+        obj.LastModified && obj.LastModified >= today
+      ).length;
 
-            return {
-                todayUploads: todayUploads,
-                storageUsed: Math.round(totalSize / (1024 * 1024 * 1024 * 1024) * 100) / 100, // TB
-                storageTotal: 5, // 5TB limit
-                processingQueue: Math.floor(Math.random() * 10), // Mock queue
-                successRate: 99.8,
-                recentUploads: objects.slice(-10).map(obj => ({
-                    name: obj.Key.split('/').pop(),
-                    size: obj.Size,
-                    uploaded: obj.LastModified
-                }))
-            };
-        } catch (error) {
-            console.error('Error calculating stats:', error);
-            return {
-                todayUploads: 0,
-                storageUsed: 0,
-                storageTotal: 5,
-                processingQueue: 0,
-                successRate: 0,
-                recentUploads: []
-            };
-        }
+      return {
+        todayUploads: todayUploads,
+        storageUsed: Math.round(totalSize / (1024 * 1024 * 1024 * 1024) * 100) / 100, // TB
+        storageTotal: 5, // 5TB limit
+        processingQueue: Math.floor(Math.random() * 10), // Mock queue
+        successRate: 99.8,
+        recentUploads: objects.slice(-10).map(obj => ({
+          name: obj.Key.split('/').pop(),
+          size: obj.Size,
+          uploaded: obj.LastModified
+        }))
+      };
+    } catch (error) {
+      console.error('Error calculating stats:', error);
+      return {
+        todayUploads: 0,
+        storageUsed: 0,
+        storageTotal: 5,
+        processingQueue: 0,
+        successRate: 0,
+        recentUploads: []
+      };
     }
+  }
 
-    createCustomScript(platform, config, userId) {
-        const templates = {
-            windows: this.getWindowsScript(config),
-            macos: this.getMacScript(config),
-            linux: this.getLinuxScript(config),
-            docker: this.getDockerScript(config)
-        };
+  createCustomScript(platform, config, userId) {
+    const templates = {
+      windows: this.getWindowsScript(config),
+      macos: this.getMacScript(config),
+      linux: this.getLinuxScript(config),
+      docker: this.getDockerScript(config)
+    };
 
-        let script = templates[platform] || templates.windows;
+    let script = templates[platform] || templates.windows;
         
-        // Replace configuration placeholders
-        script = script.replace(/{{courseName}}/g, config.courseName || 'default-course');
-        script = script.replace(/{{parallelUploads}}/g, config.parallelUploads || '3');
-        script = script.replace(/{{videoQuality}}/g, config.videoQuality || 'original');
-        script = script.replace(/{{autoTranscription}}/g, config.autoTranscription || 'true');
-        script = script.replace(/{{timestamp}}/g, new Date().toISOString());
-        script = script.replace(/{{userId}}/g, userId);
+    // Replace configuration placeholders
+    script = script.replace(/{{courseName}}/g, config.courseName || 'default-course');
+    script = script.replace(/{{parallelUploads}}/g, config.parallelUploads || '3');
+    script = script.replace(/{{videoQuality}}/g, config.videoQuality || 'original');
+    script = script.replace(/{{autoTranscription}}/g, config.autoTranscription || 'true');
+    script = script.replace(/{{timestamp}}/g, new Date().toISOString());
+    script = script.replace(/{{userId}}/g, userId);
 
-        return script;
-    }
+    return script;
+  }
 
-    getWindowsScript(config) {
-        return `# Enterprise Video Upload Script - Windows PowerShell
+  getWindowsScript(config) {
+    return `# Enterprise Video Upload Script - Windows PowerShell
 # Auto-generated for user: {{userId}}
 # Generated: {{timestamp}}
 
@@ -180,7 +180,7 @@ param(
     [string]$CourseName = "{{courseName}}",
     [int]$ParallelUploads = {{parallelUploads}},
     [string]$VideoQuality = "{{videoQuality}}",
-    [bool]$AutoTranscription = ${{autoTranscription}}
+    [bool]$AutoTranscription = \${{autoTranscription}}
 )
 
 # Enterprise configuration
@@ -383,64 +383,64 @@ Write-EnterpriseLog "System Information" "INFO" $systemInfo
 # [Rest of the enhanced script would continue here]
 
 Write-EnterpriseLog "🎉 Enterprise Upload Process Completed" "SUCCESS"`;
-    }
+  }
 
-    getMacScript(config) {
-        return `#!/bin/bash
+  getMacScript(config) {
+    return `#!/bin/bash
 # Enterprise Video Upload Script - macOS
 # Generated: {{timestamp}}
 
 COURSE_NAME="{{courseName}}"
 PARALLEL_UPLOADS={{parallelUploads}}
 S3_BUCKET="video-course-bucket-047ad47c"
-S3_PREFIX="videos/\$COURSE_NAME/"
-LOCAL_PATH="\$(pwd)"
-LOG_FILE="enterprise-upload-\$(date +%Y%m%d-%H%M%S).log"
+S3_PREFIX="videos/$COURSE_NAME/"
+LOCAL_PATH="$(pwd)"
+LOG_FILE="enterprise-upload-$(date +%Y%m%d-%H%M%S).log"
 
 echo "🚀 Enterprise Upload Started"
-echo "📁 Source: \$LOCAL_PATH"
-echo "☁️  Destination: s3://\$S3_BUCKET/\$S3_PREFIX"
+echo "📁 Source: $LOCAL_PATH"
+echo "☁️  Destination: s3://$S3_BUCKET/$S3_PREFIX"
 
 # Find video files
 video_files=()
 while IFS= read -r -d '' file; do
-    video_files+=("\$file")
-done < <(find "\$LOCAL_PATH" -type f \\( -iname "*.mp4" -o -iname "*.mkv" -o -iname "*.avi" \\) -print0)
+    video_files+=("$file")
+done < <(find "$LOCAL_PATH" -type f \\( -iname "*.mp4" -o -iname "*.mkv" -o -iname "*.avi" \\) -print0)
 
 echo "📊 Found \${#video_files[@]} video files"
 
 # Upload function
 upload_video() {
-    local file="\$1"
-    local filename=\$(basename "\$file")
-    local s3_key="\$S3_PREFIX\$filename"
+    local file="$1"
+    local filename=$(basename "$file")
+    local s3_key="$S3_PREFIX$filename"
     
-    echo "⬆️  Uploading: \$filename"
+    echo "⬆️  Uploading: $filename"
     
-    if aws s3 cp "\$file" "s3://\$S3_BUCKET/\$s3_key" --no-progress; then
-        echo "✅ Uploaded: \$filename"
+    if aws s3 cp "$file" "s3://$S3_BUCKET/$s3_key" --no-progress; then
+        echo "✅ Uploaded: $filename"
         return 0
     else
-        echo "❌ Failed: \$filename"
+        echo "❌ Failed: $filename"
         return 1
     fi
 }
 
 # Process uploads
 for file in "\${video_files[@]}"; do
-    upload_video "\$file"
+    upload_video "$file"
 done
 
 echo "🎉 Upload completed!"`;
-    }
+  }
 
-    getLinuxScript(config) {
-        // Similar to macOS but with Linux-specific optimizations
-        return this.getMacScript(config).replace('macOS', 'Linux');
-    }
+  getLinuxScript(config) {
+    // Similar to macOS but with Linux-specific optimizations
+    return this.getMacScript(config).replace('macOS', 'Linux');
+  }
 
-    getDockerScript(config) {
-        return `# Enterprise Docker Upload Configuration
+  getDockerScript(config) {
+    return `# Enterprise Docker Upload Configuration
 # Generated: {{timestamp}}
 # User: {{userId}}
 
@@ -533,103 +533,103 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \\
 
 # Start enterprise upload service
 CMD ["/app/scripts/enterprise-upload.sh"]`;
-    }
+  }
 
-    getScriptFilename(platform) {
-        const filenames = {
-            windows: 'enterprise-upload.ps1',
-            macos: 'enterprise-upload.sh',
-            linux: 'enterprise-upload.sh',
-            docker: 'docker-compose.yml'
-        };
-        return filenames[platform] || 'upload-script.txt';
-    }
+  getScriptFilename(platform) {
+    const filenames = {
+      windows: 'enterprise-upload.ps1',
+      macos: 'enterprise-upload.sh',
+      linux: 'enterprise-upload.sh',
+      docker: 'docker-compose.yml'
+    };
+    return filenames[platform] || 'upload-script.txt';
+  }
 
-    getSetupInstructions(platform) {
-        const instructions = {
-            windows: [
-                'Install AWS CLI: winget install Amazon.AWSCLI',
-                'Configure credentials: aws configure',
-                'Set execution policy: Set-ExecutionPolicy RemoteSigned',
-                'Save script as enterprise-upload.ps1',
-                'Run from video folder: .\\enterprise-upload.ps1'
-            ],
-            macos: [
-                'Install AWS CLI: brew install awscli',
-                'Install jq: brew install jq',
-                'Configure credentials: aws configure',
-                'Make executable: chmod +x enterprise-upload.sh',
-                'Run from video folder: ./enterprise-upload.sh'
-            ],
-            linux: [
-                'Install AWS CLI: sudo apt install awscli',
-                'Install jq: sudo apt install jq',
-                'Configure credentials: aws configure',
-                'Make executable: chmod +x enterprise-upload.sh',
-                'Run from video folder: ./enterprise-upload.sh'
-            ],
-            docker: [
-                'Install Docker: docker --version',
-                'Save files as docker-compose.yml and Dockerfile.enterprise',
-                'Build: docker-compose build',
-                'Run: docker-compose up -d',
-                'Monitor: docker-compose logs -f'
-            ]
-        };
-        return instructions[platform] || [];
-    }
+  getSetupInstructions(platform) {
+    const instructions = {
+      windows: [
+        'Install AWS CLI: winget install Amazon.AWSCLI',
+        'Configure credentials: aws configure',
+        'Set execution policy: Set-ExecutionPolicy RemoteSigned',
+        'Save script as enterprise-upload.ps1',
+        'Run from video folder: .\\enterprise-upload.ps1'
+      ],
+      macos: [
+        'Install AWS CLI: brew install awscli',
+        'Install jq: brew install jq',
+        'Configure credentials: aws configure',
+        'Make executable: chmod +x enterprise-upload.sh',
+        'Run from video folder: ./enterprise-upload.sh'
+      ],
+      linux: [
+        'Install AWS CLI: sudo apt install awscli',
+        'Install jq: sudo apt install jq',
+        'Configure credentials: aws configure',
+        'Make executable: chmod +x enterprise-upload.sh',
+        'Run from video folder: ./enterprise-upload.sh'
+      ],
+      docker: [
+        'Install Docker: docker --version',
+        'Save files as docker-compose.yml and Dockerfile.enterprise',
+        'Build: docker-compose build',
+        'Run: docker-compose up -d',
+        'Monitor: docker-compose logs -f'
+      ]
+    };
+    return instructions[platform] || [];
+  }
 
-    async performConnectionTest(config) {
-        // Mock connection test - in real implementation, this would test actual connectivity
-        const startTime = Date.now();
+  async performConnectionTest(config) {
+    // Mock connection test - in real implementation, this would test actual connectivity
+    const startTime = Date.now();
         
-        try {
-            // Simulate connection test
-            await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Simulate connection test
+      await new Promise(resolve => setTimeout(resolve, 1000));
             
-            const endTime = Date.now();
-            const latency = endTime - startTime;
+      const endTime = Date.now();
+      const latency = endTime - startTime;
             
-            return {
-                status: 'excellent',
-                latency: latency,
-                bandwidth: 'high',
-                recommendations: [
-                    'Connection is optimal for parallel uploads',
-                    'Recommended parallel uploads: 5-10',
-                    'Enable multipart upload for files > 100MB'
-                ]
-            };
-        } catch (error) {
-            return {
-                status: 'poor',
-                latency: 5000,
-                bandwidth: 'low',
-                recommendations: [
-                    'Reduce parallel uploads to 1-2',
-                    'Consider uploading during off-peak hours',
-                    'Check network connectivity'
-                ]
-            };
-        }
+      return {
+        status: 'excellent',
+        latency: latency,
+        bandwidth: 'high',
+        recommendations: [
+          'Connection is optimal for parallel uploads',
+          'Recommended parallel uploads: 5-10',
+          'Enable multipart upload for files > 100MB'
+        ]
+      };
+    } catch (error) {
+      return {
+        status: 'poor',
+        latency: 5000,
+        bandwidth: 'low',
+        recommendations: [
+          'Reduce parallel uploads to 1-2',
+          'Consider uploading during off-peak hours',
+          'Check network connectivity'
+        ]
+      };
     }
+  }
 
-    async getUploadMonitoring(userId) {
-        // Mock monitoring data - in real implementation, this would come from actual monitoring systems
-        return {
-            activeUploads: Math.floor(Math.random() * 5),
-            queuedUploads: Math.floor(Math.random() * 10),
-            completedToday: Math.floor(Math.random() * 50),
-            failedToday: Math.floor(Math.random() * 3),
-            averageSpeed: '15.2 MB/s',
-            estimatedCompletion: '2 hours 15 minutes',
-            systemLoad: {
-                cpu: Math.floor(Math.random() * 30) + 20,
-                memory: Math.floor(Math.random() * 40) + 30,
-                network: Math.floor(Math.random() * 50) + 25
-            }
-        };
-    }
+  async getUploadMonitoring(userId) {
+    // Mock monitoring data - in real implementation, this would come from actual monitoring systems
+    return {
+      activeUploads: Math.floor(Math.random() * 5),
+      queuedUploads: Math.floor(Math.random() * 10),
+      completedToday: Math.floor(Math.random() * 50),
+      failedToday: Math.floor(Math.random() * 3),
+      averageSpeed: '15.2 MB/s',
+      estimatedCompletion: '2 hours 15 minutes',
+      systemLoad: {
+        cpu: Math.floor(Math.random() * 30) + 20,
+        memory: Math.floor(Math.random() * 40) + 30,
+        network: Math.floor(Math.random() * 50) + 25
+      }
+    };
+  }
 }
 
 module.exports = new EnterpriseUploadController();

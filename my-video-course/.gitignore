@@ -80,3 +80,21 @@ public/uploads/
 public/videos/
 public/thumbnails/
 data/
+
+# Terraform Deployment
+**/*.zip
+
+# Python Lambdas
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Flutter & Dart
+.dart_tool/
+**/build/
+.pub-cache/
+.pub/
+
+# System Files (Nested)
+**/.DS_Store

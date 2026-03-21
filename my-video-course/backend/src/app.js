@@ -44,6 +44,38 @@ app.get('/', (req, res) => res.redirect('/login'));
 app.get('/login', (req, res) => res.render('pages/login', { error: null }));
 app.get('/signup', (req, res) => res.render('pages/signup', { error: null }));
 app.get('/forgot-password', (req, res) => res.render('pages/forgot-password', { error: null }));
+app.get('/reset-password', (req, res) => res.render('pages/reset-password', { error: null }));
+
+// Admin auth endpoint (public)
+app.post('/admin/auth', async (req, res) => {
+  const { email, password } = req.body;
+  
+  if (email !== 'engineerfelex@gmail.com') {
+    return res.json({ success: false, error: 'Admin access only' });
+  }
+  
+  try {
+    const cognitoService = require('./services/cognitoService');
+    const result = await cognitoService.signIn(email, password);
+    
+    req.session.user = {
+      email: 'engineerfelex@gmail.com',
+      roles: ['admin', 'teacher', 'student'],
+      currentRole: 'admin',
+      isAdmin: true,
+      isTeacher: true,
+      token: result.accessToken
+    };
+    
+    res.json({ 
+      success: true, 
+      message: 'Admin authenticated',
+      redirect: '/admin/course-manager'
+    });
+  } catch (error) {
+    res.json({ success: false, error: 'Invalid credentials' });
+  }
+});
 
 // Public API Routes (NO AUTH REQUIRED)
 app.use('/api/auth', require('./routes/api/auth'));
@@ -720,7 +752,10 @@ app.get('/admin/dashboard', sessionAuth, async (req, res) => {
   }
 });
 app.get('/admin/course-manager', sessionAuth, async (req, res) => {
+  console.log('Course manager accessed by:', req.user?.email);
+  
   if (req.user?.email !== 'engineerfelex@gmail.com') {
+    console.log('Access denied - not admin user');
     return res.redirect('/dashboard');
   }
   

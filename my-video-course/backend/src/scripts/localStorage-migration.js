@@ -204,7 +204,7 @@ async function verifyMigration() {
     console.log('\n📊 MIGRATION VERIFICATION:');
     console.log('========================');
     console.log(`👤 User: ${user.name} (${user.email})`);
-    console.log(`🎮 Gamification:`);
+    console.log('🎮 Gamification:');
     console.log(`   - Total Points: ${user.gamification?.userStats?.totalPoints || 0}`);
     console.log(`   - Current Level: ${user.gamification?.userStats?.currentLevel || 1}`);
     console.log(`   - Videos Watched: ${user.gamification?.userStats?.videosWatched?.size || 0}`);

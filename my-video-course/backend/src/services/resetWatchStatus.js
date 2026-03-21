@@ -47,10 +47,10 @@ try {
   // Write the updated data back to the file
   fs.writeFileSync(localStoragePath, JSON.stringify(localStorage, null, 2), 'utf8');
   
-  console.log(`Reset complete!`);
+  console.log('Reset complete!');
   console.log(`Total videos: ${totalVideos}`);
   console.log(`Videos marked as watched before: ${watchedBefore}`);
-  console.log(`Videos marked as watched after: 0`);
+  console.log('Videos marked as watched after: 0');
   
 } catch (err) {
   console.error('Error resetting watch status:', err);

@@ -225,11 +225,11 @@ class AIController {
     const msg = message.toLowerCase();
 
     if (msg.includes('terraform')) {
-      return "Indeed! Terraform is fantastic for Infrastructure as Code! Think of it as writing a blueprint for your entire cloud setup. The beauty is in the declarative approach - you describe what you want, and Terraform figures out how to get there. Start with 'terraform init', 'terraform plan', and 'terraform apply'. Remember, always version control your .tf files! 🏗️";
+      return 'Indeed! Terraform is fantastic for Infrastructure as Code! Think of it as writing a blueprint for your entire cloud setup. The beauty is in the declarative approach - you describe what you want, and Terraform figures out how to get there. Start with \'terraform init\', \'terraform plan\', and \'terraform apply\'. Remember, always version control your .tf files! 🏗️';
     }
 
     if (msg.includes('aws') || msg.includes('cloud')) {
-      return "Excellent question about AWS! The cloud is like having a massive data center at your fingertips. With Terraform, you can provision AWS resources declaratively. Start with simple resources like S3 buckets and EC2 instances, then work your way up to complex architectures. Always follow the principle of least privilege! ☁️";
+      return 'Excellent question about AWS! The cloud is like having a massive data center at your fingertips. With Terraform, you can provision AWS resources declaratively. Start with simple resources like S3 buckets and EC2 instances, then work your way up to complex architectures. Always follow the principle of least privilege! ☁️';
     }
 
     return `That's a thoughtful question about ${videoTitle || 'this topic'}! While I'm running in offline mode right now, I encourage you to break down the problem step by step.\n\nIn ${courseName?.includes('Terraform') ? 'Terraform and Infrastructure as Code' : 'DevOps'}, we always start with the fundamentals and build up. Don't be afraid to experiment in a safe environment - that's how we learn best!\n\nKeep exploring and asking great questions like this one! 🚀`;

@@ -162,7 +162,7 @@ class VideoService {
           return video;
         }
       } catch (err) {
-        console.error(`Error fetching video from MongoDB:`, err);
+        console.error('Error fetching video from MongoDB:', err);
       }
     }
     
@@ -217,10 +217,10 @@ class VideoService {
         );
         
         if (result.matchedCount > 0) {
-          console.log(`Synced video watch status to MongoDB`);
+          console.log('Synced video watch status to MongoDB');
         }
       } catch (err) {
-        console.error(`Error syncing to MongoDB:`, err);
+        console.error('Error syncing to MongoDB:', err);
       }
     }
     
@@ -336,7 +336,7 @@ class VideoService {
           return existingVideos;
         }
       } catch (err) {
-        console.error(`Error checking existing videos in MongoDB:`, err);
+        console.error('Error checking existing videos in MongoDB:', err);
       }
     } else {
       // Check localStorage
@@ -419,7 +419,7 @@ class VideoService {
           console.log(`MongoDB collection for ${courseName} already has ${count} videos, skipping insert`);
         }
       } catch (err) {
-        console.error(`Error saving videos to MongoDB:`, err);
+        console.error('Error saving videos to MongoDB:', err);
       }
     }
     

@@ -45,7 +45,7 @@ async function forceSyncVideo() {
       process.exit(1);
     }
     
-    console.log(`Found video in localStorage:`, localVideo);
+    console.log('Found video in localStorage:', localVideo);
     
     // Get the video from MongoDB
     const courseCollection = mongoose.connection.collection(courseName);
@@ -56,7 +56,7 @@ async function forceSyncVideo() {
       process.exit(1);
     }
     
-    console.log(`Found video in MongoDB:`, dbVideo);
+    console.log('Found video in MongoDB:', dbVideo);
     
     // Update the video in MongoDB
     const result = await courseCollection.updateOne(

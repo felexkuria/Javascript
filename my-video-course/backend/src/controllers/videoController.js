@@ -17,6 +17,8 @@
 
 
 // controllers/videoController.js
+const mongoose = require('mongoose');
+const Video = mongoose.models.Video || mongoose.model('Video', new mongoose.Schema({}, { strict: false }));
 const dynamoVideoService = require('../services/dynamoVideoService');
 
 exports.getVideos = async (req, res) => {
@@ -79,7 +81,7 @@ exports.getVideoById = async (req, res) => {
 //     video.watched = true;
 //     video.watchedAt = new Date(); // Set the current date and time
 //     await video.save();
-    // res.redirect(`/videos/${req.params.id}`);
+// res.redirect(`/videos/${req.params.id}`);
 //   } catch (err) {
 //     res.status(500).json({ error: err.message });
 //   }
