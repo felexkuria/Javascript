@@ -50,6 +50,7 @@ module "security" {
   create_security_groups = var.create_security_groups
   create_cognito         = var.create_cognito
   create_ec2_role        = var.create_ec2_role
+  create_cognito_role    = var.create_cognito ? var.create_cognito_role : false
   s3_bucket_arn          = module.storage.s3_bucket_arn
   dynamodb_table_arns    = [
     module.storage.dynamodb_videos_arn,
@@ -59,12 +60,14 @@ module "security" {
 }
 
 module "storage" {
-  source           = "./modules/storage"
-  app_name         = var.app_name
-  environment      = var.environment
-  create_s3_bucket = var.create_s3_bucket
-  allowed_origins  = ["https://${var.domain_name}", "http://localhost:3000"]
-  ec2_role_name    = module.security.ec2_role_name
+  source                 = "./modules/storage"
+  app_name               = var.app_name
+  environment            = var.environment
+  create_s3_bucket       = var.create_s3_bucket
+  allowed_origins        = ["https://${var.domain_name}", "http://localhost:3000"]
+  ec2_role_name          = module.security.ec2_role_name
+  create_dynamodb_policy = var.create_dynamodb_policy
+  existing_policy_arn    = var.existing_dynamodb_policy_arn
 }
 
 module "loadbalancing" {
@@ -119,4 +122,6 @@ module "lambda" {
   s3_bucket_name      = module.storage.s3_bucket_name
   s3_bucket_arn       = module.storage.s3_bucket_arn
   dynamodb_table_name = "${var.app_name}-videos-${var.environment}"
+  create_role         = var.create_lambda_role
+  existing_role_arn   = var.existing_lambda_role_arn
 }

@@ -139,6 +139,30 @@ variable "create_route53_records" {
   default     = true
 }
 
+variable "create_lambda_role" {
+  description = "Whether to create IAM role for Lambda (false to use existing)"
+  type        = bool
+  default     = true
+}
+
+variable "create_dynamodb_policy" {
+  description = "Whether to create IAM policy for DynamoDB (false to use existing)"
+  type        = bool
+  default     = true
+}
+
+variable "existing_lambda_role_arn" {
+  description = "Existing IAM role ARN for Lambda (if create_lambda_role is false)"
+  type        = string
+  default     = null
+}
+
+variable "existing_dynamodb_policy_arn" {
+  description = "Existing IAM policy ARN for DynamoDB (if create_dynamodb_policy is false)"
+  type        = string
+  default     = null
+}
+
 variable "enable_https" {
   description = "Whether to enable HTTPS (requires ACM certificate and Route53)"
   type        = bool

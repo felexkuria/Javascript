@@ -19,3 +19,13 @@ variable "ec2_role_name" {
   type    = string
   default = null
 }
+
+variable "create_dynamodb_policy" {
+  type    = bool
+  default = true
+}
+
+variable "existing_policy_arn" {
+  type    = string
+  default = null
+}

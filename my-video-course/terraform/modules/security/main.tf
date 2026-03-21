@@ -133,7 +133,7 @@ resource "aws_cognito_identity_pool" "main" {
 
 # IAM role for authenticated users
 resource "aws_iam_role" "authenticated" {
-  count = var.create_cognito ? 1 : 0
+  count = var.create_cognito_role ? 1 : 0
   name  = "${var.app_name}-cognito-auth-role"
 
   assume_role_policy = jsonencode({
@@ -160,7 +160,7 @@ resource "aws_iam_role" "authenticated" {
 
 # Policy for authenticated users
 resource "aws_iam_role_policy" "authenticated" {
-  count = var.create_cognito ? 1 : 0
+  count = var.create_cognito_role ? 1 : 0
   name  = "${var.app_name}-cognito-auth-policy"
   role  = aws_iam_role.authenticated[0].id
 
@@ -197,7 +197,7 @@ resource "aws_iam_role_policy" "authenticated" {
 
 # Attach roles to identity pool
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
-  count            = var.create_cognito ? 1 : 0
+  count            = var.create_cognito_role ? 1 : 0
   identity_pool_id = aws_cognito_identity_pool.main[0].id
 
   roles = {

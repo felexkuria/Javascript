@@ -31,3 +31,8 @@ variable "dynamodb_table_arns" {
   type    = list(string)
   default = []
 }
+
+variable "create_cognito_role" {
+  type    = bool
+  default = true
+}
