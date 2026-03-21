@@ -269,8 +269,8 @@ app.get('/api/courses/:name', (req, res) => courseController.getCourseByName(req
 app.get('/api/analytics', teacherOrAdminAuth, (req, res) => courseController.getAnalytics(req, res));
 app.use('/api/upload', teacherOrAdminAuth, require('./routes/api/upload'));
 app.use('/api/system', adminAuth, require('./routes/api/system'));
-app.use('/api/videos/fix-numbering', adminAuth, require('./routes/api/videos-fix'));
-app.use('/api/videos-manage', teacherOrAdminAuth, require('./routes/api/videos-manage'));
+// app.use('/api/videos/fix-numbering', adminAuth, require('./routes/api/videos-fix'));
+// app.use('/api/videos-manage', teacherOrAdminAuth, require('./routes/api/videos-manage'));
 
 // Update video endpoint
 app.put('/api/videos/:courseName/:videoId', teacherOrAdminAuth, async (req, res) => {
@@ -294,7 +294,7 @@ app.put('/api/videos/:courseName/:videoId', teacherOrAdminAuth, async (req, res)
 
 // Admin API Routes
 app.use('/api/admin-auth', require('./routes/api/admin-auth'));
-app.use('/api/admin', cognitoAuth, require('./routes/api/admin'));
+// app.use('/api/admin', cognitoAuth, require('./routes/api/admin'));
 app.use('/api/enterprise-upload', require('./routes/api/enterprise-upload'));
 
 // Protected API Routes
@@ -312,8 +312,8 @@ app.use('/api/videos', cognitoAuth, require('./routes/api/videos-missing'));
 
 app.use('/api/quizzes', cognitoAuth, require('./routes/api/quizzes'));
 app.use('/api/ai', cognitoAuth, require('./routes/api/ai'));
-app.use('/api/users', cognitoAuth, require('./routes/api/users'));
-app.use('/api/enrollments', cognitoAuth, require('./routes/api/enrollments'));
+// app.use('/api/users', cognitoAuth, require('./routes/api/users'));
+// app.use('/api/enrollments', cognitoAuth, require('./routes/api/enrollments'));
 
 // Video control endpoints
 app.post('/api/mark-watched', cognitoAuth, async (req, res) => {
