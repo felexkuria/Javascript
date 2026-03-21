@@ -36,6 +36,13 @@ resource "aws_launch_template" "app" {
       Name = "${var.app_name}-instance"
     }
   }
+
+  tag_specifications {
+    resource_type = "volume"
+    tags = {
+      Name = "${var.app_name}-volume"
+    }
+  }
 }
 
 # Auto Scaling Group

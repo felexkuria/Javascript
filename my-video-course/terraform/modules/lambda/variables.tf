@@ -17,3 +17,13 @@ variable "s3_bucket_arn" {
 variable "dynamodb_table_name" {
   type = string
 }
+
+variable "create_role" {
+  type    = bool
+  default = true
+}
+
+variable "existing_role_arn" {
+  type    = string
+  default = null
+}

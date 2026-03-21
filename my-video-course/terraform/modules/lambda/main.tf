@@ -136,9 +136,34 @@ data "archive_file" "add_video_to_db_zip" {
   depends_on  = [local_file.add_video_to_db_py]
 }
 
+# SNS Topic for Fan-Out
+resource "aws_sns_topic" "video_updates" {
+  name = "${var.app_name}-video-updates"
+}
+
+resource "aws_sns_topic_policy" "default" {
+  arn = aws_sns_topic.video_updates.arn
+  
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = { Service = "s3.amazonaws.com" }
+        Action = "SNS:Publish"
+        Resource = aws_sns_topic.video_updates.arn
+        Condition = {
+          ArnLike = { "aws:SourceArn": var.s3_bucket_arn }
+        }
+      }
+    ]
+  })
+}
+
 # IAM Role
 resource "aws_iam_role" "lambda_role" {
-  name = "${var.app_name}-lambda-role"
+  count = var.create_role ? 1 : 0
+  name  = "${var.app_name}-lambda-role"
   
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -151,8 +176,9 @@ resource "aws_iam_role" "lambda_role" {
 }
 
 resource "aws_iam_role_policy" "lambda_policy" {
-  name = "${var.app_name}-lambda-policy"
-  role = aws_iam_role.lambda_role.id
+  count = var.create_role ? 1 : 0
+  name  = "${var.app_name}-lambda-policy"
+  role  = aws_iam_role.lambda_role[0].id
   
   policy = jsonencode({
     Version = "2012-10-17"
@@ -185,7 +211,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
 resource "aws_lambda_function" "start_transcribe" {
   filename         = data.archive_file.start_transcribe_zip.output_path
   function_name    = "${var.app_name}-start-transcribe"
-  role            = aws_iam_role.lambda_role.arn
+  role            = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
   handler         = "start_transcribe.lambda_handler"
   runtime         = "python3.9"
   source_code_hash = data.archive_file.start_transcribe_zip.output_base64sha256
@@ -194,7 +220,7 @@ resource "aws_lambda_function" "start_transcribe" {
 resource "aws_lambda_function" "postprocess_subtitles" {
   filename         = data.archive_file.postprocess_zip.output_path
   function_name    = "${var.app_name}-postprocess-subtitles"
-  role            = aws_iam_role.lambda_role.arn
+  role            = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
   handler         = "postprocess_subtitles.lambda_handler"
   runtime         = "python3.9"
   source_code_hash = data.archive_file.postprocess_zip.output_base64sha256
@@ -203,7 +229,7 @@ resource "aws_lambda_function" "postprocess_subtitles" {
 resource "aws_lambda_function" "add_video_to_db" {
   filename         = data.archive_file.add_video_to_db_zip.output_path
   function_name    = "${var.app_name}-add-video-to-db"
-  role            = aws_iam_role.lambda_role.arn
+  role            = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
   handler         = "add_video_to_db.lambda_handler"
   runtime         = "python3.9"
   source_code_hash = data.archive_file.add_video_to_db_zip.output_base64sha256
@@ -215,38 +241,44 @@ resource "aws_lambda_function" "add_video_to_db" {
   }
 }
 
-# Permissions
-resource "aws_lambda_permission" "s3_start_transcribe" {
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.start_transcribe.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = var.s3_bucket_arn
+# SNS Subscriptions
+resource "aws_sns_topic_subscription" "start_transcribe" {
+  topic_arn = aws_sns_topic.video_updates.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.start_transcribe.arn
 }
 
-resource "aws_lambda_permission" "s3_add_video" {
+resource "aws_sns_topic_subscription" "add_video" {
+  topic_arn = aws_sns_topic.video_updates.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.add_video_to_db.arn
+}
+
+# Permissions
+resource "aws_lambda_permission" "sns_start_transcribe" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.start_transcribe.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.video_updates.arn
+}
+
+resource "aws_lambda_permission" "sns_add_video" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.add_video_to_db.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = var.s3_bucket_arn
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.video_updates.arn
 }
 
 # S3 Notification
 resource "aws_s3_bucket_notification" "video_upload" {
   bucket = var.s3_bucket_name
   
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.start_transcribe.arn
-    events             = ["s3:ObjectCreated:*"]
-    filter_prefix      = "videos/"
-    filter_suffix      = ".mp4"
-  }
-  
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.add_video_to_db.arn
-    events             = ["s3:ObjectCreated:*"]
-    filter_prefix      = "videos/"
-    filter_suffix      = ".mp4"
+  topic {
+    topic_arn     = aws_sns_topic.video_updates.arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "videos/"
+    filter_suffix = ".mp4"
   }
 
-  depends_on = [aws_lambda_permission.s3_start_transcribe, aws_lambda_permission.s3_add_video]
+  depends_on = [aws_sns_topic_policy.default]
 }

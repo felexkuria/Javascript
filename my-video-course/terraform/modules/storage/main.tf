@@ -80,6 +80,7 @@ resource "aws_dynamodb_table" "users" {
 
 # DynamoDB IAM Policy
 resource "aws_iam_policy" "dynamodb_policy" {
+  count       = var.create_dynamodb_policy ? 1 : 0
   name        = "${var.app_name}-dynamodb-policy-modular"
   description = "Policy for EC2 to access DynamoDB tables"
 
@@ -107,7 +108,7 @@ resource "aws_iam_policy" "dynamodb_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "ec2_dynamodb" {
-  count      = var.ec2_role_name != null ? 1 : 0
+  count      = (var.ec2_role_name != null && (var.create_dynamodb_policy || var.existing_policy_arn != null)) ? 1 : 0
   role       = var.ec2_role_name
-  policy_arn = aws_iam_policy.dynamodb_policy.arn
+  policy_arn = var.create_dynamodb_policy ? aws_iam_policy.dynamodb_policy[0].arn : var.existing_policy_arn
 }
