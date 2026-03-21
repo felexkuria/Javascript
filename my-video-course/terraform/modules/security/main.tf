@@ -114,6 +114,25 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role  = aws_iam_role.ec2_role[0].name
 }
 
+# IAM Policy attachments for EC2
+resource "aws_iam_role_policy_attachment" "ec2_ecr" {
+  count      = var.create_ec2_role ? 1 : 0
+  role       = aws_iam_role.ec2_role[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_ssm" {
+  count      = var.create_ec2_role ? 1 : 0
+  role       = aws_iam_role.ec2_role[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_s3" {
+  count      = var.create_ec2_role ? 1 : 0
+  role       = aws_iam_role.ec2_role[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}
+
 # Cognito Identity Pool
 resource "aws_cognito_identity_pool" "main" {
   count                            = var.create_cognito ? 1 : 0
