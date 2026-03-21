@@ -1,15 +1,15 @@
-# Use Ubuntu 22.04 for the most stable MongoDB + Node.js support
+# Use Ubuntu 22.04 for stable OS support (Pure Cloud Architecture)
 FROM ubuntu:22.04
 
 # Avoid prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies and Node.js
+# Install dependencies and Node.js 22.x (Active LTS)
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
     unzip \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm@latest
 
@@ -22,9 +22,6 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 
 # Verify installation
 RUN node -v && aws --version
-
-# Create data directory for MongoDB
-RUN mkdir -p /data/db
 
 WORKDIR /app
 
