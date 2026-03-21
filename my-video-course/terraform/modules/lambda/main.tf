@@ -1,7 +1,7 @@
 # Lambda source code generation
 resource "local_file" "start_transcribe_py" {
   filename = "${path.module}/lambda_src/start_transcribe.py"
-  content = <<EOF
+  content  = <<EOF
 import json, os, time, urllib.parse, boto3
 
 transcribe = boto3.client('transcribe')
@@ -41,7 +41,7 @@ EOF
 
 resource "local_file" "postprocess_py" {
   filename = "${path.module}/lambda_src/postprocess_subtitles.py"
-  content = <<EOF
+  content  = <<EOF
 import json, os, urllib.parse, boto3
 
 s3 = boto3.client('s3')
@@ -77,7 +77,7 @@ EOF
 
 resource "local_file" "add_video_to_db_py" {
   filename = "${path.module}/lambda_src/add_video_to_db.py"
-  content = <<EOF
+  content  = <<EOF
 import json, os, urllib.parse, boto3, re
 
 dynamodb = boto3.resource('dynamodb')
@@ -143,17 +143,17 @@ resource "aws_sns_topic" "video_updates" {
 
 resource "aws_sns_topic_policy" "default" {
   arn = aws_sns_topic.video_updates.arn
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
+        Effect    = "Allow"
         Principal = { Service = "s3.amazonaws.com" }
-        Action = "SNS:Publish"
-        Resource = aws_sns_topic.video_updates.arn
+        Action    = "SNS:Publish"
+        Resource  = aws_sns_topic.video_updates.arn
         Condition = {
-          ArnLike = { "aws:SourceArn": var.s3_bucket_arn }
+          ArnLike = { "aws:SourceArn" : var.s3_bucket_arn }
         }
       }
     ]
@@ -164,12 +164,12 @@ resource "aws_sns_topic_policy" "default" {
 resource "aws_iam_role" "lambda_role" {
   count = var.create_role ? 1 : 0
   name  = "${var.app_name}-lambda-role"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "lambda.amazonaws.com" }
     }]
   })
@@ -179,28 +179,28 @@ resource "aws_iam_role_policy" "lambda_policy" {
   count = var.create_role ? 1 : 0
   name  = "${var.app_name}-lambda-policy"
   role  = aws_iam_role.lambda_role[0].id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
         Resource = "arn:aws:logs:*:*:*"
       },
       {
-        Effect = "Allow"
-        Action = ["transcribe:StartTranscriptionJob", "transcribe:GetTranscriptionJob"]
+        Effect   = "Allow"
+        Action   = ["transcribe:StartTranscriptionJob", "transcribe:GetTranscriptionJob"]
         Resource = "*"
       },
       {
-        Effect = "Allow"
-        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:UpdateItem"]
+        Effect   = "Allow"
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:UpdateItem"]
         Resource = "*"
       },
       {
-        Effect = "Allow"
-        Action = ["s3:GetObject", "s3:PutObject", "s3:CopyObject"]
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:CopyObject"]
         Resource = "${var.s3_bucket_arn}/*"
       }
     ]
@@ -211,29 +211,29 @@ resource "aws_iam_role_policy" "lambda_policy" {
 resource "aws_lambda_function" "start_transcribe" {
   filename         = data.archive_file.start_transcribe_zip.output_path
   function_name    = "${var.app_name}-start-transcribe"
-  role            = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
-  handler         = "start_transcribe.lambda_handler"
-  runtime         = "python3.9"
+  role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
+  handler          = "start_transcribe.lambda_handler"
+  runtime          = "python3.9"
   source_code_hash = data.archive_file.start_transcribe_zip.output_base64sha256
 }
 
 resource "aws_lambda_function" "postprocess_subtitles" {
   filename         = data.archive_file.postprocess_zip.output_path
   function_name    = "${var.app_name}-postprocess-subtitles"
-  role            = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
-  handler         = "postprocess_subtitles.lambda_handler"
-  runtime         = "python3.9"
+  role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
+  handler          = "postprocess_subtitles.lambda_handler"
+  runtime          = "python3.9"
   source_code_hash = data.archive_file.postprocess_zip.output_base64sha256
 }
 
 resource "aws_lambda_function" "add_video_to_db" {
   filename         = data.archive_file.add_video_to_db_zip.output_path
   function_name    = "${var.app_name}-add-video-to-db"
-  role            = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
-  handler         = "add_video_to_db.lambda_handler"
-  runtime         = "python3.9"
+  role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
+  handler          = "add_video_to_db.lambda_handler"
+  runtime          = "python3.9"
   source_code_hash = data.archive_file.add_video_to_db_zip.output_base64sha256
-  
+
   environment {
     variables = {
       DYNAMODB_TABLE = var.dynamodb_table_name
@@ -272,7 +272,7 @@ resource "aws_lambda_permission" "sns_add_video" {
 # S3 Notification
 resource "aws_s3_bucket_notification" "video_upload" {
   bucket = var.s3_bucket_name
-  
+
   topic {
     topic_arn     = aws_sns_topic.video_updates.arn
     events        = ["s3:ObjectCreated:*"]

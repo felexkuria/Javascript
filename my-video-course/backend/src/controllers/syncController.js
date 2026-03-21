@@ -1,7 +1,6 @@
-const videoService = require('../services/videoService');
+const dynamoVideoService = require('../services/dynamoVideoService');
 const gamificationManager = require('../services/gamificationManager');
 const dynamoService = require('../services/dynamoService');
-const mongoose = require('mongoose');
 const { spawn } = require('child_process');
 const path = require('path');
 
@@ -18,48 +17,47 @@ class SyncController {
       };
 
       // Get data from localStorage
-      const localStorage = videoService.getLocalStorage();
-      const courseNames = Object.keys(localStorage);
-      results.localStorage.courses = courseNames.length;
-      results.localStorage.videos = Object.values(localStorage).reduce((sum, videos) => sum + videos.length, 0);
-
-      // Sync with MongoDB
+      // Sync with DynamoDB (Primary)
       try {
-        if (mongoose.connection.readyState) {
-          results.mongodb.status = 'success';
+        for (const courseName of courseNames) {
+          const localVideos = localStorage[courseName] || [];
+          if (localVideos.length === 0) continue;
           
-          for (const courseName of courseNames) {
-            const localVideos = localStorage[courseName] || [];
-            if (localVideos.length === 0) continue;
+          const dynamoVideos = await dynamoService.getVideosForCourse(courseName);
+          
+          for (const localVideo of localVideos) {
+            if (!localVideo?._id) continue;
             
-            const courseCollection = mongoose.connection.collection(courseName);
-            const dbVideos = await courseCollection.find({}).toArray();
+            const dynamoId = localVideo._id.toString();
+            const dynamoVideo = dynamoVideos.find(v => (v.id || v._id || '').toString() === dynamoId);
             
-            for (const localVideo of localVideos) {
-              if (!localVideo?._id) continue;
+            if (!dynamoVideo || dynamoVideo.watched !== localVideo.watched) {
+              const dynamoData = {
+                id: dynamoId,
+                _id: dynamoId,
+                title: localVideo.title,
+                videoUrl: localVideo.videoUrl,
+                watched: localVideo.watched || false,
+                watchedAt: localVideo.watchedAt,
+                chapter: localVideo.chapter,
+                thumbnailUrl: localVideo.thumbnailUrl,
+                isYouTube: localVideo.isYouTube || false,
+                courseName: courseName
+              };
               
-              const dbVideo = dbVideos.find(v => v._id.toString() === localVideo._id.toString());
-              if (dbVideo) {
-                if (dbVideo.watched !== localVideo.watched || dbVideo.watchedAt !== localVideo.watchedAt) {
-                  await courseCollection.updateOne(
-                    { _id: dbVideo._id },
-                    { $set: { watched: localVideo.watched, watchedAt: localVideo.watchedAt } }
-                  );
-                  results.mongodb.synced++;
-                }
-              } else {
-                await courseCollection.insertOne(localVideo);
-                results.mongodb.synced++;
-              }
+              await dynamoService.saveVideo(courseName, dynamoData);
+              results.dynamodb.synced++;
             }
-            
-            results.mongodb.courses++;
-            results.mongodb.videos += localVideos.length;
           }
+          
+          results.dynamodb.courses++;
+          results.dynamodb.videos += localVideos.length;
         }
-      } catch (mongoError) {
-        results.mongodb.status = 'error';
-        results.errors.push(`MongoDB: ${mongoError.message}`);
+        
+        results.dynamodb.status = 'success';
+      } catch (dynamoError) {
+        results.dynamodb.status = 'error';
+        results.errors.push(`DynamoDB: ${dynamoError.message}`);
       }
 
       // Sync with DynamoDB
@@ -130,18 +128,13 @@ class SyncController {
         return res.status(400).json({ error: 'Missing courseName', success: false });
       }
 
-      if (!mongoose.connection.readyState) {
-        return res.status(503).json({ error: 'Could not connect to MongoDB', success: false });
-      }
-
-      const localStorage = videoService.getLocalStorage();
+      const localStorage = dynamoVideoService.getLocalStorage();
       if (!localStorage[courseName]) {
         return res.status(404).json({ error: `Course ${courseName} not found in localStorage`, success: false });
       }
 
       const localVideos = localStorage[courseName];
-      const courseCollection = mongoose.connection.collection(courseName);
-      const dbVideos = await courseCollection.find({}).toArray();
+      const dynamoVideos = await dynamoService.getVideosForCourse(courseName);
 
       let syncedCount = 0;
       let addedCount = 0;
@@ -150,44 +143,41 @@ class SyncController {
       for (const localVideo of localVideos) {
         if (!localVideo || !localVideo._id) continue;
 
-        const dbVideo = dbVideos.find(v => v._id.toString() === localVideo._id.toString());
+        const dynamoId = localVideo._id.toString();
+        const dynamoVideo = dynamoVideos.find(v => (v.id || v._id || '').toString() === dynamoId);
 
-        if (dbVideo) {
-          const updateData = {
-            watched: localVideo.watched || false,
-            watchedAt: localVideo.watchedAt || null
-          };
-
-          if (dbVideo.watched !== localVideo.watched ||
-            dbVideo.watchedAt !== localVideo.watchedAt) {
-            await courseCollection.updateOne(
-              { _id: dbVideo._id },
-              { $set: updateData }
-            );
+        if (dynamoVideo) {
+          if (dynamoVideo.watched !== localVideo.watched ||
+            dynamoVideo.watchedAt !== localVideo.watchedAt) {
+            
+            const dynamoData = {
+              ...dynamoVideo,
+              watched: localVideo.watched || false,
+              watchedAt: localVideo.watchedAt || null,
+              id: dynamoId,
+              _id: dynamoId
+            };
+            await dynamoService.saveVideo(courseName, dynamoData);
             updatedCount++;
           }
           syncedCount++;
         } else {
           try {
-            await courseCollection.insertOne(localVideo);
+            const dynamoData = {
+              ...localVideo,
+              id: dynamoId,
+              _id: dynamoId,
+              courseName: courseName
+            };
+            await dynamoService.saveVideo(courseName, dynamoData);
             addedCount++;
           } catch (insertErr) {
-            console.warn(`Failed to insert video ${localVideo.title}:`, insertErr.message);
+            console.warn(`Failed to insert video ${localVideo.title} to DynamoDB:`, insertErr.message);
           }
         }
       }
 
-      // Update localStorage with any MongoDB videos not in localStorage
-      for (const dbVideo of dbVideos) {
-        const localVideo = localVideos.find(v => v._id && v._id.toString() === dbVideo._id.toString());
-        if (!localVideo) {
-          localStorage[courseName].push(dbVideo);
-        }
-      }
-
-      videoService.saveLocalStorage(localStorage);
-
-      const message = `Sync completed: ${syncedCount} matched, ${updatedCount} updated, ${addedCount} added to MongoDB`;
+      const message = `Sync completed: ${syncedCount} matched, ${updatedCount} updated, ${addedCount} added to DynamoDB`;
 
       res.status(200).json({
         success: true,
@@ -196,7 +186,7 @@ class SyncController {
         updatedCount,
         addedCount,
         totalLocal: localVideos.length,
-        totalMongoDB: dbVideos.length
+        totalDynamoDB: dynamoVideos.length
       });
     } catch (err) {
       console.error('Error syncing course:', err);
@@ -261,13 +251,13 @@ class SyncController {
 
   async getConnectionStatus(req, res) {
     res.json({
-      online: mongoose.connection.readyState === 1,
-      mongoConnected: mongoose.connection.readyState === 1
+      online: true,
+      dynamoConnected: dynamoVideoService.isDynamoAvailable()
     });
   }
 
   async ping(req, res) {
-    if (mongoose.connection.readyState) {
+    if (dynamoVideoService.isDynamoAvailable()) {
       res.status(200).end();
     } else {
       res.status(503).end();

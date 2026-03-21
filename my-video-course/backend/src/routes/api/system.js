@@ -1,6 +1,4 @@
-const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 const { S3Client, HeadBucketCommand } = require('@aws-sdk/client-s3');
 const { CognitoIdentityProviderClient, DescribeUserPoolCommand } = require('@aws-sdk/client-cognito-identity-provider');
 const dynamodb = require('../../utils/dynamodb');
@@ -8,7 +6,6 @@ const dynamodb = require('../../utils/dynamodb');
 router.get('/status', async (req, res) => {
   try {
     const status = {
-      mongodb: mongoose.connection.readyState === 1,
       dynamodb: dynamodb.isAvailable(),
       s3: false,
       cognito: false,

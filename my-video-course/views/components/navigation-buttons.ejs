@@ -1,13 +1,13 @@
 <div class="flex space-x-2">
   <% if (!isFirstVideo && prevVideoId) { %>
-  <button id="prevButton" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">
-    <i class="fas fa-step-backward mr-1"></i> Previous
+  <button id="prevButton" class="px-4 py-2 bg-[#001E2B] text-[#00ED64] border border-[#00684A] rounded-xl font-bold hover:bg-[#00684A] transition-all duration-200 shadow-lg shadow-black/20">
+    <i class="fas fa-chevron-left mr-2"></i> Prev
   </button>
   <% } %>
   
   <% if (!isLastVideo && nextVideoId) { %>
-  <button id="nextButton" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">
-    Next <i class="fas fa-step-forward ml-1"></i>
+  <button id="nextButton" class="px-4 py-2 bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] rounded-xl font-bold hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] transition-all duration-200">
+    Next <i class="fas fa-chevron-right ml-2"></i>
   </button>
   <% } %>
 </div>

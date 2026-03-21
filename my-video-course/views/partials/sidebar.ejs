@@ -1,12 +1,14 @@
 <!-- Desktop Sidebar -->
 <nav
-  class="sidebar bg-gradient-to-b from-blue-600 to-blue-800 text-white transition-all duration-300"
+  class="sidebar bg-gradient-to-b from-[#001E2B] to-[#00684A] text-[#E7EEEB] transition-all duration-300 border-r border-[#133A41]"
   :class="{'w-64': !sidebarCollapsed, 'w-16': sidebarCollapsed}"
 >
   <div class="flex items-center justify-between py-6 px-4">
     <div class="flex items-center" :class="{'justify-center w-full': sidebarCollapsed}">
-      <i class="fas fa-play-circle text-3xl" :class="{'mr-3': !sidebarCollapsed}"></i>
-      <h1 class="text-2xl font-bold" x-show="!sidebarCollapsed">VideoLearn</h1>
+      <span class="text-2xl mr-2" :class="{'mr-0': sidebarCollapsed}">🍃</span>
+      <h1 class="text-xl font-bold tracking-tight" x-show="!sidebarCollapsed">
+        <span class="text-[#00ED64]">Mongo</span>Academy
+      </h1>
     </div>
     <button 
       @click="sidebarCollapsed = !sidebarCollapsed" 
@@ -19,51 +21,51 @@
     <li>
       <a
         href="/"
-        class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+        class="flex items-center py-2.5 px-4 rounded-lg hover:bg-[#00ED64] hover:text-[#001E2B] transition-all duration-200 group"
         :class="{'justify-center': sidebarCollapsed}"
       >
-        <i class="fas fa-home" :class="{'mr-3': !sidebarCollapsed}"></i>
-        <span x-show="!sidebarCollapsed">Home</span>
+        <i class="fas fa-home transition-transform group-hover:scale-110" :class="{'mr-3': !sidebarCollapsed}"></i>
+        <span x-show="!sidebarCollapsed" class="font-medium">Dashboard</span>
       </a>
     </li>
     <li>
       <a
         href="/upload"
-        class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+        class="flex items-center py-2.5 px-4 rounded-lg hover:bg-[#00ED64] hover:text-[#001E2B] transition-all duration-200 group"
         :class="{'justify-center': sidebarCollapsed}"
       >
-        <i class="fas fa-upload" :class="{'mr-3': !sidebarCollapsed}"></i>
-        <span x-show="!sidebarCollapsed">Upload Video</span>
+        <i class="fas fa-plus-circle transition-transform group-hover:scale-110" :class="{'mr-3': !sidebarCollapsed}"></i>
+        <span x-show="!sidebarCollapsed" class="font-medium">Add Course</span>
       </a>
     </li>
     <li>
       <a
         href="/profile"
-        class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+        class="flex items-center py-2.5 px-4 rounded-lg hover:bg-[#00ED64] hover:text-[#001E2B] transition-all duration-200 group"
         :class="{'justify-center': sidebarCollapsed}"
       >
-        <i class="fas fa-trophy" :class="{'mr-3': !sidebarCollapsed}"></i>
-        <span x-show="!sidebarCollapsed">Progress</span>
+        <i class="fas fa-chart-line transition-transform group-hover:scale-110" :class="{'mr-3': !sidebarCollapsed}"></i>
+        <span x-show="!sidebarCollapsed" class="font-medium">My Progress</span>
       </a>
     </li>
     <li>
       <a
         href="/chatbot"
-        class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+        class="flex items-center py-2.5 px-4 rounded-lg hover:bg-[#00ED64] hover:text-[#001E2B] transition-all duration-200 group"
         :class="{'justify-center': sidebarCollapsed}"
       >
-        <i class="fas fa-robot" :class="{'mr-3': !sidebarCollapsed}"></i>
-        <span x-show="!sidebarCollapsed">Course Assistant</span>
+        <i class="fas fa-brain transition-transform group-hover:scale-110" :class="{'mr-3': !sidebarCollapsed}"></i>
+        <span x-show="!sidebarCollapsed" class="font-medium">AI Tutor</span>
       </a>
     </li>
     <li>
       <a
         href="/settings"
-        class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+        class="flex items-center py-2.5 px-4 rounded-lg hover:bg-[#00ED64] hover:text-[#001E2B] transition-all duration-200 group"
         :class="{'justify-center': sidebarCollapsed}"
       >
-        <i class="fas fa-cog" :class="{'mr-3': !sidebarCollapsed}"></i>
-        <span x-show="!sidebarCollapsed">Settings</span>
+        <i class="fas fa-sliders-h transition-transform group-hover:scale-110" :class="{'mr-3': !sidebarCollapsed}"></i>
+        <span x-show="!sidebarCollapsed" class="font-medium">Settings</span>
       </a>
     </li>
   </ul>
@@ -86,12 +88,12 @@
     @click="sidebarOpen = false"
   ></div>
   <nav
-    class="fixed top-0 left-0 bottom-0 flex flex-col w-64 bg-gradient-to-b from-blue-600 to-blue-800 text-white py-6 px-4 overflow-y-auto"
+    class="fixed top-0 left-0 bottom-0 flex flex-col w-64 bg-gradient-to-b from-[#001E2B] to-[#00684A] text-[#E7EEEB] py-6 px-4 overflow-y-auto"
   >
     <div class="flex items-center justify-between mb-8">
       <div class="flex items-center">
-        <i class="fas fa-play-circle text-3xl mr-3"></i>
-        <h1 class="text-2xl font-bold">VideoLearn</h1>
+        <span class="text-2xl mr-2">🍃</span>
+        <h1 class="text-xl font-bold tracking-tight">Mongo<span class="text-[#00ED64]">Academy</span></h1>
       </div>
       <button @click="sidebarOpen = false" class="text-white focus:outline-none">
         <i class="fas fa-times"></i>
@@ -101,41 +103,41 @@
       <li>
         <a
           href="/"
-          class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+          class="flex items-center py-3 px-4 rounded-xl hover:bg-[#00ED64] hover:text-[#001E2B] transition-all duration-200 font-medium"
         >
-          <i class="fas fa-home mr-3"></i> Home
+          <i class="fas fa-home mr-3"></i> Dashboard
         </a>
       </li>
       <li>
         <a
           href="/upload"
-          class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+          class="flex items-center py-3 px-4 rounded-xl hover:bg-[#00ED64] hover:text-[#001E2B] transition-all duration-200 font-medium"
         >
-          <i class="fas fa-upload mr-3"></i> Upload Video
+          <i class="fas fa-plus-circle mr-3"></i> Add Course
         </a>
       </li>
       <li>
         <a
           href="/profile"
-          class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+          class="flex items-center py-3 px-4 rounded-xl hover:bg-[#00ED64] hover:text-[#001E2B] transition-all duration-200 font-medium"
         >
-          <i class="fas fa-trophy mr-3"></i> Progress
+          <i class="fas fa-chart-line mr-3"></i> My Progress
         </a>
       </li>
       <li>
         <a
           href="/chatbot"
-          class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+          class="flex items-center py-3 px-4 rounded-xl hover:bg-[#00ED64] hover:text-[#001E2B] transition-all duration-200 font-medium"
         >
-          <i class="fas fa-robot mr-3"></i> Course Assistant
+          <i class="fas fa-brain mr-3"></i> AI Tutor
         </a>
       </li>
       <li>
         <a
           href="/settings"
-          class="flex items-center py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
+          class="flex items-center py-3 px-4 rounded-xl hover:bg-[#00ED64] hover:text-[#001E2B] transition-all duration-200 font-medium"
         >
-          <i class="fas fa-cog mr-3"></i> Settings
+          <i class="fas fa-sliders-h mr-3"></i> Settings
         </a>
       </li>
     </ul>

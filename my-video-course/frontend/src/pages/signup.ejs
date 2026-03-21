@@ -11,11 +11,12 @@
         theme: {
           extend: {
             colors: {
-              'apple-blue': '#007AFF',
-              'apple-gray': '#F2F2F7'
+              'mongo-green': '#00ED64',
+              'mongo-slate': '#001E2B',
+              'mongo-forest': '#00684A'
             },
             fontFamily: {
-              'sans': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'system-ui', 'sans-serif']
+              'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif']
             }
           }
         }
@@ -25,18 +26,18 @@
 <body class="bg-apple-gray dark:bg-gray-900 font-sans antialiased transition-colors duration-200">
     <div class="min-h-screen flex items-center justify-center px-6">
         <!-- Dark Mode Toggle -->
-        <button id="themeToggle" class="fixed top-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-10">
+        <button id="themeToggle" class="fixed top-4 right-4 p-3 bg-white dark:bg-[#023430] rounded-full shadow-lg border border-transparent dark:border-[#00ED64]/20 hover:shadow-xl transition-all duration-200 z-10">
             <span id="themeIcon" class="text-xl">🌙</span>
         </button>
         
         <div class="w-full max-w-sm">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 transition-colors duration-200">
+            <div class="bg-white dark:bg-[#023430] rounded-2xl shadow-sm border border-gray-100 dark:border-[#133A41] p-8 transition-colors duration-200">
                 <div class="text-center mb-8">
-                    <div class="w-16 h-16 bg-apple-blue rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <span class="text-white text-2xl font-medium">📚</span>
+                    <div class="w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                        <span class="text-[#001E2B] text-3xl font-bold">🍃</span>
                     </div>
-                    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Create Account</h1>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm">Join our learning platform</p>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB] mb-2 tracking-tight">MongoDB <span class="font-normal text-gray-500">Academy</span></h1>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">Join our developer learning platform</p>
                 </div>
                 
                 <% if (typeof error !== 'undefined' && error) { %>
@@ -48,25 +49,25 @@
                 <form id="signupForm" class="space-y-4">
                     <div>
                         <input type="text" id="name" name="name" placeholder="Full Name" required
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent transition-all">
+                               class="w-full px-4 py-3 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-gray-900 dark:text-[#E7EEEB] placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all">
                     </div>
                     
                     <div>
                         <input type="email" id="email" name="email" placeholder="Email" required
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent transition-all">
+                               class="w-full px-4 py-3 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-gray-900 dark:text-[#E7EEEB] placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all">
                     </div>
                     
                     <div>
                         <input type="password" id="password" name="password" placeholder="Password (min 8 chars)" required minlength="8"
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent transition-all">
+                               class="w-full px-4 py-3 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-gray-900 dark:text-[#E7EEEB] placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all">
                     </div>
                     
-                    <button type="submit" id="signupBtn" class="w-full bg-apple-blue text-white font-medium py-3 rounded-xl hover:bg-blue-600 transition-all">
+                    <button type="submit" id="signupBtn" class="w-full bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] font-bold py-3 rounded-xl hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] hover:scale-[1.02] transition-all">
                         Create Account
                     </button>
                     
                     <div class="text-center">
-                        <a href="/login" class="text-sm text-apple-blue dark:text-blue-400 hover:underline">
+                        <a href="/login" class="text-sm text-[#00C152] hover:text-[#00ED64] hover:underline font-medium">
                             Already have an account? Sign In
                         </a>
                     </div>
@@ -76,22 +77,22 @@
                 <form id="verifyForm" class="space-y-4 hidden">
                     <div class="text-center mb-4">
                         <p class="text-gray-600 dark:text-gray-400 text-sm">
-                            We sent a verification code to <span id="verifyEmail" class="font-medium"></span>
+                            We sent a verification code to <span id="verifyEmail" class="font-bold text-[#00C152]"></span>
                         </p>
                     </div>
                     
                     <div>
                         <input type="text" id="confirmationCode" placeholder="Enter verification code" required
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent transition-all text-center text-lg tracking-widest">
+                               class="w-full px-4 py-3 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-gray-900 dark:text-[#E7EEEB] placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all text-center text-lg tracking-widest font-black">
                     </div>
                     
-                    <button type="submit" id="verifyBtn" class="w-full bg-green-500 text-white font-medium py-3 rounded-xl hover:bg-green-600 transition-all">
+                    <button type="submit" id="verifyBtn" class="w-full bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] font-bold py-3 rounded-xl hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] transition-all">
                         Verify Account
                     </button>
                     
                     <div class="text-center">
-                        <button type="button" id="backToSignup" class="text-sm text-apple-blue dark:text-blue-400 hover:underline">
-                            ← Back to signup
+                        <button type="button" id="backToSignup" class="text-sm text-[#00C152] hover:text-[#00ED64] hover:underline font-medium">
+                            ← Back to registration
                         </button>
                     </div>
                 </form>

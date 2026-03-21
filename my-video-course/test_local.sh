@@ -2,9 +2,10 @@
 # 🧪 Unified All-in-One Local Tester (for Colima/Docker)
 
 # 1. Start MongoDB Data Directory
-# 2. Build the all-in-one image locally
-echo "🏗️ Building local unified image..."
-docker build -t video-course-app:local .
+# 2. Build the all-in-one image locally (FORCE REBUILD)
+echo "🏗️ Building local unified image (No Cache)..."
+docker build --no-cache -t video-course-app:local .
+docker image prune -f
 
 # 3. Stop and Remove existing container
 echo "🛑 Cleaning up old containers..."

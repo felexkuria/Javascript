@@ -14,6 +14,7 @@ class DynamoService {
     this.videosTable = 'video-course-videos';
     this.progressTable = 'video-course-progress';
     this.playlistsTable = 'video-course-playlists';
+    this.quizzesTable = 'video-course-quizzes';
   }
 
   // Video operations
@@ -81,6 +82,38 @@ class DynamoService {
     };
     const result = await this.docClient.send(new GetCommand(params));
     return result.Item;
+  }
+
+  // Quiz operations
+  async saveQuiz(videoTitle, questions) {
+    const params = {
+      TableName: this.quizzesTable,
+      Item: {
+        PK: `QUIZ#${videoTitle}`,
+        SK: 'METADATA',
+        videoTitle,
+        questions,
+        updatedAt: new Date().toISOString()
+      }
+    };
+    await this.docClient.send(new PutCommand(params));
+  }
+
+  async getQuiz(videoTitle) {
+    const params = {
+      TableName: this.quizzesTable,
+      Key: {
+        PK: `QUIZ#${videoTitle}`,
+        SK: 'METADATA'
+      }
+    };
+    try {
+      const result = await this.docClient.send(new GetCommand(params));
+      return result.Item;
+    } catch (error) {
+      console.warn('Error fetching quiz from DynamoDB:', error.message);
+      return null;
+    }
   }
 
   // Progress tracking

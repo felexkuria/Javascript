@@ -1,7 +1,7 @@
 const aiService = require('../services/aiService');
 const srtQuizGenerator = require('../services/srtQuizGenerator');
 const aiTodoExtractor = require('../services/aiTodoExtractor');
-const videoService = require('../services/videoService');
+const dynamoVideoService = require('../services/dynamoVideoService');
 const path = require('path');
 const fs = require('fs');
 
@@ -11,7 +11,7 @@ class AIController {
       const courseName = decodeURIComponent(req.params.courseName);
       const videoId = req.params.videoId;
 
-      const video = await videoService.getVideoById(courseName, videoId);
+      const video = await dynamoVideoService.getVideoById(courseName, videoId);
       if (!video) {
         return res.status(404).json({ error: 'Video not found' });
       }

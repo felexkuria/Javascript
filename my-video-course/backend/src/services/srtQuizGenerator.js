@@ -351,36 +351,26 @@ class SRTQuizGenerator {
     return summaryData;
   }
   
-  // Store quiz in MongoDB
+  // Store quiz in DynamoDB
   async storeQuiz(videoTitle, questions) {
     try {
-      const mongoose = require('mongoose');
-      if (mongoose.connection.readyState) {
-        const collection = mongoose.connection.collection('video_quizzes');
-        await collection.updateOne(
-          { videoTitle },
-          { $set: { videoTitle, questions, createdAt: new Date().toISOString(), updatedAt: new Date() } },
-          { upsert: true }
-        );
-        return true;
-      }
+      const dynamoService = require('./dynamoService');
+      await dynamoService.saveQuiz(videoTitle, questions);
+      return true;
     } catch (error) {
-      console.warn('Failed to store quiz:', error);
+      console.warn('Failed to store quiz in DynamoDB:', error);
     }
     return false;
   }
   
-  // Get stored quiz from MongoDB
+  // Get stored quiz from DynamoDB
   async getStoredQuiz(videoTitle) {
     try {
-      const mongoose = require('mongoose');
-      if (mongoose.connection.readyState) {
-        const collection = mongoose.connection.collection('video_quizzes');
-        const quiz = await collection.findOne({ videoTitle });
-        return quiz;
-      }
+      const dynamoService = require('./dynamoService');
+      const quiz = await dynamoService.getQuiz(videoTitle);
+      return quiz;
     } catch (error) {
-      console.warn('Failed to get stored quiz:', error);
+      console.warn('Failed to get stored quiz from DynamoDB:', error);
     }
     return null;
   }

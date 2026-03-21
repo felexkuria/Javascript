@@ -1,24 +1,4 @@
-// const Video = require('../models/Video');
-
-// exports.getAllVideos = async (req, res) => {
-//   const videos = await Video.find();
-//   res.render('dashboard', { videos });
-// };
-
-// exports.getVideoById = async (req, res) => {
-//   const video = await Video.findById(req.params.id);
-//   res.render('video', { video });
-// };
-
-// exports.markVideoAsWatched = async (req, res) => {
-//   await Video.findByIdAndUpdate(req.params.id, { watched: true });
-//   res.redirect('/videos');
-// };
-
-
 // controllers/videoController.js
-const mongoose = require('mongoose');
-const Video = require('../models/Video');
 const dynamoVideoService = require('../services/dynamoVideoService');
 
 exports.getVideos = async (req, res) => {
@@ -61,7 +41,7 @@ exports.getVideoById = async (req, res) => {
     }
     const courses = await dynamoVideoService.getAllCourses(userId);
     const allVideos = courses.flatMap(course => course.videos);
-    const video = allVideos.find(v => v._id.toString() === req.params.id);
+    const video = allVideos.find(v => (v._id || v.id || '').toString() === req.params.id);
 
     if (!video || !video.videoUrl) {
       return res.status(404).send('Video not found');
@@ -75,17 +55,6 @@ exports.getVideoById = async (req, res) => {
   }
 };
 
-// exports.markVideoAsWatched = async (req, res) => {
-//   try {
-//     const video = await Video.findById(req.params.id);
-//     video.watched = true;
-//     video.watchedAt = new Date(); // Set the current date and time
-//     await video.save();
-// res.redirect(`/videos/${req.params.id}`);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
 // Mark video as watched and redirect to the next video
 exports.markVideoAsWatched = async (req, res) => {
   try {
@@ -96,7 +65,7 @@ exports.markVideoAsWatched = async (req, res) => {
     }
     const courses = await dynamoVideoService.getAllCourses(userId);
     const allVideos = courses.flatMap(course => course.videos);
-    const video = allVideos.find(v => v._id.toString() === videoId);
+    const video = allVideos.find(v => (v._id || v.id || '').toString() === videoId);
 
     if (!video) {
       return res.status(404).json({ error: 'Video not found' });
@@ -105,7 +74,7 @@ exports.markVideoAsWatched = async (req, res) => {
     // Mark video as watched for this user
     await dynamoVideoService.updateVideoWatchStatus(video.courseName, videoId, true, userId);
 
-    const currentIndex = allVideos.findIndex(v => v._id.toString() === videoId);
+    const currentIndex = allVideos.findIndex(v => (v._id || v.id || '').toString() === videoId);
     const nextVideo = currentIndex < allVideos.length - 1 ? allVideos[currentIndex + 1] : null;
 
     if (nextVideo) {
