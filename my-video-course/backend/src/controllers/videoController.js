@@ -18,7 +18,7 @@
 
 // controllers/videoController.js
 const mongoose = require('mongoose');
-const Video = mongoose.models.Video || mongoose.model('Video', new mongoose.Schema({}, { strict: false }));
+const Video = require('../models/Video');
 const dynamoVideoService = require('../services/dynamoVideoService');
 
 exports.getVideos = async (req, res) => {

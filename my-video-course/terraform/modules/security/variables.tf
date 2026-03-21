@@ -1,0 +1,33 @@
+variable "vpc_id" {
+  type = string
+}
+
+variable "app_name" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
+variable "create_security_groups" {
+  type = bool
+}
+
+variable "create_cognito" {
+  type = bool
+}
+
+variable "create_ec2_role" {
+  type = bool
+}
+
+variable "s3_bucket_arn" {
+  type    = string
+  default = "*"
+}
+
+variable "dynamodb_table_arns" {
+  type    = list(string)
+  default = []
+}

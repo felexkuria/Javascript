@@ -100,19 +100,19 @@ variable "desired_capacity" {
 variable "create_cognito_role" {
   description = "Whether to create Cognito IAM role (false to use existing)"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "create_ec2_role" {
   description = "Whether to create EC2 IAM role (false to use existing)"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "create_ecr_repo" {
   description = "Whether to create ECR repository (false to use existing)"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "create_alb" {
@@ -161,4 +161,21 @@ variable "existing_ec2_sg_name" {
   description = "Name of existing EC2 security group (if create_security_groups is false)"
   type        = string
   default     = ""
+}
+variable "create_vpc" {
+  description = "Whether to create a new VPC (false to use existing)"
+  type        = bool
+  default     = true
+}
+
+variable "create_cognito" {
+  description = "Whether to create new Cognito User Pool (false to use existing)"
+  type        = bool
+  default     = true
+}
+
+variable "create_s3_bucket" {
+  description = "Whether to create a new S3 bucket (false to use existing)"
+  type        = bool
+  default     = true
 }
