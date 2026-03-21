@@ -4,6 +4,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+mongodb_data/*
+mongodb_data/diagnostic.data/*
 # Environment variables
 .env
 .env.local
