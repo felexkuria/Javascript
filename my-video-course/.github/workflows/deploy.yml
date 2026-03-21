@@ -94,17 +94,19 @@ jobs:
         echo "🔍 Checking status for ASG: $ASG_NAME"
         
         # Check if a refresh is already in progress or pending
-        # We use grep to force a boolean check on the raw output
         IN_PROGRESS=$(aws autoscaling describe-instance-refreshes \
           --auto-scaling-group-name "$ASG_NAME" \
           --query 'InstanceRefreshes[?Status==`InProgress` || Status==`Pending`].Status' \
           --output text)
         
         if [ "$IN_PROGRESS" != "" ] && [ "$IN_PROGRESS" != "None" ]; then
-          echo "⚠️  An instance refresh is already IN_PROGRESS or PENDING. Skipping new trigger to avoid conflict."
-          echo "The existing refresh will automatically incorporate the latest Launch Template."
-        else
-          echo "🚀 Starting new instance refresh for $ASG_NAME..."
-          aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG_NAME"
-          echo "✅ Instance refresh triggered successfully."
+          echo "⚠️  Existing refresh found ($IN_PROGRESS). Cancelling to prioritize latest code..."
+          aws autoscaling cancel-instance-refresh --auto-scaling-group-name "$ASG_NAME"
+          
+          echo "⏳ Waiting 15 seconds for cancellation to process..."
+          sleep 15
         fi
+
+        echo "🚀 Starting new instance refresh for $ASG_NAME..."
+        aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG_NAME"
+        echo "✅ Instance refresh triggered successfully."
