@@ -32,7 +32,11 @@ app.use('/js', express.static(path.join(__dirname, '../../public/js')));
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'healthy', 
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString() 
+  });
 });
 
 // Admin Routes
