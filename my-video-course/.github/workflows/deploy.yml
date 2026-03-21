@@ -66,8 +66,8 @@ jobs:
         aws_secret_access_key  = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
         gemini_api_key        = "${{ secrets.GEMINI_API_KEY }}"
         nova_api_key          = "${{ secrets.NOVA_API_KEY }}"
-        enable_https          = false
-        create_route53_records = false
+        enable_https          = true
+        create_route53_records = true
         EOF
 
     - name: Terraform Init
