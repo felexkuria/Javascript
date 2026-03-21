@@ -1,10 +1,9 @@
-name: Deploy to AWS
+name: Secure Deploy to AWS
 
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
@@ -12,7 +11,7 @@ env:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Build & Deploy
     runs-on: ubuntu-latest
     
     steps:
@@ -36,15 +35,11 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Ensure buildx exists
         docker buildx create --use --name multiarch || true
-        
-        # Build & push image
         docker buildx build --platform linux/amd64 \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
           --push .
-        
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
     - name: Setup Terraform
@@ -52,50 +47,40 @@ jobs:
       with:
         terraform_version: 1.5.0
 
+    - name: Create terraform.tfvars
+      run: |
+        cd terraform
+        cat > terraform.tfvars << EOF
+        aws_region            = "${{ env.AWS_REGION }}"
+        app_name              = "video-course-app"
+        environment           = "prod"
+        instance_type         = "t3.medium"
+        key_pair_name         = "${{ secrets.KEY_PAIR_NAME }}"
+        min_size              = 1
+        max_size              = 5
+        desired_capacity      = 2
+        domain_name           = "${{ secrets.DOMAIN_NAME }}"
+        hosted_zone_id        = "${{ secrets.HOSTED_ZONE_ID }}"
+        mongodb_uri           = "${{ secrets.MONGODB_URI }}"
+        aws_access_key_id      = "${{ secrets.AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key  = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+        gemini_api_key        = "${{ secrets.GEMINI_API_KEY }}"
+        nova_api_key          = "${{ secrets.NOVA_API_KEY }}"
+        EOF
+
     - name: Terraform Init
       working-directory: ./terraform
       run: terraform init
 
-    - name: Terraform Plan
-      working-directory: ./terraform
-      run: terraform plan -var-file="terraform.tfvars"
-
     - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       working-directory: ./terraform
       run: terraform apply -auto-approve -var-file="terraform.tfvars"
 
-    - name: Trigger Safe Instance Refresh
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    - name: Trigger Instance Refresh
       env:
         AWS_REGION: ${{ env.AWS_REGION }}
       run: |
-        set -e  # Exit on error
-
+        set -e
         ASG_NAME=$(cd terraform && terraform output -raw autoscaling_group_name)
-
-        # Fetch latest refresh status
-        CURRENT_STATUS=$(aws autoscaling describe-instance-refreshes \
-          --auto-scaling-group-name $ASG_NAME \
-          --max-items 1 \
-          --query 'InstanceRefreshes[0].Status' \
-          --output text 2>/dev/null || echo "None")
-
-        echo "Current instance refresh status: $CURRENT_STATUS"
-
-        if [[ "$CURRENT_STATUS" == "InProgress" ]] || [[ "$CURRENT_STATUS" == "Pending" ]]; then
-          echo "⚠️ Instance refresh already $CURRENT_STATUS. Waiting..."
-          # Wait for current refresh to complete (max 15 min)
-          aws autoscaling wait instance-refresh-complete --auto-scaling-group-name $ASG_NAME || true
-        fi
-
-        echo "🔄 Starting new instance refresh..."
-        # Start new refresh safely
-        if aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME; then
-          echo "✅ Instance refresh started successfully"
-        else
-          echo "⚠️ Instance refresh already in progress. Deployment completed but instances will update with previous refresh."
-          exit 0  # Exit successfully instead of failing
-        fi
-
-    
+        echo "🔄 Starting instance refresh for $ASG_NAME..."
+        aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME

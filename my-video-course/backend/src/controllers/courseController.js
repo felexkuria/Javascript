@@ -2,8 +2,8 @@ const dynamoVideoService = require('../services/dynamoVideoService');
 const videoProcessingService = require('../services/videoProcessingService');
 const mongoose = require('mongoose');
 const dynamodb = require('../utils/dynamodb');
-const Course = mongoose.models.Course || mongoose.model('Course', new mongoose.Schema({}, { strict: false }));
-const Analytics = mongoose.models.Analytics || mongoose.model('Analytics', new mongoose.Schema({}, { strict: false }));
+const Course = require('../models/Course');
+const Analytics = require('../models/Analytics');
 const multer = require('multer');
 
 // Configure multer for video uploads
