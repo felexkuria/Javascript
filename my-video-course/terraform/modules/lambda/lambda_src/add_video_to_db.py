@@ -3,11 +3,21 @@ import json, os, urllib.parse, boto3, re
 dynamodb = boto3.resource('dynamodb')
 
 def lambda_handler(event, context):
+    """
+    IMPORTANT: This Lambda is triggered via an SNS Topic (Fan-Out pattern).
+    The S3 event is wrapped inside the SNS message. Do not revert to direct S3 parsing
+    unless you also revert the Terraform SNS configuration.
+    """
+    print("Event received from SNS:", json.dumps(event))
     try:
-        rec = event['Records'][0]['s3']
+        # SNS sends the S3 event inside a 'Message' field
+        sns_message = event['Records'][0]['Sns']['Message']
+        s3_event = json.loads(sns_message)
+        rec = s3_event['Records'][0]['s3']
         bucket = rec['bucket']['name']
         key = urllib.parse.unquote_plus(rec['object']['key'])
-    except Exception:
+    except Exception as e:
+        print(f"Error parsing SNS/S3 data: {str(e)}")
         return {'status': 'ignored'}
     
     if not key.startswith("videos/") or not key.lower().endswith(('.mp4', '.mov', '.mkv', '.avi', '.webm')):
