@@ -406,8 +406,8 @@ class WebController {
       const courseName = decodeURIComponent(req.params.courseName);
       const id = req.params.id;
 
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).send('Invalid video ID');
+      if (!id) {
+        return res.status(400).send('Video ID is required');
       }
 
       const video = await dynamoVideoService.getVideoById(courseName, id);

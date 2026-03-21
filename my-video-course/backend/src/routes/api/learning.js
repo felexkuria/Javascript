@@ -4,13 +4,18 @@ const aiService = require('../../services/aiService');
 const dynamoVideoService = require('../../services/dynamoVideoService');
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 
-const s3Client = new S3Client({ 
-  region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
+const config = { 
+  region: process.env.AWS_REGION || 'us-east-1'
+};
+
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+  config.credentials = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  }
-});
+  };
+}
+
+const s3Client = new S3Client(config);
 
 // Generate quiz for video
 router.get('/quiz/:courseName/:videoId', async (req, res) => {

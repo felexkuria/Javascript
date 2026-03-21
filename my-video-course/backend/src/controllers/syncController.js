@@ -11,7 +11,6 @@ class SyncController {
       
       const results = {
         localStorage: { status: 'success', courses: 0, videos: 0 },
-        mongodb: { status: 'unavailable', courses: 0, videos: 0, synced: 0 },
         dynamodb: { status: 'unavailable', courses: 0, videos: 0, synced: 0 },
         errors: []
       };
@@ -239,7 +238,7 @@ class SyncController {
         });
       });
     } catch (err) {
-      console.error('Error syncing with MongoDB:', err);
+      console.error('Error syncing with DynamoDB:', err);
       res.status(200).json({
         success: false,
         offline: true,

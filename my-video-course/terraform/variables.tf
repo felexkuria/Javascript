@@ -49,23 +49,6 @@ variable "s3_bucket_name" {
   default     = ""
 }
 
-variable "mongodb_uri" {
-  description = "MongoDB connection URI"
-  type        = string
-  sensitive   = true
-}
-
-variable "aws_access_key_id" {
-  description = "AWS access key ID"
-  type        = string
-  sensitive   = true
-}
-
-variable "aws_secret_access_key" {
-  description = "AWS secret access key"
-  type        = string
-  sensitive   = true
-}
 
 variable "gemini_api_key" {
   description = "Gemini API key"

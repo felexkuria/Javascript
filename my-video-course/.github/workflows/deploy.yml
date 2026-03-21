@@ -61,9 +61,6 @@ jobs:
         desired_capacity      = 2
         domain_name           = "${{ secrets.DOMAIN_NAME }}"
         hosted_zone_id        = "${{ secrets.HOSTED_ZONE_ID }}"
-        mongodb_uri           = "${{ secrets.MONGODB_URI }}"
-        aws_access_key_id      = "${{ secrets.AWS_ACCESS_KEY_ID }}"
-        aws_secret_access_key  = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
         gemini_api_key        = "${{ secrets.GEMINI_API_KEY }}"
         nova_api_key          = "${{ secrets.NOVA_API_KEY }}"
         enable_https          = true
@@ -83,6 +80,31 @@ jobs:
         AWS_REGION: ${{ env.AWS_REGION }}
       run: |
         set -e
-        ASG_NAME=$(cd terraform && terraform output -raw autoscaling_group_name)
-        echo "🔄 Starting instance refresh for $ASG_NAME..."
-        aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME
+        ASG_NAME=$(cd terraform && terraform output -raw autoscaling_group_name || echo "")
+        if [ "$ASG_NAME" == "" ]; then
+          echo "⚠️  No ASG found in terraform output. Scanning via AWS CLI..."
+          ASG_NAME=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[?contains(AutoScalingGroupName, `video-course-app`)].AutoScalingGroupName' --output text | head -n 1)
+        fi
+        
+        if [ "$ASG_NAME" == "" ] || [ "$ASG_NAME" == "None" ]; then
+          echo "❌ ERROR: Could not identify ASG_NAME. Skipping refresh."
+          exit 0
+        fi
+
+        echo "🔍 Checking status for ASG: $ASG_NAME"
+        
+        # Check if a refresh is already in progress or pending
+        # We use grep to force a boolean check on the raw output
+        IN_PROGRESS=$(aws autoscaling describe-instance-refreshes \
+          --auto-scaling-group-name "$ASG_NAME" \
+          --query 'InstanceRefreshes[?Status==`InProgress` || Status==`Pending`].Status' \
+          --output text)
+        
+        if [ "$IN_PROGRESS" != "" ] && [ "$IN_PROGRESS" != "None" ]; then
+          echo "⚠️  An instance refresh is already IN_PROGRESS or PENDING. Skipping new trigger to avoid conflict."
+          echo "The existing refresh will automatically incorporate the latest Launch Template."
+        else
+          echo "🚀 Starting new instance refresh for $ASG_NAME..."
+          aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG_NAME"
+          echo "✅ Instance refresh triggered successfully."
+        fi

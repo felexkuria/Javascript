@@ -34,7 +34,7 @@
   <div class="max-w-4xl mx-auto">
     <div class="bg-[#023430] border border-[#00ED64]/20 rounded-2xl shadow-2xl overflow-hidden mt-4">
       <div class="bg-gradient-to-r from-[#00ED64] to-[#00684A] p-8">
-        <h1 class="text-3xl font-black text-[#001E2B] mb-2">🍃 AI Academy Assistant</h1>
+        <h1 class="text-3xl font-black text-[#001E2B] mb-2 brand-font">🍃 AI Academy Assistant</h1>
         <p class="text-[#001E2B]/80 font-medium">
           Ask me anything about your course content. I'll explain complex concepts with modern clarity.
         </p>
@@ -47,9 +47,11 @@
         <div class="message mb-4">
           <div class="flex items-start">
             <div
-              class="bg-[#00ED64] text-[#001E2B] rounded-xl w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg"
+              class="bg-[#00ED64] text-[#001E2B] rounded-xl w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg overflow-hidden p-1.5"
             >
-              🍃
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                <path d="M12 2C12 2 12 10 2 12C12 14 12 22 12 22C12 22 12 14 22 12C12 10 12 2 12 2Z" fill="currentColor"/>
+              </svg>
             </div>
             <div class="bg-[#001E2B] border border-[#00ED64]/20 rounded-2xl p-6 shadow-xl max-w-3xl">
               <p class="text-[#E7EEEB]/90 font-medium leading-relaxed">
@@ -131,13 +133,18 @@
       <div class="flex items-start ${isUser ? "justify-end" : ""}">
         ${
           !isUser
-            ? '<div class="bg-[#00ED64] text-[#001E2B] rounded-xl w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg">🍃</div>'
+            ? `<div class="bg-[#00ED64] text-[#001E2B] rounded-xl w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg overflow-hidden p-1.5">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                  <path d="M12 2C12 2 12 10 2 12C12 14 12 22 12 22C12 22 12 14 22 12C12 10 12 2 12 2Z" fill="currentColor"/>
+                </svg>
+              </div>`
             : ""
         }
         <div class="${
           isUser ? "bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] ml-12 font-bold" : "bg-[#001E2B] text-[#E7EEEB] border border-[#00ED64]/20"
-        } rounded-2xl p-4 shadow-xl max-w-3xl leading-relaxed">
-          ${content}
+        } rounded-2xl p-4 shadow-xl max-w-3xl leading-relaxed relative overflow-hidden">
+          ${!isUser ? '<div class="absolute inset-0 opacity-5 pointer-events-none bg-leaf-pattern"></div>' : ''}
+          <div class="relative z-10">${content}</div>
         </div>
         ${
           isUser

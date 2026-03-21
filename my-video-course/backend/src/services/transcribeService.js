@@ -5,22 +5,19 @@ const path = require('path');
 
 class TranscribeService {
   constructor() {
-    this.transcribeClient = new TranscribeClient({
-      region: process.env.AWS_REGION,
-      credentials: {
+    const config = {
+      region: process.env.AWS_REGION || 'us-east-1'
+    };
+
+    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+      config.credentials = {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      },
-    });
-    
-    this.s3Client = new S3Client({
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      },
-    });
-    
+      };
+    }
+
+    this.transcribeClient = new TranscribeClient(config);
+    this.s3Client = new S3Client(config);
     this.bucket = process.env.S3_BUCKET_NAME;
   }
 

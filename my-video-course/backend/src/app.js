@@ -24,10 +24,10 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../../frontend/src'));
 
 // Static files - Clean public folder with assets only
-app.use(express.static(path.join(__dirname, '../../public')));
+app.use(express.static(path.join(__dirname, '../../frontend/public')));
 app.use('/videos', express.static(path.join(__dirname, '../../frontend/public/videos')));
-app.use('/css', express.static(path.join(__dirname, '../../public/css')));
-app.use('/js', express.static(path.join(__dirname, '../../public/js')));
+app.use('/css', express.static(path.join(__dirname, '../../frontend/public/css')));
+app.use('/js', express.static(path.join(__dirname, '../../frontend/public/js')));
 
 // Health check
 app.get('/health', async (req, res) => {
