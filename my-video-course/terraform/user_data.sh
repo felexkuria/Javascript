@@ -16,29 +16,22 @@ while ! docker info >/dev/null 2>&1; do
   sleep 5
 done
 
-# Install AWS CLI v2
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-./aws/install
-
 # Create app directory
 mkdir -p /opt/video-course-app
+mkdir -p /opt/video-course-app/mongodb_data
 cd /opt/video-course-app
 
 # Create environment file
 cat > .env << EOF
 NODE_ENV=production
 PORT=3000
-MONGODB_URI=${mongodb_uri}
-AWS_ACCESS_KEY_ID=${aws_access_key_id}
-AWS_SECRET_ACCESS_KEY=${aws_secret_access_key}
+MONGODB_URI=mongodb://127.0.0.1:27017/videocourse
 AWS_REGION=${aws_region}
 S3_BUCKET_NAME=${s3_bucket_name}
 GEMINI_API_KEY=${gemini_api_key}
 NOVA_API_KEY=${nova_api_key}
 COGNITO_USER_POOL_ID=${cognito_user_pool_id}
 COGNITO_CLIENT_ID=${cognito_client_id}
-
 EOF
 
 # Login to ECR
@@ -47,10 +40,11 @@ aws ecr get-login-password --region ${aws_region} | docker login --username AWS 
 # Pull the latest image
 docker pull ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
 
-# Run the container
+# Run the unified container
 docker run -d \
   --name video-course-app \
   -p 3000:3000 \
+  -v /opt/video-course-app/mongodb_data:/data/db \
   --env-file .env \
   --restart unless-stopped \
   ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
