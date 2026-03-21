@@ -145,20 +145,19 @@ class VideoUploadProcessor {
     });
   }
 
-  // Update video record in MongoDB
+  // Update video record in DynamoDB
   async updateVideoRecord(videoTitle, courseName, updates) {
     try {
-      const mongoose = require('mongoose');
-      if (mongoose.connection.readyState) {
-        const collection = mongoose.connection.collection('videos');
-        await collection.updateOne(
-          { title: videoTitle, courseName },
-          { $set: updates },
-          { upsert: false }
-        );
+      const dynamoVideoService = require('./dynamoVideoService');
+      const videos = await dynamoVideoService.getVideosForCourse(courseName);
+      const video = videos.find(v => v.title === videoTitle);
+      
+      if (video) {
+        await dynamoVideoService.updateVideo(courseName, video._id, updates);
+        console.log(`✅ Updated video record in DynamoDB: ${videoTitle}`);
       }
     } catch (error) {
-      console.warn('Failed to update video record:', error);
+      console.warn('Failed to update video record in DynamoDB:', error);
     }
   }
 }

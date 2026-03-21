@@ -14,20 +14,27 @@ class DynamoDBService {
 
   init() {
     try {
+      // System Clock Check (for signature debugging)
+      const now = new Date();
+      const year = now.getFullYear();
+      if (year > 2025) {
+        console.warn(`⚠️  System clock is set to ${year}. This may cause AWS signature mismatches (InvalidSignatureException).`);
+      }
+
       // Configure AWS SDK v3
       const config = {
         region: process.env.AWS_REGION || 'us-east-1'
       };
       
-      // Only add credentials if they exist
-      if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+      // Only add credentials if they exist and are NOT commented out in .env
+      if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && !process.env.AWS_ACCESS_KEY_ID.startsWith('#')) {
         config.credentials = {
           accessKeyId: process.env.AWS_ACCESS_KEY_ID,
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
         };
       }
       this.dynamodb = new DynamoDBClient(config);
-      console.log(`✅ DynamoDB initialized (Region: ${config.region}, Key: ${config.credentials ? config.credentials.accessKeyId.substring(0, 5) + '...' : 'IAM Role'})`);
+      console.log(`✅ DynamoDB initialized (Region: ${config.region}, Auth: ${config.credentials ? 'Static Keys (' + config.credentials.accessKeyId.substring(0, 5) + '...)' : 'IAM Role / Default Profile'})`);
       this.docClient = DynamoDBDocumentClient.from(this.dynamodb);
       this.isConnected = true;
     } catch (error) {
@@ -143,21 +150,30 @@ class DynamoDBService {
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
     try {
+      // Handle videoId and legacy _id format
+      const id = video.videoId || (video._id ? video._id.toString() : Date.now().toString());
+      
       const params = {
         TableName: `video-course-app-videos-${environment}`,
         Item: {
-          courseName: video.courseName,
-          videoId: video._id.toString(),
           ...video,
-          createdAt: new Date().toISOString(),
+          courseName: video.courseName,
+          videoId: id,
+          createdAt: video.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
       };
 
+      // Ensure _id doesn't leak into the DynamoDB item if it's a Mongoose object
+      if (params.Item._id) delete params.Item._id;
+
       await this.docClient.send(new PutCommand(params));
       return true;
     } catch (error) {
-      console.error('Error saving video to DynamoDB:', error);
+      console.error('❌ Error saving video to DynamoDB:', error.name || error.message);
+      if (error.name === 'InvalidSignatureException') {
+        console.error('💡 TIP: Check your .env credentials and system clock. Signatures can fail if the clock is skewed.');
+      }
       return false;
     }
   }

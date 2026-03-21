@@ -1,59 +1,51 @@
 /* Main CSS file for the video course platform */
 
 /* Font imports */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap');
 
-/* Custom variables */
+/* Custom variables - MongoDB LeafyGreen Design System */
 :root {
-  --primary-color: #00ED64; /* MongoDB Green */
-  --primary-hover: #00C152;
-  --secondary-color: #00684A; /* Dark Forest Green */
-  --secondary-hover: #005039;
+  --primary-color: #00ED64; /* Spring Green */
+  --primary-hover: #00C35A;
+  --secondary-color: #00684A; /* Forest Green */
+  --secondary-hover: #00563D;
+  --base-blue: #016BF8; /* Link Blue */
+  --base-blue-hover: #0059D1;
   --apple-blue: #00ED64;
-  --apple-blue-hover: #00C152;
-  --text-color: #001E2B; /* MongoDB Slate */
+  --apple-blue-hover: #00C35A;
+  --text-color: #001E2B; /* Dark Slate (Midnight) */
   --text-light: #4D616C;
   --bg-color: #F9FBFA;
   --bg-card: #FFFFFF;
   --border-color: #E8EDEB;
   --slate: #001E2B;
+  --gray-dark-4: #3D4F58;
+  --gray-light-2: #E8EDEB;
+  --leaf-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0c0 16.569-13.431 30-30 30 16.569 0 30 13.431 30 30 0-16.569 13.431-30 30-30-16.569 0-30-13.431-30-30z' fill='%2300ED64' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
 }
 
-/* Apple blue utility classes */
-.bg-apple-blue {
-  background-color: var(--apple-blue);
-}
-
-.hover\:bg-apple-blue:hover {
-  background-color: var(--apple-blue-hover);
-}
-
-.text-apple-blue {
-  color: var(--apple-blue);
-}
-
-.border-apple-blue {
-  border-color: var(--apple-blue);
-}
-
-.focus\:ring-apple-blue:focus {
-  --tw-ring-color: var(--apple-blue);
-}
-
-/* Dark mode variables */
+/* Dark mode variables - Atlas Midnight */
 .dark {
   --text-color: #E8EDEB;
   --text-light: #ADBAB1;
   --bg-color: #001E2B;
-  --bg-card: #023430;
+  --bg-card: #023430; /* Deep Forest */
   --border-color: rgba(0, 237, 100, 0.1);
+  --gray-dark-4: #001E2B;
 }
 
 /* Base styles */
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-color);
   background-color: var(--bg-color);
+  line-height: 1.6;
+}
+
+h1, h2, h3, .brand-font {
+  font-family: 'Source Serif 4', serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 /* Progress circle styles */
@@ -89,102 +81,62 @@ svg text {
   font-weight: bold;
 }
 
-/* Video card styles */
+/* Utility classes */
+.bg-leaf-pattern {
+  background-image: var(--leaf-pattern);
+}
+
+/* Video card styles - Atlas Card */
 .video-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 0.5rem;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+  border-radius: 12px;
   overflow: hidden;
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
-}
-
-.video-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-/* Progress bar styles */
-.progress-bar {
-  height: 8px;
-  border-radius: 4px;
-  background-color: #e5e7eb;
-  overflow: hidden;
-  margin: 1rem 0;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background-color: var(--primary-color);
-  transition: width 0.3s ease;
-}
-
-.watched-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
-
-.watched-badge.watched {
-  background-color: rgba(0, 237, 100, 0.1);
-  color: var(--primary-color);
-  border: 1px solid rgba(0, 237, 100, 0.2);
-}
-
-.watched-badge.unwatched {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
-/* Sidebar styles */
-.sidebar {
-  background: linear-gradient(to bottom, #001E2B, #023430);
-  border-right: 1px solid rgba(0, 237, 100, 0.1);
-  color: #E8EDEB;
-}
-
-/* Video player styles */
-.video-container {
   position: relative;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
-  height: 0;
-  overflow: hidden;
 }
 
-.video-container video {
+.video-card::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  right: 0;
+  bottom: 0;
+  background-image: var(--leaf-pattern);
+  opacity: 0.1;
+  pointer-events: none;
 }
 
-/* Button styles */
+.video-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -10px rgba(0, 30, 43, 0.2);
+  border-color: rgba(0, 237, 100, 0.3);
+}
+
+/* Button styles - Atlas Primary */
 .btn {
   display: inline-flex;
   align-items: center;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
   transition: all 0.2s;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
+  cursor: pointer;
 }
 
 .btn-primary {
-  background: linear-gradient(to r, var(--primary-color), var(--primary-hover));
+  background-color: var(--primary-color);
   color: var(--slate);
-  border: none;
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 2px 4px rgba(0, 237, 100, 0.2);
 }
 
 .btn-primary:hover {
   background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 237, 100, 0.3);
 }
 
 .btn-secondary {

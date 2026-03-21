@@ -1,12 +1,16 @@
 <!-- Desktop Sidebar -->
 <nav
-  class="sidebar bg-gradient-to-b from-[#001E2B] to-[#00684A] text-[#E7EEEB] transition-all duration-300 border-r border-[#133A41]"
+  class="sidebar bg-[#001E2B] text-[#E7EEEB] transition-all duration-300 border-r border-[#133A41] relative overflow-hidden"
   :class="{'w-64': !sidebarCollapsed, 'w-16': sidebarCollapsed}"
 >
-  <div class="flex items-center justify-between py-6 px-4">
+  <!-- Background Pattern -->
+  <div class="absolute inset-0 bg-leaf-pattern opacity-10 pointer-events-none"></div>
+  <div class="absolute inset-0 bg-gradient-to-b from-transparent to-[#00684A]/30 pointer-events-none"></div>
+
+  <div class="relative z-10 flex items-center justify-between py-6 px-4">
     <div class="flex items-center" :class="{'justify-center w-full': sidebarCollapsed}">
       <span class="text-2xl mr-2" :class="{'mr-0': sidebarCollapsed}">🍃</span>
-      <h1 class="text-xl font-bold tracking-tight" x-show="!sidebarCollapsed">
+      <h1 class="text-xl font-bold tracking-tight brand-font" x-show="!sidebarCollapsed">
         <span class="text-[#00ED64]">Mongo</span>Academy
       </h1>
     </div>
@@ -88,12 +92,16 @@
     @click="sidebarOpen = false"
   ></div>
   <nav
-    class="fixed top-0 left-0 bottom-0 flex flex-col w-64 bg-gradient-to-b from-[#001E2B] to-[#00684A] text-[#E7EEEB] py-6 px-4 overflow-y-auto"
+    class="fixed top-0 left-0 bottom-0 flex flex-col w-64 bg-[#001E2B] text-[#E7EEEB] py-6 px-4 overflow-y-auto relative"
   >
-    <div class="flex items-center justify-between mb-8">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 bg-leaf-pattern opacity-10 pointer-events-none"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent to-[#00684A]/30 pointer-events-none"></div>
+
+    <div class="relative z-10 flex items-center justify-between mb-8">
       <div class="flex items-center">
         <span class="text-2xl mr-2">🍃</span>
-        <h1 class="text-xl font-bold tracking-tight">Mongo<span class="text-[#00ED64]">Academy</span></h1>
+        <h1 class="text-xl font-bold tracking-tight brand-font">Mongo<span class="text-[#00ED64]">Academy</span></h1>
       </div>
       <button @click="sidebarOpen = false" class="text-white focus:outline-none">
         <i class="fas fa-times"></i>
