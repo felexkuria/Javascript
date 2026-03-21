@@ -74,9 +74,6 @@ jobs:
         nova_api_key           = "${{ secrets.NOVA_API_KEY }}"
         enable_https           = true
         create_route53_records  = true
-        create_cognito_role    = false
-        create_ec2_role        = false
-        create_ecr_repo        = false
         EOF
 
     - name: Terraform Init
