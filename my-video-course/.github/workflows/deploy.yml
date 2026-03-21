@@ -29,13 +29,16 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
+    # Added proper Buildx setup for reliable container builds
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Build, tag, and push Docker image
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker buildx create --use --name multiarch || true
         docker buildx build --platform linux/amd64 \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
@@ -47,24 +50,33 @@ jobs:
       with:
         terraform_version: 1.10.2
 
+    # Fixed: Re-added missing required variables like vpc_cidr and mongodb_uri
     - name: Create terraform.tfvars
       run: |
         cd terraform
         cat > terraform.tfvars << EOF
-        aws_region            = "${{ env.AWS_REGION }}"
-        app_name              = "video-course-app"
-        environment           = "prod"
-        instance_type         = "t3.medium"
-        key_pair_name         = "${{ secrets.KEY_PAIR_NAME }}"
-        min_size              = 1
-        max_size              = 5
-        desired_capacity      = 2
-        domain_name           = "${{ secrets.DOMAIN_NAME }}"
-        hosted_zone_id        = "${{ secrets.HOSTED_ZONE_ID }}"
-        gemini_api_key        = "${{ secrets.GEMINI_API_KEY }}"
-        nova_api_key          = "${{ secrets.NOVA_API_KEY }}"
-        enable_https          = true
-        create_route53_records = true
+        aws_region             = "${{ env.AWS_REGION }}"
+        app_name               = "video-course-app"
+        environment            = "prod"
+        vpc_cidr               = "10.0.0.0/16"
+        instance_type          = "t3.medium"
+        key_pair_name          = "${{ secrets.KEY_PAIR_NAME }}"
+        min_size               = 1
+        max_size               = 5
+        desired_capacity       = 2
+        domain_name            = "${{ secrets.DOMAIN_NAME }}"
+        hosted_zone_id         = "${{ secrets.HOSTED_ZONE_ID }}"
+        s3_bucket_name         = "${{ secrets.S3_BUCKET_NAME }}"
+        mongodb_uri            = "${{ secrets.MONGODB_URI }}"
+        aws_access_key_id      = "${{ secrets.AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key  = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+        gemini_api_key         = "${{ secrets.GEMINI_API_KEY }}"
+        nova_api_key           = "${{ secrets.NOVA_API_KEY }}"
+        enable_https           = true
+        create_route53_records  = true
+        create_cognito_role    = false
+        create_ec2_role        = false
+        create_ecr_repo        = false
         EOF
 
     - name: Terraform Init
@@ -80,7 +92,9 @@ jobs:
         AWS_REGION: ${{ env.AWS_REGION }}
       run: |
         set -e
+        # Retrieve the ASG name from Terraform outputs
         ASG_NAME=$(cd terraform && terraform output -raw autoscaling_group_name || echo "")
+        
         if [ "$ASG_NAME" == "" ]; then
           echo "⚠️  No ASG found in terraform output. Scanning via AWS CLI..."
           ASG_NAME=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[?contains(AutoScalingGroupName, `video-course-app`)].AutoScalingGroupName' --output text | head -n 1)
@@ -88,25 +102,46 @@ jobs:
         
         if [ "$ASG_NAME" == "" ] || [ "$ASG_NAME" == "None" ]; then
           echo "❌ ERROR: Could not identify ASG_NAME. Skipping refresh."
-          exit 0
+          exit 1
         fi
 
         echo "🔍 Checking status for ASG: $ASG_NAME"
         
-        # Check if a refresh is already in progress or pending
-        IN_PROGRESS=$(aws autoscaling describe-instance-refreshes \
+        # Check for InProgress or Pending refreshes to avoid the InstanceRefreshInProgress error
+        REFRESH_STATUS=$(aws autoscaling describe-instance-refreshes \
           --auto-scaling-group-name "$ASG_NAME" \
           --query 'InstanceRefreshes[?Status==`InProgress` || Status==`Pending`].Status' \
           --output text)
         
-        if [ "$IN_PROGRESS" != "" ] && [ "$IN_PROGRESS" != "None" ]; then
-          echo "⚠️  Existing refresh found ($IN_PROGRESS). Cancelling to prioritize latest code..."
+        if [ -n "$REFRESH_STATUS" ] && [ "$REFRESH_STATUS" != "None" ]; then
+          echo "⚠️  Existing refresh found ($REFRESH_STATUS). Cancelling..."
           aws autoscaling cancel-instance-refresh --auto-scaling-group-name "$ASG_NAME"
-          
-          echo "⏳ Waiting 15 seconds for cancellation to process..."
           sleep 15
         fi
 
         echo "🚀 Starting new instance refresh for $ASG_NAME..."
         aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG_NAME"
         echo "✅ Instance refresh triggered successfully."
+
+    # Added: Automated Health Check to verify the new container actually starts
+    - name: Wait for Target Group Health
+      run: |
+        cd terraform
+        TARGET_GROUP_ARN=$(terraform output -raw target_group_arn)
+        echo "⏳ Waiting for targets in $TARGET_GROUP_ARN to become healthy..."
+        
+        for i in {1..30}; do
+          HEALTH_STATUS=$(aws elbv2 describe-target-health \
+            --target-group-arn "$TARGET_GROUP_ARN" \
+            --query 'TargetHealthDescriptions[?TargetHealth.State==`healthy`].TargetHealth.State' \
+            --output text)
+          
+          if [ -n "$HEALTH_STATUS" ]; then
+            echo "✅ Deployment successful! Your platform is live at https://${{ secrets.DOMAIN_NAME }}"
+            exit 0
+          fi
+          echo "...still waiting ($i/30)..."
+          sleep 10
+        done
+        echo "❌ TIMEOUT: Instances did not become healthy."
+        exit 1
