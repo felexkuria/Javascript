@@ -9,6 +9,7 @@ router.post('/signin', authController.signin);
 router.post('/logout', authController.logout);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/confirm-forgot', authController.confirmForgotPassword);
+router.post('/setup-admin', authController.setupAdmin);
 
 
 

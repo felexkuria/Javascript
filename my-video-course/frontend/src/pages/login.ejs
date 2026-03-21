@@ -85,10 +85,15 @@
                     </div>
                 </form>
                 
-                <div class="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors" onclick="loginAsSuperAdmin()">
-                    <p class="text-xs text-blue-700 dark:text-blue-300 text-center">
-                        🔑 <strong>Super Admin:</strong> engineerfelex@gmail.com <span class="text-blue-500">(Click to login)</span>
+                <!-- Super Admin Helper -->
+                <div id="superAdminSection" class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl transition-all">
+                    <p class="text-xs text-blue-700 dark:text-blue-300 text-center mb-3">
+                        🔑 <strong>Super Admin:</strong> engineerfelex@gmail.com
                     </p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="loginAsSuperAdmin()" class="py-2 px-3 text-[10px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-sm">Fill Credentials</button>
+                        <button type="button" id="setupAdminBtn" onclick="setupSuperAdmin()" class="py-2 px-3 text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all shadow-sm">Sync Cognito 🚀</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -157,9 +162,47 @@
         // Super admin login function
         function loginAsSuperAdmin() {
             document.getElementById('email').value = 'engineerfelex@gmail.com';
+            document.getElementById('password').value = 'test12345';
             document.getElementById('password').focus();
             // Switch to teacher tab
             document.getElementById('teacherTab').click();
+        }
+
+        // Setup Admin via Cognito
+        async function setupSuperAdmin() {
+            const setupBtn = document.getElementById('setupAdminBtn');
+            const originalText = setupBtn.textContent;
+            
+            const adminKey = prompt("Enter ADMIN_KEY from your .env file to confirm setup (default: admin123):");
+            if (!adminKey) return;
+            
+            setupBtn.disabled = true;
+            setupBtn.textContent = 'Syncing...';
+            
+            try {
+                const response = await fetch('/api/auth/setup-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: 'engineerfelex@gmail.com', 
+                        password: 'test12345',
+                        adminKey: adminKey 
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    loginAsSuperAdmin();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                setupBtn.disabled = false;
+                setupBtn.textContent = originalText;
+            }
         }
         
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
