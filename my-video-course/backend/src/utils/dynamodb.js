@@ -1,3 +1,6 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../../../.env') });
+
 const { DynamoDBClient, UpdateItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, ScanCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
 
@@ -24,11 +27,9 @@ class DynamoDBService {
         };
       }
       
-      this.dynamodb = new DynamoDBClient(config);
-
+      console.log(`✅ DynamoDB initialized (Region: ${config.region}, Key: ${config.credentials ? config.credentials.accessKeyId.substring(0, 5) + '...' : 'IAM Role'})`);
       this.docClient = DynamoDBDocumentClient.from(this.dynamodb);
       this.isConnected = true;
-      console.log('✅ DynamoDB initialized with AWS SDK v3');
     } catch (error) {
       console.error('❌ DynamoDB initialization failed:', error.message);
       this.isConnected = false;
