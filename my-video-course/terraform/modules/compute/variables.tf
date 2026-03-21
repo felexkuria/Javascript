@@ -5,10 +5,7 @@ variable "app_name" {
 variable "create_ecr_repo" {
   type = bool
 }
-variable "image_tag" {
-  description = "The Docker image tag to deploy"
-  type        = string
-}
+
 variable "create_asg" {
   type = bool
 }
