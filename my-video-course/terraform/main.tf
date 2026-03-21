@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.10.0"
+  required_version = ">= 1.5.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -8,10 +8,9 @@ terraform {
   }
 
   backend "s3" {
-    bucket       = "terraform-state-bucket-2026-felexirunguvault"
-    key          = "video-course-app/terraform.tfstate"
-    region       = "us-east-1"
-    use_lockfile = true
+    bucket = "terraform-state-bucket-2026-felexirunguvault"
+    key    = "video-course-app/terraform.tfstate"
+    region = "us-east-1"
   }
 }
 
