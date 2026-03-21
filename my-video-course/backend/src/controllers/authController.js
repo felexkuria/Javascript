@@ -160,7 +160,9 @@ class AuthController {
       });
       
     } catch (error) {
-      let errorMessage = 'Login failed';
+      console.error('Signin error details:', error);
+      let errorMessage = 'Login failed: ' + (error.message || 'Unknown error');
+      
       if (error.code === 'NotAuthorizedException') {
         errorMessage = 'Invalid email or password';
       } else if (error.code === 'UserNotConfirmedException') {
@@ -169,7 +171,7 @@ class AuthController {
         errorMessage = 'User not found';
       }
       
-      res.json({ success: false, error: errorMessage });
+      res.json({ success: false, error: errorMessage, code: error.code });
     }
   }
 

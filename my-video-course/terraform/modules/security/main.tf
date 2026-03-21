@@ -127,10 +127,16 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-resource "aws_iam_role_policy_attachment" "ec2_s3" {
+resource "aws_iam_role_policy_attachment" "ec2_cognito" {
   count      = var.create_ec2_role ? 1 : 0
   role       = aws_iam_role.ec2_role[0].name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonCognitoPowerUser"
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_dynamodb" {
+  count      = var.create_ec2_role ? 1 : 0
+  role       = aws_iam_role.ec2_role[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
 # Cognito Identity Pool
