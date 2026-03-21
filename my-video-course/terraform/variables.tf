@@ -139,6 +139,12 @@ variable "create_route53_records" {
   default     = true
 }
 
+variable "enable_https" {
+  description = "Whether to enable HTTPS (requires ACM certificate and Route53)"
+  type        = bool
+  default     = true
+}
+
 variable "existing_alb_name" {
   description = "Name of existing ALB to use (if create_alb is false)"
   type        = string

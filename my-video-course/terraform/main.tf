@@ -6,6 +6,13 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+    bucket       = "terraform-state-bucket-2026-felexirunguvault"
+    key          = "video-course-app/terraform.tfstate"
+    region       = "us-east-1"
+    use_lockfile = true
+  }
 }
 
 provider "aws" {
@@ -71,8 +78,10 @@ module "loadbalancing" {
   asg_name               = module.compute.asg_name
   scale_up_policy_arns   = [module.compute.scale_up_policy_arn]
   scale_down_policy_arns = [module.compute.scale_down_policy_arn]
-  domain_name           = var.domain_name
-  hosted_zone_id        = var.hosted_zone_id
+  domain_name            = var.domain_name
+  hosted_zone_id         = var.hosted_zone_id
+  enable_https           = var.enable_https
+  create_route53_records = var.create_route53_records
 }
 
 module "compute" {

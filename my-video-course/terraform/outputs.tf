@@ -5,7 +5,7 @@ output "load_balancer_dns" {
 
 output "load_balancer_url" {
   description = "URL of the application"
-  value       = "https://${var.domain_name}"
+  value       = var.enable_https ? "https://${var.domain_name}" : "http://${var.domain_name}"
 }
 
 output "vpc_id" {
