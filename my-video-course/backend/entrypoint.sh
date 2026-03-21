@@ -2,9 +2,18 @@
 # 🚀 Unified Entrypoint for Node.js + MongoDB
 
 # 1. Start MongoDB in the background
-echo "⏳ Starting MongoDB..."
-mkdir -p /data/db
-mongod --bind_ip 127.0.0.1 --fork --logpath /var/log/mongodb.log --dbpath /data/db
+echo "⏳ Preparing MongoDB..."
+mkdir -p /data/db /var/log/mongodb
+rm -f /data/db/mongod.lock || true
+chmod 777 /data/db /var/log/mongodb # Ensure write access for mounted volumes
+
+echo "⏳ Starting MongoDB (forked)..."
+# Try starting, if it fails with code 14, try repair once
+if ! mongod --bind_ip 127.0.0.1 --fork --logpath /var/log/mongodb.log --dbpath /data/db; then
+    echo "⚠️ Start failed, attempting repair..."
+    mongod --dbpath /data/db --repair
+    mongod --bind_ip 127.0.0.1 --fork --logpath /var/log/mongodb.log --dbpath /data/db
+fi
 
 # 2. Wait for MongoDB to be ready
 echo "⏳ Waiting for MongoDB to initialize..."
