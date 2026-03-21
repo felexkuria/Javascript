@@ -1,4 +1,4 @@
-const { DynamoDBClient, UpdateItemCommand } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, UpdateItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, ScanCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
 
 class DynamoDBService {
@@ -437,6 +437,42 @@ class DynamoDBService {
     } catch (error) {
       console.error('Error getting user from DynamoDB:', error);
       return null;
+    }
+  }
+
+  // Delete operations
+  async deleteCourse(courseName) {
+    if (!this.isConnected) return false;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const params = {
+        TableName: `video-course-app-courses-${environment}`,
+        Key: { courseName: { S: courseName } }
+      };
+      await this.dynamodb.send(new DeleteItemCommand(params));
+      return true;
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      return false;
+    }
+  }
+
+  async deleteVideo(courseName, videoId) {
+    if (!this.isConnected) return false;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const params = {
+        TableName: `video-course-app-videos-${environment}`,
+        Key: { 
+          courseName: { S: courseName },
+          videoId: { S: videoId }
+        }
+      };
+      await this.dynamodb.send(new DeleteItemCommand(params));
+      return true;
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      return false;
     }
   }
 

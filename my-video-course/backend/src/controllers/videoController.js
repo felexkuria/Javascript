@@ -209,9 +209,13 @@ exports.syncVideos = async (req, res) => {
 
 exports.addVideo = async (req, res) => {
   try {
-    const video = new Video(req.body);
-    await video.save();
-    res.json({ success: true, data: video });
+    const { courseName, ...videoData } = req.body;
+    const success = await dynamoVideoService.addVideoToCourse(courseName, videoData);
+    if (success) {
+      res.json({ success: true, message: 'Video added successfully to DynamoDB/Local Storage' });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to add video' });
+    }
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

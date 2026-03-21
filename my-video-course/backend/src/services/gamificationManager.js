@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const mongoose = require('mongoose');
 
 class GamificationManager {
   constructor() {
@@ -31,17 +30,6 @@ class GamificationManager {
         console.error('DynamoDB gamification read error:', error);
       }
     }
-    // Try MongoDB first
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const collection = mongoose.connection.collection('gamification');
-        const data = await collection.findOne({ userId });
-        if (data) return data;
-      } catch (error) {
-        console.error('MongoDB gamification read error:', error);
-      }
-    }
-
     // Fallback to local file
     try {
       const data = JSON.parse(fs.readFileSync(this.gamificationFile, 'utf8'));
@@ -82,21 +70,6 @@ class GamificationManager {
         await dynamoService.saveGamificationData(userId, updatedData);
       } catch (error) {
         console.error('DynamoDB gamification save error:', error);
-      }
-    }
-
-    // Save to MongoDB as backup
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const collection = mongoose.connection.collection('gamification');
-        const { _id, ...dataWithoutId } = updatedData;
-        await collection.updateOne(
-          { userId },
-          { $set: dataWithoutId },
-          { upsert: true }
-        );
-      } catch (error) {
-        console.error('MongoDB gamification save error:', error);
       }
     }
 

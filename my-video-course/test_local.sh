@@ -2,8 +2,6 @@
 # 🧪 Unified All-in-One Local Tester (for Colima/Docker)
 
 # 1. Start MongoDB Data Directory
-mkdir -p ./mongodb_data
-
 # 2. Build the all-in-one image locally
 echo "🏗️ Building local unified image..."
 docker build -t video-course-app:local .
@@ -19,9 +17,8 @@ echo "🚀 Running unified container on http://localhost:3000"
 docker run -d \
   --name video-course-app-local \
   -p 3000:3000 \
-  -v "$(pwd)/mongodb_data:/data/db" \
   --env-file .env \
-  --rm \
+  -v "$(pwd)/data:/app/data" \
   video-course-app:local
 
 # 5. Tail logs to catch errors

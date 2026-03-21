@@ -1,9 +1,6 @@
 const dynamoVideoService = require('../services/dynamoVideoService');
 const videoProcessingService = require('../services/videoProcessingService');
-const mongoose = require('mongoose');
 const dynamodb = require('../utils/dynamodb');
-const Course = require('../models/Course');
-const Analytics = require('../models/Analytics');
 const multer = require('multer');
 
 // Configure multer for video uploads
@@ -152,19 +149,17 @@ class CourseController {
         updatedAt: new Date()
       };
 
-      if (mongoose.connection.readyState === 1) {
-        const collection = mongoose.connection.collection('courses');
-        const result = await collection.updateOne(
-          { _id: new mongoose.Types.ObjectId(id) },
-          { $set: updateData }
-        );
+      // Save to DynamoDB (upsert)
+      const success = await dynamodb.saveCourse({
+        courseName: id, // Assuming id is courseName for simplicity in this refactor
+        ...updateData
+      });
 
-        if (result.matchedCount === 0) {
-          return res.status(404).json({
-            success: false,
-            message: 'Course not found'
-          });
-        }
+      if (!success) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course not found or update failed'
+        });
       }
 
       res.json({
@@ -231,55 +226,21 @@ class CourseController {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       
-      // Enrollment trends
-      const enrollmentTrends = await Analytics.aggregate([
-        {
-          $match: {
-            type: 'enrollment',
-            timestamp: { $gte: startDate }
-          }
-        },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
-            count: { $sum: 1 }
-          }
-        },
-        { $sort: { _id: 1 } }
-      ]);
+      // Return simplified analytics for the Pure Cloud architecture
+      const userId = req.user?.email || 'default_user';
+      const courses = await dynamoVideoService.getAllCourses(userId);
       
-      // Course performance
-      const coursePerformance = await Analytics.aggregate([
-        {
-          $match: {
-            type: { $in: ['enrollment', 'video_watch', 'quiz_completion'] },
-            timestamp: { $gte: startDate }
-          }
-        },
-        {
-          $group: {
-            _id: '$courseId',
-            enrollments: { $sum: { $cond: [{ $eq: ['$type', 'enrollment'] }, 1, 0] } },
-            videoWatches: { $sum: { $cond: [{ $eq: ['$type', 'video_watch'] }, 1, 0] } },
-            quizCompletions: { $sum: { $cond: [{ $eq: ['$type', 'quiz_completion'] }, 1, 0] } }
-          }
-        }
-      ]);
-      
-      // Recent activity
-      const recentActivity = await Analytics.find({
-        timestamp: { $gte: startDate }
-      })
-        .populate('courseId', 'title')
-        .sort({ timestamp: -1 })
-        .limit(20);
-      
+      const totalVideos = courses.reduce((sum, c) => sum + (c.videos?.length || 0), 0);
+      const watchedVideos = courses.reduce((sum, c) => sum + (c.videos?.filter(v => v.watched).length || 0), 0);
+
       res.json({
         success: true,
         data: {
-          enrollmentTrends,
-          coursePerformance,
-          recentActivity
+          totalCourses: courses.length,
+          totalVideos,
+          totalWatched: watchedVideos,
+          completionRate: totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0,
+          recentActivity: [] // Optional: could fetch recent scan from DynamoDB
         }
       });
     } catch (error) {
@@ -297,8 +258,8 @@ class CourseController {
     try {
       const { id } = req.params;
       
-      const course = await Course.findByIdAndDelete(id);
-      if (!course) {
+      const success = await dynamodb.deleteCourse(id);
+      if (!success) {
         return res.status(404).json({
           success: false,
           message: 'Course not found'
