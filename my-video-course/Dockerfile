@@ -33,7 +33,6 @@ RUN cd backend && npm ci --only=production
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 COPY data/ ./data/
-COPY public/ ./public/
 
 # Use standalone entrypoint script
 RUN chmod +x /app/backend/entrypoint.sh
