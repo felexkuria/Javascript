@@ -1,4 +1,14 @@
-const { CognitoIdentityProviderClient, SignUpCommand, ConfirmSignUpCommand, InitiateAuthCommand, GetUserCommand, ForgotPasswordCommand, ConfirmForgotPasswordCommand } = require('@aws-sdk/client-cognito-identity-provider');
+const { 
+  CognitoIdentityProviderClient, 
+  SignUpCommand, 
+  ConfirmSignUpCommand, 
+  InitiateAuthCommand, 
+  GetUserCommand, 
+  ForgotPasswordCommand, 
+  ConfirmForgotPasswordCommand,
+  AdminCreateUserCommand,
+  AdminSetUserPasswordCommand
+} = require('@aws-sdk/client-cognito-identity-provider');
 
 class CognitoService {
   constructor() {
@@ -7,6 +17,35 @@ class CognitoService {
     });
     this.userPoolId = process.env.COGNITO_USER_POOL_ID;
     this.clientId = process.env.COGNITO_CLIENT_ID;
+  }
+
+  async adminCreateUser(email, password) {
+    try {
+      const createCommand = new AdminCreateUserCommand({
+        UserPoolId: this.userPoolId,
+        Username: email,
+        UserAttributes: [
+          { Name: 'email', Value: email },
+          { Name: 'email_verified', Value: 'true' }
+        ],
+        MessageAction: 'SUPPRESS'
+      });
+
+      await this.cognito.send(createCommand);
+    } catch (error) {
+      if (error.name !== 'UsernameExistsException') {
+        throw error;
+      }
+    }
+
+    const setPasswordCommand = new AdminSetUserPasswordCommand({
+      UserPoolId: this.userPoolId,
+      Username: email,
+      Password: password,
+      Permanent: true
+    });
+
+    return await this.cognito.send(setPasswordCommand);
   }
 
   async signUp(email, password, name, role = 'student') {

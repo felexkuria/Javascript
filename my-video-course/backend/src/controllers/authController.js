@@ -235,6 +235,32 @@ class AuthController {
       res.json({ success: false, error: errorMessage });
     }
   }
+
+  async setupAdmin(req, res) {
+    try {
+      const { email, password, adminKey } = req.body;
+      
+      // Verify admin key from .env to prevent unauthorized setup
+      if (adminKey !== (process.env.ADMIN_KEY || 'admin123')) {
+        return res.status(403).json({ success: false, error: 'Unauthorized: Invalid Admin Key' });
+      }
+      
+      if (!email || !password) {
+        return res.json({ success: false, error: 'Email and password required' });
+      }
+      
+      await cognitoService.adminCreateUser(email, password);
+      
+      res.json({ 
+        success: true, 
+        message: `Admin user ${email} successfully created and confirmed in Cognito. You can now sign in.` 
+      });
+      
+    } catch (error) {
+      console.error('Admin setup error:', error);
+      res.json({ success: false, error: 'Failed to setup admin: ' + error.message });
+    }
+  }
 }
 
 module.exports = new AuthController();

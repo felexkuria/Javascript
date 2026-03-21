@@ -18,14 +18,12 @@ done
 
 # Create app directory
 mkdir -p /opt/video-course-app
-mkdir -p /opt/video-course-app/mongodb_data
 cd /opt/video-course-app
 
 # Create environment file
 cat > .env << EOF
 NODE_ENV=production
 PORT=3000
-MONGODB_URI=mongodb://127.0.0.1:27017/videocourse
 AWS_REGION=${aws_region}
 S3_BUCKET_NAME=${s3_bucket_name}
 GEMINI_API_KEY=${gemini_api_key}
@@ -44,7 +42,6 @@ docker pull ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:l
 docker run -d \
   --name video-course-app \
   -p 3000:3000 \
-  -v /opt/video-course-app/mongodb_data:/data/db \
   --env-file .env \
   --restart unless-stopped \
   ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
