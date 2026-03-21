@@ -1,6 +1,7 @@
-FROM node:18-slim
+# Use Debian 11 (Bullseye) for reliable MongoDB 6.0 support
+FROM node:18-bullseye-slim
 
-# Install dependencies for MongoDB
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
@@ -8,9 +9,9 @@ RUN apt-get update && apt-get install -y \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Install MongoDB 7.0
-RUN wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | gpg --dearmor > /usr/share/keyrings/mongodb-server-7.0.gpg \
-    && echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/7.0 main" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list \
+# Install MongoDB 6.0 (Stable on Bullseye)
+RUN wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | gpg --dearmor > /usr/share/keyrings/mongodb-server-6.0.gpg \
+    && echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/debian bullseye/mongodb-org/6.0 main" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list \
     && apt-get update && apt-get install -y mongodb-org \
     && rm -rf /var/lib/apt/lists/*
 
