@@ -276,10 +276,6 @@ resource "aws_autoscaling_group" "app" {
     value               = "${var.app_name}-asg"
     propagate_at_launch = false
   }
-  
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # Auto Scaling Policies (conditional creation)
@@ -330,10 +326,6 @@ resource "aws_dynamodb_table" "videos" {
     Name        = "${var.app_name}-videos"
     Environment = var.environment
   }
-  
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "aws_dynamodb_table" "gamification" {
@@ -350,10 +342,6 @@ resource "aws_dynamodb_table" "gamification" {
     Name        = "${var.app_name}-gamification"
     Environment = var.environment
   }
-  
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "aws_dynamodb_table" "users" {
@@ -369,10 +357,6 @@ resource "aws_dynamodb_table" "users" {
   tags = {
     Name        = "${var.app_name}-users"
     Environment = var.environment
-  }
-  
-  lifecycle {
-    prevent_destroy = true
   }
 }
 

@@ -79,22 +79,22 @@ Focus on practical scenarios, not theoretical concepts. Return only JSON array.`
     const templates = {
       aws: [
         {
-          scenario: "A company runs a web application on EC2 instances behind an Application Load Balancer.",
-          question: "What should be implemented to ensure high availability across multiple AZs?",
-          options: ["A) Auto Scaling Group", "B) CloudFront", "C) Route 53", "D) ElastiCache"],
+          scenario: 'A company runs a web application on EC2 instances behind an Application Load Balancer.',
+          question: 'What should be implemented to ensure high availability across multiple AZs?',
+          options: ['A) Auto Scaling Group', 'B) CloudFront', 'C) Route 53', 'D) ElastiCache'],
           correct: 0,
-          explanation: "Auto Scaling Groups automatically distribute instances across multiple AZs for high availability.",
-          topic: "EC2"
+          explanation: 'Auto Scaling Groups automatically distribute instances across multiple AZs for high availability.',
+          topic: 'EC2'
         }
       ],
       terraform: [
         {
-          scenario: "A team needs to manage infrastructure state across multiple environments.",
-          question: "What is the best practice for Terraform state management?",
-          options: ["A) Local state files", "B) Remote state with locking", "C) Git repository", "D) Shared network drive"],
+          scenario: 'A team needs to manage infrastructure state across multiple environments.',
+          question: 'What is the best practice for Terraform state management?',
+          options: ['A) Local state files', 'B) Remote state with locking', 'C) Git repository', 'D) Shared network drive'],
           correct: 1,
-          explanation: "Remote state with locking prevents conflicts and enables team collaboration.",
-          topic: "State Management"
+          explanation: 'Remote state with locking prevents conflicts and enables team collaboration.',
+          topic: 'State Management'
         }
       ]
     };

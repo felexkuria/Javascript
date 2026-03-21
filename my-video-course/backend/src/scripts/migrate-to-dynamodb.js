@@ -84,7 +84,7 @@ async function migrateToDynamoDB() {
     }
 
     console.log('\n🎉 Migration completed successfully!');
-    console.log(`📊 Migration Summary:`);
+    console.log('📊 Migration Summary:');
     console.log(`   Videos migrated: ${videoCount}`);
     console.log(`   Gamification records: ${gamificationCount}`);
     console.log(`   Users migrated: ${userCount}`);

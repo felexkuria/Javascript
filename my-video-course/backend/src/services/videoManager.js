@@ -219,7 +219,7 @@ class VideoManager {
         await courseCollection.insertMany(videos);
         console.log(`🗄️ Saved ${videos.length} videos to MongoDB`);
       } catch (error) {
-        console.error(`❌ MongoDB save failed:`, error.message);
+        console.error('❌ MongoDB save failed:', error.message);
       }
     }
   }

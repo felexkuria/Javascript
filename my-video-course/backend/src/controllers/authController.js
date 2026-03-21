@@ -120,8 +120,8 @@ class AuthController {
       const currentRole = req.body.requestedRole && user.roles.includes(req.body.requestedRole) 
         ? req.body.requestedRole 
         : user.roles.includes('admin') ? 'admin' 
-        : user.roles.includes('teacher') ? 'teacher' 
-        : 'student';
+          : user.roles.includes('teacher') ? 'teacher' 
+            : 'student';
         
       req.session.user = { 
         email, 
@@ -176,12 +176,12 @@ class AuthController {
   async refresh(req, res) {
     try {
       const { refreshToken } = req.body;
-      const result = await authService.refreshToken(refreshToken);
+      const result = await cognitoService.refreshToken(refreshToken);
       
       if (!result.AuthenticationResult) {
         return res.status(401).json({ 
           success: false, 
-          error: "Token refresh failed" 
+          error: 'Token refresh failed' 
         });
       }
       

@@ -188,11 +188,11 @@ class CourseService {
     const decodedCourseName = decodeURIComponent(courseName);
     
     if (decodedCourseName.toLowerCase().includes('terraform')) {
-      return `Master HashiCorp Terraform with hands-on Infrastructure as Code practices. Learn to provision, manage, and scale cloud resources declaratively.`;
+      return 'Master HashiCorp Terraform with hands-on Infrastructure as Code practices. Learn to provision, manage, and scale cloud resources declaratively.';
     } else if (decodedCourseName.toLowerCase().includes('aws')) {
-      return `Comprehensive AWS cloud computing course covering core services, architecture patterns, and best practices for scalable cloud solutions.`;
+      return 'Comprehensive AWS cloud computing course covering core services, architecture patterns, and best practices for scalable cloud solutions.';
     } else if (decodedCourseName.toLowerCase().includes('devops')) {
-      return `Complete DevOps bootcamp covering CI/CD, containerization, infrastructure automation, and modern development practices.`;
+      return 'Complete DevOps bootcamp covering CI/CD, containerization, infrastructure automation, and modern development practices.';
     } else {
       return `Learn ${decodedCourseName} through comprehensive lessons and practical exercises with hands-on projects.`;
     }

@@ -18,6 +18,7 @@ class UploadController {
     this.s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
     // Configure multer storage
+    // eslint-disable-next-line no-constant-condition
     if (false) { // Disable S3 for now
       console.log('Using S3 storage for uploads');
       this.storage = multerS3({

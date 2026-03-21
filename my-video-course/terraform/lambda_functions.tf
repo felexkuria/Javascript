@@ -19,8 +19,8 @@ def lambda_handler(event, context):
         print("Not an S3 put event or missing data:", e)
         return {'status': 'ignored'}
     
-    # Filter for target folder & media suffixes
-    if not key.startswith("videos/dev-ops-bootcamp_202201/"):
+    # Filter for target folders & media suffixes
+    if not (key.startswith("videos/dev-ops-bootcamp_202201/") or key.startswith("videos/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/")):
         print("Skipping non-target folder:", key)
         return {'status': 'skipped'}
     
@@ -130,8 +130,13 @@ def lambda_handler(event, context):
         print("Invalid path structure:", key)
         return {'status': 'invalid_path'}
     
-    course_folder = path_parts[1]  # e.g., "dev-ops-bootcamp_202201"
-    course_name = course_folder.split('_')[0]  # e.g., "dev-ops-bootcamp"
+    course_folder = path_parts[1]  # e.g., "dev-ops-bootcamp_202201" or "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA"
+    
+    # Handle special case for AWS CLOUD SOLUTIONS ARCHITECT course
+    if course_folder == "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA":
+        course_name = "AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA"
+    else:
+        course_name = course_folder.split('_')[0]  # e.g., "dev-ops-bootcamp"
     filename = os.path.basename(key)
     title = os.path.splitext(filename)[0]
     

@@ -41,7 +41,7 @@ class PDFKnowledgeService {
     
     // Common todo patterns in DevOps PDFs
     const todoPatterns = [
-      /(?:□|☐|▢|\[ \]|\-|\*|\d+\.)\s*(.+?)(?:\n|$)/gi,
+      /(?:□|☐|▢|\[ \]|-|\*|\d+\.)\s*(.+?)(?:\n|$)/gi,
       /(?:TODO|To Do|Action Item|Task):\s*(.+?)(?:\n|$)/gi,
       /(?:Install|Setup|Configure|Create|Deploy|Build|Test|Run|Execute|Check|Verify|Practice)\s+(.+?)(?:\n|$)/gi
     ];

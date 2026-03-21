@@ -1,4 +1,5 @@
 const dynamodb = require('../utils/dynamodb');
+const { GetCommand, PutCommand } = require('@aws-sdk/lib-dynamodb');
 const fs = require('fs');
 const path = require('path');
 

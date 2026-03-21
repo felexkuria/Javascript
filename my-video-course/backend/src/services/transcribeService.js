@@ -83,7 +83,7 @@ class TranscribeService {
       const result = await this.transcribeClient.send(new GetTranscriptionJobCommand(params));
       return result.TranscriptionJob;
     } catch (error) {
-      if (error.name === 'BadRequestException' && error.message.includes("couldn't be found")) {
+      if (error.name === 'BadRequestException' && error.message.includes('couldn\'t be found')) {
         console.error(`Transcription job not found: ${jobName}`);
         throw new Error(`Transcription job ${jobName} was not created successfully`);
       }

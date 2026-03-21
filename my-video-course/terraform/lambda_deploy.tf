@@ -148,6 +148,13 @@ resource "aws_s3_bucket_notification" "video_upload" {
   }
   
   lambda_function {
+    lambda_function_arn = aws_lambda_function.start_transcribe.arn
+    events             = ["s3:ObjectCreated:*"]
+    filter_prefix      = "videos/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/"
+    filter_suffix      = ".MP4"
+  }
+  
+  lambda_function {
     lambda_function_arn = aws_lambda_function.add_video_to_db.arn
     events             = ["s3:ObjectCreated:*"]
     filter_prefix      = "videos/"
@@ -166,5 +173,12 @@ resource "aws_s3_bucket_notification" "video_upload" {
     events             = ["s3:ObjectCreated:*"]
     filter_prefix      = "videos/"
     filter_suffix      = ".webm"
+  }
+  
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.add_video_to_db.arn
+    events             = ["s3:ObjectCreated:*"]
+    filter_prefix      = "videos/AWS CLOUD SOLUTIONS ARCHITECT BOOTCAMP SERIES AWS USER GROUP KAMPALA/"
+    filter_suffix      = ".MP4"
   }
 }
