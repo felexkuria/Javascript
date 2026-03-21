@@ -5,7 +5,7 @@ require('dotenv').config();
 // Configuration (Using Terraform-verified IDs)
 const COGNITO_USER_POOL_ID = 'us-east-1_yPaLqj6BK';
 const COGNITO_CLIENT_ID = '40hg7ml40ktllfio80pqmeupqc';
-const MONGODB_URI = 'mongodb+srv://engineerfelex:rId5qmVyJt3GlvNl@cluster0.vte1e4l.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = 'mongodb://127.0.0.1:27017/videocourse';
 
 async function testCognito() {
   console.log('🔍 Testing Cognito Connection...');
