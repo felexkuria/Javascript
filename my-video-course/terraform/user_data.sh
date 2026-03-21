@@ -42,10 +42,10 @@ COGNITO_CLIENT_ID=${cognito_client_id}
 EOF
 
 # Login to ECR
-aws ecr get-login-password --region ${aws_region} | docker login --username AWS --password-stdin 767397885043.dkr.ecr.${aws_region}.amazonaws.com
+aws ecr get-login-password --region ${aws_region} | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.${aws_region}.amazonaws.com
 
 # Pull the latest image
-docker pull 767397885043.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
+docker pull ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
 
 # Run the container
 docker run -d \
@@ -53,4 +53,4 @@ docker run -d \
   -p 3000:3000 \
   --env-file .env \
   --restart unless-stopped \
-  767397885043.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
+  ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
