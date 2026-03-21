@@ -64,11 +64,11 @@ class AuthController {
       
       const result = await cognitoService.signIn(email, password);
       
-      // Get or create user in MongoDB
-      const User = require('../models/User');
-      const TeacherRequest = require('../models/TeacherRequest');
+      // Get or create user in DynamoDB
+      const dynamoVideoService = require('../services/dynamoVideoService');
+      const dynamodb = require('../utils/dynamodb');
       
-      let user = await User.findOne({ email });
+      let user = await dynamodb.getUser(email);
       
       if (!user) {
         // Set initial roles based on email
@@ -79,41 +79,31 @@ class AuthController {
           roles = ['student', 'teacher'];
         }
         
-        user = new User({
+        user = {
           userId: email,
           name: email.split('@')[0],
           email,
-          roles
-        });
-        await user.save();
-        console.log('✅ Created user with roles:', roles);
+          roles,
+          createdAt: new Date().toISOString()
+        };
+        await dynamodb.saveUser(user);
+        console.log('✅ Created user in DynamoDB with roles:', roles);
       } else if (email === 'engineerfelex@gmail.com' && !user.roles.includes('admin')) {
         // Ensure admin has all roles
         user.roles = ['student', 'teacher', 'admin'];
-        await user.save();
+        await dynamodb.saveUser(user);
       }
       
-      // Handle teacher role request - auto-approve for now
+      // Handle teacher role request - auto-approve for specific users
       if (req.body.requestedRole === 'teacher' && !user.roles.includes('teacher')) {
-        // Auto-approve teacher role for specific users
         if (email === 'multitouchkenya@gmail.com' || email === 'engineerfelex@gmail.com') {
           if (!user.roles.includes('teacher')) {
             user.roles.push('teacher');
-            await user.save();
+            await dynamodb.saveUser(user);
             console.log('✅ Teacher role granted to:', email);
           }
-        } else {
-          // Create teacher request for other users
-          const existingRequest = await TeacherRequest.findOne({ userId: user._id });
-          if (!existingRequest) {
-            await TeacherRequest.create({
-              userId: user._id,
-              email: user.email,
-              name: user.name,
-              status: 'pending'
-            });
-          }
         }
+        // Note: Generic teacher requests can be handled via a 'teacherRequest' attribute on the user object in DynamoDB
       }
       
       // Set session for web routes with proper role

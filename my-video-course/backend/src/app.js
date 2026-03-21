@@ -3,7 +3,6 @@ const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
@@ -31,10 +30,13 @@ app.use('/css', express.static(path.join(__dirname, '../../public/css')));
 app.use('/js', express.static(path.join(__dirname, '../../public/js')));
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  const dynamoVideoService = require('./services/dynamoVideoService');
+  const dbStatus = await dynamoVideoService.healthCheck();
+  
   res.json({ 
     status: 'healthy', 
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    database: dbStatus,
     timestamp: new Date().toISOString() 
   });
 });

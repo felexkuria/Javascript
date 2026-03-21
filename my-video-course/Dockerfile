@@ -4,23 +4,24 @@ FROM ubuntu:22.04
 # Avoid prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Node.js 18 and MongoDB 6.0
+# Install dependencies and Node.js
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
-    wget \
-    ca-certificates \
-    procps \
+    unzip \
     && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
-    && wget -qO- https://www.mongodb.org/static/pgp/server-6.0.asc | gpg --dearmor | tee /usr/share/keyrings/mongodb-server-6.0.gpg > /dev/null \
-    && echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list \
-    && apt-get update \
-    && apt-get install -y mongodb-org \
+    && npm install -g npm@latest
+
+# Install AWS CLI
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws \
     && rm -rf /var/lib/apt/lists/*
 
 # Verify installation
-RUN mongod --version && mongosh --version && node -v
+RUN node -v && aws --version
 
 # Create data directory for MongoDB
 RUN mkdir -p /data/db

@@ -1,41 +1,22 @@
 const videoService = require('./videoService');
+const dynamoVideoService = require('./dynamoVideoService');
+const dynamodb = require('../utils/dynamodb');
 const path = require('path');
 const fs = require('fs');
 
 class CourseService {
   async getAllCourses() {
     try {
-      const mongoose = require('mongoose');
-      const Video = require('../models/Video');
-      
-      // Try MongoDB first if connected
-      if (mongoose.connection.readyState === 1) {
-        try {
-          // Sync S3 videos to MongoDB first
-          await this.syncS3VideosToMongoDB();
-          
-          const courses = await Video.aggregate([
-            { $group: { 
-              _id: '$courseName', 
-              videoCount: { $sum: 1 },
-              watchedCount: { $sum: { $cond: ['$watched', 1, 0] } }
-            }},
-            { $project: {
-              name: '$_id',
-              videoCount: 1,
-              watchedVideos: '$watchedCount',
-              completionPercentage: { 
-                $round: [{ $multiply: [{ $divide: ['$watchedCount', '$videoCount'] }, 100] }, 0] 
-              }
-            }}
-          ]);
-          
-          if (courses.length > 0) {
-            return courses;
-          }
-        } catch (err) {
-          console.error('MongoDB course query failed:', err);
-        }
+      const userId = 'engineerfelex@gmail.com'; // Default for sync/listing
+      const coursesData = await dynamoVideoService.getAllCourses(userId);
+      if (coursesData.length > 0) {
+        return coursesData.map(c => ({
+          name: c.name,
+          videoCount: c.videos?.length || 0,
+          watchedVideos: c.videos?.filter(v => v.watched).length || 0,
+          completionPercentage: c.videos?.length > 0 ? 
+            Math.round((c.videos.filter(v => v.watched).length / c.videos.length) * 100) : 0
+        }));
       }
       
       // Fallback to localStorage
@@ -73,20 +54,14 @@ class CourseService {
   
   async getAllVideos() {
     try {
-      const mongoose = require('mongoose');
-      const Video = require('../models/Video');
-      
-      // Try MongoDB first
-      if (mongoose.connection.readyState === 1) {
-        try {
-          const videos = await Video.find({}).select('title courseName watched _id').lean();
-          if (videos.length > 0) {
-            return videos;
-          }
-        } catch (err) {
-          console.error('MongoDB video query failed:', err);
-        }
-      }
+      const userId = 'engineerfelex@gmail.com';
+      const courses = await dynamoVideoService.getAllCourses(userId);
+      return courses.flatMap(c => (c.videos || []).map(v => ({
+        _id: v._id,
+        title: v.title,
+        courseName: c.name,
+        watched: v.watched || false
+      })));
       
       // Fallback to localStorage
       const localStorage = videoService.getLocalStorage();
@@ -138,19 +113,23 @@ class CourseService {
     }
   }
 
-  // Sync S3 videos to MongoDB
-  async syncS3VideosToMongoDB() {
+  // Sync S3 videos to DynamoDB
+  async syncS3VideosToDynamoDB() {
     try {
-      const { S3Client } = require('@aws-sdk/client-s3');
+      const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
       const s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
-      const Video = require('../models/Video');
+      const dynamodb = require('../utils/dynamodb');
       
       const params = {
         Bucket: process.env.S3_BUCKET_NAME,
         Prefix: 'videos/'
       };
       
-      const s3Objects = await s3.listObjectsV2(params).promise();
+      const command = new ListObjectsV2Command(params);
+      const s3Objects = await s3.send(command);
+      
+      if (!s3Objects.Contents) return;
+
       const videoFiles = s3Objects.Contents.filter(obj => obj.Key.endsWith('.mp4'));
       
       for (const file of videoFiles) {
@@ -158,24 +137,20 @@ class CourseService {
         if (keyParts.length >= 3) {
           const courseName = keyParts[1];
           const videoTitle = keyParts[2].replace('.mp4', '');
+          const videoId = videoTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           
-          // Check if video already exists
-          const existingVideo = await Video.findOne({ title: videoTitle, courseName });
+          const success = await dynamodb.saveVideo(courseName, {
+            videoId: videoId,
+            title: videoTitle,
+            courseName,
+            s3Key: file.Key,
+            s3Url: `s3://${process.env.S3_BUCKET_NAME}/${file.Key}`,
+            watched: false,
+            createdAt: new Date().toISOString()
+          });
           
-          if (!existingVideo) {
-            await Video.create({
-              title: videoTitle,
-              courseName,
-              s3Key: file.Key,
-              s3Url: `s3://${process.env.S3_BUCKET_NAME}/${file.Key}`,
-              watched: false,
-              captionsReady: false,
-              quizReady: false,
-              summaryReady: false,
-              processing: false,
-              createdAt: new Date()
-            });
-            console.log(`✅ Synced S3 video: ${courseName}/${videoTitle}`);
+          if (success) {
+            console.log(`✅ Synced S3 video to DynamoDB: ${courseName}/${videoTitle}`);
           }
         }
       }
