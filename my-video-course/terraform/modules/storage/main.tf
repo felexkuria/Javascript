@@ -25,6 +25,7 @@ resource "aws_s3_bucket_cors_configuration" "main" {
 
 # DynamoDB Tables
 resource "aws_dynamodb_table" "videos" {
+  count        = var.create_dynamodb_tables ? 1 : 0
   name         = "${var.app_name}-videos-${var.environment}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "courseName"
@@ -47,6 +48,7 @@ resource "aws_dynamodb_table" "videos" {
 }
 
 resource "aws_dynamodb_table" "gamification" {
+  count        = var.create_dynamodb_tables ? 1 : 0
   name         = "${var.app_name}-gamification-${var.environment}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "userId"
@@ -63,6 +65,7 @@ resource "aws_dynamodb_table" "gamification" {
 }
 
 resource "aws_dynamodb_table" "users" {
+  count        = var.create_dynamodb_tables ? 1 : 0
   name         = "${var.app_name}-users-${var.environment}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
@@ -97,10 +100,14 @@ resource "aws_iam_policy" "dynamodb_policy" {
           "dynamodb:Query",
           "dynamodb:Scan"
         ]
-        Resource = [
-          aws_dynamodb_table.videos.arn,
-          aws_dynamodb_table.gamification.arn,
-          aws_dynamodb_table.users.arn
+        Resource = var.create_dynamodb_tables ? [
+          aws_dynamodb_table.videos[0].arn,
+          aws_dynamodb_table.gamification[0].arn,
+          aws_dynamodb_table.users[0].arn
+        ] : [
+          "arn:aws:dynamodb:*:*:table/${var.app_name}-videos-${var.environment}",
+          "arn:aws:dynamodb:*:*:table/${var.app_name}-gamification-${var.environment}",
+          "arn:aws:dynamodb:*:*:table/${var.app_name}-users-${var.environment}"
         ]
       }
     ]
