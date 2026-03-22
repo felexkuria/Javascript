@@ -134,6 +134,12 @@ variable "create_dynamodb_policy" {
   default     = true
 }
 
+variable "create_dynamodb_tables" {
+  description = "Whether to create DynamoDB tables (false if they already exist outside Terraform state)"
+  type        = bool
+  default     = true
+}
+
 variable "existing_lambda_role_arn" {
   description = "Existing IAM role ARN for Lambda (if create_lambda_role is false)"
   type        = string

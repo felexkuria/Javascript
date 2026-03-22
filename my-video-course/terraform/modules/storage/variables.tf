@@ -20,6 +20,12 @@ variable "ec2_role_name" {
   default = null
 }
 
+variable "create_dynamodb_tables" {
+  description = "Whether to create DynamoDB tables (set false if tables already exist outside Terraform state)"
+  type        = bool
+  default     = true
+}
+
 variable "create_dynamodb_policy" {
   type    = bool
   default = true
