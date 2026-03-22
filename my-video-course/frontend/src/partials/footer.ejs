@@ -1,31 +1,43 @@
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
-        <div class="max-w-7xl mx-auto px-4 py-6">
-            <div class="text-center text-gray-500 dark:text-gray-400 text-sm">
-                © 2024 Video Course Platform. All rights reserved.
+    <footer style="background: var(--mdb-midnight); border-top: 1px solid rgba(0,237,100,.1); padding: 20px 24px; margin-top: 48px;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+            <span style="font-size: 13px; color: #3D4F58;">
+                © 2025 <strong style="color: var(--mdb-green);">LearnDB</strong>. All rights reserved.
+            </span>
+            <div style="display: flex; gap: 16px;">
+                <a href="/dashboard" style="font-size: 12px; color: #3D4F58; text-decoration: none;">Dashboard</a>
+                <a href="/courses"   style="font-size: 12px; color: #3D4F58; text-decoration: none;">Courses</a>
             </div>
         </div>
     </footer>
-    
+
     <script>
-        // Dark theme toggle
-        function initTheme() {
-            const theme = localStorage.getItem("theme") || "light";
-            document.documentElement.classList.toggle("dark", theme === "dark");
+        // Theme management — uses id="html-root" to toggle class
+        (function() {
+            const root  = document.getElementById('html-root') || document.documentElement;
+            const saved = localStorage.getItem('theme') || 'dark';
+            root.classList.toggle('dark', saved === 'dark');
             const icon = document.getElementById('themeIcon');
-            if (icon) icon.textContent = theme === "dark" ? '☀️' : '🌙';
-        }
-        
-        function toggleTheme() {
-            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
-            document.documentElement.classList.toggle("dark", newTheme === "dark");
-            localStorage.setItem("theme", newTheme);
-            const icon = document.getElementById('themeIcon');
-            if (icon) icon.textContent = newTheme === "dark" ? '☀️' : '🌙';
-        }
-        
-        initTheme();
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+            if (icon) icon.textContent = saved === 'dark' ? '☀️' : '🌙';
+
+            window.toggleTheme = function() {
+                const isDark   = root.classList.toggle('dark');
+                const newTheme = isDark ? 'dark' : 'light';
+                localStorage.setItem('theme', newTheme);
+                const ic = document.getElementById('themeIcon');
+                if (ic) ic.textContent = isDark ? '☀️' : '🌙';
+            };
+
+            const btn = document.getElementById('themeToggle');
+            if (btn) btn.addEventListener('click', window.toggleTheme);
+        })();
+
+        // Animate sidebar progress bars
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.progress-fill-animated').forEach(el => {
+                const w = el.getAttribute('data-width') || '0';
+                requestAnimationFrame(() => { el.style.width = w + '%'; });
+            });
+        });
     </script>
 </body>
 </html>

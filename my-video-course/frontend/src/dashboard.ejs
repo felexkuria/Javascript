@@ -1,741 +1,421 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="html-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Video Course Platform</title>
+    <title>Dashboard — LearnDB</title>
+    <meta name="description" content="Your learning dashboard.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
-            line-height: 1.47059;
-            font-weight: 400;
-            letter-spacing: -0.022em;
+        /* ── Layout ───────────────────────────────────────── */
+        .page-nav {
+            height: 56px; background: var(--mdb-midnight);
+            display: flex; align-items: center; padding: 0 24px; gap: 0;
+            position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid rgba(0,237,100,.12);
         }
-        
-        .dark body {
-            background: #000;
-            color: #f5f5f7;
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: 32px; }
+        .nav-leaf {
+            width: 28px; height: 28px; background: var(--mdb-green);
+            border-radius: 50% 50% 50% 0 / 60% 60% 40% 40%;
+            position: relative; flex-shrink: 0;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
+        .nav-leaf::after {
+            content: ''; position: absolute;
+            width: 2px; height: 14px; background: var(--mdb-midnight);
+            bottom: 3px; left: 50%; transform: translateX(-50%); border-radius: 1px;
         }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
+        .nav-brand-name { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
+        .nav-brand-name em { color: var(--mdb-green); font-style: normal; }
+        .nav-links-list { display: flex; align-items: center; gap: 4px; list-style: none; flex: 1; }
+        .nav-link {
+            padding: 6px 12px; border-radius: 5px; font-size: 13px; font-weight: 500;
+            color: rgba(255,255,255,.65); text-decoration: none; transition: all .15s;
         }
-        
-        .header-content h1 {
-            font-size: 48px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1d1d1f;
+        .nav-link:hover, .nav-link.active { color: #fff; background: rgba(255,255,255,.08); text-decoration: none; }
+        .nav-link.active { color: var(--mdb-green); background: rgba(0,237,100,.08); }
+        .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .theme-btn {
+            width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,.12); border-radius: 5px; background: transparent;
+            color: rgba(255,255,255,.7); cursor: pointer; transition: all .15s; font-size: 15px;
         }
-        
-        .dark .header-content h1 {
-            color: #f5f5f7;
+        .theme-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+        .user-avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: var(--mdb-green); display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; color: var(--mdb-midnight); cursor: pointer;
+            border: 2px solid rgba(0,237,100,.3); text-decoration: none;
         }
-        
-        .header-content p {
-            font-size: 21px;
-            color: #86868b;
-            margin-bottom: 16px;
+
+        /* ── Page body ─────────────────────────────────────── */
+        .page-wrapper {
+            max-width: 1200px; margin: 0 auto; padding: 32px 24px;
         }
-        
-        .role-switcher {
-            display: flex;
-            gap: 8px;
+
+        /* ── Page header ───────────────────────────────────── */
+        .page-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            gap: 16px; margin-bottom: 28px; flex-wrap: wrap;
         }
-        
-        .role-link {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s ease;
+        .page-title { font-size: 26px; font-weight: 700; color: var(--color-text); }
+        .page-sub { font-size: 14px; color: var(--color-text-muted); margin-top: 2px; }
+        .header-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+        /* ── Stats banner ───────────────────────────────────── */
+        .stats-banner {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 16px; margin-bottom: 28px;
         }
-        
-        .role-link.active {
-            background: #007aff;
-            color: white;
+        .stat-tile {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px; padding: 20px;
+            box-shadow: var(--shadow-sm);
+            display: flex; align-items: center; gap: 14px;
+            transition: box-shadow .15s;
         }
-        
-        .role-link:not(.active) {
-            background: #f2f2f7;
-            color: #1d1d1f;
-        }
-        
-        .dark .role-link:not(.active) {
-            background: #2c2c2e;
-            color: #f5f5f7;
-        }
-        
-        .stats-panel {
-            background: white;
-            border-radius: 18px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 32px;
-            margin-bottom: 40px;
-        }
-        
-        .dark .stats-panel {
-            background: #1d1d1f;
-            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
-        }
-        
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
+        .stat-tile:hover { box-shadow: var(--shadow-md); }
         .stat-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: 600;
-            color: white;
+            width: 44px; height: 44px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
         }
-        
-        .stat-icon.level { background: #30d158; }
-        .stat-icon.points { background: #ff9500; }
-        .stat-icon.streak { background: #ff3b30; }
-        
-        .stat-content {
-            display: flex;
-            flex-direction: column;
+        .stat-icon.green { background: rgba(0,237,100,.12); }
+        .stat-icon.orange { background: rgba(245,166,35,.12); }
+        .stat-icon.red { background: rgba(193,42,42,.12); }
+        .stat-value { font-size: 26px; font-weight: 700; color: var(--color-text); line-height: 1; }
+        .stat-label { font-size: 12px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
+
+        /* ── Section headers ──────────────────────────────── */
+        .section-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
         }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1d1d1f;
+        .section-title {
+            font-size: 14px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .06em; color: var(--mdb-green);
         }
-        
-        .dark .stat-value {
-            color: #f5f5f7;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            color: #86868b;
-        }
-        
-        .actions {
-            display: flex;
-            gap: 12px;
-            margin-left: auto;
-        }
-        
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: #007aff;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #0056b3;
-            transform: translateY(-1px);
-        }
-        
-        .btn-secondary {
-            background: #f2f2f7;
-            color: #1d1d1f;
-        }
-        
-        .dark .btn-secondary {
-            background: #2c2c2e;
-            color: #f5f5f7;
-        }
-        
-        .btn-secondary:hover {
-            background: #e5e5ea;
-            transform: translateY(-1px);
-        }
-        
-        .dark .btn-secondary:hover {
-            background: #3a3a3c;
-        }
-        
+
+        /* ── Course card grid ──────────────────────────────── */
         .courses-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;
         }
-        
+
         .course-card {
-            background: white;
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px; overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all .2s ease;
+            display: flex; flex-direction: column;
         }
-        
-        .dark .course-card {
-            background: #1d1d1f;
-            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        .course-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: rgba(0,237,100,.35); }
+
+        /* Gradient thumbnail strip */
+        .course-thumb {
+            height: 8px;
+            background: linear-gradient(90deg, var(--mdb-green) 0%, #016BF8 100%);
         }
-        
-        .course-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+        .course-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .course-name {
+            font-size: 15px; font-weight: 600; color: var(--color-text);
+            margin-bottom: 6px; line-height: 1.4;
         }
-        
-        .dark .course-card:hover {
-            box-shadow: 0 8px 40px rgba(255,255,255,0.08);
+        .course-desc {
+            font-size: 13px; color: var(--color-text-muted);
+            line-height: 1.5; flex: 1; margin-bottom: 16px;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
         }
-        
-        .course-image {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            background: linear-gradient(135deg, #007aff, #5856d6);
-        }
-        
-        .course-content {
-            padding: 24px;
-        }
-        
-        .course-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1d1d1f;
-        }
-        
-        .dark .course-title {
-            color: #f5f5f7;
-        }
-        
-        .course-description {
-            font-size: 14px;
-            color: #86868b;
-            line-height: 1.5;
-            margin-bottom: 20px;
-            height: 60px;
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-        }
-        
-        .progress-section {
-            margin-bottom: 20px;
-        }
-        
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .progress-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: #86868b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .progress-count {
-            font-size: 12px;
-            font-weight: 500;
-            color: #86868b;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: #f2f2f7;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        
-        .dark .progress-bar {
-            background: #2c2c2e;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #30d158;
-            border-radius: 2px;
-            transition: width 0.3s ease;
-        }
-        
-        .course-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
+
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .progress-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); }
+        .progress-count { font-size: 11px; color: var(--color-text-muted); }
+        .progress-track { width: 100%; height: 4px; background: var(--color-border); border-radius: 999px; overflow: hidden; margin-bottom: 16px; }
+        .progress-bar   { height: 100%; background: var(--mdb-green); border-radius: 999px; transition: width .5s ease; }
+
+        .card-actions { display: flex; gap: 8px; }
         .btn-enroll {
-            flex: 1;
-            background: #30d158;
-            color: white;
-            text-align: center;
+            flex: 0 0 auto; padding: 8px 14px;
+            background: transparent; border: 1px solid var(--mdb-green);
+            color: var(--mdb-green); border-radius: 5px;
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
         }
-        
-        .btn-enroll:hover {
-            background: #28cd4f;
-        }
-        
-        .btn-enroll:disabled {
-            background: #86868b;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
+        .btn-enroll:hover { background: rgba(0,237,100,.1); }
+        .btn-enroll:disabled { opacity: .45; cursor: not-allowed; }
         .btn-start {
-            flex: 1;
-            background: #007aff;
-            color: white;
-            text-align: center;
+            flex: 1; padding: 8px 14px;
+            background: var(--mdb-green); border: 1px solid var(--mdb-green);
+            color: var(--mdb-midnight); border-radius: 5px;
+            font-size: 13px; font-weight: 600; cursor: pointer; text-align: center;
+            text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+            transition: all .15s;
         }
-        
-        .btn-start:hover {
-            background: #0056b3;
-        }
-        
+        .btn-start:hover { background: var(--mdb-green-dark); text-decoration: none; }
+
+        /* ── Empty state ──────────────────────────────────── */
         .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            background: white;
-            border-radius: 18px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            grid-column: 1 / -1; text-align: center; padding: 80px 20px;
+            background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px;
         }
-        
-        .dark .empty-state {
-            background: #1d1d1f;
-            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+        .empty-icon  { font-size: 52px; margin-bottom: 16px; }
+        .empty-title { font-size: 20px; font-weight: 600; color: var(--color-text); margin-bottom: 6px; }
+        .empty-desc  { font-size: 13px; color: var(--color-text-muted); }
+
+        /* ── Role switch ──────────────────────────────────── */
+        .role-tabs { display: flex; gap: 4px; }
+        .role-tab {
+            padding: 5px 14px; border-radius: 5px; font-size: 13px; font-weight: 500;
+            color: var(--color-text-muted); text-decoration: none; transition: all .15s;
+            border: 1px solid transparent;
         }
-        
-        .empty-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-        
-        .empty-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1d1d1f;
-        }
-        
-        .dark .empty-title {
-            color: #f5f5f7;
-        }
-        
-        .empty-message {
-            color: #86868b;
-        }
-        
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 44px;
-            height: 44px;
-            border: none;
-            border-radius: 22px;
-            background: white;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.2s ease;
-            z-index: 1000;
-        }
-        
-        .dark .theme-toggle {
-            background: #1d1d1f;
-            box-shadow: 0 4px 20px rgba(255,255,255,0.1);
-        }
-        
-        .theme-toggle:hover {
-            transform: scale(1.1);
-        }
-        
+        .role-tab:hover  { background: var(--color-bg); color: var(--color-text); text-decoration: none; }
+        .role-tab.active { background: rgba(0,237,100,.12); color: var(--mdb-green); border-color: rgba(0,237,100,.3); }
+
+        /* ── Responsive ───────────────────────────────────── */
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            .stats-panel {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
-            }
-            
-            .actions {
-                margin-left: 0;
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .courses-grid {
-                grid-template-columns: 1fr;
-            }
+            .stats-banner { grid-template-columns: 1fr; }
+            .page-header  { flex-direction: column; }
+            .courses-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle">🌙</button>
-    
-    <div class="container">
-        <div class="header">
-            <div class="header-content">
-                <h1>Learning Dashboard</h1>
-                <p>Discover courses and track your progress</p>
+
+    <!-- ── Navigation ──────────────────────────────────────── -->
+    <nav class="page-nav" role="navigation">
+        <a href="/dashboard" class="nav-brand">
+            <div class="nav-leaf" aria-hidden="true"></div>
+            <span class="nav-brand-name">Learn<em>DB</em></span>
+        </a>
+        <ul class="nav-links-list" role="list">
+            <li><a href="/dashboard" class="nav-link active">Dashboard</a></li>
+            <li><a href="/courses"   class="nav-link">Courses</a></li>
+            <% if (user && user.isTeacher) { %>
+            <li><a href="/teacher/dashboard" class="nav-link">Teach</a></li>
+            <% } %>
+        </ul>
+        <div class="nav-right">
+            <button id="themeToggle" class="theme-btn" aria-label="Toggle dark mode">
+                <span id="themeIcon">🌙</span>
+            </button>
+            <a href="/profile" class="user-avatar" id="userAvatar" title="Your profile">
+                <%= (user && user.name) ? user.name.charAt(0).toUpperCase() : 'U' %>
+            </a>
+        </div>
+    </nav>
+
+    <!-- ── Main content ────────────────────────────────────── -->
+    <div class="page-wrapper">
+
+        <!-- Page header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">
+                    Hello, <%= (user && user.name) ? user.name.split(' ')[0] : 'Learner' %> 👋
+                </h1>
+                <p class="page-sub">Here's what you're working on</p>
                 <% if (user && user.isTeacher) { %>
-                <div class="role-switcher">
-                    <a href="/teacher/dashboard" class="role-link">Teacher View</a>
-                    <span class="role-link active">Student View</span>
+                <div class="role-tabs" style="margin-top: 12px;">
+                    <span class="role-tab active">Student</span>
+                    <a href="/teacher/dashboard" class="role-tab">Teacher</a>
                 </div>
                 <% } %>
             </div>
+            <div class="header-actions">
+                <button id="syncButton" class="btn btn-default btn-sm">⟳ Sync</button>
+                <button id="fixAllThumbnailsButton" class="btn btn-default btn-sm">⬛ Fix Thumbnails</button>
+            </div>
         </div>
-        
-        <div class="stats-panel">
-            <div class="stat-item">
-                <div class="stat-icon level user-level"><%= (gamificationData && gamificationData.userStats && gamificationData.userStats.currentLevel) || 1 %></div>
-                <div class="stat-content">
-                    <div class="stat-value">Level <%= (gamificationData && gamificationData.userStats && gamificationData.userStats.currentLevel) || 1 %></div>
+
+        <!-- Stats banner -->
+        <div class="stats-banner">
+            <div class="stat-tile">
+                <div class="stat-icon green">🎯</div>
+                <div>
+                    <div class="stat-value user-level"><%= (gamificationData && gamificationData.userStats && gamificationData.userStats.currentLevel) || 1 %></div>
                     <div class="stat-label">Current Level</div>
                 </div>
             </div>
-            
-            <div class="stat-item">
-                <div class="stat-icon points">🏆</div>
-                <div class="stat-content">
+            <div class="stat-tile">
+                <div class="stat-icon orange">🏆</div>
+                <div>
                     <div class="stat-value user-points"><%= (gamificationData && gamificationData.userStats && gamificationData.userStats.totalPoints) || 0 %></div>
                     <div class="stat-label">Total Points</div>
                 </div>
             </div>
-            
-            <div class="stat-item">
-                <div class="stat-icon streak">🔥</div>
-                <div class="stat-content">
+            <div class="stat-tile">
+                <div class="stat-icon red">🔥</div>
+                <div>
                     <div class="stat-value user-streak"><%= (gamificationData && gamificationData.streakData && gamificationData.streakData.currentStreak) || 0 %></div>
                     <div class="stat-label">Day Streak</div>
                 </div>
             </div>
-            
-            <div class="actions">
-                <button id="syncButton" class="btn btn-primary">
-                    <span>🔄</span> Sync
-                </button>
-                <button id="fixAllThumbnailsButton" class="btn btn-secondary">
-                    <span>🖼️</span> Fix Thumbnails
-                </button>
-            </div>
         </div>
 
-        <% if (courses && courses.length > 0) { %>
+        <!-- Course section -->
+        <div class="section-header">
+            <span class="section-title">Your Courses</span>
+            <span style="font-size:13px; color: var(--color-text-muted);"><%= courses ? courses.length : 0 %> available</span>
+        </div>
+
         <div class="courses-grid">
+        <% if (courses && courses.length > 0) { %>
             <% courses.forEach(course => { %>
+            <%
+                const videos       = course.videos || [];
+                const sorted       = [...videos].sort((a,b) => {
+                    const an = parseInt((a.title||'').match(/\d+/)) || 0;
+                    const bn = parseInt((b.title||'').match(/\d+/)) || 0;
+                    return an - bn;
+                });
+                const total   = sorted.length;
+                const watched = sorted.filter(v => v && v.watched).length;
+                const pct     = total > 0 ? Math.round((watched / total) * 100) : 0;
+            %>
             <div class="course-card">
-                <img src="https://uploads.teachablecdn.com/attachments/e2FDxVHOSIKe60ZmL6ki_Teachable+Course+Thumbnail.png" 
-                     alt="<%= course.name %>" class="course-image">
-                
-                <div class="course-content">
-                    <h2 class="course-title"><%= course.name %></h2>
-                    <p class="course-description">Loading description...</p>
-                    
-                    <% 
-                        const videos = course.videos || [];
-                        // Sort videos by number in title (critical for proper ordering)
-                        const sortedVideos = videos.length > 0 ? [...videos].sort((a, b) => {
-                            const aNum = parseInt((a.title || '').match(/\d+/)) || 0;
-                            const bNum = parseInt((b.title || '').match(/\d+/)) || 0;
-                            return aNum - bNum;
-                        }) : [];
-                        const totalVideos = sortedVideos.length;
-                        // Use user-specific watch status from DynamoDB
-                        const watchedVideos = sortedVideos.filter(v => {
-                            if (!v || !v._id) return false;
-                            // Check if video is watched for this specific user
-                            return v.watched === true;
-                        }).length;
-                        const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
-                    %>
-                    
-                    <div class="progress-section">
-                        <div class="progress-header">
-                            <span class="progress-label">Progress</span>
-                            <span class="progress-count"><%= watchedVideos %>/<%= totalVideos %></span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: <%= watchedPercent %>%"></div>
-                        </div>
+                <div class="course-thumb" style="background: linear-gradient(90deg, hsl(<%= Math.abs(course.name.charCodeAt(0) * 5) % 360 %>, 70%, 45%) 0%, var(--mdb-green) 100%);"></div>
+                <div class="course-body">
+                    <h2 class="course-name"><%= course.name %></h2>
+                    <p class="course-desc" data-course="<%= course.name %>">Loading description…</p>
+
+                    <div class="progress-header">
+                        <span class="progress-label">Progress</span>
+                        <span class="progress-count"><%= watched %>/<%= total %> videos</span>
                     </div>
-                    
-                    <div class="course-actions">
-                        <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
-                                class="btn btn-enroll enroll-btn" 
-                                data-course-id="<%= course._id || course.name %>">
+                    <div class="progress-track">
+                        <div class="progress-bar" style="width: <%= pct %>%"></div>
+                    </div>
+
+                    <div class="card-actions">
+                        <button
+                            class="btn-enroll enroll-btn"
+                            data-course-id="<%= course._id || course.name %>"
+                            onclick="enrollInCourse('<%= course._id || course.name %>')">
                             Enroll
                         </button>
-                        <a href="/course/<%= course.name %>" class="btn btn-start">
-                            Start Learning
+                        <a href="/course/<%= course.name %>" class="btn-start">
+                            <%= pct > 0 ? 'Continue ›' : 'Start Learning ›' %>
                         </a>
                     </div>
                 </div>
             </div>
             <% }); %>
-        </div>
         <% } else { %>
-        <div class="empty-state">
-            <div class="empty-icon">📚</div>
-            <h3 class="empty-title">No courses found</h3>
-            <p class="empty-message">Add videos to the public/videos directory to get started.</p>
-        </div>
+            <div class="empty-state">
+                <div class="empty-icon">📂</div>
+                <h3 class="empty-title">No courses yet</h3>
+                <p class="empty-desc">Add videos to the videos directory or sync to get started.</p>
+            </div>
         <% } %>
-    </div>
+        </div>
 
-    <!-- Gamification script removed to prevent override -->
+    </div><!-- /page-wrapper -->
+
     <script>
-        // Theme management
+        /* ── Theme ──────────────────────────────────── */
         function initTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.classList.toggle('dark', theme === 'dark');
-            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+            const t = localStorage.getItem('theme') || 'dark';
+            document.getElementById('html-root').classList.toggle('dark', t === 'dark');
+            document.getElementById('themeIcon').textContent = t === 'dark' ? '☀️' : '🌙';
         }
-        
         function toggleTheme() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const newTheme = isDark ? 'light' : 'dark';
-            document.documentElement.classList.toggle('dark', newTheme === 'dark');
-            localStorage.setItem('theme', newTheme);
-            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            const dark = document.getElementById('html-root').classList.toggle('dark');
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+            document.getElementById('themeIcon').textContent = dark ? '☀️' : '🌙';
         }
-        
         initTheme();
         document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load AI course descriptions with caching
-            const courseCards = document.querySelectorAll('.course-description');
-            courseCards.forEach(async (desc, index) => {
-                const courseName = desc.closest('.course-card').querySelector('.course-title').textContent.trim();
-                const cacheKey = `course_description_${courseName}`;
-                
-                const cachedDescription = localStorage.getItem(cacheKey);
-                if (cachedDescription) {
-                    desc.textContent = cachedDescription;
-                    return;
-                }
-                
-                desc.textContent = 'Generating description...';
-                
+        /* ── Course descriptions (AI) ───────────────── */
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.course-desc[data-course]').forEach(async el => {
+                const name  = el.dataset.course;
+                const key   = 'desc_' + name;
+                const cache = localStorage.getItem(key);
+                if (cache) { el.textContent = cache; return; }
                 try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 15000);
-                    
-                    const response = await fetch(`/api/course/description/${encodeURIComponent(courseName)}`, {
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data && data.description && data.description.trim()) {
-                            desc.textContent = data.description;
-                            localStorage.setItem(cacheKey, data.description);
-                        } else {
-                            throw new Error('Empty description');
+                    const r = await fetch(`/api/course/description/${encodeURIComponent(name)}`);
+                    if (!r.ok) throw new Error();
+                    const d = await r.json();
+                    if (d && d.description) { el.textContent = d.description; localStorage.setItem(key, d.description); }
+                    else throw new Error();
+                } catch {
+                    const n = name.toLowerCase();
+                    const fb = n.includes('davinci') ? 'Master DaVinci Resolve — color grading, audio, and advanced editing.'
+                             : n.includes('aws')     ? 'Complete AWS cloud course — EC2, S3, Lambda, and real-world labs.'
+                             : n.includes('devops')  ? 'Full DevOps pipeline: Docker, Kubernetes, CI/CD, and automation.'
+                             : n.includes('terraform') ? 'Infrastructure as Code with Terraform across AWS, Azure, and GCP.'
+                             : `Complete ${name} with practical exercises and real-world projects.`;
+                    el.textContent = fb; localStorage.setItem(key, fb);
+                }
+            });
+
+            /* ── Sync button ────────────────────────── */
+            document.getElementById('syncButton').addEventListener('click', async function () {
+                this.disabled = true; this.textContent = '⏳ Syncing…';
+                try {
+                    const r = await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                    const d = await r.json();
+                    this.textContent = d.success ? '✓ Synced' : '✗ Failed';
+                    if (d.success) setTimeout(() => location.reload(), 1500);
+                } catch { this.textContent = '✗ Error'; }
+                finally  { setTimeout(() => { this.disabled = false; this.textContent = '⟳ Sync'; }, 2500); }
+            });
+
+            /* ── Fix thumbnails ─────────────────────── */
+            document.getElementById('fixAllThumbnailsButton').addEventListener('click', async function () {
+                this.disabled = true; this.textContent = '⏳ Fixing…';
+                let total = 0;
+                try {
+                    for (const el of document.querySelectorAll('.course-desc[data-course]')) {
+                        const r = await fetch(`/api/thumbnails/fix/${encodeURIComponent(el.dataset.course)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                        const d = await r.json();
+                        if (d.success) total += d.fixedCount || 0;
+                    }
+                    this.textContent = `✓ Fixed ${total}`;
+                    if (total > 0) setTimeout(() => location.reload(), 2000);
+                } catch { this.textContent = '✗ Error'; }
+                finally  { setTimeout(() => { this.disabled = false; this.textContent = '⬛ Fix Thumbnails'; }, 3000); }
+            });
+
+            /* ── Enrollment status ──────────────────── */
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                document.querySelectorAll('.enroll-btn').forEach(async btn => {
+                    try {
+                        const r = await fetch(`/api/enrollments/check/${btn.dataset.courseId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                        const d = await r.json();
+                        if (d.success && d.data.enrolled) {
+                            btn.textContent = 'Enrolled ✓'; btn.disabled = true; btn.style.opacity = '.5';
                         }
-                    } else {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                } catch (error) {
-                    // Fallback descriptions
-                    const courseNameLower = courseName.toLowerCase();
-                    if (courseNameLower.includes('davinci') || courseNameLower.includes('video')) {
-                        desc.textContent = 'Master professional video editing with DaVinci Resolve. Learn color grading, audio editing, and advanced techniques.';
-                    } else if (courseNameLower.includes('aws')) {
-                        desc.textContent = 'Complete AWS cloud computing course. Build scalable solutions with hands-on labs covering EC2, S3, Lambda, and more.';
-                    } else if (courseNameLower.includes('devops')) {
-                        desc.textContent = 'Ultimate DevOps course! Master CI/CD pipelines, Docker, Kubernetes, and infrastructure automation.';
-                    } else if (courseNameLower.includes('terraform')) {
-                        desc.textContent = 'Master Infrastructure as Code with Terraform! Learn to provision cloud resources across AWS, Azure, and GCP.';
-                    } else {
-                        desc.textContent = `Complete ${courseName} course with practical exercises and real-world projects.`;
-                    }
-                    
-                    localStorage.setItem(cacheKey, desc.textContent);
-                }
-            });
-            
-            // Sync button
-            document.getElementById('syncButton').addEventListener('click', async function() {
-                this.disabled = true;
-                this.innerHTML = '<span>⏳</span> Syncing...';
-                
-                try {
-                    const response = await fetch('/api/sync', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        this.innerHTML = '<span>✅</span> Synced!';
-                        setTimeout(() => window.location.reload(), 1500);
-                    } else {
-                        this.innerHTML = '<span>❌</span> Failed';
-                    }
-                } catch (error) {
-                    this.innerHTML = '<span>❌</span> Error';
-                } finally {
-                    setTimeout(() => {
-                        this.disabled = false;
-                        this.innerHTML = '<span>🔄</span> Sync';
-                    }, 2000);
-                }
-            });
-            
-            // Fix thumbnails button
-            document.getElementById('fixAllThumbnailsButton').addEventListener('click', async function() {
-                this.disabled = true;
-                this.innerHTML = '<span>⏳</span> Fixing...';
-                
-                try {
-                    const courses = document.querySelectorAll('.course-description');
-                    let totalFixed = 0;
-                    
-                    for (const desc of courses) {
-                        const courseName = desc.closest('.course-card').querySelector('.course-title').textContent.trim();
-                        
-                        try {
-                            const response = await fetch(`/api/thumbnails/fix/${encodeURIComponent(courseName)}`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' }
-                            });
-                            
-                            const data = await response.json();
-                            if (data.success) {
-                                totalFixed += data.fixedCount;
-                            }
-                        } catch (err) {
-                            console.warn(`Failed to fix thumbnails for ${courseName}:`, err);
-                        }
-                    }
-                    
-                    this.innerHTML = `<span>✅</span> Fixed ${totalFixed}`;
-                    if (totalFixed > 0) {
-                        setTimeout(() => location.reload(), 2000);
-                    }
-                    
-                } catch (error) {
-                    this.innerHTML = '<span>❌</span> Error';
-                } finally {
-                    setTimeout(() => {
-                        this.disabled = false;
-                        this.innerHTML = '<span>🖼️</span> Fix Thumbnails';
-                    }, 3000);
-                }
-            });
+                    } catch {}
+                });
+            }
         });
 
-        // Enrollment functionality
+        /* ── Enroll ─────────────────────────────────── */
         async function enrollInCourse(courseId) {
+            const token = localStorage.getItem('accessToken');
+            if (!token) { window.location.href = '/login'; return; }
+            const btn = document.querySelector(`[data-course-id="${courseId}"]`);
+            const orig = btn.textContent;
+            btn.disabled = true; btn.textContent = '…';
             try {
-                const token = localStorage.getItem('accessToken');
-                if (!token) {
-                    alert('Please login to enroll in courses');
-                    window.location.href = '/login';
-                    return;
-                }
-
-                const button = document.querySelector(`[data-course-id="${courseId}"]`);
-                const originalText = button.textContent;
-                button.disabled = true;
-                button.textContent = 'Enrolling...';
-
-                const response = await fetch('/api/enrollments', {
+                const r = await fetch('/api/enrollments', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ courseId })
                 });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    button.textContent = 'Enrolled ✓';
-                    button.style.background = '#86868b';
-                } else {
-                    throw new Error(data.error);
-                }
-            } catch (error) {
-                console.error('Enrollment error:', error);
-                alert('Failed to enroll: ' + error.message);
-                button.disabled = false;
-                button.textContent = originalText;
+                const d = await r.json();
+                if (d.success) { btn.textContent = 'Enrolled ✓'; btn.style.opacity = '.5'; }
+                else throw new Error(d.error);
+            } catch (e) {
+                alert('Failed to enroll: ' + e.message);
+                btn.disabled = false; btn.textContent = orig;
             }
         }
-
-        // Check enrollment status on page load
-        document.addEventListener('DOMContentLoaded', async () => {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
-
-            const enrollButtons = document.querySelectorAll('.enroll-btn');
-            
-            for (const button of enrollButtons) {
-                const courseId = button.dataset.courseId;
-                try {
-                    const response = await fetch(`/api/enrollments/check/${courseId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success && data.data.enrolled) {
-                        button.textContent = 'Enrolled ✓';
-                        button.disabled = true;
-                        button.style.background = '#86868b';
-                    }
-                } catch (error) {
-                    console.error('Error checking enrollment:', error);
-                }
-            }
-        });
     </script>
     <script src="/js/auth-persistence.js"></script>
 </body>
