@@ -1,3 +1,7 @@
+# Data sources
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 # S3 Bucket
 resource "aws_s3_bucket" "main" {
   count  = var.create_s3_bucket ? 1 : 0

@@ -7,13 +7,13 @@ output "s3_bucket_arn" {
 }
 
 output "dynamodb_videos_arn" {
-  value = aws_dynamodb_table.videos.arn
+  value = var.create_dynamodb_tables ? aws_dynamodb_table.videos[0].arn : "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${var.app_name}-videos-${var.environment}"
 }
 
 output "dynamodb_gamification_arn" {
-  value = aws_dynamodb_table.gamification.arn
+  value = var.create_dynamodb_tables ? aws_dynamodb_table.gamification[0].arn : "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${var.app_name}-gamification-${var.environment}"
 }
 
 output "dynamodb_users_arn" {
-  value = aws_dynamodb_table.users.arn
+  value = var.create_dynamodb_tables ? aws_dynamodb_table.users[0].arn : "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${var.app_name}-users-${var.environment}"
 }
