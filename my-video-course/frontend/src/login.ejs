@@ -1,381 +1,284 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="html-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In - Video Course Platform</title>
+    <title>Sign In — LearnDB</title>
+    <meta name="description" content="Sign in to your LearnDB account to access your courses.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: var(--mdb-midnight);
+            padding: 24px;
+        }
+
+        /* Subtle animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 20% 30%, rgba(0,237,100,.07) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 80% 70%, rgba(1,107,248,.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+            background: #0D1B24;
+            border: 1px solid rgba(0,237,100,.15);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(0,237,100,.08);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Top brand strip */
+        .auth-brand {
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .dark body {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-        }
-        
-        .login-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 48px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-        }
-        
-        .dark .login-container {
-            background: rgba(29, 29, 31, 0.95);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        
-        .logo {
-            text-align: center;
+            gap: 10px;
             margin-bottom: 32px;
         }
-        
-        .logo-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+        .auth-leaf {
+            width: 32px; height: 32px;
+            background: var(--mdb-green);
+            border-radius: 50% 50% 50% 0 / 60% 60% 40% 40%;
+            flex-shrink: 0;
+            position: relative;
         }
-        
-        .logo-text {
-            font-size: 28px;
-            font-weight: 600;
-            color: #1d1d1f;
+        .auth-leaf::after {
+            content: '';
+            position: absolute;
+            width: 2px; height: 16px;
+            background: var(--mdb-midnight);
+            bottom: 4px; left: 50%;
+            transform: translateX(-50%);
+            border-radius: 1px;
         }
-        
-        .dark .logo-text {
-            color: #f5f5f7;
+        .auth-brand-name {
+            font-size: 18px; font-weight: 700;
+            color: #fff; letter-spacing: -.01em;
         }
-        
-        .form-group {
-            margin-bottom: 24px;
+        .auth-brand-name span { color: var(--mdb-green); }
+
+        .auth-heading {
+            font-size: 22px; font-weight: 600;
+            color: #E8EDEB;
+            margin-bottom: 4px;
         }
-        
-        .form-label {
-            display: block;
+        .auth-sub {
+            font-size: 13px;
+            color: #5C6B74;
+            margin-bottom: 28px;
+        }
+
+        /* Input group */
+        .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+        .field label { font-size: 13px; font-weight: 500; color: #89989E; }
+        .field input {
+            padding: 10px 14px;
+            background: #0F2336;
+            border: 1px solid #1C3A52;
+            border-radius: 6px;
             font-size: 14px;
-            font-weight: 500;
-            color: #1d1d1f;
-            margin-bottom: 8px;
-        }
-        
-        .dark .form-label {
-            color: #f5f5f7;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 16px 20px;
-            border: 2px solid #f2f2f7;
-            border-radius: 12px;
-            font-size: 16px;
-            background: white;
-            color: #1d1d1f;
-            transition: all 0.2s ease;
-        }
-        
-        .dark .form-input {
-            background: #2c2c2e;
-            border-color: #424245;
-            color: #f5f5f7;
-        }
-        
-        .form-input:focus {
+            color: #E8EDEB;
             outline: none;
-            border-color: #007aff;
-            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+            transition: border-color .15s, box-shadow .15s;
         }
-        
-        .submit-btn {
+        .field input:focus {
+            border-color: var(--mdb-green);
+            box-shadow: 0 0 0 3px rgba(0,237,100,.18);
+        }
+        .field input::placeholder { color: #3D4F58; }
+
+        /* CTA */
+        .auth-submit {
             width: 100%;
-            padding: 16px;
+            padding: 11px;
+            margin-top: 4px;
+            background: var(--mdb-green);
+            color: var(--mdb-midnight);
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 14px;
             font-weight: 600;
-            background: #007aff;
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 24px;
-        }
-        
-        .submit-btn:hover {
-            background: #0056b3;
-            transform: translateY(-2px);
-        }
-        
-        .submit-btn:disabled {
-            background: #86868b;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .windows-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid transparent;
-            border-top: 2px solid currentColor;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .form-footer {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        
-        .form-link {
-            color: #007aff;
-            text-decoration: none;
-            font-weight: 500;
-            display: block;
-            margin-bottom: 8px;
-        }
-        
-        .form-link:hover {
-            text-decoration: underline;
-        }
-        
-        .form-text {
-            color: #86868b;
-            font-size: 14px;
-        }
-        
-        .admin-info {
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.2);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .admin-info-text {
-            font-size: 12px;
-            color: #ff9500;
-            text-align: center;
-        }
-        
-        .alert {
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .alert.success {
-            background: rgba(48, 209, 88, 0.1);
-            color: #30d158;
-            border: 1px solid rgba(48, 209, 88, 0.2);
-        }
-        
-        .alert.error {
-            background: rgba(255, 59, 48, 0.1);
-            color: #ff3b30;
-            border: 1px solid rgba(255, 59, 48, 0.2);
-        }
-        
-        .alert.hidden {
-            display: none;
-        }
-        
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 44px;
-            height: 44px;
-            border: none;
-            border-radius: 22px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            transition: all 0.2s ease;
-            z-index: 1000;
+            gap: 8px;
+            transition: background .15s, box-shadow .15s;
         }
-        
-        .dark .theme-toggle {
-            background: rgba(29, 29, 31, 0.9);
+        .auth-submit:hover { background: var(--mdb-green-dark); box-shadow: 0 2px 8px rgba(0,237,100,.3); }
+        .auth-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* Divider */
+        .auth-divider {
+            display: flex; align-items: center; gap: 12px;
+            margin: 20px 0;
+            color: #3D4F58; font-size: 12px;
         }
-        
-        .theme-toggle:hover {
-            transform: scale(1.1);
+        .auth-divider::before, .auth-divider::after {
+            content: ''; flex: 1; height: 1px; background: #1C3A52;
         }
-        
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 32px 24px;
-            }
-            
-            .logo-text {
-                font-size: 24px;
-            }
+
+        .auth-footer {
+            text-align: center;
+            font-size: 13px;
+            color: #5C6B74;
+            margin-top: 20px;
         }
+        .auth-footer a { color: var(--mdb-green); font-weight: 500; }
+        .auth-footer a:hover { text-decoration: underline; }
+
+        /* Alert */
+        .auth-alert {
+            display: flex; align-items: flex-start; gap: 8px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            border-left: 3px solid;
+        }
+        .auth-alert-error   { background: rgba(193,42,42,.12); color: #F56262; border-color: #C12A2A; }
+        .auth-alert-success { background: rgba(0,237,100,.1);  color: var(--mdb-green); border-color: var(--mdb-green); }
+        .auth-alert.hidden  { display: none; }
+
+        /* Admin hint */
+        .admin-hint {
+            background: rgba(245,166,35,.07);
+            border: 1px solid rgba(245,166,35,.2);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: #B8860B;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Forgot link */
+        .forgot-link {
+            font-size: 12px;
+            color: var(--mdb-blue);
+            float: right;
+        }
+        .forgot-link:hover { text-decoration: underline; }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid var(--mdb-midnight);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle">🌙</button>
-    
-    <div class="login-container">
-        <div class="logo">
-            <div class="logo-icon">🎓</div>
-            <div class="logo-text">Welcome Back</div>
+    <div class="auth-card" role="main">
+        <div class="auth-brand">
+            <div class="auth-leaf" aria-hidden="true"></div>
+            <div class="auth-brand-name">Learn<span>DB</span></div>
         </div>
-        
+
+        <h1 class="auth-heading">Welcome back</h1>
+        <p class="auth-sub">Sign in to continue to your courses</p>
+
         <% if (typeof error !== 'undefined' && error) { %>
-        <div class="alert error">
-            <%= error %>
-        </div>
+        <div class="auth-alert auth-alert-error" role="alert">⚠ <%= error %></div>
         <% } %>
-        
         <% if (typeof success !== 'undefined' && success) { %>
-        <div class="alert success">
-            <%= success %>
-        </div>
+        <div class="auth-alert auth-alert-success" role="alert">✓ <%= success %></div>
         <% } %>
-        
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email" class="form-label">Email Address</label>
-                <input type="email" id="email" name="email" class="form-input" required>
+
+        <div id="jsAlert" class="auth-alert hidden" role="alert" aria-live="assertive"></div>
+
+        <form id="loginForm" novalidate>
+            <div class="field">
+                <label for="email">
+                    Email address
+                    <a href="/forgot-password" class="forgot-link">Forgot password?</a>
+                </label>
+                <input type="email" id="email" name="email" autocomplete="email" required placeholder="you@example.com">
             </div>
-            
-            <div class="form-group">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" id="password" name="password" class="form-input" required>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="••••••••">
             </div>
-            
-            <button type="submit" id="loginBtn" class="submit-btn">
+
+            <button type="submit" id="loginBtn" class="auth-submit">
                 Sign In
             </button>
         </form>
-        
-        <div class="form-footer">
-            <span class="form-text">Don't have an account? </span>
-            <a href="/signup" class="form-link">Sign up</a>
-            <a href="/forgot-password" class="form-link">Forgot password?</a>
+
+        <div class="auth-divider">or</div>
+
+        <div class="admin-hint">
+            🔑 <strong>Super Admin:</strong> engineerfelex@gmail.com
         </div>
-        
-        <div class="admin-info">
-            <div class="admin-info-text">
-                🔑 <strong>Super Admin:</strong> engineerfelex@gmail.com
-            </div>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="/signup">Create one free</a>
         </div>
-        
-        <div id="error" class="alert error hidden"></div>
     </div>
 
     <script>
-        // Theme management
-        function initTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.classList.toggle('dark', theme === 'dark');
-            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
-        }
-        
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const newTheme = isDark ? 'light' : 'dark';
-            document.documentElement.classList.toggle('dark', newTheme === 'dark');
-            localStorage.setItem('theme', newTheme);
-            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
-        }
-        
-        initTheme();
-        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-        
-        function handleLoginSubmit(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            handleLogin(e);
-            return false;
-        }
-        
+        // Dark mode init (always dark on auth pages — matches MongoDB Atlas)
+        document.getElementById('html-root').classList.add('dark');
+
         async function handleLogin(e) {
-            const email = document.getElementById('email').value;
+            e.preventDefault();
+            const email    = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            
-            const loginBtn = document.getElementById('loginBtn');
-            const errorDiv = document.getElementById('error');
-            
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<span class="windows-spinner"></span>Signing in...';
-            errorDiv.classList.add('hidden');
-            
+            const btn      = document.getElementById('loginBtn');
+            const alert    = document.getElementById('jsAlert');
+
+            // Reset alert
+            alert.className = 'auth-alert hidden';
+            alert.textContent = '';
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Signing in…';
+
             try {
-                const payload = { email, password };
-                
-                const response = await fetch('/api/auth/signin', {
+                const res  = await fetch('/api/auth/signin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ email, password })
                 });
-                
-                const data = await response.json();
-                
+                const data = await res.json();
+
                 if (data.success) {
-                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('accessToken',  data.accessToken);
                     localStorage.setItem('refreshToken', data.refreshToken);
-                    localStorage.setItem('idToken', data.idToken);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    
-                    // Show success state
-                    loginBtn.textContent = 'Success! Redirecting...';
-                    loginBtn.style.background = '#30d158';
-                    
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 1000);
+                    localStorage.setItem('idToken',      data.idToken);
+                    localStorage.setItem('user',         JSON.stringify(data.user));
+                    btn.innerHTML = '✓ Redirecting…';
+                    btn.style.background = '#00A854';
+                    setTimeout(() => window.location.href = data.redirect, 900);
                 } else {
-                    throw new Error(data.error);
+                    throw new Error(data.error || 'Invalid credentials');
                 }
-            } catch (error) {
-                errorDiv.textContent = error.message;
-                errorDiv.classList.remove('hidden');
-            } finally {
-                if (loginBtn.textContent !== 'Success! Redirecting...') {
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = 'Sign In';
-                }
+            } catch (err) {
+                alert.className = 'auth-alert auth-alert-error';
+                alert.textContent = '⚠ ' + err.message;
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
             }
         }
-        
-        // Ensure event handler is attached
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('loginForm');
-            if (form) {
-                form.addEventListener('submit', handleLoginSubmit);
-                form.onsubmit = handleLoginSubmit;
-            }
-        });
-        
-        // Fallback - attach immediately
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', handleLoginSubmit);
-            loginForm.onsubmit = handleLoginSubmit;
-        }
+
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
     </script>
 </body>
 </html>
