@@ -68,6 +68,14 @@ resource "aws_autoscaling_group" "app" {
     value               = "${var.app_name}-asg"
     propagate_at_launch = true
   }
+
+  # Auto-replace instances when user_data or the Launch Template changes
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 60
+    }
+  }
 }
 
 # Auto Scaling Policies
