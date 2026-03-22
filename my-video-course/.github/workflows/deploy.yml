@@ -88,36 +88,76 @@ jobs:
       env:
         AWS_REGION: ${{ env.AWS_REGION }}
       run: |
-        set -e
+        # NOTE: Do NOT use `set -e` here — cancel commands may return non-zero
+        # when there is nothing to cancel, which is perfectly fine.
+
         # Retrieve the ASG name from Terraform outputs
-        ASG_NAME=$(cd terraform && terraform output -raw autoscaling_group_name || echo "")
-        
-        if [ "$ASG_NAME" == "" ]; then
+        ASG_NAME=$(cd terraform && terraform output -raw autoscaling_group_name 2>/dev/null || true)
+
+        if [ -z "$ASG_NAME" ]; then
           echo "⚠️  No ASG found in terraform output. Scanning via AWS CLI..."
-          ASG_NAME=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[?contains(AutoScalingGroupName, `video-course-app`)].AutoScalingGroupName' --output text | head -n 1)
+          ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
+            --query 'AutoScalingGroups[?contains(AutoScalingGroupName, `video-course-app`)].AutoScalingGroupName' \
+            --output text | head -n 1)
         fi
-        
-        if [ "$ASG_NAME" == "" ] || [ "$ASG_NAME" == "None" ]; then
+
+        if [ -z "$ASG_NAME" ] || [ "$ASG_NAME" = "None" ]; then
           echo "❌ ERROR: Could not identify ASG_NAME. Skipping refresh."
           exit 1
         fi
 
         echo "🔍 Checking status for ASG: $ASG_NAME"
-        
-        # Check for InProgress or Pending refreshes to avoid the InstanceRefreshInProgress error
-        REFRESH_STATUS=$(aws autoscaling describe-instance-refreshes \
+
+        # ------------------------------------------------------------------
+        # Step 1: If an InProgress or Pending refresh exists, cancel it and
+        #         POLL until it reaches a terminal state before continuing.
+        #         AWS rejects StartInstanceRefresh while one is still active,
+        #         even if a cancel has been requested (it takes time).
+        # ------------------------------------------------------------------
+        ACTIVE_REFRESH=$(aws autoscaling describe-instance-refreshes \
           --auto-scaling-group-name "$ASG_NAME" \
-          --query 'InstanceRefreshes[?Status==`InProgress` || Status==`Pending`].Status' \
+          --query 'InstanceRefreshes[?Status==`InProgress` || Status==`Pending`].InstanceRefreshId' \
           --output text)
-        
-        if [ -n "$REFRESH_STATUS" ] && [ "$REFRESH_STATUS" != "None" ]; then
-          echo "⚠️  Existing refresh found ($REFRESH_STATUS). Cancelling..."
-          aws autoscaling cancel-instance-refresh --auto-scaling-group-name "$ASG_NAME"
-          sleep 15
+
+        if [ -n "$ACTIVE_REFRESH" ] && [ "$ACTIVE_REFRESH" != "None" ]; then
+          echo "⚠️  Active refresh detected (ID: $ACTIVE_REFRESH). Cancelling..."
+          aws autoscaling cancel-instance-refresh --auto-scaling-group-name "$ASG_NAME" || true
+
+          echo "⏳ Waiting for cancellation to complete (max 5 min)..."
+          MAX_WAIT=30   # 30 × 10 s = 5 minutes
+          COUNT=0
+          while [ $COUNT -lt $MAX_WAIT ]; do
+            CURRENT_STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name "$ASG_NAME" \
+              --instance-refresh-ids "$ACTIVE_REFRESH" \
+              --query 'InstanceRefreshes[0].Status' \
+              --output text)
+            echo "   Status: $CURRENT_STATUS (attempt $((COUNT+1))/$MAX_WAIT)"
+            # Terminal states: Successful, Failed, Cancelled, RollbackSuccessful, RollbackFailed
+            case "$CURRENT_STATUS" in
+              Successful|Failed|Cancelled|RollbackSuccessful|RollbackFailed)
+                echo "✅ Previous refresh reached terminal state: $CURRENT_STATUS"
+                break
+                ;;
+            esac
+            COUNT=$((COUNT + 1))
+            sleep 10
+          done
+
+          if [ $COUNT -eq $MAX_WAIT ]; then
+            echo "❌ Timed out waiting for previous refresh to cancel. Exiting."
+            exit 1
+          fi
         fi
 
-        echo "🚀 Starting new instance refresh for $ASG_NAME..."
-        aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG_NAME"
+        # ------------------------------------------------------------------
+        # Step 2: Start the new instance refresh
+        # ------------------------------------------------------------------
+        echo "🔄 Triggering instance refresh for existing ASG..."
+        aws autoscaling start-instance-refresh \
+          --auto-scaling-group-name "$ASG_NAME" \
+          --strategy Rolling \
+          --preferences '{"MinHealthyPercentage":60}'
         echo "✅ Instance refresh triggered successfully."
 
     # Added: Automated Health Check to verify the new container actually starts
