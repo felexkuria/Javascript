@@ -132,8 +132,8 @@ jobs:
         nova_api_key           = "${{ secrets.NOVA_API_KEY }}"
         enable_https           = true
         create_route53_records = true
-        create_ecr_repo          = false
-        create_dynamodb_tables   = false
+        create_ecr_repo          = true
+        create_dynamodb_tables   = true
         EOF
 
     - name: Terraform Init
