@@ -403,167 +403,99 @@
     <button class="theme-toggle" id="themeToggle">🌙</button>
     
     <div class="container">
-        <div class="course-header">
-            <h1 class="course-title"><%= courseName %></h1>
-            <p class="course-subtitle">Master MongoDB and Modern Web Development</p>
+        <div class="course-header" style="text-align: left; max-width: 800px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                <span class="badge badge-green">Best Seller</span>
+                <span class="badge badge-blue">New Architecture</span>
+            </div>
+            <h1 class="course-title" style="margin-left: 0;"><%= courseName %></h1>
+            <p class="course-subtitle" style="font-size: 20px; line-height: 1.4;">Master modern full-stack development with MongoDB, Node.js, and AI-integrated learning patterns.</p>
             
-            <div class="course-actions">
-                <button id="enrollBtn" class="btn btn-primary shadow-lg shadow-[#00ED64]/20">
-                    Get Started with this Course
+            <div style="display: flex; gap: 24px; margin-bottom: 32px; font-size: 14px; opacity: 0.8;">
+                <span>👤 Created by <strong style="color: var(--mdb-green);">Engineer Felex</strong></span>
+                <span>📅 Last updated <%= new Date().toLocaleDateString() %></span>
+                <span>🌐 English</span>
+            </div>
+
+            <div class="course-actions" style="justify-content: flex-start;">
+                <button id="enrollBtn" class="btn btn-primary btn-lg" style="padding: 14px 32px; font-size: 18px;">
+                    Enroll Now
                 </button>
             </div>
         </div>
         
-        <% if (typeof watchedVideos !== 'undefined' && typeof totalVideos !== 'undefined') { %>
-        <div class="progress-card">
-            <div class="progress-header">
-                <span class="progress-title">Course Progress</span>
-                <span class="progress-stats"><%= watchedVideos %>/<%= totalVideos %> videos (<%= Math.round((watchedVideos / totalVideos) * 100) %>%)</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: <%= typeof watchedPercent !== 'undefined' ? watchedPercent : Math.round((watchedVideos / totalVideos) * 100) %>%"></div>
-            </div>
-        </div>
-        <% } %>
-
-        <% if (typeof error !== 'undefined') { %>
-        <div class="error-state">
-            <div class="error-icon">⚠️</div>
-            <h2 class="error-title">Course Error</h2>
-            <p class="error-message"><%= error %></p>
-        </div>
-        <% } else if (videos.length === 0) { %>
-        <div class="error-state">
-            <div class="error-icon">📹</div>
-            <h2 class="error-title">No Videos Found</h2>
-            <p class="error-message">No videos found for this course.</p>
-        </div>
-        <% } else { %>
-        
-        <div class="videos-section">
-            <h2 class="section-title">Course Videos</h2>
-            
-            <% 
-            // Remove duplicates and sort videos
-            const uniqueVideos = [];
-            const seenIds = new Set();
-            
-            videos.forEach(video => {
-                if (video && video._id && !seenIds.has(video._id.toString())) {
-                    seenIds.add(video._id.toString());
-                    uniqueVideos.push(video);
-                }
-            });
-
-            // Group by chapter and sort
-            const videosByChapter = {};
-            uniqueVideos.forEach(video => {
-                const chapter = video.chapter || 'Uncategorized';
-                if (!videosByChapter[chapter]) {
-                    videosByChapter[chapter] = [];
-                }
-                videosByChapter[chapter].push(video);
-            });
-
-            Object.keys(videosByChapter).forEach(chapter => {
-                videosByChapter[chapter].sort((a, b) => {
-                    const aTitle = a.title.toLowerCase();
-                    const bTitle = b.title.toLowerCase();
-                    
-                    const aMatch = aTitle.match(/(lesson|video|part|chapter)\s*(\d+)|^(\d+)/);
-                    const bMatch = bTitle.match(/(lesson|video|part|chapter)\s*(\d+)|^(\d+)/);
-                    
-                    const aNum = aMatch ? parseInt(aMatch[2] || aMatch[3], 10) : 0;
-                    const bNum = bMatch ? parseInt(bMatch[2] || bMatch[3], 10) : 0;
-                    
-                    if (aNum && bNum && aNum !== bNum) {
-                        return aNum - bNum;
-                    }
-                    
-                    if (aNum && !bNum) return -1;
-                    if (!aNum && bNum) return 1;
-                    
-                    return a.title.localeCompare(b.title);
-                });
-            });
-
-            const sortedChapters = Object.keys(videosByChapter).sort((a, b) => {
-                const aLower = a.toLowerCase();
-                const bLower = b.toLowerCase();
-                
-                const aMatch = aLower.match(/(chapter|section|part)\s*(\d+)|^(\d+)/);
-                const bMatch = bLower.match(/(chapter|section|part)\s*(\d+)|^(\d+)/);
-                
-                const aNum = aMatch ? parseInt(aMatch[2] || aMatch[3], 10) : 0;
-                const bNum = bMatch ? parseInt(bMatch[2] || bMatch[3], 10) : 0;
-                
-                if (aNum && bNum && aNum !== bNum) {
-                    return aNum - bNum;
-                }
-                
-                if (aNum && !bNum) return -1;
-                if (!aNum && bNum) return 1;
-                
-                return a.localeCompare(b);
-            });
-
-            let videoIndex = 0;
-            sortedChapters.forEach(chapter => {
-            %>
-            <div class="chapter-section">
-                <h3 class="chapter-title"><%= chapter %></h3>
-                <div class="videos-grid">
-                    <% videosByChapter[chapter].forEach(video => { 
-                        videoIndex++;
-                    %>
-                    <div class="video-card">
-                        <div class="video-thumbnail">
-                            <% if (video.thumbnailUrl) { %>
-                            <img src="<%= video.thumbnailUrl %>" alt="<%= video.title %>"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <% } %>
-                            <div class="video-placeholder" <%= video.thumbnailUrl ? 'style="display: none;"' : '' %>>
-                                <div class="video-placeholder-icon">▶️</div>
-                                <div class="video-placeholder-text">Video Lesson</div>
-                            </div>
-                            
-                            <div class="video-badges">
-                                <span class="lesson-badge">Lesson <%= videoIndex %></span>
-                                <% if (video.watched) { %>
-                                <span class="watched-badge">✓</span>
-                                <% } %>
-                            </div>
-                        </div>
-                        
-                        <div class="video-content">
-                            <h4 class="video-title">
-                                <%= video.title %>
-                                <% if (video.watched) { %>
-                                <span style="color: #00ED64;">✓</span>
-                                <% } %>
-                            </h4>
-                            
-                            <div class="watch-button" id="watchBtn-<%= video._id %>" data-video-id="<%= video._id %>" data-course="<%= courseName %>">
-                                <% if (video.videoUrl && video.videoUrl.endsWith('.pdf')) { %>
-                                <a href="/pdf/<%= courseName %>/<%= encodeURIComponent(video.basename) %>" target="_blank"
-                                   class="btn btn-pdf">
-                                    📄 View PDF
-                                </a>
-                                <% } else { %>
-                                <button class="btn btn-locked">
-                                    🔒 Enroll to Watch
-                                </button>
-                                <% } %>
-                            </div>
-                        </div>
+        <div style="display: grid; grid-template-columns: 1fr 350px; gap: 48px; margin-top: 64px;">
+            <div class="course-main-info">
+                <% if (typeof watchedVideos !== 'undefined' && watchedVideos > 0) { %>
+                <div class="progress-card" style="margin-bottom: 48px;">
+                    <div class="progress-header">
+                        <span class="progress-title">Continue Learning</span>
+                        <span class="progress-stats"><%= watchedVideos %>/<%= totalVideos %> lectures completed</span>
                     </div>
-                    <% }); %>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: <%= watchedPercent %>%"></div>
+                    </div>
+                </div>
+                <% } %>
+
+                <h2 class="section-title">Course Content</h2>
+                <div class="curriculum-accordion" style="border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden;">
+                    <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
+                        <% sections.forEach((section, sIndex) => { %>
+                            <div class="curriculum-section">
+                                <div class="section-header" style="background: var(--mdb-cloud-light); padding: 16px 24px; border-bottom: 1px solid var(--color-border); font-size: 15px;">
+                                    <strong>Section <%= sIndex + 1 %>: <%= section.title %></strong>
+                                    <span style="font-size: 13px; opacity: 0.7;"><%= section.lectures.length %> Lectures</span>
+                                </div>
+                                <div class="section-lectures" style="background: #fff;">
+                                    <% section.lectures.forEach((lecture, lIndex) => { %>
+                                        <div class="lecture-row" style="padding: 12px 24px; border-bottom: 1px solid var(--mdb-cloud); display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <span style="opacity: 0.5;"><%= lecture.type === 'video' ? '▶️' : '📄' %></span>
+                                                <a href="/course/<%= courseName %>/video/<%= lecture.contentId %>" style="color: var(--color-text); font-size: 14px; <%= (typeof isEnrolled !== 'undefined' && isEnrolled) || (typeof isAdmin !== 'undefined' && isAdmin) ? '' : 'pointer-events: none; opacity: 0.6;' %>">
+                                                    <%= lIndex + 1 %>. <%= lecture.title %>
+                                                </a>
+                                            </div>
+                                            <span style="font-size: 12px; opacity: 0.6;"><%= Math.floor((lecture.duration || 0) / 60) %>:00</span>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <!-- Fallback for simple video list -->
+                        <div style="padding: 24px; text-align: center; color: var(--color-text-muted);">
+                            <p>Curriculum is being updated. Individual videos are available below.</p>
+                        </div>
+                    <% } %>
                 </div>
             </div>
-            <% }); %>
+
+            <aside class="course-sidebar">
+                <div class="card" style="position: sticky; top: 24px;">
+                    <div style="width: 100%; aspect-ratio: 16/9; background: var(--mdb-midnight); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 48px;">
+                        📽️
+                    </div>
+                    <div class="card-body">
+                        <div style="font-size: 32px; font-weight: 800; margin-bottom: 16px;">Free <span style="font-size: 16px; text-decoration: line-through; opacity: 0.5;">$94.99</span></div>
+                        <button class="btn btn-primary btn-full btn-lg" style="margin-bottom: 12px; height: 48px;">Enroll Now</button>
+                        <button class="btn btn-default btn-full" style="height: 48px;">Add to Wishlist</button>
+                        
+                        <div style="margin-top: 24px;">
+                            <h4 style="font-size: 14px; margin-bottom: 12px;">This course includes:</h4>
+                            <ul style="list-style: none; padding: 0; font-size: 13px; display: flex; flex-direction: column; gap: 8px; opacity: 0.8;">
+                                <li>🎥 <%= (typeof totalVideos !== 'undefined' ? totalVideos : 0) %> On-demand videos</li>
+                                <li>📄 Downloadable resources</li>
+                                <li>📱 Access on mobile and TV</li>
+                                <li>🏆 Certificate of completion</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </div>
-        <% } %>
     </div>
+
 
     <script>
         // Theme management

@@ -6,9 +6,10 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 
 const app = express();
+const connectDB = require('./utils/mongodb');
 
-// Middleware 
-app.use(cors());
+// Connect to MongoDB Atlas
+connectDB();app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -603,15 +604,43 @@ app.post('/api/ai/chat', cognitoAuth, async (req, res) => {
 async function getSRTContent(courseName, videoId) {
   const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
   const s3Client = new S3Client({ region: process.env.AWS_REGION });
+  const Course = require('./models/Course');
+  const mongoose = require('mongoose');
+
+  let video = null;
   
-  const timestamps = ['1756578844', '1756579046', '1756575209', '1756585495'];
-  const dynamoVideoService = require('./services/dynamoVideoService');
-  const videos = await dynamoVideoService.getVideosForCourse(courseName);
-  const video = videos.find(v => v._id && v._id.toString() === videoId);
+  // Try MongoDB first
+  try {
+    const course = await Course.findOne({ 
+      $or: [{ title: courseName }, { name: courseName }] 
+    }).lean();
+    
+    if (course) {
+      // Find lecture by ID or title
+      for (const section of course.sections || []) {
+        video = section.lectures?.find(l => 
+          (l._id && l._id.toString() === videoId) || 
+          (l.id === videoId) || 
+          (l.title === videoId)
+        );
+        if (video) break;
+      }
+    }
+  } catch (err) {
+    console.log('MongoDB fetch failed for SRT, falling back to DynamoDB');
+  }
+
+  // Fallback to DynamoDB if not found
+  if (!video) {
+    const dynamoVideoService = require('./services/dynamoVideoService');
+    const videos = await dynamoVideoService.getVideosForCourse(courseName);
+    video = videos.find(v => v._id && v._id.toString() === videoId);
+  }
   
   if (!video?.s3Key) return null;
   
   const videoFilename = video.s3Key.split('/').pop().replace('.mp4', '');
+  const timestamps = ['1756578844', '1756579046', '1756575209', '1756585495'];
   
   for (const timestamp of timestamps) {
     try {
@@ -622,7 +651,6 @@ async function getSRTContent(courseName, videoId) {
       }));
       
       const srtContent = await response.Body.transformToString();
-      // Extract text only from SRT
       return srtContent
         .split('\n')
         .filter(line => !line.match(/^\d+$/) && !line.match(/\d{2}:\d{2}:\d{2}/) && line.trim())
@@ -631,7 +659,6 @@ async function getSRTContent(courseName, videoId) {
       continue;
     }
   }
-  
   return null;
 }
 

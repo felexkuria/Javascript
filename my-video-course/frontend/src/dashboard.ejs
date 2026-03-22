@@ -8,414 +8,272 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/main.css">
     <style>
-        /* ── Layout ───────────────────────────────────────── */
-        .page-nav {
-            height: 56px; background: var(--mdb-midnight);
-            display: flex; align-items: center; padding: 0 24px; gap: 0;
-            position: sticky; top: 0; z-index: 100;
-            border-bottom: 1px solid rgba(0,237,100,.12);
-        }
-        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: 32px; }
-        .nav-leaf {
-            width: 28px; height: 28px; background: var(--mdb-green);
-            border-radius: 50% 50% 50% 0 / 60% 60% 40% 40%;
-            position: relative; flex-shrink: 0;
-        }
-        .nav-leaf::after {
-            content: ''; position: absolute;
-            width: 2px; height: 14px; background: var(--mdb-midnight);
-            bottom: 3px; left: 50%; transform: translateX(-50%); border-radius: 1px;
-        }
-        .nav-brand-name { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
-        .nav-brand-name em { color: var(--mdb-green); font-style: normal; }
-        .nav-links-list { display: flex; align-items: center; gap: 4px; list-style: none; flex: 1; }
-        .nav-link {
-            padding: 6px 12px; border-radius: 5px; font-size: 13px; font-weight: 500;
-            color: rgba(255,255,255,.65); text-decoration: none; transition: all .15s;
-        }
-        .nav-link:hover, .nav-link.active { color: #fff; background: rgba(255,255,255,.08); text-decoration: none; }
-        .nav-link.active { color: var(--mdb-green); background: rgba(0,237,100,.08); }
-        .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-        .theme-btn {
-            width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
-            border: 1px solid rgba(255,255,255,.12); border-radius: 5px; background: transparent;
-            color: rgba(255,255,255,.7); cursor: pointer; transition: all .15s; font-size: 15px;
-        }
-        .theme-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
-        .user-avatar {
-            width: 30px; height: 30px; border-radius: 50%;
-            background: var(--mdb-green); display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: 700; color: var(--mdb-midnight); cursor: pointer;
-            border: 2px solid rgba(0,237,100,.3); text-decoration: none;
+        .dashboard-hero {
+            background: var(--mdb-midnight);
+            color: #fff;
+            padding: var(--space-10) 0;
+            margin-bottom: var(--space-8);
+            border-bottom: 1px solid var(--mdb-green);
         }
 
-        /* ── Page body ─────────────────────────────────────── */
-        .page-wrapper {
-            max-width: 1200px; margin: 0 auto; padding: 32px 24px;
+        .dashboard-container {
+            max-width: var(--container-width);
+            margin: 0 auto;
+            padding: 0 var(--space-6);
         }
 
-        /* ── Page header ───────────────────────────────────── */
-        .page-header {
-            display: flex; align-items: flex-start; justify-content: space-between;
-            gap: 16px; margin-bottom: 28px; flex-wrap: wrap;
+        .hero-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .page-title { font-size: 26px; font-weight: 700; color: var(--color-text); }
-        .page-sub { font-size: 14px; color: var(--color-text-muted); margin-top: 2px; }
-        .header-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
-        /* ── Stats banner ───────────────────────────────────── */
-        .stats-banner {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 16px; margin-bottom: 28px;
+        .stats-row {
+            display: flex;
+            gap: var(--space-10);
         }
-        .stat-tile {
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--mdb-green);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .section-nav {
+            display: flex;
+            gap: var(--space-6);
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: var(--space-8);
+        }
+
+        .section-tab {
+            padding: var(--space-4) 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: all var(--transition);
+        }
+
+        .section-tab.active {
+            color: var(--mdb-green);
+            border-bottom-color: var(--mdb-green);
+        }
+
+        .learning-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-6);
+            margin-bottom: var(--space-10);
+        }
+
+        .learning-card {
             background: var(--color-surface);
             border: 1px solid var(--color-border);
-            border-radius: 8px; padding: 20px;
-            box-shadow: var(--shadow-sm);
-            display: flex; align-items: center; gap: 14px;
-            transition: box-shadow .15s;
-        }
-        .stat-tile:hover { box-shadow: var(--shadow-md); }
-        .stat-icon {
-            width: 44px; height: 44px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; flex-shrink: 0;
-        }
-        .stat-icon.green { background: rgba(0,237,100,.12); }
-        .stat-icon.orange { background: rgba(245,166,35,.12); }
-        .stat-icon.red { background: rgba(193,42,42,.12); }
-        .stat-value { font-size: 26px; font-weight: 700; color: var(--color-text); line-height: 1; }
-        .stat-label { font-size: 12px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
-
-        /* ── Section headers ──────────────────────────────── */
-        .section-header {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
-        }
-        .section-title {
-            font-size: 14px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: .06em; color: var(--mdb-green);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: all var(--transition);
+            display: flex;
+            flex-direction: column;
         }
 
-        /* ── Course card grid ──────────────────────────────── */
-        .courses-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;
+        .learning-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--mdb-green);
         }
 
-        .course-card {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: 8px; overflow: hidden;
-            box-shadow: var(--shadow-sm);
-            transition: all .2s ease;
-            display: flex; flex-direction: column;
-        }
-        .course-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: rgba(0,237,100,.35); }
-
-        /* Gradient thumbnail strip */
-        .course-thumb {
-            height: 8px;
-            background: linear-gradient(90deg, var(--mdb-green) 0%, #016BF8 100%);
-        }
-        .course-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-        .course-name {
-            font-size: 15px; font-weight: 600; color: var(--color-text);
-            margin-bottom: 6px; line-height: 1.4;
-        }
-        .course-desc {
-            font-size: 13px; color: var(--color-text-muted);
-            line-height: 1.5; flex: 1; margin-bottom: 16px;
-            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        .card-thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--mdb-midnight);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            position: relative;
         }
 
-        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-        .progress-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); }
-        .progress-count { font-size: 11px; color: var(--color-text-muted); }
-        .progress-track { width: 100%; height: 4px; background: var(--color-border); border-radius: 999px; overflow: hidden; margin-bottom: 16px; }
-        .progress-bar   { height: 100%; background: var(--mdb-green); border-radius: 999px; transition: width .5s ease; }
-
-        .card-actions { display: flex; gap: 8px; }
-        .btn-enroll {
-            flex: 0 0 auto; padding: 8px 14px;
-            background: transparent; border: 1px solid var(--mdb-green);
-            color: var(--mdb-green); border-radius: 5px;
-            font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
+        .card-progress-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--mdb-green);
+            transition: width 0.3s ease;
         }
-        .btn-enroll:hover { background: rgba(0,237,100,.1); }
-        .btn-enroll:disabled { opacity: .45; cursor: not-allowed; }
-        .btn-start {
-            flex: 1; padding: 8px 14px;
-            background: var(--mdb-green); border: 1px solid var(--mdb-green);
-            color: var(--mdb-midnight); border-radius: 5px;
-            font-size: 13px; font-weight: 600; cursor: pointer; text-align: center;
-            text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
-            transition: all .15s;
-        }
-        .btn-start:hover { background: var(--mdb-green-dark); text-decoration: none; }
 
-        /* ── Empty state ──────────────────────────────────── */
-        .empty-state {
-            grid-column: 1 / -1; text-align: center; padding: 80px 20px;
-            background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px;
+        .card-content {
+            padding: var(--space-5);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
-        .empty-icon  { font-size: 52px; margin-bottom: 16px; }
-        .empty-title { font-size: 20px; font-weight: 600; color: var(--color-text); margin-bottom: 6px; }
-        .empty-desc  { font-size: 13px; color: var(--color-text-muted); }
 
-        /* ── Role switch ──────────────────────────────────── */
-        .role-tabs { display: flex; gap: 4px; }
-        .role-tab {
-            padding: 5px 14px; border-radius: 5px; font-size: 13px; font-weight: 500;
-            color: var(--color-text-muted); text-decoration: none; transition: all .15s;
-            border: 1px solid transparent;
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+            line-height: 1.4;
         }
-        .role-tab:hover  { background: var(--color-bg); color: var(--color-text); text-decoration: none; }
-        .role-tab.active { background: rgba(0,237,100,.12); color: var(--mdb-green); border-color: rgba(0,237,100,.3); }
 
-        /* ── Responsive ───────────────────────────────────── */
+        .card-instructor {
+            font-size: 13px;
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-4);
+        }
+
+        .card-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-text-muted);
+        }
+
         @media (max-width: 768px) {
-            .stats-banner { grid-template-columns: 1fr; }
-            .page-header  { flex-direction: column; }
-            .courses-grid { grid-template-columns: 1fr; }
+            .hero-content { flex-direction: column; text-align: center; gap: var(--space-6); }
+            .stats-row { gap: var(--space-6); }
         }
     </style>
+
 </head>
 <body>
-
     <!-- ── Navigation ──────────────────────────────────────── -->
     <nav class="page-nav" role="navigation">
-        <a href="/dashboard" class="nav-brand">
-            <div class="nav-leaf" aria-hidden="true"></div>
-            <span class="nav-brand-name">Learn<em>DB</em></span>
-        </a>
-        <ul class="nav-links-list" role="list">
-            <li><a href="/dashboard" class="nav-link active">Dashboard</a></li>
-            <li><a href="/courses"   class="nav-link">Courses</a></li>
-            <% if (user && user.isTeacher) { %>
-            <li><a href="/teacher/dashboard" class="nav-link">Teach</a></li>
-            <% } %>
-        </ul>
-        <div class="nav-right">
-            <button id="themeToggle" class="theme-btn" aria-label="Toggle dark mode">
-                <span id="themeIcon">🌙</span>
-            </button>
-            <a href="/profile" class="user-avatar" id="userAvatar" title="Your profile">
-                <%= (user && user.name) ? user.name.charAt(0).toUpperCase() : 'U' %>
+        <div class="dashboard-container hero-content" style="padding: 0; min-height: 64px;">
+            <a href="/dashboard" class="nav-brand">
+                <div class="nav-leaf" aria-hidden="true"></div>
+                <span class="nav-brand-name">Learn<em>DB</em></span>
             </a>
+            <ul class="nav-links-list" role="list">
+                <li><a href="/dashboard" class="nav-link active">My Learning</a></li>
+                <li><a href="/courses" class="nav-link">Browse</a></li>
+                <% if (user && user.isTeacher) { %>
+                <li><a href="/teacher/dashboard" class="nav-link">Instructor</a></li>
+                <% } %>
+            </ul>
+            <div class="nav-right">
+                <button id="themeToggle" class="theme-btn" aria-label="Toggle dark mode">
+                    <span id="themeIcon">🌙</span>
+                </button>
+                <a href="/profile" class="user-avatar" title="Your profile">
+                    <%= (user && user.name) ? user.name.charAt(0).toUpperCase() : 'U' %>
+                </a>
+            </div>
         </div>
     </nav>
 
-    <!-- ── Main content ────────────────────────────────────── -->
-    <div class="page-wrapper">
-
-        <!-- Page header -->
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">
-                    Hello, <%= (user && user.name) ? user.name.split(' ')[0] : 'Learner' %> 👋
-                </h1>
-                <p class="page-sub">Here's what you're working on</p>
-                <% if (user && user.isTeacher) { %>
-                <div class="role-tabs" style="margin-top: 12px;">
-                    <span class="role-tab active">Student</span>
-                    <a href="/teacher/dashboard" class="role-tab">Teacher</a>
-                </div>
-                <% } %>
-            </div>
-            <div class="header-actions">
-                <button id="syncButton" class="btn btn-default btn-sm">⟳ Sync</button>
-                <button id="fixAllThumbnailsButton" class="btn btn-default btn-sm">⬛ Fix Thumbnails</button>
-            </div>
-        </div>
-
-        <!-- Stats banner -->
-        <div class="stats-banner">
-            <div class="stat-tile">
-                <div class="stat-icon green">🎯</div>
+    <!-- ── Dashboard Hero ──────────────────────────────────── -->
+    <header class="dashboard-hero">
+        <div class="dashboard-container">
+            <div class="hero-content">
                 <div>
-                    <div class="stat-value user-level"><%= (gamificationData && gamificationData.userStats && gamificationData.userStats.currentLevel) || 1 %></div>
-                    <div class="stat-label">Current Level</div>
+                    <h1 style="font-size: 36px; font-weight: 800; margin-bottom: var(--space-2);">My Learning</h1>
+                    <p style="opacity: 0.8; font-size: 16px;">Welcome back, <%= (user && user.name) ? user.name.split(' ')[0] : 'Learner' %>! Continue where you left off.</p>
                 </div>
-            </div>
-            <div class="stat-tile">
-                <div class="stat-icon orange">🏆</div>
-                <div>
-                    <div class="stat-value user-points"><%= (gamificationData && gamificationData.userStats && gamificationData.userStats.totalPoints) || 0 %></div>
-                    <div class="stat-label">Total Points</div>
-                </div>
-            </div>
-            <div class="stat-tile">
-                <div class="stat-icon red">🔥</div>
-                <div>
-                    <div class="stat-value user-streak"><%= (gamificationData && gamificationData.streakData && gamificationData.streakData.currentStreak) || 0 %></div>
-                    <div class="stat-label">Day Streak</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Course section -->
-        <div class="section-header">
-            <span class="section-title">Your Courses</span>
-            <span style="font-size:13px; color: var(--color-text-muted);"><%= courses ? courses.length : 0 %> available</span>
-        </div>
-
-        <div class="courses-grid">
-        <% if (courses && courses.length > 0) { %>
-            <% courses.forEach(course => { %>
-            <%
-                const videos       = course.videos || [];
-                const sorted       = [...videos].sort((a,b) => {
-                    const an = parseInt((a.title||'').match(/\d+/)) || 0;
-                    const bn = parseInt((b.title||'').match(/\d+/)) || 0;
-                    return an - bn;
-                });
-                const total   = sorted.length;
-                const watched = sorted.filter(v => v && v.watched).length;
-                const pct     = total > 0 ? Math.round((watched / total) * 100) : 0;
-            %>
-            <div class="course-card">
-                <div class="course-thumb" style="background: linear-gradient(90deg, hsl(<%= Math.abs(course.name.charCodeAt(0) * 5) % 360 %>, 70%, 45%) 0%, var(--mdb-green) 100%);"></div>
-                <div class="course-body">
-                    <h2 class="course-name"><%= course.name %></h2>
-                    <p class="course-desc" data-course="<%= course.name %>">Loading description…</p>
-
-                    <div class="progress-header">
-                        <span class="progress-label">Progress</span>
-                        <span class="progress-count"><%= watched %>/<%= total %> videos</span>
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-number"><%= (gamificationData && gamificationData.userStats && gamificationData.userStats.currentLevel) || 1 %></span>
+                        <span class="stat-label">Level</span>
                     </div>
-                    <div class="progress-track">
-                        <div class="progress-bar" style="width: <%= pct %>%"></div>
+                    <div class="stat-item">
+                        <span class="stat-number"><%= (gamificationData && gamificationData.userStats && gamificationData.userStats.totalPoints) || 0 %></span>
+                        <span class="stat-label">Points</span>
                     </div>
-
-                    <div class="card-actions">
-                        <button
-                            class="btn-enroll enroll-btn"
-                            data-course-id="<%= course._id || course.name %>"
-                            onclick="enrollInCourse('<%= course._id || course.name %>')">
-                            Enroll
-                        </button>
-                        <a href="/course/<%= course.name %>" class="btn-start">
-                            <%= pct > 0 ? 'Continue ›' : 'Start Learning ›' %>
-                        </a>
+                    <div class="stat-item">
+                        <span class="stat-number"><%= (gamificationData && gamificationData.streakData && gamificationData.streakData.currentStreak) || 0 %></span>
+                        <span class="stat-label">Streak</span>
                     </div>
                 </div>
             </div>
-            <% }); %>
-        <% } else { %>
-            <div class="empty-state">
-                <div class="empty-icon">📂</div>
-                <h3 class="empty-title">No courses yet</h3>
-                <p class="empty-desc">Add videos to the videos directory or sync to get started.</p>
-            </div>
-        <% } %>
         </div>
+    </header>
 
-    </div><!-- /page-wrapper -->
+    <!-- ── Main Content ────────────────────────────────────── -->
+    <main class="dashboard-container">
+        <nav class="section-nav">
+            <a href="#" class="section-tab active">All Courses</a>
+            <a href="#" class="section-tab">In Progress</a>
+            <a href="#" class="section-tab">Completed</a>
+            <a href="#" class="section-tab">Wishlist</a>
+        </nav>
+
+        <div class="learning-grid">
+            <% if (courses && courses.length > 0) { %>
+                <% courses.forEach(course => { %>
+                    <% 
+                        const total = course.videos ? course.videos.length : 0;
+                        const watched = course.videos ? course.videos.filter(v => v.watched).length : 0;
+                        const progress = total > 0 ? Math.round((watched / total) * 100) : 0;
+                    %>
+                    <div class="learning-card">
+                        <div class="card-thumbnail">
+                            🎞️
+                            <div class="card-progress-overlay" style="width: <%= progress %>%"></div>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="card-title"><%= course.name %></h3>
+                            <p class="card-instructor">Instructor: <%= course.instructor || 'David Malan' %></p>
+                            
+                            <div class="card-footer">
+                                <div class="progress-text"><%= progress %>% Complete</div>
+                                <a href="/course/<%= course.name %>" class="btn btn-primary btn-sm">
+                                    <%= progress > 0 ? 'Continue' : 'Start' %>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div style="grid-column: 1/-1; text-align: center; padding: var(--space-20); background: var(--color-surface); border-radius: var(--radius-lg); border: 2px dashed var(--color-border);">
+                    <div style="font-size: 64px; margin-bottom: var(--space-4);">🎓</div>
+                    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: var(--space-2);">Start your learning journey</h2>
+                    <p style="color: var(--color-text-muted); margin-bottom: var(--space-6);">You haven't enrolled in any courses yet.</p>
+                    <a href="/courses" class="btn btn-primary">Browse Courses</a>
+                </div>
+            <% } %>
+        </div>
+    </main>
 
     <script>
-        /* ── Theme ──────────────────────────────────── */
+        // Theme management
         function initTheme() {
-            const t = localStorage.getItem('theme') || 'dark';
-            document.getElementById('html-root').classList.toggle('dark', t === 'dark');
-            document.getElementById('themeIcon').textContent = t === 'dark' ? '☀️' : '🌙';
+            const theme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            document.getElementById('themeIcon').textContent = theme === 'dark' ? '☀️' : '🌙';
         }
+        
         function toggleTheme() {
-            const dark = document.getElementById('html-root').classList.toggle('dark');
-            localStorage.setItem('theme', dark ? 'dark' : 'light');
-            document.getElementById('themeIcon').textContent = dark ? '☀️' : '🌙';
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.classList.toggle('dark', newTheme === 'dark');
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
         }
+
         initTheme();
         document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
-        /* ── Course descriptions (AI) ───────────────── */
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.course-desc[data-course]').forEach(async el => {
-                const name  = el.dataset.course;
-                const key   = 'desc_' + name;
-                const cache = localStorage.getItem(key);
-                if (cache) { el.textContent = cache; return; }
-                try {
-                    const r = await fetch(`/api/course/description/${encodeURIComponent(name)}`);
-                    if (!r.ok) throw new Error();
-                    const d = await r.json();
-                    if (d && d.description) { el.textContent = d.description; localStorage.setItem(key, d.description); }
-                    else throw new Error();
-                } catch {
-                    const n = name.toLowerCase();
-                    const fb = n.includes('davinci') ? 'Master DaVinci Resolve — color grading, audio, and advanced editing.'
-                             : n.includes('aws')     ? 'Complete AWS cloud course — EC2, S3, Lambda, and real-world labs.'
-                             : n.includes('devops')  ? 'Full DevOps pipeline: Docker, Kubernetes, CI/CD, and automation.'
-                             : n.includes('terraform') ? 'Infrastructure as Code with Terraform across AWS, Azure, and GCP.'
-                             : `Complete ${name} with practical exercises and real-world projects.`;
-                    el.textContent = fb; localStorage.setItem(key, fb);
-                }
-            });
-
-            /* ── Sync button ────────────────────────── */
-            document.getElementById('syncButton').addEventListener('click', async function () {
-                this.disabled = true; this.textContent = '⏳ Syncing…';
-                try {
-                    const r = await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-                    const d = await r.json();
-                    this.textContent = d.success ? '✓ Synced' : '✗ Failed';
-                    if (d.success) setTimeout(() => location.reload(), 1500);
-                } catch { this.textContent = '✗ Error'; }
-                finally  { setTimeout(() => { this.disabled = false; this.textContent = '⟳ Sync'; }, 2500); }
-            });
-
-            /* ── Fix thumbnails ─────────────────────── */
-            document.getElementById('fixAllThumbnailsButton').addEventListener('click', async function () {
-                this.disabled = true; this.textContent = '⏳ Fixing…';
-                let total = 0;
-                try {
-                    for (const el of document.querySelectorAll('.course-desc[data-course]')) {
-                        const r = await fetch(`/api/thumbnails/fix/${encodeURIComponent(el.dataset.course)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-                        const d = await r.json();
-                        if (d.success) total += d.fixedCount || 0;
-                    }
-                    this.textContent = `✓ Fixed ${total}`;
-                    if (total > 0) setTimeout(() => location.reload(), 2000);
-                } catch { this.textContent = '✗ Error'; }
-                finally  { setTimeout(() => { this.disabled = false; this.textContent = '⬛ Fix Thumbnails'; }, 3000); }
-            });
-
-            /* ── Enrollment status ──────────────────── */
-            const token = localStorage.getItem('accessToken');
-            if (token) {
-                document.querySelectorAll('.enroll-btn').forEach(async btn => {
-                    try {
-                        const r = await fetch(`/api/enrollments/check/${btn.dataset.courseId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                        const d = await r.json();
-                        if (d.success && d.data.enrolled) {
-                            btn.textContent = 'Enrolled ✓'; btn.disabled = true; btn.style.opacity = '.5';
-                        }
-                    } catch {}
-                });
-            }
-        });
-
-        /* ── Enroll ─────────────────────────────────── */
-        async function enrollInCourse(courseId) {
-            const token = localStorage.getItem('accessToken');
-            if (!token) { window.location.href = '/login'; return; }
-            const btn = document.querySelector(`[data-course-id="${courseId}"]`);
-            const orig = btn.textContent;
-            btn.disabled = true; btn.textContent = '…';
-            try {
-                const r = await fetch('/api/enrollments', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ courseId })
-                });
-                const d = await r.json();
-                if (d.success) { btn.textContent = 'Enrolled ✓'; btn.style.opacity = '.5'; }
-                else throw new Error(d.error);
-            } catch (e) {
-                alert('Failed to enroll: ' + e.message);
-                btn.disabled = false; btn.textContent = orig;
-            }
-        }
     </script>
     <script src="/js/auth-persistence.js"></script>
 </body>

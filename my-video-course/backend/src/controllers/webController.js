@@ -1,6 +1,9 @@
 const dynamoVideoService = require('../services/dynamoVideoService');
 const path = require('path');
 const fs = require('fs');
+const Course = require('../models/Course');
+const User = require('../models/User');
+const Enrollment = require('../models/Enrollment');
 
 class WebController {
   async redirectToDashboard(req, res) {
@@ -120,156 +123,68 @@ class WebController {
   async renderVideo(req, res) {
     try {
       const courseName = decodeURIComponent(req.params.courseName);
-      console.log('Route params:', req.params);
-      console.log('URL:', req.url);
       const videoId = req.params.videoId || req.params.id;
-      console.log('Extracted videoId:', videoId);
       const userId = req.user?.email || 'guest';
       const autoplay = req.query.autoplay === 'true';
 
-      // Use DynamoDB service with user personalization
-      let videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
+      // 1. Try to fetch course from MongoDB (New Architecture)
+      const slug = courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const mongoCourse = await Course.findOne({ $or: [{ slug: slug }, { title: courseName }] });
 
-      if (!videos || videos.length === 0) {
-        return res.status(404).render('error', { message: 'Course not found or has no videos' });
-      }
-      
-      // Remove duplicates by _id
-      const uniqueVideos = [];
-      const seenIds = new Set();
-      
-      for (const video of videos) {
-        if (video && video._id && !seenIds.has(video._id.toString())) {
-          seenIds.add(video._id.toString());
-          uniqueVideos.push(video);
-        }
-      }
-      
-      videos = uniqueVideos;
+      let sections = [];
+      let video = null;
+      let videos = []; // Still needed for some legacy logic
 
-      videos = videos.sort((a, b) => {
-        // Use sortOrder/lessonNumber if available
-        if (a.sortOrder && b.sortOrder) {
-          return a.sortOrder - b.sortOrder;
-        }
-        if (a.lessonNumber && b.lessonNumber) {
-          return a.lessonNumber - b.lessonNumber;
-        }
-        
-        // Fallback to title-based sorting
-        const aMatch = a.title?.match(/(\d+)/);
-        const bMatch = b.title?.match(/(\d+)/);
-        const aNum = aMatch ? parseInt(aMatch[1]) : 0;
-        const bNum = bMatch ? parseInt(bMatch[1]) : 0;
-        
-        if (aNum !== bNum) {
-          return aNum - bNum;
-        }
-        
-        return a.title.localeCompare(b.title);
-      });
-
-      videos.forEach((video, index) => {
-        video.lessonNumber = index + 1;
-        video.displayTitle = video.title || 'Untitled Video';
-      });
-
-      const videosByChapter = {};
-      videos.forEach(video => {
-        const chapter = video.chapter || 'Uncategorized';
-        if (!videosByChapter[chapter]) {
-          videosByChapter[chapter] = [];
-        }
-        videosByChapter[chapter].push(video);
-      });
-
-      Object.keys(videosByChapter).forEach(chapter => {
-        videosByChapter[chapter].sort((a, b) => a.lessonNumber - b.lessonNumber);
-      });
-
-      const chapters = Object.keys(videosByChapter).sort();
-
-      let video;
-      let videoIndex = 0;
-
-      if (videoId) {
-        console.log(`Looking for video ID: ${videoId}`);
-        console.log(`Available videos: ${videos.length}`);
-        if (videos.length > 0) {
-          console.log(`Sample video IDs: ${videos.slice(0,3).map(v => v._id || v.videoId).join(', ')}`);
-        }
-        
-        video = videos.find(v => 
-          (v._id && v._id.toString() === videoId) || 
-          (v.videoId && v.videoId.toString() === videoId)
-        );
-        videoIndex = videos.findIndex(v => 
-          (v._id && v._id.toString() === videoId) || 
-          (v.videoId && v.videoId.toString() === videoId)
-        );
-
-        if (!video) {
-          console.log(`Video not found: ${videoId}`);
-          return res.status(404).render('error', { message: 'Video not found', courseName });
-        }
-        console.log(`Found video: ${video.title}`);
+      if (mongoCourse) {
+        sections = mongoCourse.sections;
+        // Flatten lectures to find the specific one and calculate progress
+        const allLectures = sections.flatMap(s => s.lectures);
+        video = allLectures.find(l => l.contentId === videoId) || allLectures[0];
+        videos = allLectures.map(l => ({ ...l, _id: l.contentId }));
       } else {
-        video = videos[0];
+        // 2. Fallback to DynamoDB (Legacy)
+        videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
+        if (!videos || videos.length === 0) {
+          return res.status(404).render('error', { message: 'Course not found' });
+        }
+        // Group legacy flat videos into a single section for the new UI
+        sections = [{ title: 'Course Content', lectures: videos.map(v => ({
+          title: v.title,
+          contentId: v._id || v.videoId,
+          s3Key: v.s3Key,
+          duration: v.duration || 0,
+          type: 'video'
+        })) }];
+        video = videos.find(v => (v._id && v._id.toString() === videoId) || (v.videoId === videoId)) || videos[0];
       }
 
+      // Process video URL (S3 signing, etc.)
       const s3VideoService = require('../services/s3VideoService');
       const userRole = req.user?.isTeacher ? 'teacher' : 'student';
-      video = await s3VideoService.processVideoUrl(video, userRole, courseName);
+      const processedVideo = await s3VideoService.processVideoUrl(video, userRole, courseName);
 
-      // Get user-specific watch data from DynamoDB
+      // Progress calculations
       const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
       const userWatchedVideos = gamificationData?.userStats?.videosWatched || {};
-      
-      // Count watched videos based on user data
-      const watchedVideos = videos.filter(v => 
-        userWatchedVideos[v._id] || userWatchedVideos[v._id?.toString()] || v.watched
-      ).length;
       const totalVideos = videos.length;
-      const watchedPercent = Math.round((watchedVideos / totalVideos) * 100);
-
-      const isFirstVideo = videoIndex === 0;
-      const isLastVideo = videoIndex === videos.length - 1;
-
-      const prevVideoId = video.prevVideoId || (!isFirstVideo ? videos[videoIndex - 1]._id.toString() : null);
-      const nextVideoId = video.nextVideoId || (!isLastVideo ? videos[videoIndex + 1]._id.toString() : null);
-
-      let isLastInChapter = false;
-      if (!isLastVideo && video.chapter) {
-        const nextVideo = videos[videoIndex + 1];
-        isLastInChapter = !nextVideo.chapter || nextVideo.chapter !== video.chapter;
-      } else if (isLastVideo && video.chapter) {
-        isLastInChapter = true;
-      }
-
-      const pdfs = [];
+      const watchedVideos = videos.filter(v => userWatchedVideos[v._id] || userWatchedVideos[v.contentId]).length;
+      const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
 
       res.render('video', {
-        video,
+        video: processedVideo,
         courseName,
-        videos,
+        sections,
         watchedVideos,
         totalVideos,
         watchedPercent,
-        isFirstVideo,
-        isLastVideo,
-        isLastInChapter,
-        prevVideoId,
-        nextVideoId,
-        pdfs,
         autoplay,
-        chapters,
-        videosByChapter,
+        user: req.user,
         aiEnabled: true,
-        isYouTube: video.isYouTube || false
+        isYouTube: processedVideo.isYouTube || false
       });
     } catch (err) {
       console.error('Error rendering video page:', err);
-      res.status(500).render('error', { message: 'Server error' });
+      res.status(500).render('error', { message: 'Server error: ' + err.message });
     }
   }
 

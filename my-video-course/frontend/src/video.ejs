@@ -198,124 +198,99 @@
     <link rel="preload" as="image" href="/thumbnails/<%= video ? video._id : '' %>.jpg">
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle">🌙</button>
-    
-    <div class="container">
-        <%- include('partials/video-header', { video, courseName }) %>
+    <header class="mdb-header" style="height: 64px; background: var(--mdb-midnight); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; padding: 0 var(--space-6); justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: var(--space-4);">
+            <a href="/dashboard" style="color: var(--mdb-green); font-weight: 800; font-size: 18px; letter-spacing: -0.02em;">PROJECT LEVI</a>
+            <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.2);"></div>
+            <h1 style="font-size: 14px; font-weight: 500; color: #fff;"><%= courseName %></h1>
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--space-4);">
+            <button class="btn btn-ghost" id="themeToggle" style="color: #fff;">🌙</button>
+            <a href="/course/<%= courseName %>" class="btn btn-default btn-sm">Exit Player</a>
+        </div>
+    </header>
 
-        <% if (video) { %>
-        <div class="main-content">
-            <div class="video-main">
+    <div class="course-player-container">
+        <!-- Main Player Area -->
+        <main class="player-main">
+            <div class="player-video-wrapper">
                 <%- include('partials/video-player', { video, courseName, isYouTube }) %>
-
-                
-                <%- include('partials/video-controls', { video, courseName, isFirstVideo, isLastVideo, watchedVideos, totalVideos, watchedPercent }) %>
-                
-
-                
-                <!-- AI Todos Section -->
-                <div class="sidebar-card" style="margin-top: 24px;">
-                    <h3 class="sidebar-title">🤖 AI Todos</h3>
-                    <div id="todoContainer" style="max-height: 200px; overflow-y: auto; margin-bottom: 16px;">
-                        <div id="todoLoading" style="text-align: center; padding: 16px 0; font-size: 14px; color: #86868b;">
-                            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
-                                <div class="loading-spinner" style="width: 16px; height: 16px; border: 2px solid #f2f2f7; border-top: 2px solid #007aff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></div>
-                                <span>AI analyzing content...</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span id="todoProgress" style="font-size: 12px; color: #86868b;">0/0 completed</span>
-                        <button id="refreshTodos" onclick="loadAITodos()" style="font-size: 11px; padding: 4px 8px; background: #f2f2f7; color: #1d1d1f; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">
-                            🔄 Refresh
-                        </button>
-                    </div>
-                    <div style="width: 100%; height: 6px; background: #f2f2f7; border-radius: 3px; overflow: hidden; margin-top: 12px;">
-                        <div id="todoProgressBar" style="height: 100%; background: #00ED64; border-radius: 3px; width: 0%; transition: width 0.3s ease; box-shadow: 0 0 10px rgba(0, 237, 100, 0.5);"></div>
-                    </div>
-                </div>
             </div>
             
-            <!-- Chapters Sidebar -->
-            <% if (typeof chapters !== 'undefined' && chapters.length > 0) { %>
-            <div class="chapters-sidebar">
-                <div class="sidebar-card">
-                    <h3 class="sidebar-title">📚 Chapters</h3>
-                    <div class="chapter-list">
-                        <% chapters.sort((a, b) => {
-                            const aMatch = a.match(/(\d+)/);
-                            const bMatch = b.match(/(\d+)/);
-                            if (!aMatch || !bMatch) return a.localeCompare(b);
-                            return parseInt(aMatch[0], 10) - parseInt(bMatch[0], 10);
-                        }).forEach(chapter => {
-                            const chapterVideos = videosByChapter[chapter];
-                        %>
-                        <div class="chapter-item interactive-chapter">
-                            <strong><%= chapter %></strong>
-                            <% chapterVideos.forEach((chapterVideo, index) => { %>
-                            <div style="margin-left: 12px; margin-top: 4px;">
-                                <a href="/videos/<%= encodeURIComponent(courseName) %>/<%= chapterVideo._id %>" 
-                                   class="chapter-link interactive-link <%= chapterVideo._id.toString() === video._id.toString() ? 'active' : '' %>">
-                                    <%= (index + 1) %>. <%= chapterVideo.title %>
-                                    <% if (chapterVideo.watched) { %> ✓<% } %>
-                                </a>
+            <div class="player-content-tabs">
+                <nav class="tabs-nav">
+                    <button class="tab-btn active" data-tab="overview">Overview</button>
+                    <button class="tab-btn" data-tab="qa">Q&A</button>
+                    <button class="tab-btn" data-tab="ai">AI Tutor (David Malan)</button>
+                    <button class="tab-btn" data-tab="resources">Resources</button>
+                </nav>
+
+                <div class="tab-content" id="overview">
+                    <h2 style="font-size: 24px; margin-bottom: var(--space-4);"><%= video ? video.title : 'Lecture Title' %></h2>
+                    <p style="color: var(--color-text-muted); line-height: 1.6;">
+                        In this lecture, we dive into the core concepts of <%= video ? video.title : 'this topic' %>. 
+                        Follow along with the hands-on segments to reinforce your learning.
+                    </p>
+                    
+                    <div style="margin-top: var(--space-8);">
+                        <h4 style="font-size: 16px; margin-bottom: var(--space-4);">Learning Objectives</h4>
+                        <ul style="padding-left: var(--space-5); color: var(--color-text-muted);">
+                            <li>Understand the fundamental principles of the topic</li>
+                            <li>Configure and deploy sample environments</li>
+                            <li>Troubleshoot common implementation issues</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="tab-content hidden" id="ai">
+                    <div class="ai-chat-interface">
+                        <%- include('partials/floating-chatbot') %>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar Curriculum -->
+        <aside class="sidebar-curriculum">
+            <div class="sidebar-header">
+                <h3 style="font-size: 14px; font-weight: 700;">Course Content</h3>
+            </div>
+            <div class="curriculum-list">
+                <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
+                    <% sections.forEach((section, sIndex) => { %>
+                        <div class="curriculum-section">
+                            <div class="section-header">
+                                <span>Section <%= sIndex + 1 %>: <%= section.title %></span>
+                                <span style="font-size: 11px; opacity: 0.7;"><%= section.lectures.length %> Lectures</span>
                             </div>
-                            <% }); %>
+                            <div class="section-lectures">
+                                <% section.lectures.forEach((lecture, lIndex) => { %>
+                                    <div class="lecture-item <%= video && video._id === lecture.contentId ? 'active' : '' %>" 
+                                         onclick="window.location.href='/course/<%= courseName %>/video/<%= lecture.contentId %>'">
+                                        <div style="font-size: 16px; margin-top: 2px;">
+                                            <%= lecture.type === 'video' ? '▶️' : '📄' %>
+                                        </div>
+                                        <div class="lecture-info">
+                                            <div class="lecture-title"><%= lIndex + 1 %>. <%= lecture.title %></div>
+                                            <div class="lecture-meta">
+                                                <span><%= Math.floor((lecture.duration || 0) / 60) %>m</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            </div>
                         </div>
-                        <% }); %>
+                    <% }); %>
+                <% } else { %>
+                    <!-- Fallback for legacy data -->
+                    <div style="padding: var(--space-4); text-align: center; color: var(--color-text-muted);">
+                        <p>No sections found. Syncing repository...</p>
                     </div>
-                </div>
+                <% } %>
             </div>
-            <% } %>
-        </div>
-        
-        <!-- Corner Badges -->
-        <div class="corner-badges">
-            <!-- Progress Badge -->
-            <div class="corner-badge progress-badge">
-                <div class="badge-content">
-                    <span class="badge-icon">📊</span>
-                    <div class="badge-stats">
-                        <div class="stat-row">
-                            <span class="stat-label">Level</span>
-                            <span class="stat-value user-level">1</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Points</span>
-                            <span class="stat-value user-points">0</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Streak</span>
-                            <span class="stat-value user-streak">0🔥</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Shortcuts Badge -->
-            <div class="corner-badge shortcuts-badge">
-                <div class="badge-content">
-                    <span class="badge-icon">🍃</span>
-                    <div class="shortcuts-mini">
-                        <div class="shortcut-row"><span>F</span>Full</div>
-                        <div class="shortcut-row"><span>K</span>Pause</div>
-                        <div class="shortcut-row"><span>J</span>-10s</div>
-                        <div class="shortcut-row"><span>L</span>+10s</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <% } else { %>
-        <div class="error-state">
-            <div class="error-icon">⚠️</div>
-            <h2 class="error-title">Video Not Found</h2>
-            <p class="error-message">The requested video could not be loaded.</p>
-            <a href="/course/<%= courseName %>" class="btn btn-primary">
-                <span>←</span> Back to Course
-            </a>
-        </div>
-        <% } %>
+        </aside>
     </div>
+
 
     <div id="keyHint" class="key-hint"></div>
     
@@ -344,6 +319,25 @@
         
         initTheme();
         document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        // Tab Switching Logic
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+                
+                // Update buttons
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update content
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== tabId);
+                });
+            });
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             const videoPlayer = document.getElementById('videoPlayer');

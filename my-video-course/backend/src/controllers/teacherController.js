@@ -1,110 +1,100 @@
 const dynamoVideoService = require('../services/dynamoVideoService');
+const Course = require('../models/Course');
+const User = require('../models/User');
+const Enrollment = require('../models/Enrollment');
 
 class TeacherController {
   async renderDashboard(req, res) {
     try {
-      // Get all courses for teacher (teachers can see all courses)
-      const userId = req.user?.email || 'guest';
-      const isTeacher = req.user?.isTeacher || false;
-      const courses = await dynamoVideoService.getAllCourses(userId, isTeacher);
+      const user = req.user || req.session?.user;
+      const userId = user?.email || 'guest';
       
-      // Calculate teacher dashboard stats
-      let totalVideos = 0;
-      let totalStudents = 0;
-      let totalWatchTime = 0;
-      const courseStats = [];
-
-      for (const course of courses) {
-        const videos = course.videos || [];
-        const watchedVideos = videos.filter(v => v.watched).length;
-        
-        totalVideos += videos.length;
-        
-        courseStats.push({
-          name: course.name,
-          totalVideos: videos.length,
-          watchedVideos: watchedVideos,
-          completionRate: videos.length > 0 ? Math.round((watchedVideos / videos.length) * 100) : 0
-        });
-      }
-
-      // Get recent activity (last 10 watched videos)
-      const recentActivity = [];
-      for (const course of courses) {
-        const videos = course.videos || [];
-        const watchedVideos = videos
-          .filter(v => v.watched && v.watchedAt)
-          .sort((a, b) => new Date(b.watchedAt) - new Date(a.watchedAt))
-          .slice(0, 5);
-        
-        watchedVideos.forEach(video => {
-          recentActivity.push({
-            courseName: course.name,
-            videoTitle: video.title,
-            watchedAt: video.watchedAt,
-            student: 'Student' // In real app, get from user data
-          });
-        });
-      }
-
-      // Sort recent activity by date
-      recentActivity.sort((a, b) => new Date(b.watchedAt) - new Date(a.watchedAt));
+      // 1. Fetch courses from MongoDB (all courses for instructor)
+      const courses = await Course.find({}).lean();
+      
+      // 2. Fetch all enrollments to calculate student stats
+      const enrollments = await Enrollment.find({}).lean();
+      
+      // Calculate instructor stats
+      const totalCourses = courses.length;
+      const publishedCourses = courses.filter(c => c.isPublished).length;
+      const totalStudents = new Set(enrollments.map(e => e.user)).size;
+      
+      // Map courses to a simpler format for the view
+      const courseStats = courses.map(course => {
+        const courseEnrollments = enrollments.filter(e => e.course.toString() === course._id.toString());
+        return {
+          id: course._id,
+          title: course.title,
+          isPublished: course.isPublished,
+          enrollments: courseEnrollments.length,
+          lastUpdated: course.updatedAt
+        };
+      });
 
       res.render('teacher-dashboard', {
-        user: req.user,
-        totalCourses: courses.length,
-        totalVideos,
-        totalStudents: 1, // Placeholder
-        courseStats,
-        recentActivity: recentActivity.slice(0, 10),
-        courses
+        user,
+        totalCourses,
+        publishedCourses,
+        totalStudents,
+        courses: courseStats,
+        recentActivity: [] // Optional: placeholder for now
       });
     } catch (error) {
       console.error('Error rendering teacher dashboard:', error);
-      res.status(500).render('error', { message: 'Error loading teacher dashboard' });
+      res.status(500).render('error', { message: 'Error loading teacher dashboard: ' + error.message });
     }
   }
 
   async renderStudentDashboard(req, res) {
     try {
-      // Get user's gamification data
-      const userId = req.user?.email || 'default_user';
-      const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
+      const user = req.user || req.session?.user;
+      const userId = user?.email || 'default_user';
       
-      // Get all courses for student view
-      const courses = await dynamoVideoService.getAllCourses();
+      // 1. Fetch user enrollments from MongoDB
+      const enrollments = await Enrollment.find({ user: userId })
+        .populate('course')
+        .lean();
       
-      // Calculate student progress
-      let totalVideos = 0;
-      let watchedVideos = 0;
+      // 2. Fetch all available courses (for discovery)
+      const allCourses = await Course.find({ isPublished: true }).lean();
       
-      courses.forEach(course => {
-        const videos = course.videos || [];
-        totalVideos += videos.length;
-        watchedVideos += videos.filter(v => v.watched).length;
-      });
+      // 3. Map enrollments to a format the dashboard expects
+      const studentCourses = enrollments.map(enrol => {
+        const course = enrol.course;
+        if (!course) return null;
+        
+        // Calculate progress (lectures completed vs total)
+        const totalLectures = course.sections?.reduce((sum, s) => sum + (s.lectures?.length || 0), 0) || 0;
+        const watchedLectures = enrol.progress?.watchedLectures?.length || 0;
+        const progressPercent = totalLectures > 0 ? Math.round((watchedLectures / totalLectures) * 100) : 0;
+        
+        return {
+          id: course._id,
+          name: course.title,
+          instructor: course.instructor || 'David Malan',
+          progress: progressPercent,
+          totalVideos: totalLectures,
+          watchedVideos: watchedLectures,
+          videos: course.sections?.flatMap(s => s.lectures) || []
+        };
+      }).filter(c => c !== null);
 
-      const progressPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
+      // 4. Get gamification data (fallback to placeholder if not in MongoDB yet)
+      const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
 
       res.render('dashboard', {
-        user: req.user,
-        courses,
-        offlineMode: false,
+        user,
+        courses: studentCourses, // Only enrolled courses for dashboard
+        allCourses,
         gamificationData: gamificationData || {
-          userStats: {
-            totalPoints: 0,
-            currentLevel: 1,
-            videosWatched: {},
-            coursesCompleted: 0
-          }
-        },
-        progressPercent,
-        totalVideos,
-        watchedVideos
+          userStats: { totalPoints: 0, currentLevel: 1 },
+          streakData: { currentStreak: 0 }
+        }
       });
     } catch (error) {
       console.error('Error rendering student dashboard:', error);
-      res.status(500).render('error', { message: 'Error loading dashboard' });
+      res.status(500).render('error', { message: 'Error loading dashboard: ' + error.message });
     }
   }
 }
