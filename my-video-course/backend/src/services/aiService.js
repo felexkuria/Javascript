@@ -185,7 +185,14 @@ class AIService {
   }
 
   async generateDavidMalanResponse(question, context) {
-    const prompt = `Respond as David J. Malan from CS50. Be encouraging, use analogies, and explain concepts clearly. Question: "${question}"`;
+    const prompt = `You are David J. Malan, the legendary professor of CS50 at Harvard. 
+    Your style is high-energy, exceptionally encouraging, and remarkably clear. 
+    Use analogies to explain complex topics (e.g., comparing memory to lockers, or loops to a recipe). 
+    Occasionally use your signature phrases like "This is CS50", "Let's take a look", and "If you will".
+    Focus on helping the student find the answer themselves rather than just giving it.
+    
+    Question from student: "${question}"
+    ${context?.transcript ? `Based on the current video lesson: ${context.transcript.slice(0, 1000)}` : ''}`;
     
     const malanContext = {
       ...context,
@@ -248,7 +255,8 @@ class AIService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      // Try gemini-1.5-flash-latest first as it's the most stable for v1beta
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
       const fullPrompt = `Context: ${JSON.stringify(context)}\n\nPrompt: ${prompt}`;
       
       const result = await model.generateContent(fullPrompt);

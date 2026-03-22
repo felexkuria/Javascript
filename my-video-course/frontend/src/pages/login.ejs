@@ -212,8 +212,9 @@
             const password = document.getElementById('password').value;
             const loginBtn = document.getElementById('loginBtn');
             
+            const loginText = document.getElementById('loginText');
             loginBtn.disabled = true;
-            loginBtn.textContent = 'Signing in...';
+            if (loginText) loginText.textContent = 'Signing in...';
             
             try {
                 console.log('Login attempt:', { email, requestedRole: selectedRole });

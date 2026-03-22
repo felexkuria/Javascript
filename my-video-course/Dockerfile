@@ -13,8 +13,14 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y nodejs \
     && npm install -g npm@latest
 
-# Install AWS CLI
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+# Install AWS CLI (Multi-arch support: aarch64 for Silicon Mac, x86_64 for Cloud)
+RUN arch=$(uname -m) && \
+    if [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ]; then \
+        binary="aarch64"; \
+    else \
+        binary="x86_64"; \
+    fi && \
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-${binary}.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
     && ./aws/install \
     && rm -rf awscliv2.zip aws \
