@@ -1,6 +1,14 @@
 # Lambda source code generation
+# Ensure the output directory exists at plan time
+resource "null_resource" "lambda_src_dir" {
+  provisioner "local-exec" {
+    command = "mkdir -p ${path.module}/lambda_src"
+  }
+  triggers = { always = timestamp() }
+}
 resource "local_file" "start_transcribe_py" {
-  filename = "${path.module}/lambda_src/start_transcribe.py"
+  filename   = "${path.module}/lambda_src/start_transcribe.py"
+  depends_on = [null_resource.lambda_src_dir]
   content  = <<EOF
 import json, os, time, urllib.parse, boto3
 
@@ -40,7 +48,8 @@ EOF
 }
 
 resource "local_file" "postprocess_py" {
-  filename = "${path.module}/lambda_src/postprocess_subtitles.py"
+  filename   = "${path.module}/lambda_src/postprocess_subtitles.py"
+  depends_on = [null_resource.lambda_src_dir]
   content  = <<EOF
 import json, os, urllib.parse, boto3
 
@@ -76,7 +85,8 @@ EOF
 }
 
 resource "local_file" "add_video_to_db_py" {
-  filename = "${path.module}/lambda_src/add_video_to_db.py"
+  filename   = "${path.module}/lambda_src/add_video_to_db.py"
+  depends_on = [null_resource.lambda_src_dir]
   content  = <<EOF
 import json, os, urllib.parse, boto3, re
 
@@ -209,6 +219,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
 
 # Lambda Functions
 resource "aws_lambda_function" "start_transcribe" {
+  count            = (var.create_role || var.existing_role_arn != null) ? 1 : 0
   filename         = data.archive_file.start_transcribe_zip.output_path
   function_name    = "${var.app_name}-start-transcribe"
   role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
@@ -218,6 +229,7 @@ resource "aws_lambda_function" "start_transcribe" {
 }
 
 resource "aws_lambda_function" "postprocess_subtitles" {
+  count            = (var.create_role || var.existing_role_arn != null) ? 1 : 0
   filename         = data.archive_file.postprocess_zip.output_path
   function_name    = "${var.app_name}-postprocess-subtitles"
   role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
@@ -227,6 +239,7 @@ resource "aws_lambda_function" "postprocess_subtitles" {
 }
 
 resource "aws_lambda_function" "add_video_to_db" {
+  count            = (var.create_role || var.existing_role_arn != null) ? 1 : 0
   filename         = data.archive_file.add_video_to_db_zip.output_path
   function_name    = "${var.app_name}-add-video-to-db"
   role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
@@ -243,28 +256,32 @@ resource "aws_lambda_function" "add_video_to_db" {
 
 # SNS Subscriptions
 resource "aws_sns_topic_subscription" "start_transcribe" {
+  count     = length(aws_lambda_function.start_transcribe)
   topic_arn = aws_sns_topic.video_updates.arn
   protocol  = "lambda"
-  endpoint  = aws_lambda_function.start_transcribe.arn
+  endpoint  = aws_lambda_function.start_transcribe[0].arn
 }
 
 resource "aws_sns_topic_subscription" "add_video" {
+  count     = length(aws_lambda_function.add_video_to_db)
   topic_arn = aws_sns_topic.video_updates.arn
   protocol  = "lambda"
-  endpoint  = aws_lambda_function.add_video_to_db.arn
+  endpoint  = aws_lambda_function.add_video_to_db[0].arn
 }
 
 # Permissions
 resource "aws_lambda_permission" "sns_start_transcribe" {
+  count         = length(aws_lambda_function.start_transcribe)
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.start_transcribe.function_name
+  function_name = aws_lambda_function.start_transcribe[0].function_name
   principal     = "sns.amazonaws.com"
   source_arn    = aws_sns_topic.video_updates.arn
 }
 
 resource "aws_lambda_permission" "sns_add_video" {
+  count         = length(aws_lambda_function.add_video_to_db)
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.add_video_to_db.function_name
+  function_name = aws_lambda_function.add_video_to_db[0].function_name
   principal     = "sns.amazonaws.com"
   source_arn    = aws_sns_topic.video_updates.arn
 }

@@ -1,7 +1,7 @@
 # ECR Repository
 resource "aws_ecr_repository" "main" {
   count                = var.create_ecr_repo ? 1 : 0
-  name                 = "${var.app_name}-repo"
+  name                 = var.app_name
   image_tag_mutability = "MUTABLE"
   force_delete         = true
 
