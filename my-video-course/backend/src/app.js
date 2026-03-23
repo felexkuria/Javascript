@@ -35,9 +35,14 @@ app.get('/health', async (req, res) => {
   const dynamoVideoService = require('./services/dynamoVideoService');
   const dbStatus = await dynamoVideoService.healthCheck();
   
+  // Check MongoDB Status
+  const mongoose = require('mongoose');
+  const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  
   res.json({ 
     status: 'healthy', 
     database: dbStatus,
+    mongodb: mongoStatus,
     timestamp: new Date().toISOString() 
   });
 });
@@ -314,7 +319,8 @@ app.use('/api/videos', cognitoAuth, require('./routes/api/videos-missing'));
 app.use('/api/quizzes', cognitoAuth, require('./routes/api/quizzes'));
 app.use('/api/ai', cognitoAuth, require('./routes/api/ai'));
 // app.use('/api/users', cognitoAuth, require('./routes/api/users'));
-// app.use('/api/enrollments', cognitoAuth, require('./routes/api/enrollments'));
+app.use('/api/enrollments', cognitoAuth, require('./routes/api/enrollments'));
+app.use('/api/wishlist', cognitoAuth, require('./routes/api/wishlist'));
 
 // Video control endpoints
 app.post('/api/mark-watched', cognitoAuth, async (req, res) => {

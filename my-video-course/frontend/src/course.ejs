@@ -433,7 +433,7 @@
                         <span class="progress-stats"><%= watchedVideos %>/<%= totalVideos %> lectures completed</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: <%= watchedPercent %>%"></div>
+                        <div id="courseProgressFill" class="progress-fill" style="width: 0%;"></div>
                     </div>
                 </div>
                 <% } %>
@@ -452,7 +452,7 @@
                                         <div class="lecture-row" style="padding: 12px 24px; border-bottom: 1px solid var(--mdb-cloud); display: flex; justify-content: space-between; align-items: center;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
                                                 <span style="opacity: 0.5;"><%= lecture.type === 'video' ? '▶️' : '📄' %></span>
-                                                <a href="/course/<%= courseName %>/video/<%= lecture.contentId %>" style="color: var(--color-text); font-size: 14px; <%= (typeof isEnrolled !== 'undefined' && isEnrolled) || (typeof isAdmin !== 'undefined' && isAdmin) ? '' : 'pointer-events: none; opacity: 0.6;' %>">
+                                                <a href="/course/<%= courseName %>/video/<%= lecture.contentId %>" class="lecture-link" data-content-id="<%= lecture.contentId %>" style="color: var(--color-text); font-size: 14px;">
                                                     <%= lIndex + 1 %>. <%= lecture.title %>
                                                 </a>
                                             </div>
@@ -478,8 +478,8 @@
                     </div>
                     <div class="card-body">
                         <div style="font-size: 32px; font-weight: 800; margin-bottom: 16px;">Free <span style="font-size: 16px; text-decoration: line-through; opacity: 0.5;">$94.99</span></div>
-                        <button class="btn btn-primary btn-full btn-lg" style="margin-bottom: 12px; height: 48px;">Enroll Now</button>
-                        <button class="btn btn-default btn-full" style="height: 48px;">Add to Wishlist</button>
+                        <button id="enrollBtnSidebar" class="btn btn-primary btn-full btn-lg" style="margin-bottom: 12px; height: 48px;">Enroll Now</button>
+                        <button id="wishlistBtn" class="btn btn-default btn-full" style="height: 48px;">Add to Wishlist</button>
                         
                         <div style="margin-top: 24px;">
                             <h4 style="font-size: 14px; margin-bottom: 12px;">This course includes:</h4>
@@ -495,7 +495,11 @@
             </aside>
         </div>
     </div>
-
+    <!-- Data for JS -->
+    <input type="hidden" id="course_id_data" value="<%= typeof courseId !== 'undefined' ? courseId : '' %>">
+    <input type="hidden" id="watched_percent_data" value="<%= typeof watchedPercent !== 'undefined' ? watchedPercent : 0 %>">
+    <input type="hidden" id="is_admin_data" value="<%= typeof isAdmin !== 'undefined' ? isAdmin : 'false' %>">
+    <input type="hidden" id="course_name_data" value="<%= courseName %>">
 
     <script>
         // Theme management
@@ -543,13 +547,20 @@
                 if (data.success && data.data.enrolled) {
                     isEnrolled = true;
                     const enrollBtn = document.getElementById('enrollBtn');
-                    enrollBtn.textContent = 'Enrolled ✓';
-                    enrollBtn.style.background = '#00ED64';
-                    enrollBtn.style.color = '#001E2B';
-                    enrollBtn.disabled = true;
-                    enrollBtn.style.display = 'none';
+                    if (enrollBtn) {
+                        enrollBtn.textContent = 'Enrolled ✓';
+                        enrollBtn.style.background = '#00ED64';
+                        enrollBtn.style.color = '#001E2B';
+                        enrollBtn.disabled = true;
+                        enrollBtn.style.display = 'none';
+                    }
+                    if (enrollBtnSidebar) {
+                        enrollBtnSidebar.textContent = 'Enrolled ✓';
+                        enrollBtnSidebar.disabled = true;
+                    }
                 }
                 
+                applyDynamicStates();
                 updateWatchButtons();
             } catch (error) {
                 console.error('Error checking enrollment:', error);
@@ -577,31 +588,64 @@
             });
         }
 
-        document.getElementById('enrollBtn').addEventListener('click', async () => {
+        const enrollBtn = document.getElementById('enrollBtn');
+        const enrollBtnSidebar = document.getElementById('enrollBtnSidebar');
+        const wishlistBtn = document.getElementById('wishlistBtn');
+        
+        const courseId = document.getElementById('course_id_data').value;
+        const watchedPercent = parseInt(document.getElementById('watched_percent_data').value || '0');
+        isAdmin = document.getElementById('is_admin_data').value === 'true';
+        const courseNameStr = document.getElementById('course_name_data').value;
+
+        // Apply dynamic styles safely
+        function applyDynamicStates() {
+            const progressFill = document.getElementById('courseProgressFill');
+            if (progressFill) progressFill.style.width = watchedPercent + '%';
+
+            const lectureLinks = document.querySelectorAll('.lecture-link');
+            lectureLinks.forEach(link => {
+                if (!isAdmin && !isEnrolled) {
+                    link.style.pointerEvents = 'none';
+                    link.style.opacity = '0.6';
+                } else {
+                    link.style.pointerEvents = 'auto';
+                    link.style.opacity = '1';
+                }
+            });
+        }
+
+        async function enroll() {
             if (isEnrolled) return;
+            const token = localStorage.getItem('accessToken');
+            const targetId = courseId || courseNameStr;
             
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
             try {
-                const token = localStorage.getItem('accessToken');
-                const courseName = '<%= courseName %>';
-                
                 const response = await fetch('/api/enrollments', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ courseId: courseName })
+                    body: JSON.stringify({ courseId: targetId })
                 });
                 
                 const data = await response.json();
                 if (data.success) {
                     isEnrolled = true;
-                    const enrollBtn = document.getElementById('enrollBtn');
-                    enrollBtn.textContent = 'Enrolled ✓';
-                    enrollBtn.style.background = '#00ED64';
-                    enrollBtn.style.color = '#001E2B';
-                    enrollBtn.disabled = true;
-                    enrollBtn.style.display = 'none';
+                    [enrollBtn, enrollBtnSidebar].forEach(btn => {
+                        if (btn) {
+                            btn.textContent = 'Enrolled ✓';
+                            btn.style.background = '#00ED64';
+                            btn.style.color = '#001E2B';
+                            btn.disabled = true;
+                        }
+                    });
+                    applyDynamicStates();
                     updateWatchButtons();
                 } else {
                     alert('Failed to enroll: ' + data.error);
@@ -609,7 +653,38 @@
             } catch (error) {
                 alert('Error enrolling: ' + error.message);
             }
-        });
+        }
+
+        async function addToWishlist() {
+            const token = localStorage.getItem('accessToken');
+            const targetId = courseId || courseNameStr;
+            
+            try {
+                const response = await fetch('/api/wishlist/add', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ courseId: targetId })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    wishlistBtn.textContent = 'Wishlisted ✓';
+                    wishlistBtn.style.color = '#00ED64';
+                    wishlistBtn.disabled = true;
+                } else {
+                    alert('Wishlist failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('Wishlist error: ' + error.message);
+            }
+        }
+
+        if (enrollBtn) enrollBtn.addEventListener('click', enroll);
+        if (enrollBtnSidebar) enrollBtnSidebar.addEventListener('click', enroll);
+        if (wishlistBtn) wishlistBtn.addEventListener('click', addToWishlist);
     </script>
 </body>
 </html>
