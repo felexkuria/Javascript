@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Enrollment = require('../../models/Enrollment');
 const Course = require('../../models/Course');
 const User = require('../../models/User');
@@ -49,14 +50,8 @@ router.post('/', async (req, res) => {
     
     // Update course enrollment count
     try {
-      const Course = require('../../models/Course');
-      const mongoose = require('mongoose');
-      const query = mongoose.Types.ObjectId.isValid(courseId) 
-        ? { _id: courseId } 
-        : { name: courseId };
-        
-      await Course.findOneAndUpdate(
-        query,
+      await Course.findByIdAndUpdate(
+        actualCourseId,
         { $inc: { enrollments: 1 } }
       );
     } catch (err) {
@@ -107,7 +102,22 @@ router.get('/check/:courseId', async (req, res) => {
       return res.status(401).json({ success: false, error: 'User not authenticated' });
     }
 
-    const enrollment = await Enrollment.findOne({ userId: userEmail, courseId });
+    // 1. Find the actual course based on the provided ID/Slug/Title
+    const slug = courseId.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const course = await Course.findOne({
+      $or: [
+        { _id: mongoose.Types.ObjectId.isValid(courseId) ? courseId : null },
+        { slug: slug },
+        { title: courseId },
+        { name: courseId }
+      ].filter(q => q._id !== null || q.slug || q.title || q.name)
+    });
+
+    if (!course) {
+      return res.status(404).json({ success: false, error: 'Course not found' });
+    }
+
+    const enrollment = await Enrollment.findOne({ userId: userEmail, courseId: course._id });
 
     res.json({
       success: true,

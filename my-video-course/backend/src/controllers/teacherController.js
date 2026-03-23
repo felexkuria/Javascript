@@ -53,14 +53,14 @@ class TeacherController {
       const user = req.user || req.session?.user;
       const userId = user?.email || 'default_user';
       
-      const enrollments = await Enrollment.find({ user: userId })
-        .populate('course')
+      const enrollments = await Enrollment.find({ userId: userId })
+        .populate('courseId')
         .lean();
       
       const allCourses = await Course.find({ isPublished: true }).lean();
       
       const studentCourses = enrollments.map(enrol => {
-        const course = enrol.course;
+        const course = enrol.courseId;
         if (!course) return null;
         
         const totalLectures = course.sections?.reduce((sum, s) => sum + (s.lectures?.length || 0), 0) || 0;
