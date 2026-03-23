@@ -181,6 +181,41 @@
                         <p style="color: var(--color-text-muted); margin-bottom: 32px;">You haven't enrolled in any courses yet.</p>
                         <a href="/courses" class="btn btn-primary" style="padding: 12px 32px;">Explore Courses</a>
                     </div>
+            <div style="margin-top: 48px; margin-bottom: 24px;">
+                <h2 style="font-size: 24px; font-weight: 800; letter-spacing: -0.01em;">Discover More</h2>
+                <p style="color: var(--color-text-muted);">Explore our library of engineering courses.</p>
+            </div>
+
+            <div class="learning-grid">
+                <% if (typeof allCourses !== 'undefined' && allCourses.length > 0) { %>
+                    <% 
+                        const enrolledIds = new Set(courses.map(c => (c.id || c._id)?.toString()));
+                        const discoverableCourses = allCourses.filter(c => !enrolledIds.has(c._id?.toString()));
+                    %>
+                    <% if (discoverableCourses.length > 0) { %>
+                        <% discoverableCourses.forEach(course => { %>
+                            <div class="learning-card">
+                                <div class="card-thumbnail" style="background: linear-gradient(135deg, #023430 0%, #001E2B 100%);">
+                                    🎓
+                                </div>
+                                <div style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
+                                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;"><%= course.title %></h3>
+                                    <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 24px;"><%= course.instructor || 'Engineer Felex' %></p>
+                                    
+                                    <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="font-size: 12px; font-weight: 700; color: var(--mdb-green);">Available</div>
+                                        <a href="/course/<%= encodeURIComponent(course.title) %>" class="btn btn-secondary" style="font-size: 12px; padding: 6px 16px; border-radius: 8px;">
+                                            Learn More
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p class="text-muted">You have enrolled in all available courses! ✨</p>
+                    <% } %>
+                <% } else { %>
+                    <p class="text-muted">No other courses available at the moment.</p>
                 <% } %>
             </div>
         </main>

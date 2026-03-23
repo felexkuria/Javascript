@@ -156,6 +156,23 @@ class TeacherController {
       res.status(500).render('error', { message: 'Error creating course: ' + error.message });
     }
   }
+
+  async renderUploadCenter(req, res) {
+    try {
+      const user = req.user || req.session?.user;
+      const userId = user?.id || user?.email || 'guest';
+      
+      const courses = await Course.find({ instructorId: userId }).lean();
+      
+      res.render('teacher-upload-center', { 
+        user,
+        courses 
+      });
+    } catch (error) {
+      console.error('Error rendering upload center:', error);
+      res.status(500).render('error', { message: 'Error loading upload center: ' + error.message });
+    }
+  }
 }
 
 module.exports = new TeacherController();

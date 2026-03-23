@@ -32,7 +32,7 @@ router.post('/course-new', sessionAuth, teacherAuth, (req, res) => {
 });
 
 router.get('/upload-center', sessionAuth, teacherAuth, (req, res) => {
-  res.render('teacher-upload-center', { user: req.user });
+  teacherController.renderUploadCenter(req, res);
 });
 
 router.get('/enterprise-upload', sessionAuth, teacherAuth, (req, res) => {

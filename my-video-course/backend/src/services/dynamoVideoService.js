@@ -4,7 +4,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Use environment-specific table names
-const TABLE_PREFIX = process.env.NODE_ENV === 'production' ? 'video-course' : 'video-course-dev';
+const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+const TABLE_PREFIX = `video-course-app-videos-${environment}`;
 
 class DynamoVideoService {
   constructor() {

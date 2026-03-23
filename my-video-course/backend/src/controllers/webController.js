@@ -43,6 +43,14 @@ class WebController {
       
       // 2. Fetch from MongoDB Enrollments (New Architecture)
       try {
+        const mongoose = require('mongoose');
+        console.log(`📡 MongoDB State for Dashboard: ${mongoose.connection.readyState} (1=Connected)`);
+        console.log(`📡 Database Name: ${mongoose.connection.db?.databaseName}`);
+
+        // Broad find for debugging if specific find fails
+        const allEnrollments = await Enrollment.find({}).lean();
+        console.log(`🔍 DEBUG: Total enrollments in DB: ${allEnrollments.length}`);
+        
         const enrollments = await Enrollment.find({ 
           userId: { $regex: new RegExp(`^${userId}$`, 'i') } 
         }).populate('courseId').lean();
