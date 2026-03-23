@@ -426,11 +426,60 @@
             };
 
             xhr.onload = function() {
-                const data = JSON.parse(xhr.responseText);
-                if (data.success) {
-                    alert('Upload successful!');
-                    window.location.reload();
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const data = JSON.parse(xhr.responseText);
+                    console.log('Upload success:', data);
+                    
+                    if (progressContainer) progressContainer.style.display = 'none';
+
+                    // Find the item being updated
+                    const lectureItem = document.querySelector(`[data-lecture-id="${progressId}"]`);
+                    if (lectureItem) {
+                        // Update Video Upload Status
+                        const uploadBtn = lectureItem.querySelector('.btn-upload');
+                        if (uploadBtn) {
+                            const statusPill = document.createElement('span');
+                            statusPill.className = 'status-pill status-published';
+                            statusPill.style.padding = '2px 8px';
+                            statusPill.textContent = 'Uploaded';
+                            uploadBtn.replaceWith(statusPill);
+                        }
+                    } else {
+                        // This might be a new resource upload to a section
+                        // In this case progressId was the sectionId
+                        const sectionCard = document.querySelector(`[data-section-id="${progressId}"]`);
+                        if (sectionCard) {
+                            const lectList = sectionCard.querySelector('.lecture-list');
+                            const addBtn = lectList.querySelector('.btn-add'); // Find the first add button to insert before
+                            
+                            const newLect = document.createElement('div');
+                            newLect.className = 'lecture-item';
+                            // Note: We don't have the new MongoDB _id here easily without complex mapping, 
+                            // but we can at least show it was added.
+                            newLect.innerHTML = `
+                                <div class="lecture-content">
+                                    <i class="fas fa-file-pdf text-danger"></i>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; font-size: 14px;">
+                                            ${formData.get('video').name} (New Resource)
+                                        </div>
+                                    </div>
+                                    <span class="status-pill status-published" style="padding: 2px 8px; background: #00684A; color: white; border-radius: 4px; font-size: 10px;">Ready</span>
+                                </div>
+                            `;
+                            lectList.insertBefore(newLect, addBtn);
+                        }
+                    }
+                    
+                    // Show a small toast instead of alert for "Reactive" feel
+                    const toast = document.createElement('div');
+                    toast.style = "position:fixed; bottom:20px; right:20px; background:#00ED64; color:#001E2B; padding:12px 24px; border-radius:8px; font-weight:700; z-index:9999; box-shadow:0 4px 12px rgba(0,0,0,0.1); transition: opacity 0.5s;";
+                    toast.textContent = "Upload Complete! ✨";
+                    document.body.appendChild(toast);
+                    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
+
                 } else {
+                    const data = JSON.parse(xhr.responseText || '{"message":"Unknown error"}');
                     alert('Upload failed: ' + data.message);
                     if (progressContainer) progressContainer.style.display = 'none';
                 }

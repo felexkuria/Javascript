@@ -447,33 +447,33 @@
                 </div>
                 <% } %>
                 <h2 class="section-title">Course Content</h2>
-                <div class="curriculum-accordion bg-white dark:bg-[#001E2B] dark:border-[#133A41]" style="border: 1px solid rgba(0,237,100,0.1); border-radius: 12px; overflow: hidden;">
+                <div class="curriculum-accordion bg-white dark:bg-[#001E2B] dark:border-[#133A41]" style="border: 1px solid rgba(0,237,100,0.2); border-radius: 12px; overflow: hidden;">
                     <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
                         <% sections.forEach((section, sIndex) => { %>
                             <div class="curriculum-section border-b border-gray-100 dark:border-[#133A41] last:border-0">
-                                <div class="section-header cursor-pointer flex justify-between items-center transition-colors hover:bg-gray-50 dark:hover:bg-[#023430] bg-gray-50 dark:bg-[#001E2B] dark:text-[#E7EEEB]" 
+                                <div class="section-header cursor-pointer flex justify-between items-center transition-colors hover:bg-gray-50 dark:hover:bg-[#023430] bg-gray-50 dark:bg-[#001E2B] dark:text-[#F9FBFA]" 
                                      onclick="toggleSection(this)"
                                      style="padding: 16px 24px; font-size: 15px;">
                                     <div class="flex items-center gap-3">
-                                        <span class="toggle-icon transition-transform duration-200">▶</span>
-                                        <strong class="dark:text-[#E7EEEB] text-[#1d1d1f]">Section <%= sIndex + 1 %>: <%= section.title %></strong>
+                                        <span class="toggle-icon transition-transform duration-200 dark:text-[#00ED64]">▶</span>
+                                        <strong class="dark:text-[#F9FBFA] text-[#1d1d1f]">Section <%= sIndex + 1 %>: <%= section.title %></strong>
                                     </div>
                                     <span class="text-xs opacity-60 dark:text-[#9FB1AD] text-[#6e6e73]"><%= section.lectures.length %> Lectures</span>
                                 </div>
                                 <div class="section-lectures" style="display:none;">
                                     <% section.lectures.forEach((lecture, lIndex) => { %>
                                         <div class="lecture-row hover:bg-gray-50 dark:hover:bg-[#023430]/30 transition-colors dark:border-[#133A41]" 
-                                             style="padding: 12px 24px 12px 48px; border-bottom: 1px solid rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center;">
+                                             style="padding: 12px 24px 12px 48px; border-bottom: 1px solid rgba(0,237,100,0.1); display: flex; justify-content: space-between; align-items: center;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
-                                                <span class="text-lg opacity-70"><%= lecture.type === 'video' ? '📺' : '📄' %></span>
+                                                <span class="text-lg opacity-70 dark:text-[#00ED64]"><%= lecture.type === 'video' ? '📺' : '📄' %></span>
                                                 <a href="/course/<%= courseName %>/video/<%= lecture.contentId %>" 
-                                                   class="lecture-link text-sm font-medium hover:text-[#00ED64]" 
+                                                   class="lecture-link text-sm font-medium hover:text-[#00ED64] dark:text-[#F9FBFA]" 
                                                    data-content-id="<%= lecture.contentId %>" 
                                                    style="color: inherit; text-decoration: none;">
                                                     <%= lIndex + 1 %>. <%= lecture.title %>
                                                 </a>
                                             </div>
-                                            <span class="text-[11px] opacity-50 font-mono"><%= Math.floor((lecture.duration || 0) / 60) %>:00</span>
+                                            <span class="text-[11px] opacity-50 font-mono dark:text-[#9FB1AD]"><%= Math.floor((lecture.duration || 0) / 60) %>:00</span>
                                         </div>
                                     <% }); %>
                                 </div>
