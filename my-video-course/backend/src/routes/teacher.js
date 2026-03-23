@@ -11,8 +11,14 @@ const teacherAuth = (req, res, next) => {
   next();
 };
 
+const teacherController = require('../controllers/teacherController');
+
 router.get('/dashboard', sessionAuth, teacherAuth, (req, res) => {
-  res.render('teacher-dashboard', { user: req.user });
+  teacherController.renderDashboard(req, res);
+});
+
+router.get('/course-editor/:id', sessionAuth, teacherAuth, (req, res) => {
+  teacherController.renderCourseEditor(req, res);
 });
 
 router.get('/upload-center', sessionAuth, teacherAuth, (req, res) => {
