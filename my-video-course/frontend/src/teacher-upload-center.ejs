@@ -3,406 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Upload Center - Teacher Dashboard</title>
+    <title>Upload Center - Multitouch Academy</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
-            line-height: 1.47059;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 48px;
-        }
-        
-        .header h1 {
-            font-size: 48px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #1d1d1f;
-        }
-        
-        .header p {
-            font-size: 21px;
-            color: #86868b;
-        }
-        
-        .os-detection {
-            background: white;
-            border-radius: 18px;
-            padding: 32px;
-            margin-bottom: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-        
-        .os-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-        
-        .os-name {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .os-detected {
-            color: #30d158;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .upload-methods {
+        .instructor-layout {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 32px;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+            background: var(--color-bg);
         }
-        
-        .method-card {
-            background: white;
-            border-radius: 18px;
-            padding: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            text-align: center;
-            transition: transform 0.2s ease;
+
+        .instructor-main {
+            padding: var(--space-8);
+            background: var(--color-bg);
+            overflow-y: auto;
         }
-        
-        .method-card:hover {
-            transform: translateY(-4px);
+
+        .upload-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-2xl);
+            border: 1px solid var(--color-border);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: var(--space-8);
+            transition: all 0.3s ease;
         }
-        
-        .method-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+
+        .upload-card:hover {
+            border-color: var(--mdb-green);
         }
-        
-        .method-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-        
-        .method-desc {
-            color: #86868b;
-            margin-bottom: 24px;
-            font-size: 14px;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background: #007aff;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #0056b3;
-        }
-        
-        .btn-secondary {
-            background: #f2f2f7;
-            color: #1d1d1f;
-        }
-        
-        .script-section {
-            background: white;
-            border-radius: 18px;
-            padding: 32px;
-            margin-bottom: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .script-header {
-            display: flex;
-            justify-content: space-between;
+
+        .method-badge {
+            display: inline-flex;
             align-items: center;
-            margin-bottom: 24px;
-        }
-        
-        .script-title {
-            font-size: 20px;
-            font-weight: 600;
-        }
-        
-        .copy-btn {
-            background: #30d158;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(0, 237, 100, 0.1);
+            color: var(--mdb-green);
+            border-radius: 980px;
             font-size: 12px;
+            font-weight: 700;
+            margin-bottom: var(--space-4);
         }
-        
-        .script-content {
-            background: #1d1d1f;
-            color: #f5f5f7;
-            padding: 20px;
-            border-radius: 12px;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 12px;
+
+        .code-block {
+            background: #001E2B;
+            color: #E7EEEB;
+            padding: var(--space-6);
+            border-radius: var(--radius-lg);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 13px;
+            position: relative;
+            margin: var(--space-4) 0;
             overflow-x: auto;
-            margin-bottom: 16px;
         }
-        
-        .instructions {
-            background: #f2f2f7;
-            padding: 20px;
-            border-radius: 12px;
+
+        .copy-trigger {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
         }
-        
-        .instructions h4 {
-            margin-bottom: 12px;
-            color: #1d1d1f;
+
+        .copy-trigger:hover {
+            background: var(--mdb-green);
+            color: var(--mdb-midnight);
         }
-        
-        .instructions ol {
-            margin-left: 20px;
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
-        
-        .instructions li {
-            margin-bottom: 8px;
-            color: #86868b;
+
+        .step-item {
+            display: flex;
+            gap: 12px;
+            font-size: 14px;
+            color: var(--color-text-muted);
         }
-        
-        .status-section {
-            background: white;
-            border-radius: 18px;
-            padding: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            background: var(--mdb-midnight);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
         }
-        
-        .upload-status {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .status-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-        
-        @media (max-width: 768px) {
-            .upload-methods {
-                grid-template-columns: 1fr;
-            }
+
+        .dark .step-number {
+            background: var(--mdb-green);
+            color: var(--mdb-midnight);
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📹 Video Upload Center</h1>
-            <p>Seamlessly upload your course videos to the platform</p>
-        </div>
+<body class="bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
+    <div class="instructor-layout">
+        <%- include('partials/instructor-sidebar', { activePage: 'upload' }) %>
 
-        <div class="os-detection" id="osDetection">
-            <div class="os-icon" id="osIcon">🖥️</div>
-            <div class="os-name" id="osName">Detecting your system...</div>
-            <div class="os-detected">✅ System detected automatically</div>
-        </div>
+        <main class="instructor-main">
+            <header style="margin-bottom: var(--space-10);">
+                <h1 style="font-size: 36px; font-weight: 800; letter-spacing: -0.03em;">Upload Center</h1>
+                <p style="color: var(--color-text-muted); font-size: 17px;">Choose your preferred deployment method for course assets.</p>
+            </header>
 
-        <div class="upload-methods">
-            <div class="method-card">
-                <div class="method-icon">🚀</div>
-                <div class="method-title">Bulk Script Upload</div>
-                <div class="method-desc">Upload multiple videos from your local folder using our automated script</div>
-                <button class="btn btn-primary" onclick="showScript()">Get Upload Script</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8);">
+                <!-- Bulk Deployment Card -->
+                <div class="upload-card">
+                    <span class="method-badge"><i class="fas fa-rocket"></i> RECOMMENDED</span>
+                    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 12px;">Bulk CLI Sync</h2>
+                    <p style="color: var(--color-text-muted); font-size: 14px; margin-bottom: 24px;">Synchronize entire folders of high-definition video assets directly from your local terminal.</p>
+                    
+                    <div style="margin-bottom: 32px;">
+                        <h4 style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 12px;">Quick Start Guide</h4>
+                        <div class="step-list">
+                            <div class="step-item"><span class="step-number">1</span> <div>Install AWS CLI and run <code>aws configure</code></div></div>
+                            <div class="step-item"><span class="step-number">2</span> <div>Navigate to your course video directory</div></div>
+                            <div class="step-item"><span class="step-number">3</span> <div>Execute the generated sync script below</div></div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="showScriptModal()" style="width: 100%; justify-content: center; height: 48px;">
+                        Generate Sync Script
+                    </button>
+                </div>
+
+                <!-- Direct Upload Card -->
+                <div class="upload-card">
+                    <span class="method-badge" style="background: rgba(1, 107, 248, 0.1); color: #016bf8;"><i class="fas fa-cloud-upload-alt"></i> WEB INTERFACE</span>
+                    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 12px;">Direct Browser Upload</h2>
+                    <p style="color: var(--color-text-muted); font-size: 14px; margin-bottom: 24px;">Perfect for quick updates or adding single lessons to an existing curriculum.</p>
+                    
+                    <div style="margin-bottom: 32px;">
+                        <ul class="step-list">
+                            <li class="step-item"><i class="fas fa-check-circle" style="color: var(--mdb-green);"></i> Supports drag & drop</li>
+                            <li class="step-item"><i class="fas fa-check-circle" style="color: var(--mdb-green);"></i> Real-time progress tracking</li>
+                            <li class="step-item"><i class="fas fa-check-circle" style="color: var(--mdb-green);"></i> Automatic S3 optimization</li>
+                        </ul>
+                    </div>
+
+                    <a href="/upload" class="btn btn-secondary" style="width: 100%; justify-content: center; height: 48px; border-radius: 12px;">
+                        Open Web Uploader
+                    </a>
+                </div>
             </div>
 
-            <div class="method-card">
-                <div class="method-icon">📤</div>
-                <div class="method-title">Direct Web Upload</div>
-                <div class="method-desc">Upload individual videos directly through the web interface</div>
-                <a href="/upload" class="btn btn-secondary">Web Upload</a>
+            <!-- Monitoring Section -->
+            <div class="upload-card" style="margin-top: var(--space-8); border-style: dashed;">
+                <h3 style="font-size: 18px; font-weight: 700; margin-bottom: var(--space-4);">Real-time Activity Stream</h3>
+                <div id="activityLog" style="min-height: 100px; display: flex; flex-direction: column; items-center; justify-content: center; color: var(--color-text-muted);">
+                    <div style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;">📊</div>
+                    <p style="font-size: 13px;">No active deployments detected. Use CLI or Web Uploader to start.</p>
+                </div>
             </div>
-        </div>
+        </main>
+    </div>
 
-        <div class="script-section" id="scriptSection" style="display: none;">
-            <div class="script-header">
-                <div class="script-title" id="scriptTitle">Upload Script for Your System</div>
-                <button class="copy-btn" onclick="copyScript()">📋 Copy Script</button>
-            </div>
+    <!-- Script Modal (Simplified for beauty) -->
+    <div id="scriptModal" class="modal-overlay" style="position: fixed; inset: 0; background: rgba(0,30,43,0.8); backdrop-filter: blur(8px); display: none; place-items: center; z-index: 1000;">
+        <div class="modal-content" style="background: var(--color-surface); width: 100%; max-width: 600px; padding: 32px; border-radius: 24px; position: relative;">
+            <button onclick="hideScriptModal()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
+            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Sync Script Generator</h2>
+            <p style="color: var(--color-text-muted); font-size: 14px; margin-bottom: 24px;">Detected Platform: <strong id="detectedOS">Checking...</strong></p>
             
-            <div class="script-content" id="scriptContent">
-                <!-- Script content will be inserted here -->
+            <div class="code-block">
+                <button class="copy-trigger" onclick="copyScript()">Copy Code</button>
+                <code id="scriptOutput">
+                    # Loading deployment script...
+                </code>
             </div>
-            
-            <div class="instructions" id="instructions">
-                <!-- Instructions will be inserted here -->
-            </div>
-        </div>
 
-        <div class="status-section">
-            <h3>📊 Upload Status</h3>
-            <div class="upload-status" id="uploadStatus">
-                <div class="status-icon">⏳</div>
-                <div>Monitoring for new uploads...</div>
-            </div>
+            <p style="font-size: 12px; color: var(--color-text-muted); margin-top: var(--space-4);">
+                <i class="fas fa-info-circle"></i> This script will synchronize <code>.mp4</code> files from your current directory to the production bucket.
+            </p>
         </div>
     </div>
 
     <script>
-        // Detect operating system
-        function detectOS() {
-            const userAgent = navigator.userAgent;
-            const platform = navigator.platform;
+        function initTheme() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+        }
+        initTheme();
+
+        function showScriptModal() {
+            const modal = document.getElementById('scriptModal');
+            modal.style.display = 'grid';
             
-            let os = 'Unknown';
-            let icon = '🖥️';
+            const os = navigator.platform.toLowerCase().includes('mac') ? 'macOS' : 'Windows';
+            document.getElementById('detectedOS').textContent = os;
             
-            if (userAgent.indexOf('Win') !== -1) {
-                os = 'Windows';
-                icon = '🪟';
-            } else if (userAgent.indexOf('Mac') !== -1) {
-                os = 'macOS';
-                icon = '🍎';
-            } else if (userAgent.indexOf('Linux') !== -1) {
-                os = 'Linux';
-                icon = '🐧';
-            }
+            const script = os === 'macOS' ? 
+                `#!/bin/bash\naws s3 sync . s3://video-course-bucket-047ad47c/videos/ --include "*.mp4"` :
+                `# PowerShell\naws s3 sync . s3://video-course-bucket-047ad47c/videos/ --include "*.mp4"`;
             
-            document.getElementById('osIcon').textContent = icon;
-            document.getElementById('osName').textContent = os;
-            
-            return os;
+            document.getElementById('scriptOutput').textContent = script;
         }
 
-        // Show appropriate script based on OS
-        function showScript() {
-            const os = detectOS();
-            const scriptSection = document.getElementById('scriptSection');
-            const scriptTitle = document.getElementById('scriptTitle');
-            const scriptContent = document.getElementById('scriptContent');
-            const instructions = document.getElementById('instructions');
-            
-            scriptSection.style.display = 'block';
-            scriptTitle.textContent = `Upload Script for ${os}`;
-            
-            if (os === 'Windows') {
-                scriptContent.innerHTML = `# PowerShell Script for Windows
-$S3_BUCKET = "video-course-bucket-047ad47c"
-$S3_PREFIX = "videos/dev-ops-bootcamp_202201/"
-$LOCAL_VIDEO_PATH = Get-Location
-
-Write-Host "🎬 Syncing videos from: $LOCAL_VIDEO_PATH"
-
-$videoFiles = Get-ChildItem -Recurse -Include *.mp4,*.mkv,*.avi,*.mov
-
-foreach ($file in $videoFiles) {
-    $s3Key = "$S3_PREFIX$($file.Name)"
-    Write-Host "⬆️ Uploading: $($file.Name)"
-    aws s3 cp "$($file.FullName)" "s3://$S3_BUCKET/$s3Key"
-}
-
-Write-Host "✅ Sync completed!"`;
-                
-                instructions.innerHTML = `
-                    <h4>📋 Windows Setup Instructions:</h4>
-                    <ol>
-                        <li>Install AWS CLI: <code>winget install Amazon.AWSCLI</code></li>
-                        <li>Configure AWS: <code>aws configure</code></li>
-                        <li>Navigate to your video folder in PowerShell</li>
-                        <li>Save script as <code>sync.ps1</code></li>
-                        <li>Run: <code>Set-ExecutionPolicy RemoteSigned</code></li>
-                        <li>Execute: <code>.\\sync.ps1</code></li>
-                    </ol>
-                `;
-            } else if (os === 'macOS') {
-                scriptContent.innerHTML = `#!/bin/bash
-# macOS Upload Script
-S3_BUCKET="video-course-bucket-047ad47c"
-S3_PREFIX="videos/dev-ops-bootcamp_202201/"
-LOCAL_VIDEO_PATH="$(pwd)"
-
-echo "🎬 Syncing videos from: $LOCAL_VIDEO_PATH"
-
-find . -maxdepth 2 -type f \\( -name "*.mp4" -o -name "*.mkv" -o -name "*.avi" -o -name "*.mov" \\) | while read file; do
-    filename=$(basename "$file")
-    s3_key="${S3_PREFIX}${filename}"
-    
-    echo "⬆️ Uploading: $filename"
-    aws s3 cp "$file" "s3://$S3_BUCKET/$s3_key"
-done
-
-echo "✅ Sync completed!"`;
-                
-                instructions.innerHTML = `
-                    <h4>📋 macOS Setup Instructions:</h4>
-                    <ol>
-                        <li>Install AWS CLI: <code>brew install awscli</code></li>
-                        <li>Configure AWS: <code>aws configure</code></li>
-                        <li>Navigate to your video folder in Terminal</li>
-                        <li>Save script as <code>sync.sh</code></li>
-                        <li>Make executable: <code>chmod +x sync.sh</code></li>
-                        <li>Execute: <code>./sync.sh</code></li>
-                    </ol>
-                `;
-            } else {
-                scriptContent.innerHTML = `# Linux Upload Script
-#!/bin/bash
-S3_BUCKET="video-course-bucket-047ad47c"
-S3_PREFIX="videos/dev-ops-bootcamp_202201/"
-
-echo "🎬 Starting upload..."
-aws s3 sync . "s3://$S3_BUCKET/$S3_PREFIX" --include="*.mp4" --include="*.mkv" --include="*.avi"
-echo "✅ Upload completed!"`;
-                
-                instructions.innerHTML = `
-                    <h4>📋 Linux Setup Instructions:</h4>
-                    <ol>
-                        <li>Install AWS CLI: <code>sudo apt install awscli</code></li>
-                        <li>Configure AWS: <code>aws configure</code></li>
-                        <li>Save script as <code>sync.sh</code></li>
-                        <li>Make executable: <code>chmod +x sync.sh</code></li>
-                        <li>Execute: <code>./sync.sh</code></li>
-                    </ol>
-                `;
-            }
-            
-            scriptSection.scrollIntoView({ behavior: 'smooth' });
+        function hideScriptModal() {
+            document.getElementById('scriptModal').style.display = 'none';
         }
 
-        // Copy script to clipboard
         function copyScript() {
-            const scriptContent = document.getElementById('scriptContent').textContent;
-            navigator.clipboard.writeText(scriptContent).then(() => {
-                const btn = document.querySelector('.copy-btn');
-                const originalText = btn.textContent;
-                btn.textContent = '✅ Copied!';
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                }, 2000);
+            const text = document.getElementById('scriptOutput').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-trigger');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Code', 2000);
             });
         }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            detectOS();
-        });
     </script>
 </body>
 </html>

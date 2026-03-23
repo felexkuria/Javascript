@@ -1,6 +1,7 @@
 const dynamoVideoService = require('../services/dynamoVideoService');
 const videoProcessingService = require('../services/videoProcessingService');
 const dynamodb = require('../utils/dynamodb');
+const Course = require('../models/Course');
 const multer = require('multer');
 
 // Configure multer for video uploads
@@ -118,6 +119,23 @@ class CourseController {
       // Save to DynamoDB
       const success = await dynamodb.saveCourse(courseData);
       
+      // Also Save to MongoDB
+      try {
+        await Course.create({
+          title: courseData.title,
+          description: courseData.description,
+          category: courseData.category,
+          instructorId: courseData.createdBy,
+          slug: courseData.slug,
+          sections: []
+        });
+        console.log('✅ Course also saved to MongoDB');
+      } catch (mongoError) {
+        console.error('❌ Failed to save course to MongoDB:', mongoError.message);
+        // We don't fail the whole request if MongoDB fails but DynamoDB succeeded, 
+        // to maintain backward compatibility, but we log it.
+      }
+
       if (!success) {
         return res.status(500).json({
           success: false,

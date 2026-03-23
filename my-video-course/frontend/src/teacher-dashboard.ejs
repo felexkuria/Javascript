@@ -163,25 +163,7 @@
 </head>
 <body>
     <div class="instructor-layout">
-        <!-- Sidebar -->
-        <aside class="instructor-sidebar">
-            <div class="sidebar-brand">
-                <span class="nav-leaf">🍃</span> Multitouch <span>Academy</span>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="/teacher/dashboard" class="nav-item active">📊 Performance</a>
-                <a href="/teacher/courses" class="nav-item">📚 Courses</a>
-                <a href="/teacher/students" class="nav-item">👥 Students</a>
-                <a href="/teacher/communications" class="nav-item">💬 Communications</a>
-                <a href="/teacher/resources" class="nav-item">🛠️ Tools</a>
-            </nav>
-            <div style="margin-top: auto; padding-top: var(--space-6); border-top: 1px solid rgba(255,255,255,0.1);">
-                <a href="/dashboard" class="nav-item">← Student View</a>
-                <a href="/logout" class="nav-item" style="color: #ff3b30;">🚪 Logout</a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
+        <%- include('partials/instructor-sidebar', { activePage: 'dashboard' }) %>
         <main class="instructor-main">
             <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-8);">
                 <div>

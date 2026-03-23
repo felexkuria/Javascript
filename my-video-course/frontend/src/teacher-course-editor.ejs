@@ -154,34 +154,7 @@
 </head>
 <body class="bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
     <div class="instructor-layout">
-        <!-- Sidebar -->
-        <aside class="instructor-sidebar">
-            <div class="sidebar-brand">
-                <span class="nav-leaf">🍃</span> Multitouch <span>Academy</span>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="/teacher/dashboard" class="nav-item">📊 Dashboard</a>
-                <div style="margin: var(--space-4) 0 var(--space-2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5;">Manage Course</div>
-                <a href="?tab=curriculum" class="nav-item <%= activeTab === 'curriculum' ? 'active' : '' %>">
-                    <i class="fas fa-list-ul"></i> Curriculum
-                </a>
-                <a href="?tab=details" class="nav-item <%= activeTab === 'details' ? 'active' : '' %>">
-                    <i class="fas fa-info-circle"></i> Course Details
-                </a>
-                <a href="?tab=pricing" class="nav-item <%= activeTab === 'pricing' ? 'active' : '' %>">
-                    <i class="fas fa-tag"></i> Pricing
-                </a>
-                <a href="?tab=settings" class="nav-item <%= activeTab === 'settings' ? 'active' : '' %>">
-                    <i class="fas fa-cog"></i> Settings
-                </a>
-            </nav>
-            <div style="margin-top: auto; padding-top: var(--space-6); border-top: 1px solid rgba(255,255,255,0.1);">
-                <a href="/course/<%= encodeURIComponent(course.title) %>" target="_blank" class="nav-item">🌐 Preview Course</a>
-                <a href="/logout" class="nav-item" style="color: #ff3b30;">🚪 Logout</a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
+        <%- include('partials/instructor-sidebar', { activePage: 'curriculum' }) %>
         <main class="instructor-main">
             <div class="curriculum-container">
                 <header style="margin-bottom: var(--space-8); display: flex; justify-content: space-between; align-items: flex-end;">
