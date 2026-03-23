@@ -165,7 +165,9 @@
     <div class="instructor-layout">
         <!-- Sidebar -->
         <aside class="instructor-sidebar">
-            <div class="sidebar-brand">MongoDB <span>Academy</span></div>
+            <div class="sidebar-brand">
+                <span class="nav-leaf">🍃</span> Multitouch <span>Academy</span>
+            </div>
             <nav class="sidebar-nav">
                 <a href="/teacher/dashboard" class="nav-item active">📊 Performance</a>
                 <a href="/teacher/courses" class="nav-item">📚 Courses</a>
@@ -258,7 +260,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="#" style="color: var(--mdb-green); font-size: 13px; font-weight: 600; text-decoration: none;">View Details →</a>
+                                        <a href="/teacher/course-editor/<%= course.id %>" style="color: var(--mdb-green); font-size: 13px; font-weight: 600; text-decoration: none;">Manage Curriculum →</a>
                                     </td>
                                 </tr>
                             <% }); %>

@@ -97,6 +97,30 @@ class TeacherController {
       res.status(500).render('error', { message: 'Error loading dashboard: ' + error.message });
     }
   }
+
+  async renderCourseEditor(req, res) {
+    try {
+      const { id } = req.params;
+      const user = req.user || req.session?.user;
+      const userId = user?.email || 'guest';
+
+      // 1. Fetch course from MongoDB
+      const course = await Course.findOne({ _id: id, instructorId: userId }).lean();
+      
+      if (!course) {
+        return res.status(404).render('error', { message: 'Course not found or access denied.' });
+      }
+
+      res.render('teacher-course-editor', {
+        user,
+        course,
+        activeTab: req.query.tab || 'curriculum'
+      });
+    } catch (error) {
+      console.error('Error rendering course editor:', error);
+      res.status(500).render('error', { message: 'Error loading course editor: ' + error.message });
+    }
+  }
 }
 
 module.exports = new TeacherController();
