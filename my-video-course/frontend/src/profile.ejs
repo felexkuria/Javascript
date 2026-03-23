@@ -4,754 +4,291 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learning Progress - Multitouch Academy</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              'mongo-green': '#00ED64',
-              'mongo-slate': '#001E2B',
-              'mongo-forest': '#00684A'
-            },
-            fontFamily: {
-              'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif']
-            }
-          }
-        }
-      }
-    </script>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #F9FBFA;
-            color: #001E2B;
-            line-height: 1.5;
-            font-weight: 400;
-            letter-spacing: -0.01em;
-        }
-        
-        .dark body {
-            background: #001E2B;
-            color: #E7EEEB;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        
-        .profile-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
-        }
-        
-        .header-content h1 {
-            font-size: 48px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            color: #001E2B;
-            letter-spacing: -0.03em;
-        }
-        
-        .dark .header-content h1 {
-            color: #E7EEEB;
-        }
-        
-        .header-content p {
-            font-size: 21px;
-            color: #4C6F73;
-        }
-        
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        
-        .level-badge {
-            width: 60px;
-            height: 60px;
-            border-radius: 30px;
-            background: #00ED64;
-            color: #001E2B;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: 800;
-            box-shadow: 0 0 20px rgba(0, 237, 100, 0.4);
-        }
-        
-        .streak-display {
-            background: white;
-            border-radius: 16px;
-            padding: 16px 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-        
-        .dark .streak-display {
-            background: rgba(2, 52, 48, 0.8);
-            border: 0.5px solid rgba(0, 237, 100, 0.2);
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
-        }
-        
-        .streak-icon {
-            font-size: 24px;
-            margin-bottom: 4px;
-        }
-        
-        .streak-value {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-        
-        .dark .streak-value {
-            color: #00ED64;
-        }
-        
-        .streak-label {
-            font-size: 12px;
-            color: #86868b;
-        }
-        
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(to right, #00ED64, #00C152);
-            color: #001E2B;
-            font-weight: 700;
-        }
-        
-        .btn-primary:hover {
-            box-shadow: 0 0 15px rgba(0, 237, 100, 0.3);
-            transform: translateY(-1px);
-        }
-        
-        .stats-grid {
+        .instructor-layout {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 24px;
-            margin-bottom: 40px;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+            background: var(--color-bg);
         }
-        
-        .stat-card {
-            background: white;
-            border-radius: 18px;
-            padding: 32px;
+
+        .instructor-main {
+            padding: var(--space-8);
+            background: var(--color-bg);
+            overflow-y: auto;
+        }
+
+        .profile-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-2xl);
+            border: 1px solid var(--color-border);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-8);
+        }
+
+        .glass-stat-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
         }
-        
-        .dark .stat-card {
-            background: rgba(2, 52, 48, 0.8);
-            border: 0.5px solid rgba(0, 237, 100, 0.1);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+
+        .dark .glass-stat-card {
+            background: rgba(2, 52, 48, 0.4);
+            border: 1px solid rgba(0, 237, 100, 0.1);
         }
-        
-        .stat-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+
+        .glass-stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--mdb-green);
         }
-        
-        .stat-value {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1d1d1f;
-        }
-        
-        .dark .stat-value {
-            color: #00ED64;
-        }
-        
-        .stat-label {
-            font-size: 16px;
-            color: #86868b;
-        }
-        
-        .level-progress-card {
-            background: white;
-            border-radius: 18px;
-            padding: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            margin-bottom: 40px;
-        }
-        
-        .dark .level-progress-card {
-            background: rgba(2, 52, 48, 0.8);
-            border: 0.5px solid rgba(0, 237, 100, 0.2);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
-        }
-        
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-        
-        .progress-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-        
-        .dark .progress-title {
-            color: #00ED64;
-        }
-        
-        .level-info {
-            font-size: 16px;
-            color: #86868b;
-        }
-        
-        .progress-bar {
+
+        .xp-progress-container {
             width: 100%;
             height: 12px;
-            background: #f2f2f7;
-            border-radius: 6px;
+            background: var(--color-bg-alt);
+            border-radius: 980px;
             overflow: hidden;
-            margin-bottom: 16px;
+            margin: 16px 0;
         }
-        
-        .dark .progress-bar {
-            background: #2c2c2e;
-        }
-        
-        .progress-fill {
+
+        .xp-progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #00ED64, #00684A);
-            border-radius: 6px;
-            transition: width 0.3s ease;
-            box-shadow: 0 0 10px rgba(0, 237, 100, 0.4);
+            background: linear-gradient(90deg, var(--mdb-green), var(--mdb-green-dark));
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 15px rgba(0, 237, 100, 0.3);
         }
-        
-        .xp-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            color: #86868b;
-        }
-        
-        .achievements-card {
-            background: white;
-            border-radius: 18px;
-            padding: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            margin-bottom: 40px;
-        }
-        
-        .dark .achievements-card {
-            background: rgba(2, 52, 48, 0.8);
-            border: 0.5px solid rgba(0, 237, 100, 0.1);
-        }
-        
-        .achievements-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 32px;
-            color: #1d1d1f;
-        }
-        
-        .dark .achievements-title {
-            color: #00ED64;
-        }
-        
-        .achievements-grid {
+
+        .achievement-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 20px;
         }
-        
+
         .achievement-card {
-            background: #f2f2f7;
-            border-radius: 16px;
+            background: var(--color-bg-alt);
+            border-radius: var(--radius-lg);
             padding: 24px;
             text-align: center;
-            transition: all 0.2s ease;
+            opacity: 0.5;
+            filter: grayscale(1);
+            transition: all 0.4s ease;
+            position: relative;
         }
-        
-        .dark .achievement-card {
-            background: #001E2B;
-            border: 0.5px solid rgba(0, 237, 100, 0.1);
-        }
-        
+
         .achievement-card.earned {
-            background: linear-gradient(135deg, #00ED64, #00684A);
-            color: #001E2B;
+            opacity: 1;
+            filter: grayscale(0);
+            background: var(--color-surface);
+            border: 1px solid var(--mdb-green-light);
+            box-shadow: var(--shadow-md);
         }
-        
-        .achievement-card.earned .achievement-name,
-        .achievement-card.earned .achievement-description,
-        .achievement-card.earned .achievement-points {
-            color: #001E2B;
-        }
-        
-        .achievement-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-        
-        .achievement-name {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1d1d1f;
-        }
-        
-        .dark .achievement-name {
-            color: #f5f5f7;
-        }
-        
-        .achievement-description {
-            font-size: 14px;
-            color: #86868b;
-            margin-bottom: 8px;
-        }
-        
-        .achievement-points {
-            font-size: 12px;
-            color: #86868b;
-        }
-        
-        .calendar-card {
-            background: white;
-            border-radius: 18px;
-            padding: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .dark .calendar-card {
-            background: rgba(2, 52, 48, 0.8);
-            border: 0.5px solid rgba(0, 237, 100, 0.1);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
-        }
-        
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-        }
-        
-        .calendar-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-        
-        .dark .calendar-title {
-            color: #00ED64;
-        }
-        
-        .calendar-nav {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        
-        .nav-btn {
-            width: 36px;
-            height: 36px;
-            border: none;
-            border-radius: 18px;
-            background: #f2f2f7;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-        
-        .dark .nav-btn {
-            background: #001E2B;
-            color: #00ED64;
-            border: 0.5px solid rgba(0, 237, 100, 0.2);
-        }
-        
-        .nav-btn:hover {
-            background: #e5e5ea;
+
+        .achievement-card.earned .achievement-icon {
             transform: scale(1.1);
+            text-shadow: 0 0 10px rgba(0, 237, 100, 0.4);
         }
-        
-        .dark .nav-btn:hover {
-            background: #3a3a3c;
-        }
-        
-        .calendar-month {
-            font-size: 16px;
-            font-weight: 500;
-            min-width: 120px;
-            text-align: center;
-            color: #001E2B;
-        }
-        
-        .dark .calendar-month {
-            color: #E7EEEB;
-        }
-        
-        .calendar-weekdays {
+
+        /* Calendar Styling */
+        .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 8px;
-            margin-bottom: 16px;
         }
-        
-        .weekday {
-            text-align: center;
-            font-size: 14px;
-            font-weight: 500;
-            color: #4C6F73;
-            padding: 12px 0;
-        }
-        
-        .calendar-days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-        
+
         .calendar-day {
-            width: 40px;
-            height: 40px;
-            border-radius: 20px;
+            aspect-ratio: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--color-bg-alt);
+            color: var(--color-text-muted);
+            cursor: default;
             position: relative;
         }
-        
-        .calendar-day.current-month {
-            background: #F0F2F2;
-            color: #001E2B;
-        }
-        
-        .dark .calendar-day.current-month {
-            background: #001E2B;
-            border: 1px solid rgba(0, 237, 100, 0.1);
-            color: #f5f5f7;
-        }
-        
-        .calendar-day.other-month {
-            background: #f9f9f9;
-            color: #86868b;
-        }
-        
-        .dark .calendar-day.other-month {
-            background: #1a1a1a;
-            color: #86868b;
-        }
-        
+
+        .calendar-day.current-month { color: var(--color-text); }
         .calendar-day.has-activity {
-            background: #00ED64;
-            color: #001E2B;
-            font-weight: 700;
+            background: var(--mdb-green-light);
+            color: var(--mdb-green-dark);
+            border: 1px solid var(--mdb-green);
         }
-        
         .calendar-day.today {
-            box-shadow: 0 0 0 2px #00ED64;
+            box-shadow: 0 0 0 2px var(--mdb-midnight);
         }
-        
+        .dark .calendar-day.today {
+            box-shadow: 0 0 0 2px var(--mdb-green);
+        }
+
         .activity-indicator {
             position: absolute;
-            top: -2px;
-            right: -2px;
+            top: -4px;
+            right: -4px;
+            background: var(--mdb-midnight);
+            color: #fff;
             width: 16px;
             height: 16px;
-            background: #00ED64;
-            border: 2px solid white;
-            border-radius: 8px;
+            border-radius: 50%;
             font-size: 10px;
-            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #001E2B;
-        }
-        
-        .calendar-footer {
-            margin-top: 24px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            color: #4C6F73;
-        }
-        
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 44px;
-            height: 44px;
-            border: none;
-            border-radius: 22px;
-            background: white;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.2s ease;
-            z-index: 1000;
-            border: 1px solid transparent;
-        }
-        
-        .dark .theme-toggle {
-            background: #023430;
-            color: #00ED64;
-            border-color: rgba(0, 237, 100, 0.2);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
-        
-        .theme-toggle:hover {
-            transform: scale(1.1);
-        }
-        
-        @media (max-width: 768px) {
-            .profile-header {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            .header-actions {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .achievements-grid {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
-<body>
-    <button class="theme-toggle" id="themeToggle">🌙</button>
-    
-    <div class="container">
-        <div class="profile-header">
-            <div class="header-content">
-                <h1>Learning Progress</h1>
-                <p>Track your achievements and learning journey</p>
-            </div>
-            <div class="header-actions">
-                <button id="refresh-stats" class="btn btn-primary">
-                    🔄 Refresh
+<body class="bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
+    <div class="instructor-layout">
+        <%- include('partials/student-sidebar', { activePage: 'profile' }) %>
+
+        <main class="instructor-main">
+            <header style="margin-bottom: var(--space-10); display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <h1 style="font-size: 40px; font-weight: 800; letter-spacing: -0.04em;">Learning Progress</h1>
+                    <p style="color: var(--color-text-muted); font-size: 18px;">Track your journey to engineering mastery.</p>
+                </div>
+                <button id="refresh-stats" class="btn btn-secondary" style="height: 44px; border-radius: 12px; font-weight: 700;">
+                    <i class="fas fa-sync-alt"></i> Refresh Stats
                 </button>
-                <div class="level-badge user-level">1</div>
-                <div class="streak-display">
-                    <div class="streak-icon">🔥</div>
-                    <div class="streak-value user-streak">0</div>
-                    <div class="streak-label">day streak</div>
+            </header>
+
+            <!-- Quick Stats -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 48px;">
+                <div class="glass-stat-card">
+                    <div style="font-size: 24px; margin-bottom: 8px;">📺</div>
+                    <div id="videos-watched" style="font-size: 28px; font-weight: 800;">0</div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6;">Lessons Watched</div>
+                </div>
+                <div class="glass-stat-card">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🎓</div>
+                    <div id="courses-completed" style="font-size: 28px; font-weight: 800;">0</div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6;">Courses Finished</div>
+                </div>
+                <div class="glass-stat-card">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🏆</div>
+                    <div id="achievements-earned" style="font-size: 28px; font-weight: 800;">0/0</div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6;">Achievements</div>
+                </div>
+                <div class="glass-stat-card">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🔥</div>
+                    <div id="longest-streak" style="font-size: 28px; font-weight: 800;">0</div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6;">Day Streak</div>
                 </div>
             </div>
-        </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🏆</div>
-                <div class="stat-value user-points">0</div>
-                <div class="stat-label">Total Points</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">📺</div>
-                <div class="stat-value" id="videos-watched">0</div>
-                <div class="stat-label">Videos Watched</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">📚</div>
-                <div class="stat-value" id="courses-completed">0</div>
-                <div class="stat-label">Courses Completed</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-value" id="achievements-earned">0</div>
-                <div class="stat-label">Achievements</div>
-            </div>
-        </div>
+            <div style="display: grid; grid-template-columns: 1fr 340px; gap: 40px;">
+                <div class="profile-left">
+                    <!-- Progress Card -->
+                    <div class="profile-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                            <h2 style="font-size: 22px; font-weight: 700;">Current Level</h2>
+                            <span style="padding: 4px 12px; background: var(--mdb-midnight); color: var(--mdb-green); border-radius: 8px; font-weight: 800; font-size: 14px;">LEVEL <span id="user-level">1</span></span>
+                        </div>
+                        <div class="xp-progress-container">
+                            <div id="level-progress" class="xp-progress-fill"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--color-text-muted);">
+                            <span id="current-xp">0 XP</span>
+                            <span id="next-level-xp">100 XP</span>
+                        </div>
+                    </div>
 
-        <div class="level-progress-card">
-            <div class="progress-header">
-                <h2 class="progress-title">Level Progress</h2>
-                <span class="level-info">Level <span class="user-level">1</span></span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="level-progress" style="width: 0%"></div>
-            </div>
-            <div class="xp-info">
-                <span id="current-xp">0 XP</span>
-                <span id="next-level-xp">100 XP</span>
-            </div>
-        </div>
-
-        <div class="achievements-card">
-            <h2 class="achievements-title">Achievements</h2>
-            <div class="achievements-grid" id="achievements-container">
-                <!-- Achievements populated by JavaScript -->
-            </div>
-        </div>
-
-        <div class="calendar-card">
-            <div class="calendar-header">
-                <h2 class="calendar-title">Learning Streak</h2>
-                <div class="calendar-nav">
-                    <button id="prev-month" class="nav-btn">‹</button>
-                    <span id="calendar-month" class="calendar-month"></span>
-                    <button id="next-month" class="nav-btn">›</button>
+                    <!-- Achievements -->
+                    <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 24px;">Achievements</h3>
+                    <div id="achievements-container" class="achievement-grid">
+                        <!-- Populated by JS -->
+                    </div>
                 </div>
+
+                <aside class="profile-right">
+                    <!-- Streak Calendar -->
+                    <div class="profile-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                            <h3 id="calendar-month" style="font-size: 16px; font-weight: 700;">March 2026</h3>
+                            <div style="display: flex; gap: 8px;">
+                                <button id="prev-month" style="background: none; border: none; cursor: pointer; opacity: 0.6;"><i class="fas fa-chevron-left"></i></button>
+                                <button id="next-month" style="background: none; border: none; cursor: pointer; opacity: 0.6;"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="calendar-grid" id="streak-calendar">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--color-border);">
+                            <div style="display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--color-text-muted);">
+                                <div style="width: 12px; height: 12px; background: var(--mdb-green-light); border-radius: 2px;"></div>
+                                <span>Study sessions completed</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
             </div>
-            
-            <div class="calendar-weekdays">
-                <div class="weekday">Sun</div>
-                <div class="weekday">Mon</div>
-                <div class="weekday">Tue</div>
-                <div class="weekday">Wed</div>
-                <div class="weekday">Thu</div>
-                <div class="weekday">Fri</div>
-                <div class="weekday">Sat</div>
-            </div>
-            
-            <div class="calendar-days" id="streak-calendar">
-                <!-- Calendar populated by JavaScript -->
-            </div>
-            
-            <div class="calendar-footer">
-                <span>Current Streak: <strong class="user-streak">0</strong> days</span>
-                <span>Longest Streak: <strong id="longest-streak">0</strong> days</span>
-            </div>
-        </div>
+        </main>
     </div>
 
+    <!-- Core Gamification Scripts -->
     <script src="/js/gamification.js"></script>
     <script>
-        // Theme management
-        function initTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.classList.toggle('dark', theme === 'dark');
-            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
-        }
-        
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const newTheme = isDark ? 'light' : 'dark';
-            document.documentElement.classList.toggle('dark', newTheme === 'dark');
-            localStorage.setItem('theme', newTheme);
-            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
-        }
-        
-        initTheme();
-        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        document.addEventListener('DOMContentLoaded', () => {
+            function initTheme() {
+                const theme = localStorage.getItem('theme') || 'light';
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+            }
+            initTheme();
 
-        document.addEventListener('DOMContentLoaded', function() {
-            let retryCount = 0;
-            const maxRetries = 10;
-            
-            function tryUpdateProfile() {
+            let currentCalendarDate = new Date();
+            let watchDatesData = [];
+
+            const tryUpdateProfile = () => {
                 if (window.gamificationSystem) {
                     updateProfileDisplay();
-                } else if (retryCount < maxRetries) {
-                    retryCount++;
-                    setTimeout(tryUpdateProfile, 500);
                 } else {
-                    console.error('Gamification system failed to load');
-                    showFallbackData();
+                    setTimeout(tryUpdateProfile, 100);
+                }
+            };
+
+            async function loadWatchDates() {
+                try {
+                    const response = await fetch('/api/videos/watch-dates');
+                    if (response.ok) {
+                        watchDatesData = await response.json();
+                    }
+                } catch (error) {
+                    console.warn('Failed to load watch dates:', error);
                 }
             }
-            
-            function showFallbackData() {
-                const elements = {
-                    'videos-watched': '0',
-                    'courses-completed': '0', 
-                    'achievements-earned': '0/8',
-                    'current-xp': '0 XP',
-                    'next-level-xp': '100 XP',
-                    'longest-streak': '0'
-                };
-                
-                Object.entries(elements).forEach(([id, value]) => {
-                    const el = document.getElementById(id);
-                    if (el) el.textContent = value;
-                });
-            }
-            
-            loadWatchDates().then(() => {
-                if (window.gamificationSystem) {
-                    window.gamificationSystem.syncWithLocalStorageVideos().then(() => {
-                        updateProfileDisplay();
-                    });
-                } else {
-                    updateProfileDisplay();
-                }
-            });
-            
+
             async function updateProfileDisplay() {
-                if (!window.gamificationSystem) {
-                    console.warn('Gamification system not loaded yet');
-                    return;
-                }
+                if (!window.gamificationSystem) return;
                 
                 const progress = await window.gamificationSystem.getProgressSummary();
                 
-                const videosWatchedEl = document.getElementById('videos-watched');
-                const coursesCompletedEl = document.getElementById('courses-completed');
-                const achievementsEarnedEl = document.getElementById('achievements-earned');
+                document.getElementById('videos-watched').textContent = progress.videosWatched || 0;
+                document.getElementById('courses-completed').textContent = progress.coursesCompleted || 0;
+                document.getElementById('achievements-earned').textContent = `${progress.achievements || 0}/${progress.totalAchievements || 0}`;
+                document.getElementById('longest-streak').textContent = progress.longestStreak || 0;
+                document.getElementById('user-level').textContent = progress.level || 1;
                 
-                if (videosWatchedEl) {
-                    videosWatchedEl.textContent = progress.videosWatched || 0;
-                }
-                if (coursesCompletedEl) coursesCompletedEl.textContent = progress.coursesCompleted || 0;
-                if (achievementsEarnedEl) achievementsEarnedEl.textContent = `${progress.achievements || 0}/${progress.totalAchievements || 0}`;
-                
-                // Update level progress
                 const xpForNextLevel = (progress.level || 1) * 100;
                 const currentXP = window.gamificationSystem.userStats?.experiencePoints || 0;
-                const progressPercent = (currentXP / xpForNextLevel) * 100;
+                const progressPercent = Math.min((currentXP / xpForNextLevel) * 100, 100);
                 
-                const levelProgressEl = document.getElementById('level-progress');
-                const currentXpEl = document.getElementById('current-xp');
-                const nextLevelXpEl = document.getElementById('next-level-xp');
-                const longestStreakEl = document.getElementById('longest-streak');
-                
-                if (levelProgressEl) levelProgressEl.style.width = `${progressPercent}%`;
-                if (currentXpEl) currentXpEl.textContent = `${currentXP} XP`;
-                if (nextLevelXpEl) nextLevelXpEl.textContent = `${xpForNextLevel} XP`;
-                if (longestStreakEl) longestStreakEl.textContent = progress.longestStreak || 0;
+                document.getElementById('level-progress').style.width = `${progressPercent}%`;
+                document.getElementById('current-xp').textContent = `${currentXP} XP`;
+                document.getElementById('next-level-xp').textContent = `${xpForNextLevel} XP`;
                 
                 populateAchievements();
                 populateStreakCalendar();
             }
-            
+
             function populateAchievements() {
                 const container = document.getElementById('achievements-container');
                 if (!container || !window.gamificationSystem) return;
@@ -767,40 +304,22 @@
                     card.className = `achievement-card ${isEarned ? 'earned' : ''}`;
                     
                     card.innerHTML = `
-                        <div class="achievement-icon">${achievement.icon}</div>
-                        <div class="achievement-name">${achievement.name}</div>
-                        <div class="achievement-description">${achievement.description}</div>
-                        <div class="achievement-points">${achievement.points} points</div>
+                        <div class="achievement-icon" style="font-size: 32px; margin-bottom: 12px;">${achievement.icon}</div>
+                        <div style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">${achievement.name}</div>
+                        <div style="font-size: 11px; opacity: 0.7; line-height: 1.3;">${achievement.description}</div>
+                        <div style="font-size: 10px; font-weight: 800; color: var(--mdb-green); margin-top: 12px;">+${achievement.points} XP</div>
                     `;
                     
                     container.appendChild(card);
                 });
             }
-            
-            let currentCalendarDate = new Date();
-            let watchDatesData = [];
-            
-            async function loadWatchDates() {
-                try {
-                    const response = await fetch('/api/videos/watch-dates');
-                    if (response.ok) {
-                        watchDatesData = await response.json();
-                    }
-                } catch (error) {
-                    console.warn('Failed to load watch dates:', error);
-                }
-            }
-            
+
             function populateStreakCalendar() {
                 const calendar = document.getElementById('streak-calendar');
                 const monthLabel = document.getElementById('calendar-month');
-                
                 if (!calendar || !monthLabel) return;
                 
-                monthLabel.textContent = currentCalendarDate.toLocaleDateString('en-US', { 
-                    month: 'long', 
-                    year: 'numeric' 
-                });
+                monthLabel.textContent = currentCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                 
                 const firstDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
                 const startDate = new Date(firstDay.getTime() - (firstDay.getDay() * 24 * 60 * 60 * 1000));
@@ -817,9 +336,7 @@
                     const isToday = dateString === new Date().toISOString().split('T')[0];
                     
                     const dayElement = document.createElement('div');
-                    dayElement.className = `calendar-day ${
-                        isCurrentMonth ? 'current-month' : 'other-month'
-                    } ${hasActivity ? 'has-activity' : ''} ${isToday ? 'today' : ''}`;
+                    dayElement.className = `calendar-day ${isCurrentMonth ? 'current-month' : ''} ${hasActivity ? 'has-activity' : ''} ${isToday ? 'today' : ''}`;
                     dayElement.textContent = date.getDate();
                     
                     if (hasActivity && dayWatchData.length > 1) {
@@ -829,40 +346,43 @@
                         dayElement.appendChild(indicator);
                     }
                     
-                    if (hasActivity) {
-                        const videoTitles = dayWatchData.map(w => `${w.videoTitle} (${w.courseName})`).join('\\n');
-                        dayElement.title = `Videos watched on ${date.toLocaleDateString()}:\\n${videoTitles}`;
-                    }
-                    
                     calendar.appendChild(dayElement);
                 }
             }
-            
-            // Calendar navigation
+
+            // Initialization
+            loadWatchDates().then(() => {
+                if (window.gamificationSystem) {
+                    window.gamificationSystem.syncWithLocalStorageVideos().then(updateProfileDisplay);
+                } else {
+                    tryUpdateProfile();
+                }
+            });
+
+            // Nav listeners
             document.getElementById('prev-month').addEventListener('click', () => {
-                currentCalendarDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() - 1, 1);
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
                 populateStreakCalendar();
             });
-            
             document.getElementById('next-month').addEventListener('click', () => {
-                currentCalendarDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 1);
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
                 populateStreakCalendar();
             });
-            
-            // Refresh stats
+
             document.getElementById('refresh-stats').addEventListener('click', async function() {
-                this.innerHTML = '⏳ Refreshing...';
+                this.disabled = true;
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
                 
                 if (window.gamificationSystem) {
                     await window.gamificationSystem.syncWithLocalStorageVideos();
                     await loadWatchDates();
-                    updateProfileDisplay();
+                    await updateProfileDisplay();
                 }
                 
-                this.innerHTML = '🔄 Refresh';
+                this.innerHTML = originalText;
+                this.disabled = false;
             });
-            
-            tryUpdateProfile();
         });
     </script>
 </body>
