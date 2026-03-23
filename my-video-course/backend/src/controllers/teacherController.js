@@ -20,11 +20,11 @@ class TeacherController {
       // Calculate instructor stats
       const totalCourses = courses.length;
       const publishedCourses = courses.filter(c => c.isPublished).length;
-      const totalStudents = new Set(enrollments.map(e => e.user)).size;
+      const totalStudents = new Set(enrollments.map(e => e.userId)).size;
       
       // Map courses to a simpler format for the view
       const courseStats = courses.map(course => {
-        const courseEnrollments = enrollments.filter(e => e.course && e.course.toString() === course._id.toString());
+        const courseEnrollments = enrollments.filter(e => e.courseId && e.courseId.toString() === course._id.toString());
         return {
           id: course._id,
           title: course.title,

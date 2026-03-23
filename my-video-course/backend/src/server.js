@@ -11,6 +11,10 @@ async function startServer() {
       process.exit(1);
     }
 
+    // Trigger S3 sync on start
+    const courseService = require('./services/courseService');
+    courseService.syncS3VideosToDynamoDB().catch(e => console.warn('Sync failed:', e.message));
+
     app.listen(PORT, '0.0.0.0', () => { 
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌐 Web: http://localhost:${PORT}`);

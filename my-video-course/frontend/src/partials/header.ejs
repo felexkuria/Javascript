@@ -210,7 +210,10 @@
 
         <ul class="nav-links">
             <li><a href="/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
-            <li><a href="/admin/course-manager" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'active' : '' %>">Manager</a></li>
+            <li><a href="/courses" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'active' : '' %>">Courses</a></li>
+            <% if (typeof user !== 'undefined' && (user.isAdmin || user.role === 'teacher' || user.isTeacher)) { %>
+                <li><a href="/admin/course-manager" class="nav-link">Manager</a></li>
+            <% } %>
         </ul>
 
         <div class="nav-actions">
