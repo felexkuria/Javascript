@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema({
   bio: { type: String },
   profileImage: { type: String },
   enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+  wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

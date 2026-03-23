@@ -72,47 +72,43 @@ class WebController {
       const userId = req.user?.email || 'guest';
       console.log(`Rendering course: ${courseName} for user: ${userId}`);
       
-      // Use DynamoDB service with user personalization
-      let videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
-      console.log(`Found ${videos ? videos.length : 0} videos for course`);
+      // 1. Try to fetch course from MongoDB (New Architecture)
+      const slug = courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const mongoCourse = await Course.findOne({ 
+        $or: [{ slug: slug }, { title: courseName }, { name: courseName }] 
+      }).lean();
 
+      let sections = [];
+      let totalVideosCount = 0;
+      let courseId = null;
+
+      if (mongoCourse) {
+        courseId = mongoCourse._id;
+        sections = mongoCourse.sections || [];
+        totalVideosCount = sections.reduce((sum, s) => sum + (s.lectures?.length || 0), 0);
+      }
+
+      // 2. Fallback or data enrichment via DynamoDB
+      let videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
+      
       if (!Array.isArray(videos)) {
         videos = [];
       }
 
-      console.log(`Videos already deduplicated and sorted: ${videos.length}`);
-      // DynamoDB service already handles deduplication and sorting
-
-      if (videos.length === 0) {
-        return res.render('course', {
-          courseName,
-          videos: [],
-          pdfs: [],
-          totalVideos: 0,
-          watchedVideos: 0,
-          watchedPercent: 0,
-          aiEnabled: true
-        });
-      }
-
-      const processedVideos = videos.map(video => ({
-        ...video,
-        basename: video.videoUrl ? path.basename(video.videoUrl) : null,
-        watched: video.watched || false
-      }));
-
-      const totalVideos = videos.length;
+      const totalVideos = mongoCourse ? totalVideosCount : videos.length;
       const watchedVideos = videos.filter(v => v.watched).length;
       const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
 
       res.render('course', {
         courseName,
-        videos: processedVideos,
-        pdfs: [],
+        courseId, // Crucial for Enrollment
+        videos: videos.map(v => ({...v, basename: v.videoUrl ? path.basename(v.videoUrl) : null})),
+        sections, // Crucial for Curriculum UI
         totalVideos,
         watchedVideos,
         watchedPercent,
-        aiEnabled: true
+        aiEnabled: true,
+        isAdmin: userId === 'engineerfelex@gmail.com'
       });
     } catch (err) {
       console.error('Error fetching course data:', err);
