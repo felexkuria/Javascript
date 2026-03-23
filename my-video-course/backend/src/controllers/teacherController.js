@@ -9,8 +9,8 @@ class TeacherController {
       const user = req.user || req.session?.user;
       const userId = user?.email || 'guest';
       
-      // 1. Fetch courses from MongoDB (all courses for instructor)
-      const courses = await Course.find({}).lean();
+      // 1. Fetch courses from MongoDB (ONLY courses for this instructor)
+      const courses = await Course.find({ instructorId: userId }).lean();
       
       // 2. Fetch all enrollments to calculate student stats
       const enrollments = await Enrollment.find({}).lean();
