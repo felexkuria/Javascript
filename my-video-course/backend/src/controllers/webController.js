@@ -43,23 +43,30 @@ class WebController {
       
       // 2. Fetch from MongoDB Enrollments (New Architecture)
       try {
-        const enrollments = await Enrollment.find({ userId }).populate('courseId').lean();
-        console.log(`🔍 Found ${enrollments.length} MongoDB enrollments for email: ${userId}`);
+        const enrollments = await Enrollment.find({ 
+          userId: { $regex: new RegExp(`^${userId}$`, 'i') } 
+        }).populate('courseId').lean();
+
+        console.log(`🔍 Found ${enrollments.length} MongoDB enrollments for: ${userId}`);
         
         const enrolledCourses = enrollments
           .filter(e => e.courseId) // Ensure course hasn't been deleted
-          .map(e => ({
-            _id: e.courseId._id,
-            name: e.courseId.title,
-            title: e.courseId.title,
-            instructor: e.courseId.instructorId || 'Engineer Felex',
-            category: e.courseId.category || 'Core',
-            description: e.courseId.description,
-            videoCount: (e.courseId.sections || []).reduce((sum, s) => sum + (s.lectures?.length || 0), 0),
-            watchedVideos: 0,
-            completionPercentage: 0,
-            isMongo: true
-          }));
+          .map(e => {
+            const allLectures = (e.courseId.sections || []).flatMap(s => s.lectures || []);
+            return {
+              _id: e.courseId._id,
+              name: e.courseId.title, // Dashboard uses .name for URL
+              title: e.courseId.title,
+              instructor: 'Engineer Felex',
+              category: e.courseId.category || 'Core',
+              description: e.courseId.description,
+              videos: allLectures, // Mapping the lectures to videos array
+              videoCount: allLectures.length,
+              watchedVideos: 0,
+              completionPercentage: 0,
+              isMongo: true
+            };
+          });
 
         console.log(`🔍 Processed ${enrolledCourses.length} Enrolled Courses from MongoDB`);
 
