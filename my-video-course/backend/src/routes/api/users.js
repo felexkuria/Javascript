@@ -5,7 +5,7 @@ const User = require('../../models/User');
 // Get user profile
 router.get('/profile', async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.user.email });
+    const user = await User.findOne({ email: req.user?.email });
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
@@ -15,8 +15,8 @@ router.get('/profile', async (req, res) => {
       data: {
         name: user.name,
         email: user.email,
-        roles: user.roles,
-        currentRole: user.roles[0]
+        roles: user.roles || ['student'],
+        currentRole: (user.roles && user.roles.length > 0) ? user.roles[0] : 'student'
       }
     });
   } catch (error) {

@@ -129,11 +129,11 @@ class AuthController {
         refreshToken: result.refreshToken,
         user: { 
           email, 
-          roles: user.roles,
+          roles: [mongoUser.role],
           currentRole,
-          name: user.name,
-          isAdmin: user.roles.includes('admin'),
-          isTeacher: user.roles.includes('teacher')
+          name: mongoUser.name,
+          isAdmin: mongoUser.role === 'admin',
+          isTeacher: mongoUser.role === 'teacher' || mongoUser.role === 'admin'
         },
         redirect: redirectUrl
       });
