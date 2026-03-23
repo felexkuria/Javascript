@@ -250,23 +250,39 @@
                 <h3 style="font-size: 14px; font-weight: 700;">Course Content</h3>
             </div>
             <div class="curriculum-list">
+                <% 
+                    // Determine active lecture from current URL / video param
+                    const activeVideoId = (typeof video !== 'undefined' && video) ? (video._id || video.videoId || '') : '';
+                    const activeUrlId = '<%= video ? (video._id || video.videoId || "") : "" %>';
+                %>
                 <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
                     <% sections.forEach((section, sIndex) => { %>
-                        <div class="curriculum-section">
-                            <div class="section-header">
-                                <span>Section <%= sIndex + 1 %>: <%= section.title %></span>
-                                <span style="font-size: 11px; opacity: 0.7;"><%= section.lectures.length %> Lectures</span>
+                        <% 
+                            // Auto-expand section that contains the current video
+                            const hasActive = section.lectures.some(l => l.contentId === activeVideoId);
+                        %>
+                        <div class="curriculum-section" style="border-bottom: 1px solid var(--color-border);">
+                            <div class="section-header" 
+                                 onclick="toggleVideoSection(this)"
+                                 style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; cursor: pointer; background: <%= hasActive ? 'rgba(0,237,100,0.06)' : 'transparent' %>; transition: background 0.2s;">
+                                <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+                                    <span class="toggle-icon" style="font-size: 10px; flex-shrink: 0; transition: transform 0.2s; transform: <%= hasActive ? 'rotate(90deg)' : 'rotate(0deg)' %>;">▶</span>
+                                    <span style="font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">§<%= sIndex + 1 %>: <%= section.title %></span>
+                                </div>
+                                <span style="font-size: 10px; opacity: 0.5; flex-shrink: 0; margin-left: 4px;"><%= section.lectures.length %></span>
                             </div>
-                            <div class="section-lectures">
+                            <div class="section-lectures" style="display: <%= hasActive ? 'block' : 'none' %>;">
                                 <% section.lectures.forEach((lecture, lIndex) => { %>
-                                    <div class="lecture-item <%= video && video._id === lecture.contentId ? 'active' : '' %>" 
-                                         onclick="window.location.href='/course/<%= courseName %>/video/<%= lecture.contentId %>'">
-                                        <div style="font-size: 16px; margin-top: 2px;">
-                                            <%= lecture.type === 'video' ? '▶️' : '📄' %>
+                                    <% const isActive = lecture.contentId === activeVideoId; %>
+                                    <div class="lecture-item <%= isActive ? 'active' : '' %>" 
+                                         style="padding: 10px 16px 10px 28px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; border-left: 3px solid <%= isActive ? '#00ED64' : 'transparent' %>; background: <%= isActive ? 'rgba(0,237,100,0.08)' : 'transparent' %>; transition: all 0.15s;"
+                                         onclick="navigateToLecture('<%= encodeURIComponent(courseName) %>', '<%= lecture.contentId %>')">
+                                        <div style="font-size: 13px; margin-top: 1px; flex-shrink: 0;">
+                                            <%= isActive ? '▶️' : (lecture.type === 'video' ? '▷' : '📄') %>
                                         </div>
-                                        <div class="lecture-info">
-                                            <div class="lecture-title"><%= lIndex + 1 %>. <%= lecture.title %></div>
-                                            <div class="lecture-meta">
+                                        <div class="lecture-info" style="flex: 1; min-width: 0;">
+                                            <div class="lecture-title" style="font-size: 12px; font-weight: <%= isActive ? '700' : '500' %>; color: <%= isActive ? '#00ED64' : 'inherit' %>; line-height: 1.4;"><%= lIndex + 1 %>. <%= lecture.title %></div>
+                                            <div class="lecture-meta" style="font-size: 11px; opacity: 0.5; margin-top: 2px;">
                                                 <span><%= Math.floor((lecture.duration || 0) / 60) %>m</span>
                                             </div>
                                         </div>
@@ -276,7 +292,6 @@
                         </div>
                     <% }); %>
                 <% } else { %>
-                    <!-- Fallback for legacy data -->
                     <div style="padding: var(--space-4); text-align: center; color: var(--color-text-muted);">
                         <p>No sections found. Syncing repository...</p>
                     </div>
@@ -302,7 +317,42 @@
             document.documentElement.classList.toggle('dark', theme === 'dark');
             document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
         }
-        
+
+        // ── Sidebar section collapse ──────────────────────────────
+        function toggleVideoSection(header) {
+            const lectures = header.nextElementSibling;
+            if (!lectures) return;
+            const icon = header.querySelector('.toggle-icon');
+            const isOpen = lectures.style.display !== 'none';
+
+            if (isOpen) {
+                lectures.style.display = 'none';
+                if (icon) icon.style.transform = 'rotate(0deg)';
+                header.style.background = 'transparent';
+            } else {
+                lectures.style.display = 'block';
+                if (icon) icon.style.transform = 'rotate(90deg)';
+                header.style.background = 'rgba(0,237,100,0.06)';
+            }
+        }
+
+        // ── Navigate to lecture & highlight active ────────────────
+        function navigateToLecture(courseName, lectureId) {
+            const url = `/course/${courseName}/video/${lectureId}`;
+            // Update active states immediately for fast UI feedback
+            document.querySelectorAll('.lecture-item').forEach(el => {
+                const isTarget = el.getAttribute('onclick')?.includes(lectureId);
+                el.style.borderLeft = isTarget ? '3px solid #00ED64' : '3px solid transparent';
+                el.style.background = isTarget ? 'rgba(0,237,100,0.08)' : '';
+                const title = el.querySelector('.lecture-title');
+                if (title) {
+                    title.style.color = isTarget ? '#00ED64' : '';
+                    title.style.fontWeight = isTarget ? '700' : '500';
+                }
+            });
+            window.location.href = url;
+        }
+
         function toggleTheme() {
             const isDark = document.documentElement.classList.contains('dark');
             const newTheme = isDark ? 'light' : 'dark';
