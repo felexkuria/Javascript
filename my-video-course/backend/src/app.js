@@ -233,7 +233,7 @@ const teacherOrAdminAuth = (req, res, next) => {
   if (req.user?.isTeacher) {
     return next();
   }
-  res.status(403).json({ error: 'Admin or teacher access required' });
+  res.status(403).json({ success: false, message: 'Admin or teacher access required' });
 };
 
 // Simple admin auth for S3 uploads
@@ -243,7 +243,7 @@ const simpleAdminAuth = (req, res, next) => {
     return next();
   }
   console.log('Auth failed, admin key:', adminKey);
-  res.status(403).json({ error: 'Admin access required' });
+  res.status(403).json({ success: false, message: 'Admin access required' });
 };
 
 // Course API - Enhanced for admin
@@ -800,12 +800,13 @@ app.get('/admin/course-manager', sessionAuth, async (req, res) => {
   }
   
   try {
-    const dynamoVideoService = require('./services/dynamoVideoService');
-    const courses = await dynamoVideoService.getAllCourses();
-    console.log('Admin courses loaded:', courses.length);
+    const Course = require('./models/Course'); // Use MongoDB model for the new ERD
+    const courses = await Course.find({}).lean();
+    console.log('Admin courses loaded from MongoDB:', courses.length);
     res.render('admin-course-manager', { courses: courses || [] });
   } catch (error) {
-    console.error('Error loading courses for admin:', error);
+    console.error('Error loading courses from MongoDB for admin:', error);
+    // Fallback if needed, or render empty
     res.render('admin-course-manager', { courses: [] });
   }
 });

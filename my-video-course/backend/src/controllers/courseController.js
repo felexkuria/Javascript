@@ -120,6 +120,7 @@ class CourseController {
       const success = await dynamodb.saveCourse(courseData);
       
       // Also Save to MongoDB
+      let mongoSuccess = false;
       try {
         await Course.create({
           title: courseData.title,
@@ -129,24 +130,23 @@ class CourseController {
           slug: courseData.slug,
           sections: []
         });
+        mongoSuccess = true;
         console.log('✅ Course also saved to MongoDB');
       } catch (mongoError) {
         console.error('❌ Failed to save course to MongoDB:', mongoError.message);
-        // We don't fail the whole request if MongoDB fails but DynamoDB succeeded, 
-        // to maintain backward compatibility, but we log it.
       }
 
-      if (!success) {
+      if (!success && !mongoSuccess) {
         return res.status(500).json({
           success: false,
-          message: 'Failed to save course to database'
+          message: 'Failed to deploy course to any persistence layer.'
         });
       }
 
       res.status(201).json({
         success: true,
         data: courseData,
-        message: 'Course created successfully'
+        message: 'Course created and synced successfully.'
       });
     } catch (error) {
       console.error('Error creating course:', error);
