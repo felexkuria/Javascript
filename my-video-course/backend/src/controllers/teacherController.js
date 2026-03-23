@@ -103,9 +103,11 @@ class TeacherController {
       const { id } = req.params;
       const user = req.user || req.session?.user;
       const userId = user?.email || 'guest';
+      const isAdmin = userId === 'engineerfelex@gmail.com' || user?.isAdmin || user?.role === 'admin';
 
-      // 1. Fetch course from MongoDB
-      const course = await Course.findOne({ _id: id, instructorId: userId }).lean();
+      // Admin can open any course; teachers can only open their own
+      const query = isAdmin ? { _id: id } : { _id: id, instructorId: userId };
+      const course = await Course.findOne(query).lean();
       
       if (!course) {
         return res.status(404).render('error', { message: 'Course not found or access denied.' });
@@ -118,6 +120,10 @@ class TeacherController {
       });
     } catch (error) {
       console.error('Error rendering course editor:', error);
+      res.status(500).render('error', { message: 'Error loading course editor: ' + error.message });
+    }
+  }
+
       res.status(500).render('error', { message: 'Error loading course editor: ' + error.message });
     }
   }
