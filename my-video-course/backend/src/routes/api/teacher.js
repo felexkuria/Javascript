@@ -9,14 +9,18 @@ const uploadController = require('../../controllers/uploadController');
 router.patch('/courses/:id/publish', async (req, res) => {
   try {
     const { id } = req.params;
-    const course = await Course.findById(id);
+    const mongoose = require('mongoose');
+    const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+    
+    const course = await Course.findOne(query);
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
     
     course.isPublished = true;
     await course.save();
     res.json({ success: true, isPublished: true });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Publish Error:', error);
+    res.status(500).json({ success: false, message: error.message, error: error.message });
   }
 });
 
@@ -24,19 +28,20 @@ router.patch('/courses/:id/publish', async (req, res) => {
 router.patch('/courses/:id/reorder', async (req, res) => {
   try {
     const { id } = req.params;
-    const { sectionIds } = req.body; // Array of IDs in new order
+    const { sectionIds } = req.body; 
     
-    const course = await Course.findById(id);
+    const mongoose = require('mongoose');
+    const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+    
+    const course = await Course.findOne(query);
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
     
-    // Sort sections based on the provided IDs
     const newSections = [];
     sectionIds.forEach(sid => {
       const section = course.sections.id(sid);
       if (section) newSections.push(section);
     });
     
-    // Catch any sections not in the reorder list (optional but safer)
     course.sections.forEach(s => {
       if (!sectionIds.includes(s._id.toString())) newSections.push(s);
     });
@@ -45,7 +50,7 @@ router.patch('/courses/:id/reorder', async (req, res) => {
     await course.save();
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message, error: error.message });
   }
 });
 
@@ -57,7 +62,10 @@ router.post('/courses/:id/sections', async (req, res) => {
     const { id } = req.params;
     const { title } = req.body;
     
-    const course = await Course.findById(id);
+    const mongoose = require('mongoose');
+    const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+    
+    const course = await Course.findOne(query);
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
     
     course.sections.push({ title, lectures: [] });
@@ -65,7 +73,7 @@ router.post('/courses/:id/sections', async (req, res) => {
     
     res.json({ success: true, sections: course.sections });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message, error: error.message });
   }
 });
 
@@ -75,7 +83,12 @@ router.patch('/courses/:id/sections/:sectionId', async (req, res) => {
     const { id, sectionId } = req.params;
     const { title } = req.body;
     
-    const course = await Course.findById(id);
+    const mongoose = require('mongoose');
+    const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+    
+    const course = await Course.findOne(query);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+
     const section = course.sections.id(sectionId);
     if (!section) return res.status(404).json({ success: false, message: 'Section not found' });
     
@@ -84,7 +97,7 @@ router.patch('/courses/:id/sections/:sectionId', async (req, res) => {
     
     res.json({ success: true, section });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message, error: error.message });
   }
 });
 
@@ -92,12 +105,17 @@ router.patch('/courses/:id/sections/:sectionId', async (req, res) => {
 router.delete('/courses/:id/sections/:sectionId', async (req, res) => {
   try {
     const { id, sectionId } = req.params;
-    const course = await Course.findById(id);
+    const mongoose = require('mongoose');
+    const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+    
+    const course = await Course.findOne(query);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+
     course.sections.pull(sectionId);
     await course.save();
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message, error: error.message });
   }
 });
 
@@ -109,21 +127,26 @@ router.post('/courses/:id/sections/:sectionId/lectures', async (req, res) => {
     const { id, sectionId } = req.params;
     const { title, type = 'video' } = req.body;
     
-    const course = await Course.findById(id);
+    const mongoose = require('mongoose');
+    const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+    
+    const course = await Course.findOne(query);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+
     const section = course.sections.id(sectionId);
     if (!section) return res.status(404).json({ success: false, message: 'Section not found' });
     
     section.lectures.push({ 
         title, 
         type, 
-        contentId: 'pending', // Placeholder until video is uploaded
+        contentId: 'pending', 
         isFree: false 
     });
     
     await course.save();
     res.json({ success: true, lecture: section.lectures[section.lectures.length - 1] });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message, error: error.message });
   }
 });
 
@@ -139,7 +162,10 @@ router.post('/courses/:id/lectures/:lectureId/upload', upload.single('video'), a
     const file = req.file;
     if (!file) return res.status(400).json({ success: false, message: 'No file uploaded' });
 
-    const course = await Course.findById(id);
+    const mongoose = require('mongoose');
+    const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+    
+    const course = await Course.findOne(query);
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
 
     // Find the lecture in any section
@@ -162,7 +188,7 @@ router.post('/courses/:id/lectures/:lectureId/upload', upload.single('video'), a
     res.json({ success: true, lecture: targetedLecture });
   } catch (error) {
     console.error('Upload Error:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message, error: error.message });
   }
 });
 
@@ -172,7 +198,12 @@ router.patch('/courses/:id/sections/:sectionId/lectures/:lectureId', async (req,
     const { id, sectionId, lectureId } = req.params;
     const { title } = req.body;
     
-    const course = await Course.findById(id);
+    const mongoose = require('mongoose');
+    const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+    
+    const course = await Course.findOne(query);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+
     const section = course.sections.id(sectionId);
     if (!section) return res.status(404).json({ success: false, message: 'Section not found' });
     
@@ -183,7 +214,7 @@ router.patch('/courses/:id/sections/:sectionId/lectures/:lectureId', async (req,
     await course.save();
     res.json({ success: true, lecture });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message, error: error.message });
   }
 });
 

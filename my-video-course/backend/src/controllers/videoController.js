@@ -191,15 +191,28 @@ exports.addVideo = async (req, res) => {
 };
 
 exports.getVideoCount = async (req, res) => {
-  try {
-    const { courseName } = req.params;
-    const userId = req.user?.email || req.session?.user?.email;
-    if (!userId) {
-      return res.status(401).json({ success: false, error: 'Authentication required' });
+    try {
+      const { courseName } = req.params;
+      const userId = req.user?.email || req.session?.user?.email;
+      if (!userId) {
+        return res.status(401).json({ success: false, error: 'Authentication required' });
+      }
+      const count = await dynamoVideoService.getVideoCount(courseName, userId);
+      res.json({ success: true, data: count });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
     }
-    const count = await dynamoVideoService.getVideoCount(courseName, userId);
-    res.json({ success: true, data: count });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-};
+  };
+
+  exports.getWatchDates = async (req, res) => {
+    try {
+      const userId = req.user?.email || req.session?.user?.email;
+      if (!userId) {
+        return res.status(401).json({ success: false, error: 'Authentication required' });
+      }
+      const watchDates = await dynamoVideoService.getWatchDates(userId);
+      res.json(watchDates);
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  };
