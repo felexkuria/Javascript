@@ -347,7 +347,7 @@ app.use('/api/ai', cognitoAuth, require('./routes/api/ai'));
 // app.use('/api/users', cognitoAuth, require('./routes/api/users'));
 app.use('/api/enrollments', cognitoAuth, require('./routes/api/enrollments'));
 app.use('/api/wishlist', cognitoAuth, require('./routes/api/wishlist'));
-app.use('/api/teacher', cognitoAuth, require('./routes/api/teacher'));
+app.use('/api/teacher', teacherOrAdminAuth, require('./routes/api/teacher'));
 
 // Video control endpoints
 app.post('/api/mark-watched', cognitoAuth, async (req, res) => {

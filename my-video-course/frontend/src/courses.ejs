@@ -1,95 +1,313 @@
 <%- include('partials/header', { title: 'All Courses', activePage: 'courses' }) %>
 
-<main class="min-h-screen bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
-  <div class="max-w-7xl mx-auto px-6 py-12">
-    <!-- Top Atlas Query Bar Style Navigation -->
-    <div class="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
-      <div>
-        <h1 class="text-4xl font-black text-[#001E2B] dark:text-[#E7EEEB] tracking-tighter mb-2 brand-font">Explore <span class="text-[#00ED64]">Curriculum</span></h1>
-        <p class="text-gray-500 dark:text-[#9FB1AD] font-medium">Master state-of-the-art engineering with Multitouch Academy</p>
-      </div>
+<!-- VERSION: ATLAS-REWRITE-V3 -->
+<style>
+  :root {
+    --atlas-forest: #00684A;
+    --atlas-spring: #00ED64;
+    --atlas-evergreen: #023430;
+    --atlas-slate: #495957;
+    --atlas-mist: #E7EEEB;
+    --atlas-white: #FFFFFF;
+    --atlas-black: #001E2B;
+    --atlas-border: #E8EDE9;
+  }
 
-      <div class="relative flex-1 max-w-lg">
-        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <i class="fas fa-search text-[#00684A] opacity-50"></i>
-        </div>
-        <input type="text" id="courseSearch" 
-               class="block w-full pl-11 pr-12 py-3.5 bg-white dark:bg-[#023430] border border-gray-200 dark:border-[#133A41] rounded-2xl text-sm font-medium focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all shadow-sm"
-               placeholder="Search database courses...">
-        <div class="absolute inset-y-0 right-0 pr-4 flex items-center">
-          <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-[#001E2B] rounded-lg transition-colors">
-            <i class="fas fa-filter text-[#00684A] dark:text-[#00ED64]"></i>
-          </button>
-        </div>
-      </div>
+  .atlas-main-wrapper {
+    min-height: 100vh;
+    background-color: #FFFFFF; /* FORCE WHITE BACKGOUND */
+    color: var(--atlas-black);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    padding-bottom: 100px;
+  }
+
+  .dark .atlas-main-wrapper {
+    background-color: var(--atlas-black);
+    color: var(--atlas-mist);
+  }
+
+  .atlas-hero-section {
+    padding: 80px 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  @media (min-width: 1024px) {
+    .atlas-hero-section {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+  }
+
+  .search-container-atlas {
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+  }
+
+  .search-input-atlas {
+    width: 100%;
+    padding: 14px 16px 14px 48px;
+    background: #FFFFFF;
+    border: 1px solid var(--atlas-border);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .dark .search-input-atlas {
+    background: #023430;
+    border-color: #133A41;
+    color: white;
+  }
+
+  .search-input-atlas:focus {
+    outline: none;
+    border-color: var(--atlas-forest);
+    box-shadow: 0 0 0 4px rgba(0, 104, 74, 0.05);
+  }
+
+  /* ── Grid System ── */
+  .courses-grid-atlas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── Card Design ── */
+  .atlas-card {
+    background: white;
+    border: 1px solid var(--atlas-border);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    height: 400px; /* FIXED HEIGHT FOR BALANCE */
+    transition: all 0.2s cubic-bezier(0.2, 0, 0.4, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dark .atlas-card {
+    background: #001E2B;
+    border-color: #133A41;
+  }
+
+  .atlas-card:hover {
+    border-color: var(--atlas-forest);
+    box-shadow: 0 8px 16px rgba(0, 30, 43, 0.05);
+    background: #F9FBFA;
+  }
+
+  .dark .atlas-card:hover {
+    border-color: var(--atlas-spring);
+    background: #023430;
+  }
+
+  .monogram-atlas {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--atlas-spring) 0%, #00C152 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--atlas-black);
+    margin-bottom: 20px;
+  }
+
+  .course-badge-atlas {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: var(--atlas-mist);
+    color: var(--atlas-forest);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .dark .course-badge-atlas {
+    background: rgba(0, 237, 100, 0.1);
+    color: var(--atlas-spring);
+  }
+
+  .course-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--atlas-black);
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  .dark .course-title {
+    color: white;
+  }
+
+  .course-desc {
+    font-size: 14px;
+    color: var(--atlas-slate);
+    line-height: 1.5;
+    margin-bottom: 24px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .dark .course-desc {
+    color: #9FB1AD;
+  }
+
+  .meta-atlas {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--atlas-slate);
+    text-transform: uppercase;
+    margin-bottom: auto;
+  }
+
+  .atlas-btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .btn-atlas {
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 1px solid transparent;
+    text-decoration: none;
+  }
+
+  .btn-atlas-fill {
+    background: var(--atlas-forest);
+    color: white;
+  }
+
+  .btn-atlas-fill:hover {
+    background: #00593f;
+  }
+
+  .btn-atlas-ghost {
+    background: transparent;
+    border-color: var(--atlas-border);
+    color: var(--atlas-black);
+  }
+
+  .dark .btn-atlas-ghost {
+    border-color: #133A41;
+    color: white;
+  }
+
+  .btn-atlas-ghost:hover {
+    border-color: var(--atlas-forest);
+  }
+
+  /* ── Progress Bar ── */
+  .atlas-p-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--atlas-mist);
+    border-radius: 4px;
+    margin-top: 16px;
+    overflow: hidden;
+  }
+
+  .atlas-p-fill {
+    height: 100%;
+    background: var(--atlas-forest);
+    transition: width 1s ease;
+  }
+
+  .dark .atlas-p-fill {
+    background: var(--atlas-spring);
+  }
+</style>
+
+<div class="atlas-main-wrapper">
+  <div class="atlas-hero-section">
+    <div>
+      <h1 style="font-size: 44px; font-weight: 900; letter-spacing: -0.03em;">Academy Curriculum</h1>
+      <p style="opacity: 0.7; font-weight: 500; margin-top: 8px;">Master modern engineering with our professional-grade modules.</p>
     </div>
-
-    <!-- Courses Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="coursesGrid">
-      <% if (courses && courses.length > 0) { %>
-        <% courses.forEach(course => { %>
-          <div class="course-card bg-white dark:bg-[#023430] rounded-3xl border border-gray-100 dark:border-[#133A41] overflow-hidden hover:shadow-[0_20px_40px_rgba(0,30,43,0.08)] transition-all duration-500 group flex flex-col h-full">
-            <!-- Card Identity Header -->
-            <div class="relative aspect-[16/10] bg-[#001E2B] flex items-center justify-center overflow-hidden">
-               <div class="absolute inset-0 opacity-20 bg-leaf-pattern"></div>
-               <div class="relative z-10 w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center text-[#001E2B] text-2xl font-black shadow-xl group-hover:scale-110 transition-transform duration-500">
-                <%= course.name.charAt(0).toUpperCase() %>
-               </div>
-               <div class="absolute top-4 right-4">
-                 <span class="px-3 py-1 bg-black/40 backdrop-blur-md rounded-full text-[10px] font-bold text-[#00ED64] tracking-widest uppercase">Verified</span>
-               </div>
-            </div>
-
-            <div class="p-8 flex flex-col flex-1">
-              <div class="mb-6 flex-1">
-                <h3 class="text-xl font-black text-[#001E2B] dark:text-[#E7EEEB] mb-2 leading-tight group-hover:text-[#00684A] dark:group-hover:text-[#00ED64] transition-colors">
-                  <%= (course.title || course.name).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) %>
-                </h3>
-                <div class="flex items-center gap-3 text-xs font-bold text-gray-400">
-                  <span class="flex items-center gap-1.5"><i class="fas fa-layer-group text-[#00684A] opacity-50"></i> <%= course.sections ? course.sections.length : 0 %> Sections</span>
-                  <span class="flex items-center gap-1.5"><i class="fas fa-play-circle text-[#00684A] opacity-50"></i> <%= course.videoCount || 0 %> Lectures</span>
-                </div>
-              </div>
-
-              <!-- Progress Bar (Visible if enrolled) -->
-              <div class="enrollment-status mb-6" data-course-id="<%= course._id || course.name %>">
-                 <!-- Populated by JS -->
-              </div>
-              
-              <div class="space-y-3 mt-auto">
-                <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
-                        class="w-full px-6 py-3.5 text-sm font-black text-[#001E2B] bg-[#00ED64] hover:bg-[#00C152] rounded-2xl transition-all enroll-btn shadow-lg shadow-[#00ED64]/10 flex items-center justify-center gap-2" 
-                        data-btn-course-id="<%= course._id || course.name %>">
-                  <i class="fas fa-bolt"></i> Enroll Now
-                </button>
-                <a href="/course/<%= course.name %>" 
-                   class="inline-flex items-center justify-center w-full px-6 py-3.5 text-sm font-bold text-[#001E2B] dark:text-[#E7EEEB] bg-[#F1F5F4] dark:bg-[#133A41] hover:bg-gray-200 dark:hover:bg-[#00684A]/30 rounded-2xl transition-all">
-                  View Database
-                </a>
-              </div>
-            </div>
-          </div>
-        <% }) %>
-      <% } else { %>
-        <div class="col-span-full text-center py-24 bg-white dark:bg-[#023430] rounded-[32px] border-2 border-dashed border-gray-100 dark:border-[#133A41]">
-          <div class="text-8xl mb-8">🍃</div>
-          <h3 class="text-2xl font-black text-[#001E2B] dark:text-[#E7EEEB] mb-3 brand-font">Engineering Pipeline Processing</h3>
-          <p class="text-gray-500 dark:text-[#9FB1AD] max-w-xs mx-auto text-sm font-medium">New specialized database engineering courses are currently in development.</p>
-        </div>
-      <% } %>
+    
+    <div class="search-container-atlas">
+      <i class="fas fa-search" style="position: absolute; left: 16px; top: 18px; color: var(--atlas-forest); opacity: 0.5;"></i>
+      <input type="text" id="courseSearch" class="search-input-atlas" placeholder="Filter subjects...">
     </div>
   </div>
-</main>
+
+  <div class="courses-grid-atlas" id="coursesGrid">
+    <% if (courses && courses.length > 0) { %>
+      <% courses.forEach(course => { %>
+        <% 
+          const title = (course.title || course.name || '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          const initial = title.match(/[A-Z]/)?.[0] || 'A';
+        %>
+        <div class="atlas-card">
+          <div class="course-badge-atlas"><%= course.category || 'Core' %></div>
+          
+          <div class="monogram-atlas"><%= initial %></div>
+          
+          <h3 class="course-title"><%= title %></h3>
+          
+          <p class="course-desc">
+            <%= course.description || 'Deep dive into this comprehensive engineering lab designed for modern infrastructure.' %>
+          </p>
+
+          <div class="meta-atlas">
+            <span><i class="fas fa-layer-group"></i> <%= course.sections ? course.sections.length : 0 %></span>
+            <span><i class="fas fa-play-circle"></i> <%= course.videoCount || 0 %></span>
+          </div>
+
+          <!-- Progress Injected by JS -->
+          <div class="enrollment-status" data-course-id="<%= course._id || course.name %>"></div>
+
+          <div class="atlas-btn-group">
+            <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
+                    class="btn-atlas btn-atlas-fill" 
+                    data-btn-course-id="<%= course._id || course.name %>">
+              Enroll
+            </button>
+            <a href="/course/<%= course.name %>" class="btn-atlas btn-atlas-ghost">
+              Details
+            </a>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
+  </div>
+</div>
 
 <%- include('partials/footer') %>
 
 <script>
-// Search Functionality
+// Search
 document.getElementById('courseSearch')?.addEventListener('input', (e) => {
   const term = e.target.value.toLowerCase();
-  const cards = document.querySelectorAll('.course-card');
-  cards.forEach(card => {
-    const title = card.querySelector('h3').textContent.toLowerCase();
+  document.querySelectorAll('.atlas-card').forEach(card => {
+    const title = card.querySelector('.course-title').textContent.toLowerCase();
     card.style.display = title.includes(term) ? 'flex' : 'none';
   });
 });
@@ -97,82 +315,55 @@ document.getElementById('courseSearch')?.addEventListener('input', (e) => {
 async function enrollInCourse(courseId) {
   try {
     const token = localStorage.getItem('accessToken');
-    if (!token) {
-      window.location.href = '/login';
-      return;
-    }
+    if (!token) { window.location.href = '/login'; return; }
 
     const button = document.querySelector(`[data-btn-course-id="${courseId}"]`);
-    const originalContent = button.innerHTML;
     button.disabled = true;
-    button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
+    button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
 
     const response = await fetch('/api/enrollments', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ courseId })
     });
 
     const data = await response.json();
-    
     if (data.success) {
-      button.innerHTML = '<i class="fas fa-check"></i> Enrolled';
-      button.classList.replace('bg-[#00ED64]', 'bg-[#133A41]');
-      button.classList.add('text-white');
-      setTimeout(() => window.location.reload(), 1000);
-    } else {
-      throw new Error(data.error || data.message);
-    }
-  } catch (error) {
-    console.error('Enrollment error:', error);
-    alert('Failed to enroll: ' + error.message);
+      button.innerHTML = 'Enrolled';
+      button.style.opacity = '0.5';
+      setTimeout(() => window.location.reload(), 800);
+    } else { throw new Error(data.error); }
+  } catch (err) {
+    alert('Error: ' + err.message);
+    const button = document.querySelector(`[data-btn-course-id="${courseId}"]`);
     button.disabled = false;
-    button.innerHTML = '<i class="fas fa-bolt"></i> Enroll Now';
+    button.innerText = 'Enroll';
   }
 }
 
-// Check enrollment and progress
+// Progress
 document.addEventListener('DOMContentLoaded', async () => {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
 
   const containers = document.querySelectorAll('.enrollment-status');
-  
   for (const container of containers) {
     const courseId = container.dataset.courseId;
     try {
       const response = await fetch(`/api/enrollments/check/${encodeURIComponent(courseId)}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
       const data = await response.json();
       if (data.success && data.data.enrolled) {
         const btn = document.querySelector(`[data-btn-course-id="${courseId}"]`);
-        if (btn) {
-          btn.innerHTML = '<i class="fas fa-check"></i> Enrolled';
-          btn.disabled = true;
-          btn.classList.replace('bg-[#00ED64]', 'bg-[#133A41]');
-          btn.classList.add('text-white');
-        }
-
-        // Show Progress
+        if (btn) { btn.disabled = true; btn.innerText = 'Enrolled'; btn.style.opacity = '0.5'; }
         const progress = data.data.progress || 0;
         container.innerHTML = `
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-[10px] font-black text-[#00684A] dark:text-[#00ED64] uppercase tracking-widest">Progress</span>
-            <span class="text-[10px] font-black text-gray-500">${progress}%</span>
-          </div>
-          <div class="w-full h-1.5 bg-gray-100 dark:bg-[#133A41] rounded-full overflow-hidden">
-            <div class="h-full bg-gradient-to-r from-[#00ED64] to-[#00684A] transition-all duration-1000" style="width: ${progress}%"></div>
-          </div>
+          <div class="atlas-p-bar"><div class="atlas-p-fill" style="width: ${progress}%"></div></div>
+          <div style="font-size: 9px; font-weight: 800; opacity: 0.5; margin-top: 4px; text-transform: uppercase;">${progress}% Complete</div>
         `;
       }
-    } catch (error) {
-      console.error('Error checking enrollment:', error);
-    }
+    } catch (e) {}
   }
 });
 </script>

@@ -21,6 +21,7 @@ const CourseSchema = new mongoose.Schema({
   thumbnail: { type: String },
   instructorId: { type: String, required: true }, // User email or ID
   category: { type: String },
+  isPublished: { type: Boolean, default: false },
   level: { type: String, enum: ['beginner', 'intermediate', 'advanced'], default: 'intermediate' },
   price: { type: Number, default: 0 },
   sections: [SectionSchema],
