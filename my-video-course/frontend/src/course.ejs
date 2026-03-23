@@ -460,7 +460,7 @@
                                     </div>
                                     <span class="text-xs opacity-60"><%= section.lectures.length %> Lectures</span>
                                 </div>
-                                <div class="section-lectures hidden bg-white dark:bg-[#001E2B]">
+                                <div class="section-lectures" style="display:none;">
                                     <% section.lectures.forEach((lecture, lIndex) => { %>
                                         <div class="lecture-row hover:bg-gray-50 dark:hover:bg-[#023430]/30 transition-colors dark:border-[#133A41]" 
                                              style="padding: 12px 24px 12px 48px; border-bottom: 1px solid rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center;">
@@ -488,14 +488,14 @@
             </div>
 
             <aside class="course-sidebar">
-                <div class="card bg-white dark:bg-[#023430] dark:border-[#133A41]" style="position: sticky; top: 24px; border: 1px solid rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
+                <div id="sidebar-enrollment-card" class="card bg-white dark:bg-[#023430] dark:border-[#133A41]" style="position: sticky; top: 24px; border: 1px solid rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden; <%= (typeof isEnrolled !== 'undefined' && isEnrolled) ? 'display:none;' : '' %>">
                     <div style="width: 100%; aspect-ratio: 16/9; background: #001E2B; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 48px;">
                         📽️
                     </div>
                     <div class="card-body" style="padding: 24px;">
                         <div style="font-size: 32px; font-weight: 800; margin-bottom: 16px;" class="dark:text-[#E7EEEB]">Free <span style="font-size: 16px; text-decoration: line-through; opacity: 0.5;">$94.99</span></div>
-                        <button id="enrollBtnSidebar" class="btn btn-primary" style="margin-bottom: 12px; height: 48px; width: 100%; justify-content: center;">Enroll Now</button>
-                        <button id="wishlistBtn" class="btn border border-gray-200 dark:border-[#133A41] dark:text-[#E7EEEB]" style="height: 48px; width: 100%; justify-content: center;">Add to Wishlist</button>
+                        <button id="enrollBtnSidebar" onclick="enroll()" class="btn btn-primary" style="margin-bottom: 12px; height: 48px; width: 100%; justify-content: center;">Enroll Now</button>
+                        <button id="wishlistBtnSidebar" onclick="addToWishlist()" class="btn border border-gray-200 dark:border-[#133A41] dark:text-[#E7EEEB]" style="height: 48px; width: 100%; justify-content: center;">Add to Wishlist</button>
                         
                         <div style="margin-top: 24px;">
                             <h4 style="font-size: 14px; margin-bottom: 12px;" class="dark:text-[#E7EEEB]">This course includes:</h4>
@@ -554,16 +554,16 @@
             const lectures = header.nextElementSibling;
             if (!lectures) return;
             const icon = header.querySelector('.toggle-icon');
-            const isHidden = lectures.classList.contains('hidden');
+            const isHidden = lectures.style.display === 'none' || lectures.style.display === '';
             
             if (isHidden) {
-                lectures.classList.remove('hidden');
+                lectures.style.display = 'block';
                 if (icon) icon.style.transform = 'rotate(90deg)';
-                header.classList.add('bg-gray-100', 'dark:bg-[#023430]');
+                header.style.background = 'rgba(0,237,100,0.05)';
             } else {
-                lectures.classList.add('hidden');
+                lectures.style.display = 'none';
                 if (icon) icon.style.transform = 'rotate(0deg)';
-                header.classList.remove('bg-gray-100', 'dark:bg-[#023430]');
+                header.style.background = '';
             }
         }
 
@@ -579,8 +579,12 @@
                 const data = await response.json();
                 if (data.success && data.data.enrolled) {
                     isEnrolled = true;
+                    // Hide the entire enrollment sidebar card
+                    const card = document.getElementById('sidebar-enrollment-card');
+                    if (card) card.style.display = 'none';
+                    // Also hide the inline CTA buttons
                     if (document.getElementById('enrollBtn')) document.getElementById('enrollBtn').style.display = 'none';
-                    if (document.getElementById('enrollBtnSidebar')) document.getElementById('enrollBtnSidebar').style.display = 'none';
+                    if (document.getElementById('wishlistBtn')) document.getElementById('wishlistBtn').style.display = 'none';
                 }
                 
                 applyDynamicStates();
