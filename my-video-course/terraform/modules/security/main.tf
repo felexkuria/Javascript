@@ -205,7 +205,10 @@ resource "aws_iam_role_policy" "authenticated" {
           "s3:GetObject",
           "s3:DeleteObject"
         ]
-        Resource = "${var.s3_bucket_arn}/uploads/*"
+        Resource = [
+          "${var.s3_bucket_arn}/uploads/*",
+          "${var.s3_bucket_arn}/videos/*"
+        ]
       },
       {
         Effect = "Allow"
