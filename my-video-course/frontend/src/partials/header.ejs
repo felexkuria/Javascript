@@ -3,139 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title || 'Multitouch Academy' %></title>
+    <title><%= typeof title !== 'undefined' ? title : 'Multitouch Academy' %></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css">
     <style>
-      /* ── Nav ─────────────────────────────────────────────── */
+      /* ── Premium Atlas Header ──────────────────────────────── */
       .mdb-nav {
-        height: 56px;
-        background: var(--mdb-midnight);
+        height: 64px;
+        background: rgba(0, 30, 43, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         display: flex;
         align-items: center;
-        padding: 0 24px;
+        padding: 0 32px;
         position: sticky;
         top: 0;
-        z-index: 100;
-        border-bottom: 1px solid rgba(0,237,100,.12);
-        gap: 0;
+        z-index: 1000;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.3s ease;
       }
+      
+      .dark .mdb-nav {
+        background: rgba(0, 30, 43, 0.9);
+        border-bottom: 1px solid rgba(0, 237, 100, 0.1);
+      }
+
       .nav-brand {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         text-decoration: none !important;
-        margin-right: 32px;
+        margin-right: 48px;
         flex-shrink: 0;
+        transition: transform 0.2s ease;
       }
-      /* MongoDB leaf logo mark */
-      .nav-leaf {
-        width: 28px; height: 28px;
-        background: var(--mdb-green);
-        border-radius: 50% 50% 50% 0 / 60% 60% 40% 40%;
-        flex-shrink: 0;
+      
+      .nav-brand:hover {
+        transform: scale(1.02);
+      }
+
+      /* Atlas-style Hexagon Logo Mark */
+      .nav-logo-mark {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #001E2B;
+        font-weight: 900;
+        font-size: 18px;
+        box-shadow: 0 4px 12px rgba(0, 237, 100, 0.2);
         position: relative;
+        overflow: hidden;
       }
-      .nav-leaf::after {
+      
+      .nav-logo-mark::after {
         content: '';
         position: absolute;
-        width: 2px; height: 14px;
-        background: var(--mdb-midnight);
-        bottom: 3px; left: 50%;
-        transform: translateX(-50%);
-        border-radius: 1px;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+        transform: rotate(45deg);
+        animation: logo-shimmer 3s infinite;
       }
+      
+      @keyframes logo-shimmer {
+        0% { transform: translateX(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) rotate(45deg); }
+      }
+
       .nav-brand-name {
-        font-size: 15px;
+        font-family: 'Inter', sans-serif;
+        font-size: 18px;
         font-weight: 700;
-        color: #fff;
-        letter-spacing: -.01em;
+        color: #FFFFFF;
+        letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
       }
-      .nav-brand-name span { color: var(--mdb-green); }
+      
+      .nav-brand-name span {
+        color: #00ED64;
+        margin-left: 4px;
+      }
 
       .nav-links {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 8px;
         list-style: none;
         flex: 1;
       }
+      
       .nav-link {
-        padding: 6px 12px;
-        border-radius: var(--radius-md);
-        font-size: 13px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
         font-weight: 500;
-        color: rgba(255,255,255,.7);
-        text-decoration: none;
-        transition: all var(--transition);
+        color: rgba(255, 255, 255, 0.65);
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
-      .nav-link:hover { color: #fff; background: rgba(255,255,255,.08); text-decoration: none; }
-      .nav-link.active { color: var(--mdb-green); }
+      
+      .nav-link:hover {
+        color: #FFFFFF;
+        background: rgba(255, 255, 255, 0.05);
+      }
+      
+      .nav-link.active {
+        color: #00ED64;
+        background: rgba(0, 237, 100, 0.08);
+      }
 
       .nav-actions {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 16px;
         margin-left: auto;
       }
-      .nav-theme-btn {
-        width: 34px; height: 34px;
-        display: flex; align-items: center; justify-content: center;
-        border: 1px solid rgba(255,255,255,.12);
-        border-radius: var(--radius-md);
-        background: transparent;
-        color: rgba(255,255,255,.7);
+
+      .action-icon-btn {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        color: #FFFFFF;
         cursor: pointer;
-        transition: all var(--transition);
-        font-size: 15px;
+        transition: all 0.2s ease;
+        font-size: 18px;
       }
-      .nav-theme-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+      
+      .action-icon-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .profile-trigger {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 4px;
+        padding-right: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .profile-trigger:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #00ED64;
+      }
 
       .nav-avatar {
-        width: 30px; height: 30px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
-        background: var(--mdb-green);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 12px; font-weight: 700;
-        color: var(--mdb-midnight);
-        cursor: pointer;
-        border: 2px solid rgba(0,237,100,.4);
+        background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: #001E2B;
+        box-shadow: 0 2px 8px rgba(0, 0, 237, 0.2);
+      }
+      
+      .profile-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #FFFFFF;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 768px) {
+        .nav-brand-name, .profile-name { display: none; }
+        .nav-brand { margin-right: 16px; }
       }
     </style>
 </head>
-<body>
-    <nav class="mdb-nav" role="navigation" aria-label="Main navigation">
-        <a href="/dashboard" class="nav-brand" aria-label="Home">
-            <div class="nav-leaf" aria-hidden="true"></div>
-            <span class="nav-brand-name">MongoDB <span>Academy</span></span>
+<body class="<%= typeof theme !== 'undefined' ? theme : '' %>">
+    <nav class="mdb-nav">
+        <a href="/dashboard" class="nav-brand">
+            <div class="nav-logo-mark">M</div>
+            <span class="nav-brand-name">Multitouch<span>Academy</span></span>
         </a>
 
-        <ul class="nav-links" role="list">
-            <li><a href="/dashboard" class="nav-link">Dashboard</a></li>
-            <li><a href="/courses" class="nav-link">Courses</a></li>
+        <ul class="nav-links">
+            <li><a href="/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
+            <li><a href="/admin/course-manager" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'active' : '' %>">Manager</a></li>
         </ul>
 
         <div class="nav-actions">
-            <button id="themeToggle" class="nav-theme-btn" aria-label="Toggle theme" title="Toggle dark/light mode">
+            <button id="themeToggle" class="action-icon-btn" title="Toggle theme">
                 <span id="themeIcon">☀️</span>
             </button>
-            <div class="nav-avatar" id="navAvatar" title="Profile">U</div>
+            
+            <div class="profile-trigger" onclick="window.location.href='/profile'">
+                <div class="nav-avatar" id="navAvatar">U</div>
+                <span class="profile-name" id="navName">User</span>
+            </div>
         </div>
     </nav>
 
     <script>
-      // Sync navbar avatar with stored user
       (function() {
+        function applyTheme(theme) {
+          const isDark = theme === 'dark';
+          document.documentElement.classList.toggle('dark', isDark);
+          document.body.classList.toggle('dark', isDark);
+          const icon = document.getElementById('themeIcon');
+          if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+        }
+
+        function initTheme() {
+          const savedTheme = localStorage.getItem('theme') || 'light';
+          applyTheme(savedTheme);
+        }
+
+        function toggleTheme() {
+          const isDark = document.documentElement.classList.contains('dark');
+          const newTheme = isDark ? 'light' : 'dark';
+          localStorage.setItem('theme', newTheme);
+          applyTheme(newTheme);
+        }
+
+        initTheme();
+        document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+
+        // Profile Sync
         try {
-          const user = JSON.parse(localStorage.getItem('user') || '{}');
-          const avatar = document.getElementById('navAvatar');
-          if (user && user.name && avatar) {
-            avatar.textContent = user.name.charAt(0).toUpperCase();
-            avatar.setAttribute('title', user.name);
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const user = JSON.parse(userStr);
+            const avatar = document.getElementById('navAvatar');
+            const nameField = document.getElementById('navName');
+            if (avatar && user.email) avatar.textContent = user.email.charAt(0).toUpperCase();
+            if (nameField && user.name) nameField.textContent = user.name;
           }
         } catch(e) {}
       })();
     </script>
-</body>
-</html>

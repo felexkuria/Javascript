@@ -99,23 +99,29 @@
         body.dark .theme-toggle:hover { color: #000; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <nav class="nav">
-            <div class="logo">📚 Admin Panel</div>
-            <div class="nav-links">
-                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
-                <a href="/admin/course-manager" class="nav-link active">Courses</a>
-                <a href="/admin/teacher-requests" class="nav-link">Teachers</a>
-                <a href="/logout" class="nav-link">Logout</a>
-                <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+<body class="bg-[#F9FBFA] dark:bg-[#001E2B] font-sans antialiased transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <nav class="flex justify-between items-center mb-12 bg-white/80 dark:bg-[#001E2B]/80 backdrop-blur-xl sticky top-0 z-50 py-4 border-b border-gray-100 dark:border-[#133A41] -mx-6 px-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-xl flex items-center justify-center text-[#001E2B] font-bold text-xl shadow-lg shadow-[#00ED64]/20">M</div>
+                <span class="text-xl font-bold text-gray-900 dark:text-[#E7EEEB] tracking-tight">Multitouch <span class="text-[#00ED64]">Academy</span></span>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="/dashboard" class="text-sm font-medium text-gray-600 dark:text-[#9FB1AD] hover:text-[#00ED64] transition-colors">Student Dashboard</a>
+                <button onclick="showCreateModal()" class="px-5 py-2.5 bg-[#00ED64] hover:bg-[#00D158] text-[#001E2B] font-bold rounded-lg transition-all shadow-lg shadow-[#00ED64]/10 flex items-center gap-2">
+                    <span>+</span> New Course
+                </button>
+                <div class="h-6 w-px bg-gray-200 dark:bg-[#133A41]"></div>
+                <button id="themeToggle" class="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-[#133A41] rounded-lg transition-colors">
+                    <span id="themeIcon">🌙</span>
+                </button>
             </div>
         </nav>
 
-        <div class="header">
-            <h1>Course Manager</h1>
-            <p>Manage and edit your course content</p>
-        </div>
+        <header class="mb-12">
+            <h1 class="text-4xl font-extrabold text-gray-900 dark:text-[#E7EEEB] tracking-tight mb-4">Course Manager</h1>
+            <p class="text-lg text-gray-600 dark:text-[#9FB1AD]">Build and manage premium learning experiences for Multitouch Academy.</p>
+        </header>
 
         <div id="courseList" class="courses-grid">
             <!-- Courses will be loaded here -->
@@ -134,9 +140,11 @@
             
             if (courses.length === 0) {
                 container.innerHTML = `
-                    <div class="empty-state">
-                        <h2>No courses found</h2>
-                        <p>Start by creating your first course</p>
+                    <div class="col-span-full py-20 text-center bg-white dark:bg-[#023430] rounded-3xl border border-dashed border-gray-200 dark:border-[#133A41]">
+                        <div class="text-6xl mb-6">🎓</div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB] mb-2">No courses yet</h2>
+                        <p class="text-gray-500 dark:text-[#9FB1AD] mb-8">Start your teaching journey by creating your first course.</p>
+                        <button onclick="showCreateModal()" class="px-8 py-3 bg-[#00ED64] text-[#001E2B] font-bold rounded-xl hover:scale-105 transition-transform">Create Course</button>
                     </div>
                 `;
                 return;
@@ -144,509 +152,187 @@
             
             container.innerHTML = courses.map(course => {
                 const videoCount = course.videos ? course.videos.length : 0;
-                const watchedCount = course.videos ? course.videos.filter(v => v.watched).length : 0;
-                const completionRate = videoCount > 0 ? Math.round((watchedCount / videoCount) * 100) : 0;
                 
                 return `
-                    <div class="course-card">
-                        <div class="course-title">${course.title || course.name || 'Untitled Course'}</div>
-                        <div class="course-description">${course.description || 'No description available'}</div>
+                    <div class="group bg-white dark:bg-[#023430] rounded-2xl border border-gray-100 dark:border-[#133A41] p-6 transition-all hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded-md border border-blue-100 dark:border-blue-800/30">${course.category || 'General'}</span>
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="deleteCourse('${course.name || course._id}')" class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">🗑️</button>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-[#E7EEEB] mb-2 group-hover:text-[#00ED64] transition-colors">${course.title || course.name || 'Untitled Course'}</h3>
+                        <p class="text-sm text-gray-500 dark:text-[#9FB1AD] line-clamp-2 mb-6">${course.description || 'No description available'}</p>
                         
-                        <div class="course-stats">
-                            <div class="stat">
-                                <div class="stat-number">${videoCount}</div>
-                                <div class="stat-label">Videos</div>
+                        <div class="grid grid-cols-2 gap-4 mb-6 pt-6 border-t border-gray-50 dark:border-[#133A41]">
+                            <div>
+                                <div class="text-xs text-gray-400 dark:text-[#5C7C77] uppercase font-bold tracking-widest mb-1">Content</div>
+                                <div class="text-lg font-bold text-gray-900 dark:text-[#E7EEEB]">${videoCount} Lessons</div>
                             </div>
-                            <div class="stat">
-                                <div class="stat-number">${completionRate}%</div>
-                                <div class="stat-label">Completed</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-number">${course.category || 'General'}</div>
-                                <div class="stat-label">Category</div>
+                            <div>
+                                <div class="text-xs text-gray-400 dark:text-[#5C7C77] uppercase font-bold tracking-widest mb-1">Level</div>
+                                <div class="text-lg font-bold text-gray-900 dark:text-[#E7EEEB]">${course.difficulty || 'Intermediate'}</div>
                             </div>
                         </div>
                         
-                        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-                            <button class="btn" onclick="editCourse('${course.name || course._id}')" style="flex: 1;">
-                                Edit Course
-                            </button>
-                            <button class="btn" onclick="uploadVideo('${course.name || course._id}')" style="flex: 1; background: #30d158;">
-                                Upload Video
-                            </button>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="editCourse('${course.name || course._id}')" class="py-2.5 bg-gray-50 dark:bg-[#133A41] text-gray-700 dark:text-[#E7EEEB] font-bold rounded-lg hover:bg-gray-100 dark:hover:bg-[#1a4b53] transition-colors text-sm">Settings</button>
+                            <button onclick="showVideos('${course.name || course._id}')" class="py-2.5 bg-[#00ED64]/10 text-[#00ED64] font-bold rounded-lg hover:bg-[#00ED64]/20 transition-colors text-sm">Curriculum</button>
                         </div>
-                        
-                        <button class="btn" onclick="showVideos('${course.name || course._id}')" style="background: #ff9500; font-size: 14px; padding: 8px 16px;">
-                            📹 Manage Videos (${videoCount})
-                        </button>
                     </div>
                 `;
-            }).join('');
+            });
         }
-        
-        function editCourse(courseId) {
-            const course = serverCourses.find(c => (c.name || c._id) === courseId);
-            showEditModal(course);
-        }
-        
-        function showEditModal(course) {
+
+        function editCourse(id) {
+            const course = serverCourses.find(c => (c.name || c._id) === id);
             const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-[#001E2B]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4';
+            modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
             modal.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;" onclick="closeModal(event)">
-                    <div style="background: white; border-radius: 18px; padding: 32px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
-                        <h2 style="margin-bottom: 24px; font-size: 24px; font-weight: 600;">Edit Course: ${course.title || course.name}</h2>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Course Name:</label>
-                            <input type="text" id="courseName" value="${course.name || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Course Title:</label>
-                            <input type="text" id="courseTitle" value="${course.title || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Description:</label>
-                            <textarea id="courseDescription" rows="4" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; resize: vertical;">${course.description || ''}</textarea>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Category:</label>
-                            <input type="text" id="courseCategory" value="${course.category || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Instructor:</label>
-                            <input type="text" id="courseInstructor" value="${course.instructor || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Difficulty Level:</label>
-                            <select id="courseDifficulty" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                                <option value="Beginner" ${course.difficulty === 'Beginner' ? 'selected' : ''}>Beginner</option>
-                                <option value="Intermediate" ${course.difficulty === 'Intermediate' ? 'selected' : ''}>Intermediate</option>
-                                <option value="Advanced" ${course.difficulty === 'Advanced' ? 'selected' : ''}>Advanced</option>
-                            </select>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Tags (comma-separated):</label>
-                            <input type="text" id="courseTags" value="${course.tags ? course.tags.join(', ') : ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                        </div>
-                        
-                        <div style="margin-bottom: 24px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
-                            <h4 style="margin-bottom: 12px; font-size: 16px;">Course Statistics:</h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; font-size: 14px;">
-                                <div><strong>Videos:</strong> ${course.videos ? course.videos.length : 0}</div>
-                                <div><strong>Created:</strong> ${course.createdAt ? new Date(course.createdAt).toLocaleDateString() : 'N/A'}</div>
-                                <div><strong>Updated:</strong> ${course.updatedAt ? new Date(course.updatedAt).toLocaleDateString() : 'N/A'}</div>
-                            </div>
-                        </div>
-                        
-                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                            <button onclick="closeModal()" style="padding: 12px 24px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer;">Cancel</button>
-                            <button onclick="saveCourse('${course.name || course._id}')" style="padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer;">Save Changes</button>
-                        </div>
+                <div class="bg-white dark:bg-[#023430] rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-100 dark:border-[#133A41]" onclick="event.stopPropagation()">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB] mb-6 font-mono">Course Configuration</h2>
+                    <div class="space-y-4">
+                        <input id="editTitle" type="text" value="${course.title || ''}" placeholder="Title" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] dark:text-white outline-none focus:border-[#00ED64]">
+                        <input id="editCategory" type="text" value="${course.category || ''}" placeholder="Category" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] dark:text-white outline-none focus:border-[#00ED64]">
+                        <textarea id="editDesc" rows="4" placeholder="Description" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] dark:text-white outline-none focus:border-[#00ED64]">${course.description || ''}</textarea>
+                    </div>
+                    <div class="flex gap-4 mt-8">
+                        <button onclick="this.closest('.fixed').remove()" class="flex-1 py-3 text-gray-400 font-bold">Cancel</button>
+                        <button onclick="submitEditCourse('${course.name || course._id}')" class="flex-1 py-3 bg-[#00ED64] text-[#001E2B] font-bold rounded-xl shadow-lg shadow-[#00ED64]/20 hover:scale-105 transition-transform">Update Metadata</button>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
         }
-        
-        async function saveCourse(courseId) {
-            const courseData = {
-                name: document.getElementById('courseName').value.trim(),
-                title: document.getElementById('courseTitle').value.trim(),
-                description: document.getElementById('courseDescription').value.trim(),
-                category: document.getElementById('courseCategory').value.trim(),
-                instructor: document.getElementById('courseInstructor').value.trim(),
-                difficulty: document.getElementById('courseDifficulty').value,
-                tags: document.getElementById('courseTags').value.split(',').map(t => t.trim()).filter(t => t)
+
+        async function submitEditCourse(id) {
+            const data = {
+                title: document.getElementById('editTitle').value.trim(),
+                category: document.getElementById('editCategory').value.trim(),
+                description: document.getElementById('editDesc').value.trim()
             };
-            
             try {
-                const response = await fetch(`/api/courses/${encodeURIComponent(courseId)}`, {
+                const res = await fetch(`/api/courses/${encodeURIComponent(id)}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-key': 'admin123'
-                    },
-                    body: JSON.stringify(courseData)
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('Course updated successfully!');
-                    closeModal();
-                    location.reload();
-                } else {
-                    alert('Failed to update course: ' + (result.error || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Save error:', error);
-                alert('Failed to save course: ' + error.message);
-            }
+                if((await res.json()).success) location.reload();
+            } catch(e) { console.error(e); }
         }
-        
+
         function showVideos(courseId) {
             const course = serverCourses.find(c => (c.name || c._id) === courseId);
             const videos = course.videos || [];
-            
             const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-[#001E2B]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4';
+            modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
             modal.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;" onclick="closeModal(event)">
-                    <div style="background: white; border-radius: 18px; padding: 32px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
-                        <h2 style="margin-bottom: 24px; font-size: 24px; font-weight: 600;">Manage Videos: ${course.title || course.name}</h2>
-                        
-                        <div id="videosList">
-                            ${videos.map(video => `
-                                <div style="border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin-bottom: 12px; background: #f8f9fa;">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                                        <div style="flex: 1;">
-                                            <h4 style="margin-bottom: 4px; font-size: 16px;">${video.title}</h4>
-                                            <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
-                                                Chapter: ${video.chapter || video.sectionTitle || 'N/A'} | Order: ${video.order || 'N/A'}
-                                            </div>
-                                            <div style="font-size: 11px; color: #888;">
-                                                ID: ${video._id} | Created: ${video.createdAt ? new Date(video.createdAt).toLocaleDateString() : 'N/A'}
-                                            </div>
-                                        </div>
-                                        <button onclick="editVideo('${courseId}', '${video._id}')" style="padding: 6px 12px; background: #007aff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                                            Edit
-                                        </button>
-                                    </div>
-                                    <div style="font-size: 11px; color: #666; word-break: break-all;">
-                                        URL: ${video.videoUrl || 'No URL'}
-                                    </div>
+                <div class="bg-white dark:bg-[#023430] rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-gray-100 dark:border-[#133A41]" onclick="event.stopPropagation()">
+                    <div class="flex justify-between items-center mb-8 pb-4 border-b border-gray-100 dark:border-[#133A41]">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB] font-mono tracking-tighter">MANAGE ASSETS</h2>
+                        <button onclick="showUploadModal('${courseId}')" class="px-5 py-2 bg-[#00ED64] text-[#001E2B] font-bold rounded-lg text-sm shadow-md shadow-[#00ED64]/10 hover:-translate-y-0.5 transition-transform">+ NEW LECTURE</button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto space-y-3 pr-2 scroll-smooth">
+                        ${videos.length ? videos.map(video => `
+                            <div class="group bg-gray-50/50 dark:bg-[#001E2B]/50 p-5 rounded-2xl border border-gray-100 dark:border-[#133A41] flex justify-between items-center transition-all hover:bg-white dark:hover:bg-[#001E2B] hover:border-[#00ED64]/30 hover:shadow-lg hover:shadow-black/5">
+                                <div>
+                                    <h4 class="font-bold text-gray-900 dark:text-[#E7EEEB] group-hover:text-[#00ED64] transition-colors">${video.title}</h4>
+                                    <p class="text-xs text-gray-400 dark:text-[#5C7C77] font-medium mt-1 uppercase tracking-widest">${video.chapter || 'UNNAMED CHAPTER'} • VERSION 1.0</p>
                                 </div>
-                            `).join('')}
-                        </div>
-                        
-                        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                            <button onclick="closeModal()" style="padding: 12px 24px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer;">Close</button>
-                        </div>
+                                <button onclick="deleteVideo('${courseId}', '${video._id}')" class="w-10 h-10 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors">
+                                    <span class="text-xl">🗑️</span>
+                                </button>
+                            </div>
+                        `).join('') : '<div class="py-20 text-center text-gray-400 dark:text-[#5C7C77] italic font-mono uppercase tracking-widest">Repository is empty</div>'}
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
         }
-        
-        function editVideo(courseId, videoId) {
-            const course = serverCourses.find(c => (c.name || c._id) === courseId);
-            const video = course.videos.find(v => v._id === videoId);
-            
-            const modal = document.createElement('div');
-            modal.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1001; display: flex; align-items: center; justify-content: center;" onclick="closeModal(event)">
-                    <div style="background: white; border-radius: 18px; padding: 32px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
-                        <h2 style="margin-bottom: 24px; font-size: 24px; font-weight: 600;">Edit Video: ${video.title}</h2>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Title:</label>
-                            <input type="text" id="videoTitle" value="${video.title || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Chapter/Section:</label>
-                            <input type="text" id="videoChapter" value="${video.chapter || video.sectionTitle || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Order:</label>
-                            <input type="number" id="videoOrder" value="${video.order || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Description:</label>
-                            <textarea id="videoDescription" rows="3" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">${video.description || ''}</textarea>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Video URL:</label>
-                            <input type="url" id="videoUrl" value="${video.videoUrl || ''}" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Replace Video File:</label>
-                            <input type="file" id="newVideoFile" accept="video/*" style="width: 100%; padding: 12px; border: 2px dashed #007aff; border-radius: 12px; background: #f8f9fa;">
-                            <div style="font-size: 12px; color: #888; margin-top: 4px;">Leave empty to keep current video</div>
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <button onclick="generateSummary('${videoId}')" style="width: 100%; padding: 12px; background: #ff9500; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                                🤖 Generate AI Summary
-                            </button>
-                        </div>
-                        
-                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                            <button onclick="closeModal()" style="padding: 12px 24px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer;">Cancel</button>
-                            <button onclick="saveVideo('${courseId}', '${videoId}')" style="padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer;">Save Changes</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-        
-        async function saveVideo(courseId, videoId) {
-            const videoData = {
-                title: document.getElementById('videoTitle').value.trim(),
-                chapter: document.getElementById('videoChapter').value.trim(),
-                order: parseInt(document.getElementById('videoOrder').value) || 0,
-                description: document.getElementById('videoDescription').value.trim(),
-                videoUrl: document.getElementById('videoUrl').value.trim()
-            };
-            
-            const newFile = document.getElementById('newVideoFile').files[0];
-            
-            try {
-                // If new file selected, upload it first
-                if (newFile) {
-                    const formData = new FormData();
-                    formData.append('video', newFile);
-                    formData.append('courseName', courseId);
-                    formData.append('title', videoData.title);
-                    formData.append('chapter', videoData.chapter);
-                    
-                    const uploadResponse = await fetch('/api/videos/upload', {
-                        method: 'POST',
-                        headers: { 'x-admin-key': 'admin123' },
-                        body: formData
-                    });
-                    
-                    const uploadResult = await uploadResponse.json();
-                    if (uploadResult.success) {
-                        videoData.videoUrl = uploadResult.videoUrl;
-                    }
-                }
-                
-                // Update video metadata
-                const response = await fetch(`/api/videos/${encodeURIComponent(courseId)}/${videoId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-key': 'admin123'
-                    },
-                    body: JSON.stringify(videoData)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('Video updated successfully!');
-                    closeModal();
-                    location.reload();
-                } else {
-                    alert('Failed to update video: ' + (result.error || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Save error:', error);
-                alert('Failed to save video: ' + error.message);
-            }
-        }
-        
-        async function generateSummary(videoId) {
-            try {
-                const response = await fetch(`/api/ai/analyze-content`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-key': 'admin123'
-                    },
-                    body: JSON.stringify({ videoId })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('videoDescription').value = result.analysis;
-                    alert('AI summary generated!');
-                } else {
-                    alert('Failed to generate summary');
-                }
-            } catch (error) {
-                alert('Error generating summary: ' + error.message);
-            }
-        }
-        
-        function uploadVideo(courseId) {
-            showUploadModal(courseId);
-        }
-        
+
         function showUploadModal(courseId) {
             const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-[#001E2B]/95 backdrop-blur-md z-[110] flex items-center justify-center p-4';
+            modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
             modal.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;" onclick="closeModal(event)">
-                    <div style="background: white; border-radius: 18px; padding: 32px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
-                        <h2 style="margin-bottom: 24px; font-size: 24px; font-weight: 600;">Upload Video to ${courseId}</h2>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Video File:</label>
-                            <input type="file" id="videoFile" accept="video/*" style="width: 100%; padding: 12px; border: 2px dashed #007aff; border-radius: 12px; background: #f8f9fa;">
-                            <div style="font-size: 12px; color: #888; margin-top: 4px;">
-                                📁 Looking for .mp4 files? Check: <code>/frontend/public/videos/</code>
-                            </div>
+                <div class="bg-white dark:bg-[#023430] rounded-3xl p-10 max-w-lg w-full shadow-2xl border border-gray-100 dark:border-[#133A41]" onclick="event.stopPropagation()">
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-[#00ED64]/10 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">🚀</div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB] mb-2 font-mono uppercase tracking-tight">Media Deployment</h2>
+                        <p class="text-sm text-gray-500 dark:text-[#9FB1AD]">Target Course: <span class="text-[#00ED64]">${courseId}</span></p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="relative group p-8 border-2 border-dashed border-gray-200 dark:border-[#133A41] rounded-2xl text-center hover:border-[#00ED64] transition-all cursor-pointer bg-gray-50/30 dark:bg-[#001E2B]/30">
+                            <input id="videoFile" type="file" class="hidden" onchange="document.getElementById('fileNameP').textContent = this.files[0].name; document.getElementById('fileNameP').className='text-sm text-[#00ED64] font-bold mt-2'">
+                            <label for="videoFile" class="cursor-pointer">
+                                <span class="text-gray-400 dark:text-[#5C7C77] text-sm font-medium" id="fileNameP">DROP MEDIA FILE HERE OR CLICK TO BROWSE</span>
+                            </label>
                         </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Video Title:</label>
-                            <input type="text" id="videoTitle" placeholder="Enter video title" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        <input id="vTitle" type="text" placeholder="LECTURE TITLE" class="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] dark:text-white outline-none focus:ring-2 ring-[#00ED64]/20 transition-all font-medium uppercase tracking-wider text-sm">
+                        <input id="vChapter" type="text" placeholder="CHAPTER NAME" class="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] dark:text-white outline-none focus:ring-2 ring-[#00ED64]/20 transition-all font-medium uppercase tracking-wider text-sm">
+                    </div>
+                    <div id="uProgress" class="hidden mt-8">
+                        <div class="h-1.5 w-full bg-gray-100 dark:bg-[#133A41] rounded-full overflow-hidden">
+                            <div id="uBar" class="h-full bg-gradient-to-r from-[#00ED64] to-[#00684A] transition-all duration-300" style="width:0%"></div>
                         </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Chapter (optional):</label>
-                            <input type="text" id="videoChapter" placeholder="e.g., Chapter 1" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                        </div>
-                        
-                        <div id="uploadProgress" style="display: none; margin-bottom: 20px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                <span>Uploading...</span>
-                                <span id="progressPercent">0%</span>
-                            </div>
-                            <div style="width: 100%; height: 8px; background: #f2f2f7; border-radius: 4px; overflow: hidden;">
-                                <div id="progressBar" style="height: 100%; background: #007aff; width: 0%; transition: width 0.3s ease;"></div>
-                            </div>
-                        </div>
-                        
-                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                            <button onclick="closeModal()" style="padding: 12px 24px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer;">Cancel</button>
-                            <button onclick="startUpload('${courseId}')" id="uploadBtn" style="padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer;">Upload to S3</button>
-                        </div>
-                        
-                        <div style="margin-top: 20px; padding: 16px; background: #f8f9fa; border-radius: 8px; font-size: 14px; color: #666;">
-                            <strong>CLI Workflow:</strong><br>
-                            <div style="margin: 8px 0;">
-                                <strong>1. Compress video:</strong><br>
-                                <code style="background: #e9ecef; padding: 2px 4px; border-radius: 4px; display: block; margin: 4px 0;">ffmpeg -i input.mp4 -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 128k compressed.mp4</code>
-                            </div>
-                            <div style="margin: 8px 0;">
-                                <strong>2. Upload to S3:</strong><br>
-                                <code style="background: #e9ecef; padding: 2px 4px; border-radius: 4px; display: block; margin: 4px 0;">aws s3 cp compressed.mp4 s3://your-bucket/videos/${courseId}/</code>
-                            </div>
-                            <div style="margin: 8px 0; font-size: 12px; color: #888;">
-                                💡 Tip: Use CRF 18-28 (lower = better quality, larger file)
-                            </div>
-                        </div>
+                        <p class="text-[10px] text-gray-400 dark:text-[#5C7C77] font-bold uppercase tracking-[0.2em] mt-3 text-center">SYCHRONIZING ASSETS TO M-CLOUD...</p>
+                    </div>
+                    <div class="flex gap-4 mt-10">
+                        <button onclick="this.closest('.fixed').remove()" class="flex-1 py-4 text-gray-400 dark:text-[#5C7C77] font-bold text-xs uppercase tracking-widest hover:text-gray-600 dark:hover:text-[#9FB1AD] transition-colors">Abort</button>
+                        <button onclick="startUpload('${courseId}')" class="flex-1 py-4 bg-[#00ED64] hover:bg-[#00D158] text-[#001E2B] font-bold rounded-xl shadow-lg shadow-[#00ED64]/20 hover:scale-[1.02] transition-all uppercase tracking-widest text-xs">Deploy Lecture</button>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
         }
-        
-        function closeModal(event) {
-            if (event && event.target !== event.currentTarget) return;
-            const modal = document.querySelector('[style*="position: fixed"]');
-            if (modal) modal.remove();
-        }
-        
+
         async function startUpload(courseId) {
-            const fileInput = document.getElementById('videoFile');
-            const titleInput = document.getElementById('videoTitle');
-            const chapterInput = document.getElementById('videoChapter');
-            const uploadBtn = document.getElementById('uploadBtn');
-            const progressDiv = document.getElementById('uploadProgress');
-            const progressBar = document.getElementById('progressBar');
-            const progressPercent = document.getElementById('progressPercent');
-            
-            const file = fileInput.files[0];
-            const title = titleInput.value.trim();
-            
-            if (!file) {
-                alert('Please select a video file');
-                return;
-            }
-            
-            if (!title) {
-                alert('Please enter a video title');
-                return;
-            }
-            
-            uploadBtn.disabled = true;
-            uploadBtn.textContent = 'Uploading...';
-            progressDiv.style.display = 'block';
-            
+            const file = document.getElementById('videoFile').files[0];
+            const title = document.getElementById('vTitle').value;
+            if(!file || !title) return alert('File and Title are required');
+
+            const formData = new FormData();
+            formData.append('video', file);
+            formData.append('courseName', courseId);
+            formData.append('title', title);
+            formData.append('chapter', document.getElementById('vChapter').value);
+
+            document.getElementById('uProgress').classList.remove('hidden');
+            const xhr = new XMLHttpRequest();
+            xhr.upload.onprogress = (e) => {
+                if(e.lengthComputable) document.getElementById('uBar').style.width = (e.loaded/e.total*100)+'%';
+            };
+            xhr.onload = () => {
+                if(xhr.status === 200) location.reload();
+                else alert('Upload failed');
+            };
+            xhr.open('POST', '/api/videos/upload');
+            xhr.send(formData);
+        }
+
+        async function deleteVideo(courseId, videoId) {
+            if(!confirm('This will permanently delete this asset. Continue?')) return;
             try {
-                // Generate S3 key
-                const timestamp = Date.now();
-                const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_');
-                const s3Key = `videos/${courseId}/${timestamp}_${sanitizedTitle}.${file.name.split('.').pop()}`;
-                
-
-                
-                // Upload via backend (avoids CORS issues)
-                const formData = new FormData();
-                formData.append('video', file);
-                formData.append('courseName', courseId);
-                formData.append('title', title);
-                formData.append('chapter', chapterInput.value.trim());
-                
-                const xhr = new XMLHttpRequest();
-                
-                xhr.upload.addEventListener('progress', (e) => {
-                    if (e.lengthComputable) {
-                        const percent = Math.round((e.loaded / e.total) * 100);
-                        progressBar.style.width = percent + '%';
-                        progressPercent.textContent = percent + '%';
-                    }
-                });
-                
-                xhr.onload = function() {
-                    console.log('Upload response status:', xhr.status);
-                    
-                    if (xhr.status === 200) {
-                        const response = JSON.parse(xhr.responseText);
-                        if (response.success) {
-                            alert('Video uploaded successfully!');
-                            closeModal();
-                            location.reload();
-                        } else {
-                            alert('Upload failed: ' + (response.error || 'Unknown error'));
-                        }
-                    } else {
-                        alert('Upload failed with status: ' + xhr.status);
-                    }
-                    
-                    uploadBtn.disabled = false;
-                    uploadBtn.textContent = 'Upload to S3';
-                };
-                
-                xhr.onerror = function() {
-                    alert('Network error during upload');
-                    uploadBtn.disabled = false;
-                    uploadBtn.textContent = 'Upload to S3';
-                };
-                
-                xhr.open('POST', '/api/videos/upload');
-                xhr.setRequestHeader('x-admin-key', 'admin123');
-                xhr.send(formData);
-                
-            } catch (error) {
-                console.error('Upload error:', error);
-                alert('Upload failed: ' + error.message);
-                uploadBtn.disabled = false;
-                uploadBtn.textContent = 'Upload to S3';
-            }
+                const res = await fetch(`/api/videos/${encodeURIComponent(courseId)}/${videoId}`, { method: 'DELETE' });
+                if((await res.json()).success) location.reload();
+            } catch(e) { console.error(e); }
         }
-        
+
         function toggleTheme() {
-            const body = document.body;
-            const button = document.querySelector('.theme-toggle');
-            
-            body.classList.toggle('dark');
-            const isDark = body.classList.contains('dark');
-            
-            button.textContent = isDark ? '☀️' : '🌙';
+            const isDark = document.body.classList.toggle('dark');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
         }
 
-        // Initialize theme
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark');
-            document.querySelector('.theme-toggle').textContent = '☀️';
-        }
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') document.body.classList.add('dark');
+        document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeToggle').onclick = toggleTheme;
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
