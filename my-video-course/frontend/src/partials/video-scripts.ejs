@@ -36,10 +36,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (window.gamificationSystem) {
+                const isLastVideoVal = document.getElementById('isLastVideo')?.value === 'true';
+                const isLastInChapterVal = document.getElementById('isLastInChapter')?.value === 'true';
+                
                 window.gamificationSystem.onVideoCompleted({
-                    videoId, courseName,
-                    isLastVideo: <%= isLastVideo ? 'true' : 'false' %>,
-                    isLastInChapter: <%= isLastInChapter ? 'true' : 'false' %>
+                    videoId, 
+                    courseName,
+                    isLastVideo: isLastVideoVal,
+                    isLastInChapter: isLastInChapterVal
                 });
             }
         })

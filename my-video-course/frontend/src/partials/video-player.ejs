@@ -1,5 +1,5 @@
 <div class="video-section animate-slide-up">
-    <div class="video-container">
+    <div class="video-container" id="videoContainer">
         <% if (isYouTube) { %>
         <iframe id="youtubePlayer" 
                 src="<%= video.embedUrl %>" 
@@ -7,44 +7,58 @@
                 allowfullscreen>
         </iframe>
         <% } else { %>
-        <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video" preload="metadata" poster="/thumbnails/<%= video._id %>.jpg">
-            <source src="data:video/mp4;base64," type="video/mp4" id="videoSource">
+        <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video" preload="metadata" 
+               poster="/thumbnails/<%= video._id %>.jpg"
+               style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+            <source src="<%= video.videoUrl %>" type="video/mp4" id="videoSource">
             <% if (video.captionsUrl) { %>
             <track label="English" kind="subtitles" srclang="en" src="/captions/<%= courseName %>/<%= video._id %>" default />
             <% } %>
             <track id="autoCaption" label="Auto-Generated" kind="subtitles" srclang="en" 
-                   src="/api/captions/vtt/<%= encodeURIComponent(courseName) %>/<%= video._id %>" default />
+                   src="/api/captions/vtt/<%= encodeURIComponent(courseName) %>/<%= video._id %>" />
         </video>
         <% } %>
         
-        <!-- Interactive overlay -->
-        <div class="video-overlay" id="videoOverlay" style="display: none;">
-            <div class="play-button" id="playButton">
+        <!-- Interactive overlay (only shown when paused and not YouTube) -->
+        <% if (!isYouTube) { %>
+        <div class="video-overlay" id="videoOverlay" style="display: flex; opacity: 0; pointer-events: none;">
+            <div class="play-button" id="playButton" style="pointer-events: all; cursor: pointer;">
                 <span>▶</span>
             </div>
         </div>
+        <% } %>
         
         <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const videoPlayer = document.getElementById('videoPlayer');
-            const overlay = document.getElementById('videoOverlay');
-            const playButton = document.getElementById('playButton');
-            
-            if (videoPlayer && overlay && playButton) {
-                playButton.addEventListener('click', function() {
-                    videoPlayer.play();
-                    overlay.style.display = 'none';
-                });
+        (function() {
+            document.addEventListener('DOMContentLoaded', function() {
+                const videoPlayer = document.getElementById('videoPlayer');
+                const overlay = document.getElementById('videoOverlay');
+                const playButton = document.getElementById('playButton');
                 
-                videoPlayer.addEventListener('play', function() {
-                    overlay.style.display = 'none';
-                });
-                
-                videoPlayer.addEventListener('pause', function() {
-                    overlay.style.display = 'flex';
-                });
-            }
-        });
+                if (videoPlayer && overlay && playButton) {
+                    playButton.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        videoPlayer.play().catch(err => console.error("Play blocked:", err));
+                    });
+                    
+                    videoPlayer.addEventListener('play', function() {
+                        overlay.style.opacity = '0';
+                        overlay.style.pointerEvents = 'none';
+                    });
+                    
+                    videoPlayer.addEventListener('pause', function() {
+                        overlay.style.opacity = '1';
+                        // Keep pointer-events: none on the overlay mask itself, but button is handled
+                    });
+
+                    // Ensure video player is clickable even with overlay
+                    videoPlayer.addEventListener('click', function() {
+                        if (videoPlayer.paused) videoPlayer.play();
+                        else videoPlayer.pause();
+                    });
+                }
+            });
+        })();
         </script>
     </div>
 </div>

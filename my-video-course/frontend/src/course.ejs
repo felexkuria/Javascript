@@ -399,28 +399,37 @@
         }
     </style>
 </head>
-<body>
-    <button class="theme-toggle" id="themeToggle">🌙</button>
+<body class="dark:bg-[#001E2B]">
+    <%- include('partials/header', { title: courseName + ' - Multitouch Academy', activePage: 'courses' }) %>
     
-    <div class="container">
-        <div class="course-header" style="text-align: left; max-width: 800px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                <span class="badge badge-green">Best Seller</span>
-                <span class="badge badge-blue">New Architecture</span>
+    <div class="container" style="margin-top: 40px;">
+        <div class="course-header animate-slide-up" style="text-align: left; max-width: 800px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+                <span class="badge badge-green">Premium Course</span>
+                <span class="badge badge-blue">Verified Content</span>
             </div>
-            <h1 class="course-title" style="margin-left: 0;"><%= courseName %></h1>
-            <p class="course-subtitle" style="font-size: 20px; line-height: 1.4;">Master modern full-stack development with MongoDB, Node.js, and AI-integrated learning patterns.</p>
+            <h1 class="course-title dark:text-[#E7EEEB]" style="font-size: 48px; letter-spacing: -0.03em;"><%= courseName %></h1>
+            <p class="course-subtitle dark:text-[#9FB1AD]" style="font-size: 20px; line-height: 1.4; margin-top: 16px;">Master state-of-the-art engineering patterns with the Multitouch Academy curriculum.</p>
             
-            <div style="display: flex; gap: 24px; margin-bottom: 32px; font-size: 14px; opacity: 0.8;">
-                <span>👤 Created by <strong style="color: var(--mdb-green);">Engineer Felex</strong></span>
-                <span>📅 Last updated <%= new Date().toLocaleDateString() %></span>
-                <span>🌐 English</span>
+            <div style="display: flex; gap: 24px; margin: 32px 0; font-size: 14px; opacity: 0.8;" class="dark:text-[#9FB1AD]">
+                <span class="flex items-center gap-2">👤 <strong>Engineer Felex</strong></span>
+                <span class="flex items-center gap-2">📅 Updated March 2026</span>
+                <span class="flex items-center gap-2">🌐 Global Access</span>
             </div>
 
             <div class="course-actions" style="justify-content: flex-start;">
-                <button id="enrollBtn" class="btn btn-primary btn-lg" style="padding: 14px 32px; font-size: 18px;">
+                <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
+                <a href="/course/<%= courseName %>/video/start" class="btn btn-primary" style="padding: 14px 40px; font-size: 16px; border-radius: 12px; background: #00684A; color: #fff;">
+                    Continue Learning
+                </a>
+                <% } else { %>
+                <button id="enrollBtn" class="btn btn-primary" style="padding: 14px 40px; font-size: 16px; border-radius: 12px;">
                     Enroll Now
                 </button>
+                <button id="wishlistBtn" class="btn btn-secondary" style="padding: 14px 24px; font-size: 16px; border-radius: 12px; margin-left: 12px;">
+                    Add to Wishlist
+                </button>
+                <% } %>
             </div>
         </div>
         
@@ -436,17 +445,14 @@
                         <div id="courseProgressFill" class="progress-fill" style="width: 0%;"></div>
                     </div>
                 </div>
-                <% } %>
-
-                <h2 class="section-title">Course Content</h2>
-                <div class="curriculum-accordion" style="border: 1px solid rgba(0,237,100,0.1); border-radius: 12px; overflow: hidden; background: white;" class="dark:bg-[#001E2B] dark:border-[#133A41]">
+                             <h2 class="section-title">Course Content</h2>
+                <div class="curriculum-accordion bg-white dark:bg-[#001E2B] dark:border-[#133A41]" style="border: 1px solid rgba(0,237,100,0.1); border-radius: 12px; overflow: hidden;">
                     <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
                         <% sections.forEach((section, sIndex) => { %>
                             <div class="curriculum-section border-b border-gray-100 dark:border-[#133A41] last:border-0">
-                                <div class="section-header cursor-pointer flex justify-between items-center transition-colors hover:bg-gray-50 dark:hover:bg-[#023430]" 
+                                <div class="section-header cursor-pointer flex justify-between items-center transition-colors hover:bg-gray-50 dark:hover:bg-[#023430] bg-gray-50 dark:bg-[#001E2B] dark:text-[#E7EEEB]" 
                                      onclick="toggleSection(this)"
-                                     style="padding: 16px 24px; font-size: 15px;"
-                                     class="bg-gray-50 dark:bg-[#001E2B] dark:text-[#E7EEEB]">
+                                     style="padding: 16px 24px; font-size: 15px;">
                                     <div class="flex items-center gap-3">
                                         <span class="toggle-icon transition-transform duration-200">▶</span>
                                         <strong class="dark:text-[#00ED64]">Section <%= sIndex + 1 %>: <%= section.title %></strong>
@@ -455,9 +461,8 @@
                                 </div>
                                 <div class="section-lectures hidden bg-white dark:bg-[#001E2B]">
                                     <% section.lectures.forEach((lecture, lIndex) => { %>
-                                        <div class="lecture-row hover:bg-gray-50 dark:hover:bg-[#023430]/30 transition-colors" 
-                                             style="padding: 12px 24px 12px 48px; border-bottom: 1px solid rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center;"
-                                             class="dark:border-[#133A41]">
+                                        <div class="lecture-row hover:bg-gray-50 dark:hover:bg-[#023430]/30 transition-colors dark:border-[#133A41]" 
+                                             style="padding: 12px 24px 12px 48px; border-bottom: 1px solid rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
                                                 <span class="text-lg opacity-70"><%= lecture.type === 'video' ? '📺' : '📄' %></span>
                                                 <a href="/course/<%= courseName %>/video/<%= lecture.contentId %>" 
@@ -474,8 +479,7 @@
                             </div>
                         <% }); %>
                     <% } else { %>
-                        <!-- Fallback for simple video list -->
-                        <div style="padding: 24px; text-align: center; color: var(--color-text-muted);">
+                        <div style="padding: 24px; text-align: center; color: #6e6e73;">
                             <p>Curriculum is being updated. Individual videos are available below.</p>
                         </div>
                     <% } %>
@@ -483,18 +487,18 @@
             </div>
 
             <aside class="course-sidebar">
-                <div class="card" style="position: sticky; top: 24px;">
-                    <div style="width: 100%; aspect-ratio: 16/9; background: var(--mdb-midnight); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 48px;">
+                <div class="card bg-white dark:bg-[#023430] dark:border-[#133A41]" style="position: sticky; top: 24px; border: 1px solid rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
+                    <div style="width: 100%; aspect-ratio: 16/9; background: #001E2B; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 48px;">
                         📽️
                     </div>
-                    <div class="card-body">
-                        <div style="font-size: 32px; font-weight: 800; margin-bottom: 16px;">Free <span style="font-size: 16px; text-decoration: line-through; opacity: 0.5;">$94.99</span></div>
-                        <button id="enrollBtnSidebar" class="btn btn-primary btn-full btn-lg" style="margin-bottom: 12px; height: 48px; width: 100%;">Enroll Now</button>
-                        <button id="wishlistBtn" class="btn btn-default btn-full" style="height: 48px;">Add to Wishlist</button>
+                    <div class="card-body" style="padding: 24px;">
+                        <div style="font-size: 32px; font-weight: 800; margin-bottom: 16px;" class="dark:text-[#E7EEEB]">Free <span style="font-size: 16px; text-decoration: line-through; opacity: 0.5;">$94.99</span></div>
+                        <button id="enrollBtnSidebar" class="btn btn-primary" style="margin-bottom: 12px; height: 48px; width: 100%; justify-content: center;">Enroll Now</button>
+                        <button id="wishlistBtn" class="btn border border-gray-200 dark:border-[#133A41] dark:text-[#E7EEEB]" style="height: 48px; width: 100%; justify-content: center;">Add to Wishlist</button>
                         
                         <div style="margin-top: 24px;">
-                            <h4 style="font-size: 14px; margin-bottom: 12px;">This course includes:</h4>
-                            <ul style="list-style: none; padding: 0; font-size: 13px; display: flex; flex-direction: column; gap: 8px; opacity: 0.8;">
+                            <h4 style="font-size: 14px; margin-bottom: 12px;" class="dark:text-[#E7EEEB]">This course includes:</h4>
+                            <ul style="list-style: none; padding: 0; font-size: 13px; display: flex; flex-direction: column; gap: 8px; opacity: 0.8;" class="dark:text-[#9FB1AD]">
                                 <li>🎥 <%= (typeof totalVideos !== 'undefined' ? totalVideos : 0) %> On-demand videos</li>
                                 <li>📄 Downloadable resources</li>
                                 <li>📱 Access on mobile and TV</li>
@@ -535,8 +539,13 @@
         let isAdmin = false;
 
         document.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('user');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                isAdmin = user.email === 'engineerfelex@gmail.com' || user.isAdmin;
+            }
+            
             checkEnrollmentStatus();
-            checkUserRole();
             
             // Open first section by default
             const firstSection = document.querySelector('.section-header');
@@ -545,24 +554,19 @@
 
         function toggleSection(header) {
             const lectures = header.nextElementSibling;
+            if (!lectures) return;
             const icon = header.querySelector('.toggle-icon');
             const isHidden = lectures.classList.contains('hidden');
             
             if (isHidden) {
                 lectures.classList.remove('hidden');
-                icon.style.transform = 'rotate(90deg)';
+                if (icon) icon.style.transform = 'rotate(90deg)';
                 header.classList.add('bg-gray-100', 'dark:bg-[#023430]');
             } else {
                 lectures.classList.add('hidden');
-                icon.style.transform = 'rotate(0deg)';
+                if (icon) icon.style.transform = 'rotate(0deg)';
                 header.classList.remove('bg-gray-100', 'dark:bg-[#023430]');
             }
-        }
-
-        async function checkUserRole() {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            isAdmin = user.email === 'engineerfelex@gmail.com';
-            updateWatchButtons();
         }
 
         async function checkEnrollmentStatus() {
@@ -576,54 +580,20 @@
                 
                 const data = await response.json();
                 if (data.success && data.data.enrolled) {
-                    if (enrollBtn) {
-                        enrollBtn.style.display = 'none';
-                    }
-                    if (enrollBtnSidebar) {
-                        enrollBtnSidebar.style.display = 'none';
-                    }
                     isEnrolled = true;
+                    if (document.getElementById('enrollBtn')) document.getElementById('enrollBtn').style.display = 'none';
+                    if (document.getElementById('enrollBtnSidebar')) document.getElementById('enrollBtnSidebar').style.display = 'none';
                 }
                 
                 applyDynamicStates();
-                updateWatchButtons();
             } catch (error) {
                 console.error('Error checking enrollment:', error);
+                applyDynamicStates();
             }
         }
 
-        function updateWatchButtons() {
-            const watchButtons = document.querySelectorAll('.watch-button');
-            
-            watchButtons.forEach(btn => {
-                const videoId = btn.dataset.videoId;
-                const courseName = btn.dataset.course;
-                
-                if (isAdmin || isEnrolled) {
-                    const button = btn.querySelector('button');
-                    if (button && button.classList.contains('btn-locked')) {
-                        btn.innerHTML = `
-                            <a href="/videos/${encodeURIComponent(courseName)}/${videoId}"
-                               class="btn btn-watch">
-                                ▶️ Watch Video
-                            </a>
-                        `;
-                    }
-                }
-            });
-        }
-
-        const enrollBtn = document.getElementById('enrollBtn');
-        const enrollBtnSidebar = document.getElementById('enrollBtnSidebar');
-        const wishlistBtn = document.getElementById('wishlistBtn');
-        
-        const courseId = document.getElementById('course_id_data').value;
-        const watchedPercent = parseInt(document.getElementById('watched_percent_data').value || '0');
-        isAdmin = document.getElementById('is_admin_data').value === 'true';
-        const courseNameStr = document.getElementById('course_name_data').value;
-
-        // Apply dynamic styles safely
         function applyDynamicStates() {
+            const watchedPercent = parseInt(document.getElementById('watched_percent_data').value || '0');
             const progressFill = document.getElementById('courseProgressFill');
             if (progressFill) progressFill.style.width = watchedPercent + '%';
 
@@ -632,9 +602,12 @@
                 if (!isAdmin && !isEnrolled) {
                     link.style.pointerEvents = 'none';
                     link.style.opacity = '0.6';
+                    link.parentElement.style.cursor = 'not-allowed';
                 } else {
                     link.style.pointerEvents = 'auto';
                     link.style.opacity = '1';
+                    link.style.color = '#00ED64';
+                    link.parentElement.style.cursor = 'pointer';
                 }
             });
         }
@@ -642,7 +615,9 @@
         async function enroll() {
             if (isEnrolled) return;
             const token = localStorage.getItem('accessToken');
-            const targetId = courseId || courseNameStr;
+            const courseIdVal = document.getElementById('course_id_data').value;
+            const courseNameVal = document.getElementById('course_name_data').value;
+            const targetId = courseIdVal || courseNameVal;
             
             if (!token) {
                 window.location.href = '/login';
@@ -662,18 +637,9 @@
                 const data = await response.json();
                 if (data.success) {
                     isEnrolled = true;
-                    [enrollBtn, enrollBtnSidebar].forEach(btn => {
-                        if (btn) {
-                            btn.textContent = 'Enrolled ✓';
-                            btn.style.background = '#00ED64';
-                            btn.style.color = '#001E2B';
-                            btn.disabled = true;
-                        }
-                    });
-                    applyDynamicStates();
-                    updateWatchButtons();
+                    location.reload();
                 } else {
-                    alert('Failed to enroll: ' + data.error);
+                    alert('Failed to enroll: ' + (data.error || 'Check authentication'));
                 }
             } catch (error) {
                 alert('Error enrolling: ' + error.message);
@@ -682,8 +648,15 @@
 
         async function addToWishlist() {
             const token = localStorage.getItem('accessToken');
-            const targetId = courseId || courseNameStr;
+            const courseIdVal = document.getElementById('course_id_data').value;
+            const courseNameVal = document.getElementById('course_name_data').value;
+            const targetId = courseIdVal || courseNameVal;
             
+            if (!token) {
+                alert('Please login to add to wishlist');
+                return;
+            }
+
             try {
                 const response = await fetch('/api/wishlist/add', {
                     method: 'POST',
@@ -696,20 +669,27 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    wishlistBtn.textContent = 'Wishlisted ✓';
-                    wishlistBtn.style.color = '#00ED64';
-                    wishlistBtn.disabled = true;
+                    const btn = document.getElementById('wishlistBtn');
+                    if (btn) {
+                        btn.textContent = 'Wishlisted ✓';
+                        btn.style.color = '#00ED64';
+                        btn.disabled = true;
+                    }
                 } else {
-                    alert('Wishlist failed: ' + data.error);
+                    alert('Wishlist failed: ' + (data.error || 'Already in wishlist?'));
                 }
             } catch (error) {
                 alert('Wishlist error: ' + error.message);
             }
         }
 
-        if (enrollBtn) enrollBtn.addEventListener('click', enroll);
-        if (enrollBtnSidebar) enrollBtnSidebar.addEventListener('click', enroll);
-        if (wishlistBtn) wishlistBtn.addEventListener('click', addToWishlist);
+        if (document.getElementById('enrollBtn')) document.getElementById('enrollBtn').addEventListener('click', enroll);
+        if (document.getElementById('enrollBtnSidebar')) document.getElementById('enrollBtnSidebar').addEventListener('click', enroll);
+        if (document.getElementById('wishlistBtn')) document.getElementById('wishlistBtn').addEventListener('click', addToWishlist);
+    </script>
+</body>
+</html>
+ener('click', addToWishlist);
     </script>
 </body>
 </html>

@@ -30,7 +30,8 @@ router.post('/add', async (req, res) => {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    if (user.wishlist.includes(course._id)) {
+    const isAlreadyInWishlist = user.wishlist.some(id => id.toString() === course._id.toString());
+    if (isAlreadyInWishlist) {
       return res.json({ success: true, message: 'Course already in wishlist' });
     }
 

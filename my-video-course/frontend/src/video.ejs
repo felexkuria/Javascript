@@ -197,20 +197,14 @@
     <script src="/js/video-quiz-functions.js"></script>
     <link rel="preload" as="image" href="/thumbnails/<%= video ? video._id : '' %>.jpg">
 </head>
-<body>
-    <header class="mdb-header" style="height: 64px; background: var(--mdb-midnight); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; padding: 0 var(--space-6); justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: var(--space-4);">
-            <a href="/dashboard" style="color: var(--mdb-green); font-weight: 800; font-size: 18px; letter-spacing: -0.02em;">PROJECT LEVI</a>
-            <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.2);"></div>
-            <h1 style="font-size: 14px; font-weight: 500; color: #fff;"><%= courseName %></h1>
-        </div>
-        <div style="display: flex; align-items: center; gap: var(--space-4);">
-            <button class="btn btn-ghost" id="themeToggle" style="color: #fff;">🌙</button>
-            <a href="/course/<%= courseName %>" class="btn btn-default btn-sm">Exit Player</a>
-        </div>
-    </header>
+<body class="dark:bg-[#001E2B]">
+    <%- include('partials/header', { title: (video ? video.title : 'Play Video') + ' - ' + courseName, activePage: 'courses' }) %>
 
     <div class="course-player-container">
+        <!-- Hidden states for JS -->
+        <input type="hidden" id="isLastVideo" value="<%= (typeof isLastVideo !== 'undefined' && isLastVideo) ? 'true' : 'false' %>">
+        <input type="hidden" id="isLastInChapter" value="<%= (typeof isLastInChapter !== 'undefined' && isLastInChapter) ? 'true' : 'false' %>">
+
         <!-- Main Player Area -->
         <main class="player-main">
             <div class="player-video-wrapper">
@@ -373,10 +367,14 @@
                     updateVideoCount();
                     
                     if (window.gamificationSystem) {
+                        const isLastVideoVal = document.getElementById('isLastVideo')?.value === 'true';
+                        const isLastInChapterVal = document.getElementById('isLastInChapter')?.value === 'true';
+                        
                         window.gamificationSystem.onVideoCompleted({
-                            videoId, courseName,
-                            isLastVideo: <%= isLastVideo ? 'true' : 'false' %>,
-                            isLastInChapter: <%= isLastInChapter ? 'true' : 'false' %>
+                            videoId: videoId,
+                            courseName: courseName,
+                            isLastVideo: isLastVideoVal,
+                            isLastInChapter: isLastInChapterVal
                         });
                     }
                 })

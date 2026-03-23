@@ -99,6 +99,13 @@ class WebController {
       const watchedVideos = videos.filter(v => v.watched).length;
       const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
 
+      // 3. Check Enrollment Status
+      let isEnrolled = false;
+      if (userId !== 'guest') {
+        const enrollment = await Enrollment.findOne({ userId, courseId: mongoCourse?._id });
+        isEnrolled = !!enrollment;
+      }
+
       res.render('course', {
         courseName,
         courseId, // Crucial for Enrollment
@@ -108,7 +115,8 @@ class WebController {
         watchedVideos,
         watchedPercent,
         aiEnabled: true,
-        isAdmin: userId === 'engineerfelex@gmail.com'
+        isAdmin: userId === 'engineerfelex@gmail.com',
+        isEnrolled
       });
     } catch (err) {
       console.error('Error fetching course data:', err);
@@ -166,6 +174,21 @@ class WebController {
       const watchedVideos = videos.filter(v => userWatchedVideos[v._id] || userWatchedVideos[v.contentId]).length;
       const watchedPercent = totalVideos > 0 ? Math.round((watchedVideos / totalVideos) * 100) : 0;
 
+      // Calculate sequence markers for the player
+      const allLectures = sections.flatMap(s => s.lectures);
+      const videoIndex = allLectures.findIndex(l => l.contentId === videoId || l._id?.toString() === videoId);
+      const isLastVideo = videoIndex === allLectures.length - 1;
+
+      // Find if it's last in its specific section
+      let isLastInChapter = false;
+      for (const section of sections) {
+        const lastInSec = section.lectures[section.lectures.length - 1];
+        if (lastInSec && (lastInSec.contentId === videoId || lastInSec._id?.toString() === videoId)) {
+          isLastInChapter = true;
+          break;
+        }
+      }
+
       res.render('video', {
         video: processedVideo,
         courseName,
@@ -176,7 +199,9 @@ class WebController {
         autoplay,
         user: req.user,
         aiEnabled: true,
-        isYouTube: processedVideo.isYouTube || false
+        isYouTube: processedVideo.isYouTube || false,
+        isLastVideo,
+        isLastInChapter
       });
     } catch (err) {
       console.error('Error rendering video page:', err);

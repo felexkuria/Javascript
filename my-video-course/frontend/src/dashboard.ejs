@@ -160,26 +160,24 @@
 </head>
 <body>
     <!-- ── Navigation ──────────────────────────────────────── -->
-    <nav class="page-nav" role="navigation">
-        <div class="dashboard-container hero-content" style="padding: 0; min-height: 64px;">
-            <a href="/dashboard" class="nav-brand">
-                <div class="nav-leaf" aria-hidden="true"></div>
-                <span class="nav-brand-name">MongoDB <em>Academy</em></span>
-            </a>
-            <ul class="nav-links-list" role="list">
-                <li><a href="/dashboard" class="nav-link active">My Learning</a></li>
-                <li><a href="/courses" class="nav-link">Browse</a></li>
-                <% if (user && user.isTeacher) { %>
-                <li><a href="/teacher/dashboard" class="nav-link">Instructor</a></li>
-                <% } %>
-            </ul>
-            <div class="nav-right">
-                <button id="themeToggle" class="theme-btn" aria-label="Toggle dark mode">
-                    <span id="themeIcon">🌙</span>
-                </button>
-                <a href="/profile" class="user-avatar" title="Your profile">
-                    <%= (user && user.name) ? user.name.charAt(0).toUpperCase() : 'U' %>
-                </a>
+    <nav class="mdb-nav" style="height: 64px; background: rgba(0, 30, 43, 0.8); backdrop-filter: blur(12px); display: flex; align-items: center; padding: 0 32px; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+        <a href="/dashboard" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #00ED64 0%, #00684A 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #001E2B; font-weight: 900; font-size: 18px;">M</div>
+            <span style="font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.02em;">Multitouch<span style="color: #00ED64; margin-left: 4px;">Academy</span></span>
+        </a>
+
+        <ul style="display: flex; align-items: center; gap: 8px; list-style: none; margin-left: 48px; flex: 1;">
+            <li><a href="/dashboard" class="nav-link active" style="color: #00ED64; background: rgba(0, 237, 100, 0.08); padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none;">Dashboard</a></li>
+            <li><a href="/courses" style="color: rgba(255, 255, 255, 0.65); padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none;">Courses</a></li>
+        </ul>
+
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <button id="themeToggle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; background: rgba(255, 255, 255, 0.03); color: #FFFFFF; cursor: pointer;">
+                <span id="themeIcon">☀️</span>
+            </button>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 4px; padding-right: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; cursor: pointer;" onclick="window.location.href='/profile'">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #00ED64 0%, #00684A 100%); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #001E2B;"><%= (user && user.name) ? user.name.charAt(0).toUpperCase() : 'U' %></div>
+                <span style="font-size: 13px; font-weight: 600; color: #FFFFFF;"><%= (user && user.name) ? user.name : 'User' %></span>
             </div>
         </div>
     </nav>
@@ -230,7 +228,7 @@
                     <div class="learning-card">
                         <div class="card-thumbnail">
                             🎞️
-                            <div class="card-progress-overlay" style="width: <%= progress %>%"></div>
+                            <div class="card-progress-overlay" style="width: <%- progress %>%;"></div>
                         </div>
                         <div class="card-content">
                             <h3 class="card-title"><%= course.name %></h3>
