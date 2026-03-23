@@ -14,20 +14,33 @@ router.post('/', async (req, res) => {
       return res.status(401).json({ success: false, error: 'User not authenticated' });
     }
 
-    if (!courseId) {
-      return res.status(400).json({ success: false, error: 'Course ID is required' });
+    // 1. Find the actual course based on the provided ID/Slug/Title
+    const slug = courseId.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const course = await Course.findOne({
+      $or: [
+        { _id: mongoose.Types.ObjectId.isValid(courseId) ? courseId : null },
+        { slug: slug },
+        { title: courseId },
+        { name: courseId }
+      ].filter(q => q._id !== null || q.slug || q.title || q.name)
+    });
+
+    if (!course) {
+      return res.status(404).json({ success: false, error: 'Course not found' });
     }
 
-    // Check if already enrolled
-    const existingEnrollment = await Enrollment.findOne({ userId: userEmail, courseId });
+    const actualCourseId = course._id;
+
+    // 2. Check if already enrolled
+    const existingEnrollment = await Enrollment.findOne({ userId: userEmail, courseId: actualCourseId });
     if (existingEnrollment) {
       return res.status(400).json({ success: false, error: 'Already enrolled in this course' });
     }
 
-    // Create enrollment
+    // 3. Create enrollment
     const enrollment = new Enrollment({
       userId: userEmail,
-      courseId,
+      courseId: actualCourseId,
       enrolledAt: new Date(),
       status: 'active'
     });

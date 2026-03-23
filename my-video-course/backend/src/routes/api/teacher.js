@@ -1,7 +1,53 @@
 const express = require('express');
 const router = express.Router();
 const Course = require('../../models/Course');
-const teacherOrAdminAuth = require('../../middleware/cognitoAuth'); // Adjust based on actual middleware name
+const uploadController = require('../../controllers/uploadController');
+// Note: teacherOrAdminAuth is handled in app.js for this router
+// ── Course Meta ────────────────────────────────────────────────
+
+// Publish Course
+router.patch('/courses/:id/publish', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const course = await Course.findById(id);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+    
+    course.isPublished = true;
+    await course.save();
+    res.json({ success: true, isPublished: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Reorder Sections
+router.patch('/courses/:id/reorder', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { sectionIds } = req.body; // Array of IDs in new order
+    
+    const course = await Course.findById(id);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+    
+    // Sort sections based on the provided IDs
+    const newSections = [];
+    sectionIds.forEach(sid => {
+      const section = course.sections.id(sid);
+      if (section) newSections.push(section);
+    });
+    
+    // Catch any sections not in the reorder list (optional but safer)
+    course.sections.forEach(s => {
+      if (!sectionIds.includes(s._id.toString())) newSections.push(s);
+    });
+    
+    course.sections = newSections;
+    await course.save();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // ── Sections ──────────────────────────────────────────────────
 
@@ -118,6 +164,32 @@ router.post('/courses/:id/lectures/:lectureId/upload', upload.single('video'), a
     console.error('Upload Error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
+});
+
+// Update Lecture Metadata (Rename)
+router.patch('/courses/:id/sections/:sectionId/lectures/:lectureId', async (req, res) => {
+  try {
+    const { id, sectionId, lectureId } = req.params;
+    const { title } = req.body;
+    
+    const course = await Course.findById(id);
+    const section = course.sections.id(sectionId);
+    if (!section) return res.status(404).json({ success: false, message: 'Section not found' });
+    
+    const lecture = section.lectures.id(lectureId);
+    if (!lecture) return res.status(404).json({ success: false, message: 'Lecture not found' });
+    
+    lecture.title = title;
+    await course.save();
+    res.json({ success: true, lecture });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// General Upload (Video or Resource) into Section
+router.post('/courses/:courseId/upload', uploadController.upload.single('video'), (req, res) => {
+  uploadController.uploadDirect(req, res);
 });
 
 module.exports = router;

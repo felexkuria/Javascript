@@ -98,28 +98,29 @@ class UploadController {
       // Support both route param and body for courseId
       const courseId = req.params.courseId || req.body.courseId;
       const sectionId = req.body.sectionId;
-      const videoFile = req.files?.video?.[0];
+      const type = req.body.type || 'video';
+      const file = req.file || req.files?.video?.[0] || req.files?.file?.[0];
       const Course = require('../models/Course');
 
-      if (!videoFile) {
-        return res.status(400).json({ success: false, message: 'No video file uploaded' });
+      if (!file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded' });
       }
 
       const videoIdStr = Date.now().toString();
       let videoUrl;
       let s3Key = null;
 
-      if (videoFile.location) {
+      if (file.location) {
         // S3 upload — location populated by multer-s3
-        videoUrl = videoFile.location;
-        s3Key = videoFile.key;
+        videoUrl = file.location;
+        s3Key = file.key;
       } else {
         // Local disk upload
         const courseDir = path.join(__dirname, '../../../frontend/public/videos', courseId || 'general');
         if (!fs.existsSync(courseDir)) fs.mkdirSync(courseDir, { recursive: true });
-        const fileName = `${Date.now()}-${sanitizeKey(videoFile.originalname)}`;
+        const fileName = `${Date.now()}-${sanitizeKey(file.originalname)}`;
         const finalPath = path.join(courseDir, fileName);
-        fs.renameSync(videoFile.path, finalPath);
+        fs.renameSync(file.path, finalPath);
         videoUrl = path.join(courseId || 'general', fileName).replace(/\\/g, '/');
       }
 
@@ -130,10 +131,10 @@ class UploadController {
       }
 
       const newLecture = {
-        title: title || videoFile.originalname,
+        title: title || file.originalname,
         contentId: videoIdStr,
         s3Key,
-        type: 'video',
+        type: type,
         duration: 0,
         isFree: false
       };

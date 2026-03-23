@@ -6,6 +6,7 @@
     <title>Edit Curriculum - <%= course.title %> - Multitouch Academy</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         .instructor-layout {
             display: grid;
@@ -151,6 +152,36 @@
             color: var(--mdb-green);
             background: rgba(0, 237, 100, 0.02);
         }
+
+        /* ── Progress Bar ────────────────────────────────────── */
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: #eee;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--mdb-green);
+            transition: width 0.3s ease;
+        }
+
+        .lecture-item {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+
+        .lecture-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: var(--space-4);
+        }
     </style>
 </head>
 <body class="bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
@@ -176,8 +207,9 @@
                             <div class="section-card" data-section-id="<%= section._id %>">
                                 <div class="section-header">
                                     <div style="display: flex; align-items: center; gap: 12px;">
-                                        <i class="fas fa-bars text-muted"></i>
+                                        <i class="fas fa-bars text-muted" style="cursor: move;"></i>
                                         <strong style="font-size: 15px;">Section <%= sIdx + 1 %>: <%= section.title %></strong>
+                                        <button class="btn-icon" onclick="editSection('<%= section._id %>')"><i class="fas fa-pencil-alt" style="font-size: 12px; opacity: 0.6;"></i></button>
                                     </div>
                                     <div style="display: flex; gap: 12px;">
                                         <button class="btn-icon" onclick="deleteSection('<%= section._id %>')"><i class="fas fa-trash"></i></button>
@@ -185,18 +217,33 @@
                                 </div>
                                 <div class="lecture-list">
                                     <% section.lectures.forEach((lecture, lIdx) => { %>
-                                        <div class="lecture-item">
-                                            <i class="fas fa-play-circle text-muted"></i>
-                                            <div style="flex: 1;">
-                                                <div style="font-weight: 600; font-size: 14px;"><%= lecture.title %></div>
+                                        <div class="lecture-item" data-lecture-id="<%= lecture._id %>">
+                                            <div class="lecture-content">
+                                                <i class="fas fa-play-circle text-muted"></i>
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600; font-size: 14px;">
+                                                        <%= lecture.title %>
+                                                        <button class="btn-icon" onclick="editLecture('<%= section._id %>', '<%= lecture._id %>')">
+                                                            <i class="fas fa-pencil-alt" style="font-size: 10px; opacity: 0.6;"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <% if (!lecture.s3Key && lecture.contentId === 'pending') { %>
+                                                    <button class="btn-upload" onclick="triggerUpload('<%= section._id %>', '<%= lecture._id %>')">
+                                                        <i class="fas fa-upload"></i> Upload Video
+                                                    </button>
+                                                <% } else if (lecture.s3Key) { %>
+                                                    <span class="status-pill status-published" style="padding: 2px 8px;">Uploaded</span>
+                                                <% } else { %>
+                                                    <span class="text-muted" style="font-size: 12px;">No video</span>
+                                                    <button class="btn-upload" onclick="triggerUpload('<%= section._id %>', '<%= lecture._id %>')">
+                                                        <i class="fas fa-upload"></i> Upload
+                                                    </button>
+                                                <% } %>
                                             </div>
-                                            <% if (!lecture.s3Key) { %>
-                                                <button class="btn-upload" onclick="triggerUpload('<%= section._id %>', '<%= lecture._id %>')">
-                                                    <i class="fas fa-upload"></i> Upload Video
-                                                </button>
-                                            <% } else { %>
-                                                <span class="status-pill status-published" style="padding: 2px 8px;">Uploaded</span>
-                                            <% } %>
+                                            <div class="progress-container" id="progress-<%= lecture._id %>">
+                                                <div class="progress-bar"></div>
+                                            </div>
                                         </div>
                                     <% }) %>
                                     <button class="btn-add" style="padding: 8px; border-style: dotted; margin-top: 8px;" onclick="addLecture('<%= section._id %>')">
@@ -234,6 +281,22 @@
         }
         initTheme();
 
+        // ── Navigation & Meta ──────────────────────────────────
+        async function publishCourse() {
+            if (!confirm('Are you sure you want to publish this course? Once published, it will be visible to all students.')) return;
+            try {
+                const res = await fetch(`/api/teacher/courses/${courseId}/publish`, { method: 'PATCH' });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Course published successfully!');
+                    window.location.reload();
+                } else {
+                    alert('Publish failed: ' + data.message);
+                }
+            } catch (e) { alert(e.message); }
+        }
+
+        // ── Section Management ────────────────────────────────
         async function addSection() {
             const title = prompt("Enter section title:");
             if (!title) return;
@@ -249,6 +312,33 @@
             } catch (e) { alert(e.message); }
         }
 
+        async function editSection(sectionId) {
+            const title = prompt("Enter new section title:");
+            if (!title) return;
+
+            try {
+                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sectionId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title })
+                });
+                const data = await res.json();
+                if (data.success) window.location.reload();
+            } catch (e) { alert(e.message); }
+        }
+
+        async function deleteSection(sectionId) {
+            if (!confirm('Are you sure you want to delete this section and all its lectures?')) return;
+            try {
+                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sectionId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) window.location.reload();
+            } catch (e) { alert(e.message); }
+        }
+
+        // ── Lecture Management ────────────────────────────────
         async function addLecture(sectionId) {
             const title = prompt("Enter lecture title:");
             if (!title) return;
@@ -264,7 +354,23 @@
             } catch (e) { alert(e.message); }
         }
 
-        async function triggerUpload(sectionId, lectureId) {
+        async function editLecture(sectionId, lectureId) {
+            const title = prompt("Enter new lecture title:");
+            if (!title) return;
+
+            try {
+                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sectionId}/lectures/${lectureId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title })
+                });
+                const data = await res.json();
+                if (data.success) window.location.reload();
+            } catch (e) { alert(e.message); }
+        }
+
+        // ── File Uploads (with Progress) ─────────────────────
+        function triggerUpload(sectionId, lectureId) {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'video/*';
@@ -273,44 +379,18 @@
                 if (!file) return;
 
                 const formData = new FormData();
-                // Sanitize file name for S3
                 const safeName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._\-]/g, '');
                 const sanitizedFile = new File([file], safeName, { type: file.type });
                 
                 formData.append('video', sanitizedFile);
                 formData.append('sectionId', sectionId);
 
-                const btn = e.target.closest('.lecture-item')?.querySelector('.btn-upload');
-                if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-                }
-
-                try {
-                    const res = await fetch(`/api/teacher/courses/${courseId}/lectures/${lectureId}/upload`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        alert('Video uploaded successfully!');
-                        window.location.reload();
-                    } else {
-                        alert('Upload failed: ' + data.message);
-                    }
-                } catch (err) {
-                    alert('Upload error: ' + err.message);
-                } finally {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fas fa-upload"></i> Upload Video';
-                    }
-                }
+                performUpload(`/api/teacher/courses/${courseId}/lectures/${lectureId}/upload`, formData, lectureId);
             };
             input.click();
         }
 
-        async function triggerResourceUpload(sectionId) {
+        function triggerResourceUpload(sectionId) {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.pdf';
@@ -322,39 +402,74 @@
                 const safeName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._\-]/g, '');
                 const sanitizedFile = new File([file], safeName, { type: file.type });
                 
-                formData.append('video', sanitizedFile); // Backend expects 'video' field for now, but filter allows PDF
+                formData.append('video', sanitizedFile); // Backend expects 'video' field
                 formData.append('sectionId', sectionId);
                 formData.append('type', 'resource');
 
-                try {
-                    const res = await fetch(`/api/teacher/courses/${courseId}/upload`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        alert('Resource uploaded successfully!');
-                        window.location.reload();
-                    } else {
-                        alert('Upload failed: ' + data.message);
-                    }
-                } catch (err) {
-                    alert('Upload error: ' + err.message);
-                }
+                performUpload(`/api/teacher/courses/${courseId}/upload`, formData, sectionId);
             };
             input.click();
         }
 
-        async function deleteSection(sectionId) {
-            if (!confirm('Are you sure you want to delete this section and all its lectures?')) return;
-            try {
-                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sectionId}`, {
-                    method: 'DELETE'
-                });
-                const data = await res.json();
-                if (data.success) window.location.reload();
-            } catch (e) { alert(e.message); }
+        function performUpload(url, formData, progressId) {
+            const xhr = new XMLHttpRequest();
+            const progressContainer = document.getElementById(`progress-${progressId}`);
+            const progressBar = progressContainer?.querySelector('.progress-bar');
+            
+            if (progressContainer) progressContainer.style.display = 'block';
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percent = (e.loaded / e.total) * 100;
+                    if (progressBar) progressBar.style.width = percent + '%';
+                }
+            };
+
+            xhr.onload = function() {
+                const data = JSON.parse(xhr.responseText);
+                if (data.success) {
+                    alert('Upload successful!');
+                    window.location.reload();
+                } else {
+                    alert('Upload failed: ' + data.message);
+                    if (progressContainer) progressContainer.style.display = 'none';
+                }
+            };
+
+            xhr.onerror = function() {
+                alert('Upload failed due to a network error.');
+                if (progressContainer) progressContainer.style.display = 'none';
+            };
+
+            xhr.open('POST', url, true);
+            xhr.send(formData);
         }
+
+        // ── Drag & Drop Reordering ──────────────────────────
+        function initSortable() {
+            const container = document.getElementById('sections-container');
+            if (!container) return;
+
+            Sortable.create(container, {
+                animation: 150,
+                handle: '.fa-bars',
+                onEnd: async function(evt) {
+                    const sectionIds = Array.from(container.querySelectorAll('.section-card'))
+                                           .map(card => card.dataset.sectionId);
+                    
+                    try {
+                        const res = await fetch(`/api/teacher/courses/${courseId}/reorder`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ sectionIds })
+                        });
+                        const data = await res.json();
+                        if (!data.success) alert('Failed to save new order');
+                    } catch (e) { console.error('Reorder error:', e); }
+                }
+            });
+        }
+        initSortable();
     </script>
 </body>
 </html>
