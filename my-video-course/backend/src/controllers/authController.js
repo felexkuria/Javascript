@@ -54,11 +54,9 @@ class AuthController {
   async signin(req, res) {
     try {
       console.log('Signin request body:', req.body);
-      console.log('Signin headers:', req.headers['content-type']);
       const { email, password } = req.body;
       
       if (!email || !password) {
-        console.log('Missing - email:', email, 'password:', !!password);
         return res.json({ success: false, error: 'Email and password required' });
       }
       
@@ -68,6 +66,10 @@ class AuthController {
       const User = require('../models/User');
       let mongoUser = await User.findOne({ email });
       
+      if (mongoUser && mongoUser.isDeactivated) {
+        return res.json({ success: false, error: 'Your account has been deactivated. Please contact support.' });
+      }
+
       if (!mongoUser) {
         console.log('👤 Creating initial user in MongoDB...');
         let role = 'student';
@@ -93,7 +95,6 @@ class AuthController {
         if (email === 'multitouchkenya@gmail.com' || email === 'engineerfelex@gmail.com') {
           mongoUser.role = 'teacher';
           await mongoUser.save();
-          console.log('✅ Teacher role granted in MongoDB to:', email);
         }
       }
 
@@ -105,22 +106,12 @@ class AuthController {
       req.session.user = { 
         email, 
         name: mongoUser.name,
-        role: mongoUser.role, // Standardized single role
+        role: mongoUser.role,
         currentRole,
         isTeacher: mongoUser.role === 'teacher' || mongoUser.role === 'admin',
         isAdmin: mongoUser.role === 'admin',
         token: result.accessToken 
       };
-      
-      console.log('✅ Session set (MongoDB Sync):', {
-        email,
-        role: mongoUser.role,
-        currentRole,
-        isTeacher: req.session.user.isTeacher
-      });
-      
-      // Return tokens for API usage
-      const redirectUrl = currentRole === 'teacher' ? '/dashboard' : '/dashboard';
       
       res.json({ 
         success: true,
@@ -135,7 +126,7 @@ class AuthController {
           isAdmin: mongoUser.role === 'admin',
           isTeacher: mongoUser.role === 'teacher' || mongoUser.role === 'admin'
         },
-        redirect: redirectUrl
+        redirect: '/dashboard'
       });
       
     } catch (error) {
@@ -154,44 +145,14 @@ class AuthController {
     }
   }
 
-  async refresh(req, res) {
-    try {
-      const { refreshToken } = req.body;
-      const result = await cognitoService.refreshToken(refreshToken);
-      
-      if (!result.AuthenticationResult) {
-        return res.status(401).json({ 
-          success: false, 
-          error: 'Token refresh failed' 
-        });
-      }
-      
-      res.json({
-        success: true,
-        accessToken: result.AuthenticationResult.AccessToken
-      });
-    } catch (error) {
-      res.status(401).json({ 
-        success: false, 
-        error: error.message || 'Token refresh failed' 
-      });
-    }
-  }
-
   async logout(req, res) {
     try {
-      // Clear session if exists
-      if (req.session) {
-        req.session.destroy();
-      }
-      
-      // Clear cookies
+      if (req.session) req.session.destroy();
       res.clearCookie('cognitoToken');
-      res.clearCookie('connect.sid'); // Session cookie
-      
-      res.json({ success: true, message: 'Logged out successfully' });
+      res.clearCookie('connect.sid');
+      res.json({ success: true });
     } catch (error) {
-      res.json({ success: true, message: 'Logged out successfully' }); // Always succeed
+      res.json({ success: true });
     }
   }
 
@@ -201,11 +162,7 @@ class AuthController {
       await cognitoService.forgotPassword(email);
       res.json({ success: true, message: 'Password reset code sent to your email' });
     } catch (error) {
-      let errorMessage = error.message;
-      if (error.code === 'UserNotFoundException') {
-        errorMessage = 'No account found with this email';
-      }
-      res.json({ success: false, error: errorMessage });
+      res.json({ success: false, error: error.message });
     }
   }
 
@@ -215,39 +172,20 @@ class AuthController {
       await cognitoService.confirmForgotPassword(email, code, newPassword);
       res.json({ success: true, message: 'Password reset successfully' });
     } catch (error) {
-      let errorMessage = error.message;
-      if (error.code === 'CodeMismatchException') {
-        errorMessage = 'Invalid reset code';
-      } else if (error.code === 'ExpiredCodeException') {
-        errorMessage = 'Reset code has expired';
-      }
-      res.json({ success: false, error: errorMessage });
+      res.json({ success: false, error: error.message });
     }
   }
 
   async setupAdmin(req, res) {
     try {
       const { email, password, adminKey } = req.body;
-      
-      // Verify admin key from .env to prevent unauthorized setup
       if (adminKey !== (process.env.ADMIN_KEY || 'admin123')) {
         return res.status(403).json({ success: false, error: 'Unauthorized: Invalid Admin Key' });
       }
-      
-      if (!email || !password) {
-        return res.json({ success: false, error: 'Email and password required' });
-      }
-      
       await cognitoService.adminCreateUser(email, password);
-      
-      res.json({ 
-        success: true, 
-        message: `Admin user ${email} successfully created and confirmed in Cognito. You can now sign in.` 
-      });
-      
+      res.json({ success: true, message: 'Admin user created successfully' });
     } catch (error) {
-      console.error('Admin setup error:', error);
-      res.json({ success: false, error: 'Failed to setup admin: ' + error.message });
+      res.json({ success: false, error: error.message });
     }
   }
 }

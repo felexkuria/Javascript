@@ -253,7 +253,7 @@
                 <% 
                     // Determine active lecture from current URL / video param
                     const activeVideoId = (typeof video !== 'undefined' && video) ? (video._id || video.videoId || '') : '';
-                    const activeUrlId = '<%= video ? (video._id || video.videoId || "") : "" %>';
+                    const activeUrlId = (typeof video !== 'undefined' && video) ? (video._id || video.videoId || "") : "";
                 %>
                 <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
                     <% sections.forEach((section, sIndex) => { %>

@@ -8,8 +8,8 @@ const session = require('express-session');
 const app = express();
 const connectDB = require('./utils/mongodb');
 
-// Connect to MongoDB Atlas
-connectDB();app.use(cors());
+// Connect to MongoDB Atlas (Handled in server.js)
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -57,6 +57,7 @@ app.get('/login', (req, res) => res.render('pages/login', { error: null }));
 app.get('/signup', (req, res) => res.render('pages/signup', { error: null }));
 app.get('/forgot-password', (req, res) => res.render('pages/forgot-password', { error: null }));
 app.get('/reset-password', (req, res) => res.render('pages/reset-password', { error: null }));
+app.get('/certificates', (req, res) => res.render('certificates'));
 
 // Admin auth endpoint (public)
 app.post('/admin/auth', async (req, res) => {
@@ -225,13 +226,32 @@ const cognitoAuth = require('./middleware/cognitoAuth');
 const sessionAuth = require('./middleware/sessionAuth');
 
 // Admin/Teacher API Routes (protected)
+const ADMIN_EMAIL_AUTH = 'engineerfelex@gmail.com';
+
 const teacherOrAdminAuth = (req, res, next) => {
+  // 1. API key check (for CLI / scripts)
   const adminKey = req.headers['x-admin-key'];
   if (adminKey === process.env.ADMIN_KEY || adminKey === 'admin123') {
     return next();
   }
-  if (req.user?.isTeacher) {
-    return next();
+  // 2. Session-based check — teacher or admin role, or known admin email
+  const user = req.user;
+  if (user) {
+    if (
+      user.isTeacher ||
+      user.isAdmin ||
+      user.role === 'teacher' ||
+      user.role === 'admin' ||
+      user.email === ADMIN_EMAIL_AUTH
+    ) {
+      return next();
+    }
+  }
+  // 3. JWT token check (Bearer)
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    // Already verified by sessionAuth if req.user exists; if not, reject
+    return res.status(403).json({ success: false, message: 'Admin or teacher access required' });
   }
   res.status(403).json({ success: false, message: 'Admin or teacher access required' });
 };
@@ -274,6 +294,7 @@ app.get('/api/courses', (req, res) => courseController.getAllCourses(req, res));
 app.get('/api/courses/:name', (req, res) => courseController.getCourseByName(req, res));
 app.get('/api/analytics', teacherOrAdminAuth, (req, res) => courseController.getAnalytics(req, res));
 app.use('/api/upload', teacherOrAdminAuth, require('./routes/api/upload'));
+app.use('/api/certificates', require('./routes/api/certificates'));
 app.use('/api/system', adminAuth, require('./routes/api/system'));
 // app.use('/api/videos/fix-numbering', adminAuth, require('./routes/api/videos-fix'));
 // app.use('/api/videos-manage', teacherOrAdminAuth, require('./routes/api/videos-manage'));
