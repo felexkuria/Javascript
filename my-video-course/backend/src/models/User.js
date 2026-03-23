@@ -12,7 +12,8 @@ const UserSchema = new mongoose.Schema({
   level: { type: Number, default: 1 },
   experiencePoints: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  isDeactivated: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model('User', UserSchema);

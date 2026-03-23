@@ -1,0 +1,93 @@
+<%- include('partials/header', { title: 'My Certificates', activePage: 'certificates' }) %>
+
+<main class="min-h-screen bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
+  <div class="max-w-7xl mx-auto px-6 py-12">
+    <div class="mb-12">
+      <h1 class="text-4xl font-black text-[#001E2B] dark:text-[#E7EEEB] tracking-tighter mb-2 brand-font">Technical <span class="text-[#00ED64]">Certifications</span></h1>
+      <p class="text-gray-500 dark:text-[#9FB1AD] font-medium">Verify your database engineering expertise with professional certifications</p>
+    </div>
+
+    <!-- Certificates Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="certificatesGrid">
+      <div class="animate-pulse bg-white dark:bg-[#023430] h-64 rounded-3xl border border-gray-100 dark:border-[#133A41]"></div>
+      <div class="animate-pulse bg-white dark:bg-[#023430] h-64 rounded-3xl border border-gray-100 dark:border-[#133A41]"></div>
+    </div>
+    
+    <div id="noCertificates" class="hidden text-center py-24 bg-white dark:bg-[#023430] rounded-[32px] border-2 border-dashed border-gray-100 dark:border-[#133A41]">
+      <div class="text-8xl mb-8">🎓</div>
+      <h3 class="text-2xl font-black text-[#001E2B] dark:text-[#E7EEEB] mb-3 brand-font">No Certifications Yet</h3>
+      <p class="text-gray-500 dark:text-[#9FB1AD] max-w-xs mx-auto text-sm font-medium">Complete a course at 100% to generate your first professional certificate.</p>
+      <a href="/courses" class="mt-8 inline-flex items-center px-8 py-3.5 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:bg-[#00C152] transition-all">
+        Browse Courses
+      </a>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>
+
+<script>
+async function loadCertificates() {
+  const grid = document.getElementById('certificatesGrid');
+  const empty = document.getElementById('noCertificates');
+  
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+
+    const response = await fetch('/api/certificates/my', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    const data = await response.json();
+    grid.innerHTML = '';
+    
+    if (data.success && data.certificates.length > 0) {
+      data.certificates.forEach(cert => {
+        const date = new Date(cert.issuedDate).toLocaleDateString('en-US', { 
+          month: 'long', day: 'numeric', year: 'numeric' 
+        });
+        
+        grid.innerHTML += `
+          <div class="bg-white dark:bg-[#023430] rounded-3xl border border-gray-100 dark:border-[#133A41] overflow-hidden hover:shadow-[0_20px_40px_rgba(0,30,43,0.08)] transition-all duration-500 group">
+            <div class="p-8">
+              <div class="flex justify-between items-start mb-6">
+                <div class="w-14 h-14 bg-[#001E2B] rounded-2xl flex items-center justify-center text-[#00ED64] text-2xl shadow-lg">
+                  <i class="fas fa-certificate"></i>
+                </div>
+                <span class="inline-flex items-center px-3 py-1 bg-[#00ED64]/10 text-[#00684A] dark:text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full">
+                  <i class="fas fa-check-circle mr-1.5"></i> Verified
+                </span>
+              </div>
+              
+              <h3 class="text-lg font-black text-[#001E2B] dark:text-[#E7EEEB] mb-1 group-hover:text-[#00684A] dark:group-hover:text-[#00ED64] transition-colors">
+                ${cert.courseName}
+              </h3>
+              <p class="text-xs text-gray-400 font-bold mb-6">Issued on ${date}</p>
+              
+              <div class="flex items-center justify-between pt-6 border-t border-gray-50 dark:border-[#133A41]">
+                <span class="text-[10px] font-mono text-gray-400 uppercase tracking-tighter">ID: ${cert.certificateId.split('-')[0]}...</span>
+                <a href="${cert.s3Url}" target="_blank" class="flex items-center gap-2 text-sm font-black text-[#00684A] dark:text-[#00ED64] hover:gap-3 transition-all">
+                  Download PDF <i class="fas fa-download"></i>
+                </a>
+              </div>
+            </div>
+            <div class="h-1.5 w-full bg-[#00ED64]"></div>
+          </div>
+        `;
+      });
+    } else {
+      grid.classList.add('hidden');
+      empty.classList.remove('hidden');
+    }
+  } catch (error) {
+    console.error('Failed to load certificates:', error);
+    grid.innerHTML = '<p class="text-red-500">Failed to load certificates. Please try again later.</p>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadCertificates);
+</script>

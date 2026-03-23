@@ -1,70 +1,111 @@
-<%- include('partials/header', { title: 'All Courses' }) %>
+<%- include('partials/header', { title: 'All Courses', activePage: 'courses' }) %>
 
-<main class="max-w-7xl mx-auto px-4 py-8 bg-[#F9FBFA] dark:bg-[#001E2B] min-h-screen transition-colors duration-200">
-  <div class="mb-10">
-    <h1 class="text-3xl font-extrabold text-[#001E2B] dark:text-[#E7EEEB] tracking-tight mb-2">Explore Our <span class="text-[#00ED64]">Curriculum</span></h1>
-    <p class="text-gray-500 dark:text-gray-400">Master modern database engineering with Multitouch Academy</p>
-  </div>
+<main class="min-h-screen bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
+  <div class="max-w-7xl mx-auto px-6 py-12">
+    <!-- Top Atlas Query Bar Style Navigation -->
+    <div class="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <h1 class="text-4xl font-black text-[#001E2B] dark:text-[#E7EEEB] tracking-tighter mb-2 brand-font">Explore <span class="text-[#00ED64]">Curriculum</span></h1>
+        <p class="text-gray-500 dark:text-[#9FB1AD] font-medium">Master state-of-the-art engineering with Multitouch Academy</p>
+      </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    <% if (courses && courses.length > 0) { %>
-      <% courses.forEach(course => { %>
-        <div class="bg-white dark:bg-[#023430] rounded-2xl border border-gray-100 dark:border-[#133A41] overflow-hidden hover:shadow-xl transition-all duration-300 group">
-          <div class="p-6">
-            <div class="flex items-center mb-4">
-              <div class="w-12 h-12 bg-[#00ED64] rounded-xl flex items-center justify-center text-[#001E2B] text-xl font-bold shadow-sm group-hover:scale-110 transition-transform">
+      <div class="relative flex-1 max-w-lg">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <i class="fas fa-search text-[#00684A] opacity-50"></i>
+        </div>
+        <input type="text" id="courseSearch" 
+               class="block w-full pl-11 pr-12 py-3.5 bg-white dark:bg-[#023430] border border-gray-200 dark:border-[#133A41] rounded-2xl text-sm font-medium focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all shadow-sm"
+               placeholder="Search database courses...">
+        <div class="absolute inset-y-0 right-0 pr-4 flex items-center">
+          <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-[#001E2B] rounded-lg transition-colors">
+            <i class="fas fa-filter text-[#00684A] dark:text-[#00ED64]"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="coursesGrid">
+      <% if (courses && courses.length > 0) { %>
+        <% courses.forEach(course => { %>
+          <div class="course-card bg-white dark:bg-[#023430] rounded-3xl border border-gray-100 dark:border-[#133A41] overflow-hidden hover:shadow-[0_20px_40px_rgba(0,30,43,0.08)] transition-all duration-500 group flex flex-col h-full">
+            <!-- Card Identity Header -->
+            <div class="relative aspect-[16/10] bg-[#001E2B] flex items-center justify-center overflow-hidden">
+               <div class="absolute inset-0 opacity-20 bg-leaf-pattern"></div>
+               <div class="relative z-10 w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center text-[#001E2B] text-2xl font-black shadow-xl group-hover:scale-110 transition-transform duration-500">
                 <%= course.name.charAt(0).toUpperCase() %>
-              </div>
-              <div class="ml-4 flex-1 min-w-0">
-                <h3 class="text-base font-bold text-[#001E2B] dark:text-[#E7EEEB] truncate">
-                  <%= course.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) %>
-                </h3>
-                <p class="text-xs text-[#00684A] dark:text-[#00ED64] font-semibold">
-                  <%= course.videoCount %> Modules
-                </p>
-              </div>
+               </div>
+               <div class="absolute top-4 right-4">
+                 <span class="px-3 py-1 bg-black/40 backdrop-blur-md rounded-full text-[10px] font-bold text-[#00ED64] tracking-widest uppercase">Verified</span>
+               </div>
             </div>
-            
-            <div class="space-y-3">
-              <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
-                      class="w-full px-4 py-2.5 text-sm font-bold text-[#001E2B] bg-[#00ED64] hover:bg-[#00C152] rounded-xl transition-all enroll-btn shadow-sm" 
-                      data-course-id="<%= course._id || course.name %>">
-                Enroll Now
-              </button>
-              <a href="/course/<%= course.name %>" 
-                 class="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-bold text-[#E7EEEB] bg-[#001E2B] dark:bg-[#133A41] hover:bg-[#00684A] rounded-xl transition-all">
-                View Curriculum
-              </a>
+
+            <div class="p-8 flex flex-col flex-1">
+              <div class="mb-6 flex-1">
+                <h3 class="text-xl font-black text-[#001E2B] dark:text-[#E7EEEB] mb-2 leading-tight group-hover:text-[#00684A] dark:group-hover:text-[#00ED64] transition-colors">
+                  <%= (course.title || course.name).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) %>
+                </h3>
+                <div class="flex items-center gap-3 text-xs font-bold text-gray-400">
+                  <span class="flex items-center gap-1.5"><i class="fas fa-layer-group text-[#00684A] opacity-50"></i> <%= course.sections ? course.sections.length : 0 %> Sections</span>
+                  <span class="flex items-center gap-1.5"><i class="fas fa-play-circle text-[#00684A] opacity-50"></i> <%= course.videoCount || 0 %> Lectures</span>
+                </div>
+              </div>
+
+              <!-- Progress Bar (Visible if enrolled) -->
+              <div class="enrollment-status mb-6" data-course-id="<%= course._id || course.name %>">
+                 <!-- Populated by JS -->
+              </div>
+              
+              <div class="space-y-3 mt-auto">
+                <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
+                        class="w-full px-6 py-3.5 text-sm font-black text-[#001E2B] bg-[#00ED64] hover:bg-[#00C152] rounded-2xl transition-all enroll-btn shadow-lg shadow-[#00ED64]/10 flex items-center justify-center gap-2" 
+                        data-btn-course-id="<%= course._id || course.name %>">
+                  <i class="fas fa-bolt"></i> Enroll Now
+                </button>
+                <a href="/course/<%= course.name %>" 
+                   class="inline-flex items-center justify-center w-full px-6 py-3.5 text-sm font-bold text-[#001E2B] dark:text-[#E7EEEB] bg-[#F1F5F4] dark:bg-[#133A41] hover:bg-gray-200 dark:hover:bg-[#00684A]/30 rounded-2xl transition-all">
+                  View Database
+                </a>
+              </div>
             </div>
           </div>
+        <% }) %>
+      <% } else { %>
+        <div class="col-span-full text-center py-24 bg-white dark:bg-[#023430] rounded-[32px] border-2 border-dashed border-gray-100 dark:border-[#133A41]">
+          <div class="text-8xl mb-8">🍃</div>
+          <h3 class="text-2xl font-black text-[#001E2B] dark:text-[#E7EEEB] mb-3 brand-font">Engineering Pipeline Processing</h3>
+          <p class="text-gray-500 dark:text-[#9FB1AD] max-w-xs mx-auto text-sm font-medium">New specialized database engineering courses are currently in development.</p>
         </div>
-      <% }) %>
-    <% } else { %>
-      <div class="col-span-full text-center py-20 bg-white dark:bg-[#023430] rounded-3xl border-2 border-dashed border-gray-100 dark:border-[#133A41]">
-        <div class="text-6xl mb-6">📚</div>
-        <h3 class="text-xl font-bold text-[#001E2B] dark:text-[#E7EEEB] mb-2">New courses coming soon</h3>
-        <p class="text-gray-500 dark:text-gray-400 max-w-xs mx-auto text-sm">Our engineers are working hard on new content. Stay tuned!</p>
-      </div>
-    <% } %>
+      <% } %>
+    </div>
   </div>
 </main>
 
 <%- include('partials/footer') %>
 
 <script>
+// Search Functionality
+document.getElementById('courseSearch')?.addEventListener('input', (e) => {
+  const term = e.target.value.toLowerCase();
+  const cards = document.querySelectorAll('.course-card');
+  cards.forEach(card => {
+    const title = card.querySelector('h3').textContent.toLowerCase();
+    card.style.display = title.includes(term) ? 'flex' : 'none';
+  });
+});
+
 async function enrollInCourse(courseId) {
   try {
     const token = localStorage.getItem('accessToken');
     if (!token) {
-      alert('Please login to enroll in courses');
       window.location.href = '/login';
       return;
     }
 
-    const button = document.querySelector(`[data-course-id="${courseId}"]`);
-    const originalText = button.textContent;
+    const button = document.querySelector(`[data-btn-course-id="${courseId}"]`);
+    const originalContent = button.innerHTML;
     button.disabled = true;
-    button.textContent = 'Enrolling...';
+    button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
 
     const response = await fetch('/api/enrollments', {
       method: 'POST',
@@ -78,41 +119,56 @@ async function enrollInCourse(courseId) {
     const data = await response.json();
     
     if (data.success) {
-      button.textContent = 'Enrolled ✓';
-      button.classList.remove('bg-green-600', 'hover:bg-green-700');
-      button.classList.add('bg-gray-500');
-      alert('Successfully enrolled in course!');
+      button.innerHTML = '<i class="fas fa-check"></i> Enrolled';
+      button.classList.replace('bg-[#00ED64]', 'bg-[#133A41]');
+      button.classList.add('text-white');
+      setTimeout(() => window.location.reload(), 1000);
     } else {
-      throw new Error(data.error);
+      throw new Error(data.error || data.message);
     }
   } catch (error) {
     console.error('Enrollment error:', error);
     alert('Failed to enroll: ' + error.message);
     button.disabled = false;
-    button.textContent = originalText;
+    button.innerHTML = '<i class="fas fa-bolt"></i> Enroll Now';
   }
 }
 
-// Check enrollment status on page load
+// Check enrollment and progress
 document.addEventListener('DOMContentLoaded', async () => {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
 
-  const enrollButtons = document.querySelectorAll('.enroll-btn');
+  const containers = document.querySelectorAll('.enrollment-status');
   
-  for (const button of enrollButtons) {
-    const courseId = button.dataset.courseId;
+  for (const container of containers) {
+    const courseId = container.dataset.courseId;
     try {
-      const response = await fetch(`/api/enrollments/check/${courseId}`, {
+      const response = await fetch(`/api/enrollments/check/${encodeURIComponent(courseId)}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
       const data = await response.json();
       if (data.success && data.data.enrolled) {
-        button.textContent = 'Enrolled ✓';
-        button.disabled = true;
-        button.classList.remove('bg-green-600', 'hover:bg-green-700');
-        button.classList.add('bg-gray-500');
+        const btn = document.querySelector(`[data-btn-course-id="${courseId}"]`);
+        if (btn) {
+          btn.innerHTML = '<i class="fas fa-check"></i> Enrolled';
+          btn.disabled = true;
+          btn.classList.replace('bg-[#00ED64]', 'bg-[#133A41]');
+          btn.classList.add('text-white');
+        }
+
+        // Show Progress
+        const progress = data.data.progress || 0;
+        container.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-black text-[#00684A] dark:text-[#00ED64] uppercase tracking-widest">Progress</span>
+            <span class="text-[10px] font-black text-gray-500">${progress}%</span>
+          </div>
+          <div class="w-full h-1.5 bg-gray-100 dark:bg-[#133A41] rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-[#00ED64] to-[#00684A] transition-all duration-1000" style="width: ${progress}%"></div>
+          </div>
+        `;
       }
     } catch (error) {
       console.error('Error checking enrollment:', error);
