@@ -35,29 +35,58 @@ class WebController {
       if (!userId) {
         return res.status(401).redirect('/login');
       }
-      console.log('🔍 User ID:', userId);
-      const courses = await dynamoVideoService.getAllCourses(userId);
+      console.log('🔍 User ID for Dashboard:', userId);
+
+      // 1. Fetch from DynamoDB (Legacy/Hybrid)
+      let courses = await dynamoVideoService.getAllCourses(userId);
+      console.log(`🔍 Found ${courses?.length} DynamoDB courses`);
+      
+      // 2. Fetch from MongoDB Enrollments (New Architecture)
+      try {
+        const enrollments = await Enrollment.find({ userId }).populate('courseId').lean();
+        console.log(`🔍 Found ${enrollments.length} MongoDB enrollments for email: ${userId}`);
+        
+        const enrolledCourses = enrollments
+          .filter(e => e.courseId) // Ensure course hasn't been deleted
+          .map(e => ({
+            _id: e.courseId._id,
+            name: e.courseId.title,
+            title: e.courseId.title,
+            instructor: e.courseId.instructorId || 'Engineer Felex',
+            category: e.courseId.category || 'Core',
+            description: e.courseId.description,
+            videoCount: (e.courseId.sections || []).reduce((sum, s) => sum + (s.lectures?.length || 0), 0),
+            watchedVideos: 0,
+            completionPercentage: 0,
+            isMongo: true
+          }));
+
+        console.log(`🔍 Processed ${enrolledCourses.length} Enrolled Courses from MongoDB`);
+
+        // Merge keeping DynamoDB for now but preferring MongoDB titles
+        const seenTitles = new Set(enrolledCourses.map(c => c.title.toLowerCase()));
+        courses = [
+          ...enrolledCourses,
+          ...courses.filter(c => !seenTitles.has(c.name.toLowerCase()))
+        ];
+        console.log(`🔍 Total merged courses for dashboard: ${courses.length}`);
+      } catch (mongoErr) {
+        console.error('❌ MongoDB Enrollment fetch failed:', mongoErr.message);
+      }
+
       const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
-      console.log('🔍 Gamification Data:', {
-        totalPoints: gamificationData?.userStats?.totalPoints,
-        currentLevel: gamificationData?.userStats?.currentLevel,
-        currentStreak: gamificationData?.streakData?.currentStreak
-      });
       const usingDynamoDB = dynamoVideoService.isDynamoAvailable();
 
       res.render('dashboard', { 
         courses, 
         offlineMode: !usingDynamoDB,
-        user: user,
+        user: {
+          ...user,
+          isAdmin: user.role === 'admin' || user.email === 'engineerfelex@gmail.com'
+        },
         gamificationData: gamificationData || {
-          userStats: {
-            totalPoints: 0,
-            currentLevel: 1,
-            experiencePoints: 0
-          },
-          streakData: {
-            currentStreak: 0
-          }
+          userStats: { totalPoints: 0, currentLevel: 1, experiencePoints: 0 },
+          streakData: { currentStreak: 0 }
         }
       });
     } catch (err) {

@@ -4,11 +4,58 @@ const dynamodb = require('../utils/dynamodb');
 const path = require('path');
 const fs = require('fs');
 
+const CourseModel = require('../models/Course');
+
 class CourseService {
   async getAllCourses() {
     try {
       const userId = 'engineerfelex@gmail.com'; // Default for sync/listing
+      
+      // 1. Fetch from DynamoDB (Legacy/Hybrid)
       const coursesData = await dynamoVideoService.getAllCourses(userId);
+      
+      // 2. Fetch from MongoDB (New Architecture)
+      const mongoCourses = await CourseModel.find({ isPublished: true }).lean();
+      
+      // 3. Merge and Normalize
+      const mergedCourses = [];
+      const seenTitles = new Set();
+
+      // Add MongoDB courses first (preferred)
+      mongoCourses.forEach(c => {
+        mergedCourses.push({
+          _id: c._id,
+          name: c.title,
+          title: c.title,
+          category: c.category || 'Core',
+          description: c.description,
+          videoCount: (c.sections || []).reduce((sum, s) => sum + (s.lectures?.length || 0), 0),
+          watchedVideos: 0, // Needs progress service integration
+          completionPercentage: 0,
+          sections: c.sections,
+          isMongo: true
+        });
+        seenTitles.add(c.title.toLowerCase());
+      });
+
+      // Add DynamoDB courses if not already seen
+      coursesData.forEach(c => {
+        if (!seenTitles.has(c.name.toLowerCase())) {
+          mergedCourses.push({
+            name: c.name,
+            title: c.name,
+            videoCount: c.videos?.length || 0,
+            watchedVideos: c.videos?.filter(v => v.watched).length || 0,
+            completionPercentage: c.videos?.length > 0 ? 
+              Math.round((c.videos.filter(v => v.watched).length / c.videos.length) * 100) : 0,
+            isMongo: false
+          });
+        }
+      });
+
+      if (mergedCourses.length > 0) {
+        return mergedCourses;
+      }
       if (coursesData.length > 0) {
         return coursesData.map(c => ({
           name: c.name,
