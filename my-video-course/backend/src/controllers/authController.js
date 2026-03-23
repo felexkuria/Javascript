@@ -189,6 +189,16 @@ class AuthController {
       res.json({ success: false, error: error.message });
     }
   }
+
+  async getMe(req, res) {
+    try {
+      const user = req.user || req.session?.user;
+      if (!user) return res.status(401).json({ success: false, message: 'Not authenticated' });
+      res.json({ success: true, user });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new AuthController();

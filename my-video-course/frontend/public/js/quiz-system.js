@@ -1,15 +1,20 @@
 // Interactive Quiz System for Video Learning Platform
 class QuizSystem {
   constructor() {
+    this.userId = 'guest';
     this.currentQuiz = null;
     this.userAnswers = [];
-    this.quizData = this.loadQuizData();
+    this.quizData = this.getDefaultQuizzes(); // Initial
     this.initializeSystem();
+  }
+
+  getNSKey(key) {
+    return `${key}_${this.userId}`;
   }
 
   // Load quiz data from localStorage or default
   loadQuizData() {
-    const saved = localStorage.getItem('quiz_data');
+    const saved = localStorage.getItem(this.getNSKey('quiz_data'));
     return saved ? JSON.parse(saved) : this.getDefaultQuizzes();
   }
 
@@ -218,7 +223,18 @@ class QuizSystem {
   }
 
   // Initialize the quiz system
-  initializeSystem() {
+  async initializeSystem() {
+    try {
+      const resp = await fetch('/api/auth/me');
+      const authData = await resp.json();
+      if (authData.success) {
+        this.userId = authData.user.email;
+        // Reload quiz data with user identity
+        this.quizData = this.loadQuizData();
+      }
+    } catch (e) {
+      console.warn('QuizSystem: Identity fetch failed');
+    }
     this.createQuizModal();
     this.bindEvents();
   }
@@ -645,14 +661,14 @@ class QuizSystem {
       correctAnswers: this.currentQuiz.questions.map(q => q.correct)
     };
     
-    const completions = JSON.parse(localStorage.getItem('quiz_completions') || '[]');
+    const completions = JSON.parse(localStorage.getItem(this.getNSKey('quiz_completions')) || '[]');
     completions.push(completion);
-    localStorage.setItem('quiz_completions', JSON.stringify(completions));
+    localStorage.setItem(this.getNSKey('quiz_completions'), JSON.stringify(completions));
     
     // Store latest result for this video
-    const videoResults = JSON.parse(localStorage.getItem('video_quiz_results') || '{}');
+    const videoResults = JSON.parse(localStorage.getItem(this.getNSKey('video_quiz_results')) || '{}');
     videoResults[topic] = completion;
-    localStorage.setItem('video_quiz_results', JSON.stringify(videoResults));
+    localStorage.setItem(this.getNSKey('video_quiz_results'), JSON.stringify(videoResults));
   }
 
   // Utility function to shuffle array
@@ -714,7 +730,7 @@ class QuizSystem {
 
   // Get quiz statistics
   getQuizStats() {
-    const completions = JSON.parse(localStorage.getItem('quiz_completions') || '[]');
+    const completions = JSON.parse(localStorage.getItem(this.getNSKey('quiz_completions')) || '[]');
     return {
       totalQuizzes: completions.length,
       averageScore: completions.length > 0 ? 

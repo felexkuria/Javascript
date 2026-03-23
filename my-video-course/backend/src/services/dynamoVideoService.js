@@ -526,6 +526,15 @@ class DynamoVideoService {
     }
   }
 
+  // Get watch dates for a specific user
+  async getWatchDates(userId) {
+    const userGamification = await this.getUserGamificationData(userId);
+    const watchDates = userGamification?.streakData?.streakDates || [];
+    
+    // Return in format expected by profile.ejs
+    return watchDates.map(date => ({ date, count: 1 }));
+  }
+
   // Health check
   async healthCheck() {
     const status = {

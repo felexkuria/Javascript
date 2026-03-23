@@ -198,3 +198,9 @@ variable "create_s3_bucket" {
   type        = bool
   default     = true
 }
+
+variable "mongodb_uri" {
+  description = "MongoDB Connection URI"
+  type        = string
+  sensitive   = true
+}

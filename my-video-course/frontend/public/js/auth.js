@@ -53,11 +53,10 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Logout failed:', error);
             } finally {
-                // Always clear local storage and redirect
-                localStorage.removeItem('cognitoToken');
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('user');
-                localStorage.removeItem('userId');
+                // Always clear ALL local storage except theme and redirect
+                const theme = localStorage.getItem('theme');
+                localStorage.clear();
+                if (theme) localStorage.setItem('theme', theme);
                 window.location.href = '/login';
             }
         });

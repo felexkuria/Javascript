@@ -1,10 +1,35 @@
 // Gamification system for video learning platform
 class GamificationSystem {
   constructor() {
-    this.achievements = this.loadAchievements();
-    this.userStats = this.loadUserStats();
-    this.streakData = this.loadStreakData();
+    this.userId = 'guest'; // Default until initialized
+    this.achievements = [];
+    this.userStats = this.getDefaultStats();
+    this.streakData = this.getDefaultStreak();
     this.initializeSystem();
+  }
+
+  getDefaultStats() {
+    return {
+      totalPoints: 0,
+      videosWatched: 0,
+      coursesCompleted: 0,
+      keyboardShortcutsUsed: 0,
+      currentLevel: 1,
+      experiencePoints: 0
+    };
+  }
+
+  getDefaultStreak() {
+    return {
+      currentStreak: 0,
+      longestStreak: 0,
+      lastActiveDate: null,
+      streakDates: []
+    };
+  }
+
+  getNSKey(key) {
+    return `${key}_${this.userId}`;
   }
 
   // Achievement definitions
@@ -103,12 +128,25 @@ class GamificationSystem {
 
   // Initialize the gamification system
   async initializeSystem() {
+    try {
+      const resp = await fetch('/api/auth/me');
+      const authData = await resp.json();
+      if (authData.success) {
+        this.userId = authData.user.email;
+      }
+    } catch (e) {
+      console.warn('Could not fetch user identity, using guest namespace');
+    }
+
+    this.achievements = this.loadAchievements();
+    // userStats and streakData will be loaded from server but we load from LS for immediate UI
+    this.streakData = this.loadStreakDataFromLS();
+
     this.createFloatingPointsContainer();
     this.createAchievementNotification();
     
-    // Load data from DynamoDB
-    this.userStats = await this.loadUserStats();
-    this.streakData = await this.loadStreakData();
+    // Load data from Server (DynamoDB/MongoDB)
+    await this.loadFromMongoDB();
     
     this.updateProgressDisplay();
     this.checkTimeBasedAchievements();
@@ -116,7 +154,7 @@ class GamificationSystem {
 
   // Load user achievements from localStorage
   loadAchievements() {
-    const saved = localStorage.getItem('user_achievements');
+    const saved = localStorage.getItem(this.getNSKey('user_achievements'));
     return saved ? JSON.parse(saved) : [];
   }
 
@@ -174,7 +212,7 @@ class GamificationSystem {
 
   // Save achievements
   saveAchievements() {
-    localStorage.setItem('user_achievements', JSON.stringify(this.achievements));
+    localStorage.setItem(this.getNSKey('user_achievements'), JSON.stringify(this.achievements));
   }
 
   // Save user stats to DynamoDB
@@ -196,7 +234,12 @@ class GamificationSystem {
 
   // Save streak data
   saveStreakData() {
-    localStorage.setItem('learning_streak', JSON.stringify(this.streakData));
+    localStorage.setItem(this.getNSKey('learning_streak'), JSON.stringify(this.streakData));
+  }
+
+  loadStreakDataFromLS() {
+    const saved = localStorage.getItem(this.getNSKey('learning_streak'));
+    return saved ? JSON.parse(saved) : this.getDefaultStreak();
   }
 
   // Sync gamification data with MongoDB
@@ -448,7 +491,7 @@ class GamificationSystem {
         shouldAward = new Date().getHours() <= 7;
         break;
       case 'quiz_master':
-        const quizCompletions = JSON.parse(localStorage.getItem('quiz_completions') || '[]');
+        const quizCompletions = JSON.parse(localStorage.getItem(this.getNSKey('quiz_completions')) || '[]');
         shouldAward = quizCompletions.length >= 10;
         break;
       case 'perfect_score':
@@ -585,7 +628,7 @@ class GamificationSystem {
   // Check daily video count
   checkDailyVideoCount() {
     const today = new Date().toDateString();
-    const dailyCount = localStorage.getItem(`daily_videos_${today}`);
+    const dailyCount = localStorage.getItem(this.getNSKey(`daily_videos_${today}`));
     return dailyCount ? parseInt(dailyCount) : 0;
   }
 
@@ -593,7 +636,7 @@ class GamificationSystem {
   incrementDailyVideoCount() {
     const today = new Date().toDateString();
     const currentCount = this.checkDailyVideoCount();
-    localStorage.setItem(`daily_videos_${today}`, (currentCount + 1).toString());
+    localStorage.setItem(this.getNSKey(`daily_videos_${today}`), (currentCount + 1).toString());
   }
 
   // Create floating points container

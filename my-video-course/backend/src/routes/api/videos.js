@@ -1,20 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const videoController = require('../../controllers/videoController');
+const sessionAuth = require('../../middleware/sessionAuth');
 
-router.get('/', videoController.getAllVideos);
-router.get('/course/:courseName', videoController.getVideosByCourse);
-router.get('/course/:courseName/count', videoController.getVideoCount);
-router.get('/:courseName/:videoId', videoController.getVideo);
-router.post('/:courseName/:videoId/watch', videoController.markWatched);
-router.post('/sync', videoController.syncVideos);
-router.post('/add', videoController.addVideo);
+router.get('/', sessionAuth, videoController.getAllVideos);
+router.get('/course/:courseName', sessionAuth, videoController.getVideosByCourse);
+router.get('/course/:courseName/count', sessionAuth, videoController.getVideoCount);
+router.get('/watch-dates', sessionAuth, videoController.getWatchDates);
+router.get('/:courseName/:videoId', sessionAuth, videoController.getVideo);
+router.post('/:courseName/:videoId/watch', sessionAuth, videoController.markWatched);
+router.post('/sync', sessionAuth, videoController.syncVideos);
+router.post('/add', sessionAuth, videoController.addVideo);
 
-// localStorage endpoint for gamification
-router.get('/localStorage', async (req, res) => {
+// localStorage endpoint for gamification (User specific)
+router.get('/localStorage', sessionAuth, async (req, res) => {
   try {
+    const userId = req.user?.email || req.session?.user?.email || 'guest';
     const dynamoVideoService = require('../../services/dynamoVideoService');
-    const courses = await dynamoVideoService.getAllCourses();
+    const courses = await dynamoVideoService.getAllCourses(userId);
     
     const localStorageFormat = {};
     courses.forEach(course => {
