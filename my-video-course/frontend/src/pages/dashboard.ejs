@@ -23,23 +23,23 @@
       }
     </script>
 </head>
-<body class="bg-apple-gray dark:bg-gray-900 font-sans antialiased transition-colors duration-200">
+<body class="bg-[#F9FBFA] dark:bg-[#001E2B] font-sans antialiased transition-colors duration-200">
     <!-- Dark Mode Toggle -->
     <button id="themeToggle" class="fixed top-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-10">
         <span id="themeIcon" class="text-xl">🌙</span>
     </button>
     
     <!-- Header -->
-    <header class="bg-white dark:bg-[#001E2B] border-b border-gray-200 dark:border-[#133A41] transition-colors duration-200 sticky top-0 z-50 backdrop-blur-md bg-opacity-90">
+    <header class="bg-white/80 dark:bg-[#001E2B]/80 border-b border-gray-200 dark:border-[#133A41] transition-colors duration-200 sticky top-0 z-50 backdrop-blur-xl">
         <div class="max-w-7xl mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-4">
-                    <div class="w-10 h-10 bg-[#00ED64] rounded-xl flex items-center justify-center shadow-sm">
-                        <span class="text-[#001E2B] text-xl font-bold">🍃</span>
+                    <div class="w-10 h-10 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-xl flex items-center justify-center shadow-lg shadow-[#00ED64]/20 border border-white/20">
+                        <span class="text-[#001E2B] text-xl font-bold">M</span>
                     </div>
                     <div>
-                        <h1 class="text-xl font-bold text-gray-900 dark:text-[#E7EEEB] tracking-tight">MongoDB <span class="font-normal text-gray-500">Academy</span></h1>
-                        <p id="userRole" class="text-xs font-semibold uppercase tracking-wider text-[#00ED64]">Student</p>
+                        <h1 class="text-xl font-bold text-gray-900 dark:text-[#E7EEEB] tracking-tight">Multitouch <span class="font-normal text-gray-500">Academy</span></h1>
+                        <p id="userRole" class="text-xs font-semibold uppercase tracking-wider text-[#00ED64] opacity-80">Student</p>
                     </div>
                 </div>
                 
@@ -55,9 +55,12 @@
 
     <div class="max-w-7xl mx-auto px-6 py-8">
         <!-- Super Admin Panel -->
-        <div id="adminPanel" class="hidden mb-8">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-200">
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">🔑 Super Admin Panel</h2>
+        <div id="adminPanel" class="hidden mb-12">
+            <div class="bg-white dark:bg-[#023430] rounded-2xl shadow-xl shadow-black/5 border border-gray-100 dark:border-[#133A41] p-8 transition-colors duration-200">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB] mb-6 flex items-center gap-3">
+                    <span class="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-xl">🛡️</span>
+                    Super Admin Console
+                </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
                         <h3 class="font-medium text-gray-900 dark:text-white mb-2">Grant Teacher Access</h3>
@@ -124,9 +127,14 @@
         </div>
 
         <!-- Available Courses -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors duration-200">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Available Courses</h2>
-            <div id="courseGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB]">Available Courses</h2>
+                <div class="flex gap-2">
+                    <span class="px-3 py-1 bg-gray-100 dark:bg-[#00684A]/30 text-gray-600 dark:text-[#00ED64] text-xs font-bold rounded-full border dark:border-[#00ED64]/20">Trending</span>
+                </div>
+            </div>
+            <div id="courseGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Courses will be loaded here -->
             </div>
         </div>
@@ -139,6 +147,14 @@
             loadUser();
             loadCourses();
         });
+        
+        // Include auth persistence if not already present
+        if (!window.authPersistenceLoaded) {
+            const script = document.createElement('script');
+            script.src = '/js/auth-persistence.js';
+            document.head.appendChild(script);
+            window.authPersistenceLoaded = true;
+        }
         
         function loadUser() {
             const userStr = localStorage.getItem('user');
@@ -219,7 +235,7 @@
                         <span class="text-[#00ED64] text-2xl font-black">${(course.title || course.name || 'C').charAt(0)}</span>
                     </div>
                     <h3 class="font-bold text-gray-900 dark:text-[#E7EEEB] mb-2 text-lg">${course.title || course.name || 'Untitled Course'}</h3>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 line-clamp-2">${course.description || 'Master this course with MongoDB Academy.'}</p>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 line-clamp-2">${course.description || 'Master this course with Multitouch Academy.'}</p>
                     <div class="space-y-3">
                         <button onclick="enrollInCourse('${course._id || course.name}')" 
                                 class="w-full px-4 py-3 bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] font-bold rounded-xl transition-all enroll-btn hover:shadow-lg" 
@@ -282,10 +298,7 @@
                     
                     const data = await response.json();
                     if (data.success && data.data.enrolled) {
-                        button.textContent = 'Enrolled ✓';
-                        button.disabled = true;
-                        button.classList.remove('bg-apple-blue', 'hover:bg-blue-600');
-                        button.classList.add('bg-green-500');
+                        button.style.display = 'none';
                     }
                 } catch (error) {
                     console.error('Error checking enrollment:', error);

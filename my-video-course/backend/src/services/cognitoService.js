@@ -17,6 +17,7 @@ class CognitoService {
     });
     this.userPoolId = process.env.COGNITO_USER_POOL_ID;
     this.clientId = process.env.COGNITO_CLIENT_ID;
+    console.log(`🔐 Cognito initialized with Client ID: ${this.clientId}`);
   }
 
   async adminCreateUser(email, password) {

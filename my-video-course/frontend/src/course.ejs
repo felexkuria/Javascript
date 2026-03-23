@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= courseName %> Course - Video Course Platform</title>
+    <title><%= courseName %> - Multitouch Academy</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -33,9 +33,9 @@
         }
         
         .course-title {
-            font-size: 48px;
+            font-size: 32px;
             font-weight: 800;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             color: #1d1d1f;
             letter-spacing: -0.03em;
             line-height: 1.1;
@@ -439,24 +439,35 @@
                 <% } %>
 
                 <h2 class="section-title">Course Content</h2>
-                <div class="curriculum-accordion" style="border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden;">
+                <div class="curriculum-accordion" style="border: 1px solid rgba(0,237,100,0.1); border-radius: 12px; overflow: hidden; background: white;" class="dark:bg-[#001E2B] dark:border-[#133A41]">
                     <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
                         <% sections.forEach((section, sIndex) => { %>
-                            <div class="curriculum-section">
-                                <div class="section-header" style="background: var(--mdb-cloud-light); padding: 16px 24px; border-bottom: 1px solid var(--color-border); font-size: 15px;">
-                                    <strong>Section <%= sIndex + 1 %>: <%= section.title %></strong>
-                                    <span style="font-size: 13px; opacity: 0.7;"><%= section.lectures.length %> Lectures</span>
+                            <div class="curriculum-section border-b border-gray-100 dark:border-[#133A41] last:border-0">
+                                <div class="section-header cursor-pointer flex justify-between items-center transition-colors hover:bg-gray-50 dark:hover:bg-[#023430]" 
+                                     onclick="toggleSection(this)"
+                                     style="padding: 16px 24px; font-size: 15px;"
+                                     class="bg-gray-50 dark:bg-[#001E2B] dark:text-[#E7EEEB]">
+                                    <div class="flex items-center gap-3">
+                                        <span class="toggle-icon transition-transform duration-200">▶</span>
+                                        <strong class="dark:text-[#00ED64]">Section <%= sIndex + 1 %>: <%= section.title %></strong>
+                                    </div>
+                                    <span class="text-xs opacity-60"><%= section.lectures.length %> Lectures</span>
                                 </div>
-                                <div class="section-lectures" style="background: #fff;">
+                                <div class="section-lectures hidden bg-white dark:bg-[#001E2B]">
                                     <% section.lectures.forEach((lecture, lIndex) => { %>
-                                        <div class="lecture-row" style="padding: 12px 24px; border-bottom: 1px solid var(--mdb-cloud); display: flex; justify-content: space-between; align-items: center;">
+                                        <div class="lecture-row hover:bg-gray-50 dark:hover:bg-[#023430]/30 transition-colors" 
+                                             style="padding: 12px 24px 12px 48px; border-bottom: 1px solid rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center;"
+                                             class="dark:border-[#133A41]">
                                             <div style="display: flex; align-items: center; gap: 12px;">
-                                                <span style="opacity: 0.5;"><%= lecture.type === 'video' ? '▶️' : '📄' %></span>
-                                                <a href="/course/<%= courseName %>/video/<%= lecture.contentId %>" class="lecture-link" data-content-id="<%= lecture.contentId %>" style="color: var(--color-text); font-size: 14px;">
+                                                <span class="text-lg opacity-70"><%= lecture.type === 'video' ? '📺' : '📄' %></span>
+                                                <a href="/course/<%= courseName %>/video/<%= lecture.contentId %>" 
+                                                   class="lecture-link text-sm font-medium hover:text-[#00ED64]" 
+                                                   data-content-id="<%= lecture.contentId %>" 
+                                                   style="color: inherit; text-decoration: none;">
                                                     <%= lIndex + 1 %>. <%= lecture.title %>
                                                 </a>
                                             </div>
-                                            <span style="font-size: 12px; opacity: 0.6;"><%= Math.floor((lecture.duration || 0) / 60) %>:00</span>
+                                            <span class="text-[11px] opacity-50 font-mono"><%= Math.floor((lecture.duration || 0) / 60) %>:00</span>
                                         </div>
                                     <% }); %>
                                 </div>
@@ -478,7 +489,7 @@
                     </div>
                     <div class="card-body">
                         <div style="font-size: 32px; font-weight: 800; margin-bottom: 16px;">Free <span style="font-size: 16px; text-decoration: line-through; opacity: 0.5;">$94.99</span></div>
-                        <button id="enrollBtnSidebar" class="btn btn-primary btn-full btn-lg" style="margin-bottom: 12px; height: 48px;">Enroll Now</button>
+                        <button id="enrollBtnSidebar" class="btn btn-primary btn-full btn-lg" style="margin-bottom: 12px; height: 48px; width: 100%;">Enroll Now</button>
                         <button id="wishlistBtn" class="btn btn-default btn-full" style="height: 48px;">Add to Wishlist</button>
                         
                         <div style="margin-top: 24px;">
@@ -526,7 +537,27 @@
         document.addEventListener('DOMContentLoaded', () => {
             checkEnrollmentStatus();
             checkUserRole();
+            
+            // Open first section by default
+            const firstSection = document.querySelector('.section-header');
+            if (firstSection) toggleSection(firstSection);
         });
+
+        function toggleSection(header) {
+            const lectures = header.nextElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            const isHidden = lectures.classList.contains('hidden');
+            
+            if (isHidden) {
+                lectures.classList.remove('hidden');
+                icon.style.transform = 'rotate(90deg)';
+                header.classList.add('bg-gray-100', 'dark:bg-[#023430]');
+            } else {
+                lectures.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+                header.classList.remove('bg-gray-100', 'dark:bg-[#023430]');
+            }
+        }
 
         async function checkUserRole() {
             const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -545,19 +576,13 @@
                 
                 const data = await response.json();
                 if (data.success && data.data.enrolled) {
-                    isEnrolled = true;
-                    const enrollBtn = document.getElementById('enrollBtn');
                     if (enrollBtn) {
-                        enrollBtn.textContent = 'Enrolled ✓';
-                        enrollBtn.style.background = '#00ED64';
-                        enrollBtn.style.color = '#001E2B';
-                        enrollBtn.disabled = true;
                         enrollBtn.style.display = 'none';
                     }
                     if (enrollBtnSidebar) {
-                        enrollBtnSidebar.textContent = 'Enrolled ✓';
-                        enrollBtnSidebar.disabled = true;
+                        enrollBtnSidebar.style.display = 'none';
                     }
+                    isEnrolled = true;
                 }
                 
                 applyDynamicStates();

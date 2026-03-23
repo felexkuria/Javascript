@@ -37,8 +37,13 @@ router.post('/', async (req, res) => {
     // Update course enrollment count
     try {
       const Course = require('../../models/Course');
+      const mongoose = require('mongoose');
+      const query = mongoose.Types.ObjectId.isValid(courseId) 
+        ? { _id: courseId } 
+        : { name: courseId };
+        
       await Course.findOneAndUpdate(
-        { $or: [{ _id: courseId }, { name: courseId }] },
+        query,
         { $inc: { enrollments: 1 } }
       );
     } catch (err) {

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../../models/User');
 const Course = require('../../models/Course');
+const mongoose = require('mongoose');
 
 // Add a course to wishlist
 router.post('/add', async (req, res) => {
@@ -14,9 +15,11 @@ router.post('/add', async (req, res) => {
     }
 
     // Find course to verify it exists and get its ObjectId
-    const course = await Course.findOne({ 
-      $or: [{ _id: mongoose.Types.ObjectId.isValid(courseId) ? courseId : null }, { title: courseId }, { name: courseId }] 
-    });
+    const query = mongoose.Types.ObjectId.isValid(courseId)
+      ? { _id: courseId }
+      : { $or: [{ title: courseId }, { name: courseId }] };
+
+    const course = await Course.findOne(query);
 
     if (!course) {
       return res.status(404).json({ success: false, error: 'Course not found' });
@@ -71,5 +74,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-const mongoose = require('mongoose');
 module.exports = router;
