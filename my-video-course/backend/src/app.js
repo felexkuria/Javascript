@@ -234,8 +234,10 @@ const teacherOrAdminAuth = (req, res, next) => {
   if (adminKey === process.env.ADMIN_KEY || adminKey === 'admin123') {
     return next();
   }
-  // 2. Session-based check — teacher or admin role, or known admin email
-  const user = req.user;
+  
+  // 2. Session-based check (Directly check session if req.user isn't set yet)
+  const user = req.user || req.session?.user;
+  
   if (user) {
     if (
       user.isTeacher ||
@@ -244,15 +246,18 @@ const teacherOrAdminAuth = (req, res, next) => {
       user.role === 'admin' ||
       user.email === ADMIN_EMAIL_AUTH
     ) {
+      // Ensure req.user is set for downstream handlers
+      req.user = user;
       return next();
     }
   }
+
   // 3. JWT token check (Bearer)
   const authHeader = req.headers['authorization'];
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    // Already verified by sessionAuth if req.user exists; if not, reject
     return res.status(403).json({ success: false, message: 'Admin or teacher access required' });
   }
+  
   res.status(403).json({ success: false, message: 'Admin or teacher access required' });
 };
 

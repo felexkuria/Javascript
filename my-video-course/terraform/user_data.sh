@@ -23,7 +23,7 @@ cd /opt/video-course-app
 # Create environment file
 cat > .env << EOF
 NODE_ENV=production
-PORT=3000
+PORT=3002
 AWS_REGION=${aws_region}
 S3_BUCKET_NAME=${s3_bucket_name}
 GEMINI_API_KEY=${gemini_api_key}
@@ -41,7 +41,7 @@ docker pull ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:l
 # Run the unified container
 docker run -d \
   --name video-course-app \
-  -p 3000:3000 \
+  -p 3002:3002 \
   --env-file .env \
   --restart unless-stopped \
   ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest

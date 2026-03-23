@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy New Course - Multitouch Academy</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --mdb-midnight: #001E2B;
+            --mdb-green: #00ED64;
+            --mdb-green-dark: #00684A;
+            --mdb-cloud: #F9FBFA;
+            --mdb-slate: #889397;
+        }
+
+        body {
+            font-family: 'Euclid Circular A', 'Inter', system-ui, sans-serif;
+            background: var(--mdb-cloud);
+            color: var(--mdb-midnight);
+            margin: 0;
+        }
+
+        .dark body {
+            background: var(--mdb-midnight);
+            color: var(--mdb-cloud);
+        }
+
+        .instructor-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        .instructor-main {
+            padding: 64px;
+            max-width: 800px;
+        }
+
+        .deploy-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.02);
+        }
+
+        .dark .deploy-card {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.05);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--mdb-slate);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 8px;
+            font-size: 15px;
+            background: transparent;
+            color: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--mdb-green);
+            box-shadow: 0 0 0 3px rgba(0, 237, 100, 0.1);
+        }
+
+        .btn-deploy {
+            background: var(--mdb-green-dark);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-deploy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 104, 74, 0.2);
+        }
+
+        h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; }
+        .subtitle { color: var(--mdb-slate); margin-bottom: 40px; }
+    </style>
+</head>
+<body class="dark:bg-[#001E2B]">
+    <div class="instructor-layout">
+        <%- include('partials/instructor-sidebar', { activePage: 'dashboard' }) %>
+        <main class="instructor-main">
+            <header>
+                <h1>Deploy New Course</h1>
+                <p class="subtitle">Initialize your curriculum and start building the future of engineering.</p>
+            </header>
+
+            <div class="deploy-card animate-slide-up">
+                <form action="/teacher/course-new" method="POST">
+                    <div class="form-group">
+                        <label class="form-label">Course Title</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Advanced Distributed Systems" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-control">
+                            <option value="Engineering">Engineering</option>
+                            <option value="Database">Database</option>
+                            <option value="Cloud">Cloud</option>
+                            <option value="Frontend">Frontend</option>
+                            <option value="AI">AI / Machine Learning</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 40px;">
+                        <label class="form-label">Short Description</label>
+                        <textarea name="description" class="form-control" rows="4" placeholder="Briefly describe what students will learn..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-deploy">
+                        <i class="fas fa-rocket"></i> Deploy Course & Initialize Curriculum
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Theme management
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+            document.body.classList.toggle('dark', savedTheme === 'dark');
+        })();
+    </script>
+</body>
+</html>

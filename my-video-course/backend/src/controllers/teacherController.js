@@ -9,7 +9,7 @@ class TeacherController {
   async renderDashboard(req, res) {
     try {
       const user = req.user || req.session?.user;
-      const userId = user?.email || 'guest';
+      const userId = user?.id || user?.email || 'guest';
       
       // 1. Fetch courses from MongoDB (ONLY courses for this instructor)
       const courses = await Course.find({ instructorId: userId }).lean();
@@ -24,7 +24,7 @@ class TeacherController {
       
       // Map courses to a simpler format for the view
       const courseStats = courses.map(course => {
-        const courseEnrollments = enrollments.filter(e => e.course.toString() === course._id.toString());
+        const courseEnrollments = enrollments.filter(e => e.course && e.course.toString() === course._id.toString());
         return {
           id: course._id,
           title: course.title,
@@ -99,11 +99,15 @@ class TeacherController {
     try {
       const { id } = req.params;
       const user = req.user || req.session?.user;
-      const userId = user?.email || 'guest';
-      const isAdmin = userId === ADMIN_EMAIL || user?.isAdmin || user?.role === 'admin';
+      const userId = user?.id || user?.email || 'guest';
+      const isAdmin = userId === ADMIN_EMAIL || user?.isAdmin || user?.role === 'admin' || user?.email === ADMIN_EMAIL;
+
+      // Robust ObjectId casting for lookup
+      const mongoose = require('mongoose');
+      const objectId = mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id;
 
       // Admin can open any course; teachers can only open their own
-      const query = isAdmin ? { _id: id } : { _id: id, instructorId: userId };
+      const query = isAdmin ? { _id: objectId } : { _id: objectId, instructorId: userId };
       const course = await Course.findOne(query).lean();
       
       if (!course) {
@@ -118,6 +122,38 @@ class TeacherController {
     } catch (error) {
       console.error('Error rendering course editor:', error);
       res.status(500).render('error', { message: 'Error loading course editor: ' + error.message });
+    }
+  }
+  
+  async renderNewCourseForm(req, res) {
+    const user = req.user || req.session?.user;
+    res.render('teacher-course-new', { user });
+  }
+
+  async createNewCourse(req, res) {
+    try {
+      const user = req.user || req.session?.user;
+      const { title, category, description } = req.body;
+      const userId = user?.id || user?.email || 'guest';
+      
+      const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      
+      const newCourse = new Course({
+        title,
+        slug,
+        category: category || 'General',
+        description: description || '',
+        instructor: user?.name || 'Instructor',
+        instructorId: userId,
+        isPublished: false,
+        sections: []
+      });
+
+      await newCourse.save();
+      res.redirect(`/teacher/course-editor/${newCourse._id}`);
+    } catch (error) {
+      console.error('Error creating course:', error);
+      res.status(500).render('error', { message: 'Error creating course: ' + error.message });
     }
   }
 }
