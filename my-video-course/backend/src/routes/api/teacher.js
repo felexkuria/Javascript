@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Course = require('../../models/Course');
 const uploadController = require('../../controllers/uploadController');
+const teacherController = require('../../controllers/teacherController');
 // Note: teacherOrAdminAuth is handled in app.js for this router
 // ── Course Meta ────────────────────────────────────────────────
 
@@ -48,6 +49,11 @@ router.patch('/courses/:id/metadata', async (req, res) => {
     console.error('Metadata Update Error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
+});
+
+// Delete Course
+router.delete('/courses/:id', async (req, res) => {
+  teacherController.deleteCourse(req, res);
 });
 
 

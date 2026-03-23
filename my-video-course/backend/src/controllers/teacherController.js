@@ -173,6 +173,20 @@ class TeacherController {
       res.status(500).render('error', { message: 'Error loading upload center: ' + error.message });
     }
   }
+
+  async deleteCourse(req, res) {
+    try {
+      const { id } = req.params;
+      const courseService = require('../services/courseService');
+      
+      await courseService.deleteCourseData(id);
+      
+      res.json({ success: true, message: 'Course and all associated data deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      res.status(500).json({ success: false, message: 'Error deleting course: ' + error.message });
+    }
+  }
 }
 
 module.exports = new TeacherController();

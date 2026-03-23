@@ -5,6 +5,10 @@ const path = require('path');
 const fs = require('fs');
 
 const CourseModel = require('../models/Course');
+const Enrollment = require('../models/Enrollment');
+const { S3Client, DeleteObjectsCommand, ListObjectsV2Command } = require('@aws-sdk/client-s3');
+
+const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
 class CourseService {
   async getAllCourses() {
@@ -98,150 +102,87 @@ class CourseService {
       return [];
     }
   }
-  
-  async getAllVideos() {
-    try {
-      const userId = 'engineerfelex@gmail.com';
-      const courses = await dynamoVideoService.getAllCourses(userId);
-      return courses.flatMap(c => (c.videos || []).map(v => ({
-        _id: v._id,
-        title: v.title,
-        courseName: c.name,
-        watched: v.watched || false
-      })));
-      
-      // Fallback to localStorage
-      const localStorage = dynamoVideoService.getLocalStorage();
-      const allVideos = [];
-      
-      Object.keys(localStorage).forEach(courseName => {
-        const courseVideos = localStorage[courseName] || [];
-        courseVideos.forEach(video => {
-          if (video && video._id) {
-            allVideos.push({
-              _id: video._id,
-              title: video.title,
-              courseName: courseName,
-              watched: video.watched || false
-            });
-          }
-        });
-      });
-      
-      return allVideos;
-    } catch (error) {
-      console.error('Error getting all videos:', error);
-      return [];
-    }
-  }
 
-  async getCourseByName(courseName) {
+  async getCourseById(id, userId) {
     try {
-      const decodedCourseName = decodeURIComponent(courseName);
-      const videos = await dynamoVideoService.getVideosForCourse(decodedCourseName, 'guest');
+      // 1. Try MongoDB first (New Architecture)
+      const mongoose = require('mongoose');
+      const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id };
+      const mongoCourse = await CourseModel.findOne(query).lean();
       
-      if (!videos || videos.length === 0) {
-        return null;
+      if (mongoCourse) {
+        const allLectures = (mongoCourse.sections || []).flatMap(s => s.lectures || []);
+        return {
+          _id: mongoCourse._id,
+          name: mongoCourse.title,
+          title: mongoCourse.title,
+          description: mongoCourse.description,
+          instructor: 'Engineer Felex',
+          videos: allLectures,
+          sections: mongoCourse.sections,
+          isMongo: true
+        };
       }
 
-      const watchedVideos = videos.filter(v => v && v.watched).length;
-      
-      return {
-        name: decodedCourseName,
-        title: decodedCourseName,
-        videos: videos,
-        totalVideos: videos.length,
-        watchedVideos: watchedVideos,
-        completionPercentage: Math.round((watchedVideos / videos.length) * 100)
-      };
+      // 2. Try DynamoDB (Legacy/Hybrid)
+      const course = await dynamoVideoService.getCourseByTitle(id, userId);
+      return course;
     } catch (error) {
-      console.error('Error getting course by name:', error);
+      console.error('Error getting course by ID:', error);
       return null;
     }
   }
 
-  // Sync S3 videos to DynamoDB
   async syncS3VideosToDynamoDB() {
     try {
+      const bucketName = process.env.S3_BUCKET_NAME;
+      if (!bucketName) return;
+
       const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
       const s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
-      const dynamodb = require('../utils/dynamodb');
-      
-      const params = {
-        Bucket: process.env.S3_BUCKET_NAME,
+
+      // List objects in videos/ folder
+      const command = new ListObjectsV2Command({
+        Bucket: bucketName,
         Prefix: 'videos/'
-      };
-      
-      const command = new ListObjectsV2Command(params);
-      const s3Objects = await s3.send(command);
-      
-      if (!s3Objects.Contents) return;
+      });
 
-      const videoFiles = s3Objects.Contents.filter(obj => obj.Key.endsWith('.mp4'));
-      
-      for (const file of videoFiles) {
-        const keyParts = file.Key.split('/');
-        if (keyParts.length >= 3) {
-          const courseName = keyParts[1];
-          const videoTitle = keyParts[2].replace('.mp4', '');
-          const videoId = videoTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-          
-          // ── Ensure Course exists in MongoDB too ───────────────────
-          const Course = require('../models/Course');
-          let mongoCourse = await Course.findOne({ title: courseName });
-          if (!mongoCourse) {
-            try {
-              mongoCourse = await Course.create({
-                title: courseName,
-                slug: courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-                instructorId: 'engineerfelex@gmail.com',
-                isPublished: true,
-                sections: [{ title: 'Lessons', lectures: [] }]
-              });
-              console.log(`✅ Created MongoDB Course for S3 Course: ${courseName}`);
-            } catch (err) {
-              console.error(`❌ Failed to create MongoDB Course "${courseName}":`, err.message);
-            }
-          }
+      const response = await s3.send(command);
+      if (!response.Contents) return;
 
-          const success = await dynamodb.saveVideo({
-            videoId: videoId,
-            title: videoTitle,
-            courseName: courseName,
-            sectionTitle: 'Lessons',
-            s3Key: file.Key,
-            s3Url: `s3://${process.env.S3_BUCKET_NAME}/${file.Key}`,
-            watched: false,
-            createdAt: new Date().toISOString()
-          });
+      const courses = {};
 
-          // Link to MongoDB if it was a missing lecture
-          if (mongoCourse) {
-            const hasLecture = mongoCourse.sections[0].lectures.some(l => l.contentId === videoId);
-            if (!hasLecture) {
-              await Course.findByIdAndUpdate(mongoCourse._id, {
-                $push: { 'sections.0.lectures': {
-                  title: videoTitle,
-                  contentId: videoId,
-                  s3Key: file.Key,
-                  type: 'video'
-                }},
-                $inc: { totalVideos: 1 }
-              });
-            }
-          }
-          
-          if (success) {
-            console.log(`✅ Synced S3 video to DynamoDB: ${courseName}/${videoTitle}`);
-          }
-        }
+      for (const obj of response.Contents) {
+        const parts = obj.Key.split('/');
+        if (parts.length < 3) continue;
+
+        const courseName = parts[1];
+        const fileName = parts[2];
+        if (!fileName.endsWith('.mp4')) continue;
+
+        if (!courses[courseName]) courses[courseName] = [];
+        
+        courses[courseName].push({
+          videoId: fileName.split('-')[0] || Date.now().toString(),
+          title: fileName.replace(/^\d+-/, '').replace('.mp4', '').replace(/_/g, ' '),
+          videoUrl: `https://${bucketName}.s3.amazonaws.com/${obj.Key}`,
+          s3Key: obj.Key,
+          watched: false
+        });
       }
+
+      // Save to DynamoDB
+      for (const [courseName, videos] of Object.entries(courses)) {
+        await dynamoVideoService.updateCourseVideos(courseName, videos, 'engineerfelex@gmail.com');
+      }
+
+      console.log('✅ S3 to DynamoDB sync completed');
     } catch (error) {
-      console.warn('S3 sync failed:', error.message);
+      console.warn('Sync failed:', error.message);
     }
   }
-  
-  async generateDescription(courseName) {
+
+  generateDescription(courseName) {
     const decodedCourseName = decodeURIComponent(courseName);
     
     if (decodedCourseName.toLowerCase().includes('terraform')) {
@@ -252,6 +193,63 @@ class CourseService {
       return 'Complete DevOps bootcamp covering CI/CD, containerization, infrastructure automation, and modern development practices.';
     } else {
       return `Learn ${decodedCourseName} through comprehensive lessons and practical exercises with hands-on projects.`;
+    }
+  }
+
+  async deleteCourseData(courseId) {
+    try {
+      const course = await CourseModel.findById(courseId);
+      if (!course) throw new Error('Course not found');
+
+      const title = course.title;
+      const slug = course.slug || title.toLowerCase().replace(/\s+/g, '-');
+
+      // 1. Delete Enrollments
+      const enrollResult = await Enrollment.deleteMany({ courseId });
+      console.log(`🗑️ Deleted ${enrollResult.deletedCount} enrollments for course: ${title}`);
+
+      // 2. Delete from S3 (Curriculum files)
+      if (process.env.S3_BUCKET_NAME) {
+        try {
+          // List all objects under the course's prefix
+          const prefix = `courses/${slug}/`;
+          const listCommand = new ListObjectsV2Command({
+            Bucket: process.env.S3_BUCKET_NAME,
+            Prefix: prefix
+          });
+          const listResponse = await s3Client.send(listCommand);
+
+          if (listResponse.Contents && listResponse.Contents.length > 0) {
+            const deleteParams = {
+              Bucket: process.env.S3_BUCKET_NAME,
+              Delete: {
+                Objects: listResponse.Contents.map(obj => ({ Key: obj.Key }))
+              }
+            };
+            await s3Client.send(new DeleteObjectsCommand(deleteParams));
+            console.log(`🗑️ Deleted ${listResponse.Contents.length} objects from S3 for course: ${title}`);
+          }
+        } catch (s3Err) {
+          console.error('⚠️ S3 cleanup failed during course deletion:', s3Err.message);
+        }
+      }
+
+      // 3. Delete from DynamoDB (Legacy/Hybrid)
+      try {
+        await dynamoVideoService.deleteCourse(title);
+        console.log(`🗑️ Deleted course "${title}" from DynamoDB`);
+      } catch (dynamoErr) {
+        console.error('⚠️ DynamoDB cleanup failed during course deletion:', dynamoErr.message);
+      }
+
+      // 4. Delete MongoDB Course Document
+      await CourseModel.findByIdAndDelete(courseId);
+      console.log(`🗑️ Deleted course document from MongoDB: ${title}`);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting course data:', error);
+      throw error;
     }
   }
 }

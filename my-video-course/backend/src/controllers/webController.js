@@ -4,6 +4,10 @@ const fs = require('fs');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const Enrollment = require('../models/Enrollment');
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+
+const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
 class WebController {
   async redirectToDashboard(req, res) {
@@ -453,8 +457,25 @@ class WebController {
         return res.status(404).send('Video not found');
       }
 
-      // Handle S3 URLs - redirect to S3
-      if (video.videoUrl && (video.videoUrl.startsWith('https://') || video.videoUrl.includes('amazonaws.com'))) {
+      // Handle S3 URLs - redirect to a Signed URL
+      if (video.videoUrl && (video.videoUrl.startsWith('https://') || video.videoUrl.includes('amazonaws.com') || video.videoUrl.startsWith('s3://'))) {
+        let s3Key = video.s3Key;
+        if (!s3Key) {
+          // Attempt to extract key from URL if not explicitly stored
+          const urlParts = video.videoUrl.split('.com/');
+          if (urlParts.length > 1) s3Key = urlParts[1];
+        }
+
+        if (s3Key) {
+          const command = new GetObjectCommand({
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: s3Key
+          });
+          const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // 1 hour
+          return res.redirect(signedUrl);
+        }
+        
+        // Fallback to direct redirect if signing fails (might still fail with Access Denied but better than 500)
         return res.redirect(video.videoUrl);
       }
 
