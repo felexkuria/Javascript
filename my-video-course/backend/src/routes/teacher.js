@@ -3,7 +3,9 @@ const router = express.Router();
 const sessionAuth = require('../middleware/sessionAuth');
 
 const teacherAuth = (req, res, next) => {
-  if (!req.user || (!req.user.roles?.includes('teacher') && !req.user.isTeacher)) {
+  // Check the standard 'role' field from the User model
+  const userRole = req.user?.role;
+  if (userRole !== 'teacher' && userRole !== 'admin') {
     return res.redirect('/dashboard');
   }
   next();

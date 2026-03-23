@@ -8,6 +8,9 @@ const UserSchema = new mongoose.Schema({
   profileImage: { type: String },
   enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+  points: { type: Number, default: 0 },
+  level: { type: Number, default: 1 },
+  experiencePoints: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

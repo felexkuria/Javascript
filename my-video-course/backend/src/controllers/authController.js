@@ -64,70 +64,59 @@ class AuthController {
       
       const result = await cognitoService.signIn(email, password);
       
-      // Get or create user in DynamoDB
-      const dynamoVideoService = require('../services/dynamoVideoService');
-      const dynamodb = require('../utils/dynamodb');
+      // Synchronize with MongoDB User model
+      const User = require('../models/User');
+      let mongoUser = await User.findOne({ email });
       
-      let user = await dynamodb.getUser(email);
-      
-      if (!user) {
-        // Set initial roles based on email
-        let roles = ['student'];
+      if (!mongoUser) {
+        console.log('👤 Creating initial user in MongoDB...');
+        let role = 'student';
         if (email === 'engineerfelex@gmail.com') {
-          roles = ['student', 'teacher', 'admin'];
+          role = 'admin';
         } else if (email === 'multitouchkenya@gmail.com') {
-          roles = ['student', 'teacher'];
+          role = 'teacher';
         }
         
-        user = {
-          userId: email,
-          name: email.split('@')[0],
+        mongoUser = new User({
           email,
-          roles,
-          createdAt: new Date().toISOString()
-        };
-        await dynamodb.saveUser(user);
-        console.log('✅ Created user in DynamoDB with roles:', roles);
-      } else if (email === 'engineerfelex@gmail.com' && !user.roles.includes('admin')) {
-        // Ensure admin has all roles
-        user.roles = ['student', 'teacher', 'admin'];
-        await dynamodb.saveUser(user);
+          name: email.split('@')[0],
+          role: role
+        });
+        await mongoUser.save();
+      } else if (email === 'engineerfelex@gmail.com' && mongoUser.role !== 'admin') {
+        mongoUser.role = 'admin';
+        await mongoUser.save();
       }
-      
-      // Handle teacher role request - auto-approve for specific users
-      if (req.body.requestedRole === 'teacher' && !user.roles.includes('teacher')) {
+
+      // Handle teacher role request
+      if (req.body.requestedRole === 'teacher' && mongoUser.role === 'student') {
         if (email === 'multitouchkenya@gmail.com' || email === 'engineerfelex@gmail.com') {
-          if (!user.roles.includes('teacher')) {
-            user.roles.push('teacher');
-            await dynamodb.saveUser(user);
-            console.log('✅ Teacher role granted to:', email);
-          }
+          mongoUser.role = 'teacher';
+          await mongoUser.save();
+          console.log('✅ Teacher role granted in MongoDB to:', email);
         }
-        // Note: Generic teacher requests can be handled via a 'teacherRequest' attribute on the user object in DynamoDB
       }
-      
-      // Set session for web routes with proper role
-      const currentRole = req.body.requestedRole && user.roles.includes(req.body.requestedRole) 
-        ? req.body.requestedRole 
-        : user.roles.includes('admin') ? 'admin' 
-          : user.roles.includes('teacher') ? 'teacher' 
-            : 'student';
+
+      // Standardize session role
+      const currentRole = (req.body.requestedRole && (mongoUser.role === req.body.requestedRole || mongoUser.role === 'admin'))
+        ? req.body.requestedRole
+        : mongoUser.role;
         
       req.session.user = { 
         email, 
-        roles: user.roles, 
+        name: mongoUser.name,
+        role: mongoUser.role, // Standardized single role
         currentRole,
-        isTeacher: user.roles.includes('teacher'),
-        isAdmin: user.roles.includes('admin'),
+        isTeacher: mongoUser.role === 'teacher' || mongoUser.role === 'admin',
+        isAdmin: mongoUser.role === 'admin',
         token: result.accessToken 
       };
       
-      console.log('✅ Session set:', {
+      console.log('✅ Session set (MongoDB Sync):', {
         email,
-        roles: user.roles,
+        role: mongoUser.role,
         currentRole,
-        requestedRole: req.body.requestedRole,
-        isTeacher: user.roles.includes('teacher')
+        isTeacher: req.session.user.isTeacher
       });
       
       // Return tokens for API usage
