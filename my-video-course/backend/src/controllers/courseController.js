@@ -197,42 +197,57 @@ class CourseController {
   // Upload video to course
   async uploadVideo(req, res) {
     try {
-      const { courseName, title } = req.body;
+      const { courseId } = req.params;
+      const { sectionId, title, courseName } = req.body;
       const videoFile = req.file;
       
       if (!videoFile) {
-        return res.status(400).json({
-          success: false,
-          message: 'No video file provided'
-        });
+        return res.status(400).json({ success: false, message: 'No video file provided' });
       }
+
+      const targetCourseId = courseId;
+      const targetTitle = title || videoFile.originalname.replace(/\.[^.]+$/, '');
       
-      if (!courseName || !title) {
-        return res.status(400).json({
-          success: false,
-          message: 'Course name and title are required'
-        });
-      }
-      
-      // Process video (compress, upload to S3, generate captions, AI content)
+      // Upload to S3 via videoProcessingService
       const processedVideo = await videoProcessingService.processVideo(
-        videoFile, 
-        courseName, 
-        title
+        videoFile,
+        courseName || targetCourseId,
+        targetTitle
       );
+
+      // ── Link lecture to MongoDB section ────────────────────────
+      if (targetCourseId && sectionId) {
+        try {
+          const lectureEntry = {
+            title: targetTitle,
+            type: 'video',
+            contentId: processedVideo?.videoId || processedVideo?._id || (Date.now().toString()),
+            s3Key: processedVideo?.s3Key || processedVideo?.key || '',
+            duration: processedVideo?.duration || 0,
+            isFree: false
+          };
+
+          await Course.findOneAndUpdate(
+            { _id: targetCourseId, 'sections._id': sectionId },
+            { $push: { 'sections.$.lectures': lectureEntry }, $set: { updatedAt: new Date() } },
+            { new: true }
+          );
+          console.log(`✅ Lecture linked to section ${sectionId} in course ${targetCourseId}`);
+        } catch (mongoErr) {
+          console.error('❌ Failed to link lecture to MongoDB section:', mongoErr.message);
+          // Don't fail the S3 upload response — log and continue
+        }
+      }
       
       res.json({
         success: true,
         data: processedVideo,
-        message: 'Video uploaded and processed successfully'
+        sectionId: sectionId || null,
+        message: 'Video uploaded and linked to section successfully'
       });
     } catch (error) {
       console.error('Error uploading video:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to upload video',
-        error: error.message
-      });
+      res.status(500).json({ success: false, message: 'Failed to upload video', error: error.message });
     }
   }
   

@@ -3,6 +3,8 @@ const Course = require('../models/Course');
 const User = require('../models/User');
 const Enrollment = require('../models/Enrollment');
 
+const ADMIN_EMAIL = 'engineerfelex@gmail.com';
+
 class TeacherController {
   async renderDashboard(req, res) {
     try {
@@ -38,7 +40,7 @@ class TeacherController {
         publishedCourses,
         totalStudents,
         courses: courseStats,
-        recentActivity: [] // Optional: placeholder for now
+        recentActivity: []
       });
     } catch (error) {
       console.error('Error rendering teacher dashboard:', error);
@@ -51,20 +53,16 @@ class TeacherController {
       const user = req.user || req.session?.user;
       const userId = user?.email || 'default_user';
       
-      // 1. Fetch user enrollments from MongoDB
       const enrollments = await Enrollment.find({ user: userId })
         .populate('course')
         .lean();
       
-      // 2. Fetch all available courses (for discovery)
       const allCourses = await Course.find({ isPublished: true }).lean();
       
-      // 3. Map enrollments to a format the dashboard expects
       const studentCourses = enrollments.map(enrol => {
         const course = enrol.course;
         if (!course) return null;
         
-        // Calculate progress (lectures completed vs total)
         const totalLectures = course.sections?.reduce((sum, s) => sum + (s.lectures?.length || 0), 0) || 0;
         const watchedLectures = enrol.progress?.watchedLectures?.length || 0;
         const progressPercent = totalLectures > 0 ? Math.round((watchedLectures / totalLectures) * 100) : 0;
@@ -80,12 +78,11 @@ class TeacherController {
         };
       }).filter(c => c !== null);
 
-      // 4. Get gamification data (fallback to placeholder if not in MongoDB yet)
       const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
 
       res.render('dashboard', {
         user,
-        courses: studentCourses, // Only enrolled courses for dashboard
+        courses: studentCourses,
         allCourses,
         gamificationData: gamificationData || {
           userStats: { totalPoints: 0, currentLevel: 1 },
@@ -103,7 +100,7 @@ class TeacherController {
       const { id } = req.params;
       const user = req.user || req.session?.user;
       const userId = user?.email || 'guest';
-      const isAdmin = userId === 'engineerfelex@gmail.com' || user?.isAdmin || user?.role === 'admin';
+      const isAdmin = userId === ADMIN_EMAIL || user?.isAdmin || user?.role === 'admin';
 
       // Admin can open any course; teachers can only open their own
       const query = isAdmin ? { _id: id } : { _id: id, instructorId: userId };
@@ -120,10 +117,6 @@ class TeacherController {
       });
     } catch (error) {
       console.error('Error rendering course editor:', error);
-      res.status(500).render('error', { message: 'Error loading course editor: ' + error.message });
-    }
-  }
-
       res.status(500).render('error', { message: 'Error loading course editor: ' + error.message });
     }
   }
