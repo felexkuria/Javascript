@@ -6,6 +6,11 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen>
         </iframe>
+        <% } else if (video && (video.videoUrl.toLowerCase().endsWith('.pdf') || video.type === 'resource')) { %>
+        <iframe src="<%= video.videoUrl %>" 
+                style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; border: none;"
+                id="pdfViewer">
+        </iframe>
         <% } else { %>
         <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video" preload="metadata" 
                poster="/thumbnails/<%= video._id %>.jpg"

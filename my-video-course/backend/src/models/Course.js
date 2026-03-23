@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const LectureSchema = new mongoose.Schema({
   title: { type: String, required: true },
   type: { type: String, enum: ['video', 'quiz', 'resource'], default: 'video' },
-  contentId: { type: String, required: true }, // videoId or quizId
+  contentId: { type: String, required: false }, // videoId or quizId
   s3Key: { type: String },
   duration: { type: Number }, // in seconds
   isFree: { type: Boolean, default: false }

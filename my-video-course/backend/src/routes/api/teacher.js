@@ -16,13 +16,40 @@ router.patch('/courses/:id/publish', async (req, res) => {
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
     
     course.isPublished = true;
-    await course.save();
+    await course.save({ validateBeforeSave: false });
     res.json({ success: true, isPublished: true });
   } catch (error) {
     console.error('Publish Error:', error);
     res.status(500).json({ success: false, message: error.message, error: error.message });
   }
 });
+// Update Course Metadata
+router.patch('/courses/:id/metadata', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, category } = req.body;
+    
+    const mongoose = require('mongoose');
+    const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+    
+    const course = await Course.findOne(query);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+    
+    if (title) {
+        course.title = title;
+        course.slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    }
+    if (description !== undefined) course.description = description;
+    if (category) course.category = category;
+    
+    await course.save();
+    res.json({ success: true, course });
+  } catch (error) {
+    console.error('Metadata Update Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 
 // Reorder Sections
 router.patch('/courses/:id/reorder', async (req, res) => {

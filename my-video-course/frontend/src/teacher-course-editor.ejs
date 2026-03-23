@@ -191,7 +191,12 @@
             <div class="curriculum-container">
                 <header style="margin-bottom: var(--space-8); display: flex; justify-content: space-between; align-items: flex-end;">
                     <div>
-                        <h1 style="font-size: 32px; font-weight: 700;">Curriculum Builder</h1>
+                        <h1 id="course-title-display" style="font-size: 32px; font-weight: 700;">
+                            <%= course.title %>
+                            <button class="btn-icon" onclick="renameCourse()" title="Rename Course">
+                                <i class="fas fa-pencil-alt" style="font-size: 16px; opacity: 0.5;"></i>
+                            </button>
+                        </h1>
                         <p style="color: var(--color-text-muted);">Build your course structure with sections and lectures.</p>
                     </div>
                     <div>
@@ -204,12 +209,12 @@
                 <div id="sections-container">
                     <% if (course.sections && course.sections.length > 0) { %>
                         <% course.sections.forEach((section, sIdx) => { %>
-                            <div class="section-card" data-section-id="<%= section._id %>">
+                            <div class="section-card" data-section-id="<%= section._id %>" data-title="<%= section.title %>">
                                 <div class="section-header">
                                     <div style="display: flex; align-items: center; gap: 12px;">
                                         <i class="fas fa-bars text-muted" style="cursor: move;"></i>
                                         <strong style="font-size: 15px;">Section <%= sIdx + 1 %>: <%= section.title %></strong>
-                                        <button class="btn-icon" onclick="editSection('<%= section._id %>')"><i class="fas fa-pencil-alt" style="font-size: 12px; opacity: 0.6;"></i></button>
+                                        <button class="btn-icon" onclick="editSection('<%= section._id %>', this.closest('.section-card').dataset.title)"><i class="fas fa-pencil-alt" style="font-size: 12px; opacity: 0.6;"></i></button>
                                     </div>
                                     <div style="display: flex; gap: 12px;">
                                         <button class="btn-icon" onclick="deleteSection('<%= section._id %>')"><i class="fas fa-trash"></i></button>
@@ -217,13 +222,13 @@
                                 </div>
                                 <div class="lecture-list">
                                     <% section.lectures.forEach((lecture, lIdx) => { %>
-                                        <div class="lecture-item" data-lecture-id="<%= lecture._id %>">
+                                        <div class="lecture-item" data-lecture-id="<%= lecture._id %>" data-title="<%= lecture.title %>">
                                             <div class="lecture-content">
                                                 <i class="fas fa-play-circle text-muted"></i>
                                                 <div style="flex: 1;">
                                                     <div style="font-weight: 600; font-size: 14px;">
                                                         <%= lecture.title %>
-                                                        <button class="btn-icon" onclick="editLecture('<%= section._id %>', '<%= lecture._id %>')">
+                                                        <button class="btn-icon" onclick="editLecture('<%= section._id %>', '<%= lecture._id %>', this.closest('.lecture-item').dataset.title)">
                                                             <i class="fas fa-pencil-alt" style="font-size: 10px; opacity: 0.6;"></i>
                                                         </button>
                                                     </div>
@@ -297,6 +302,25 @@
         }
 
         // ── Section Management ────────────────────────────────
+        async function renameCourse() {
+            const newTitle = prompt("Enter new course title:", "<%= course.title %>");
+            if (!newTitle || newTitle === "<%= course.title %>") return;
+
+            try {
+                const res = await fetch(`/api/teacher/courses/${courseId}/metadata`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTitle })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Rename failed: ' + data.message);
+                }
+            } catch (e) { alert(e.message); }
+        }
+
         async function addSection() {
             const title = prompt("Enter section title:");
             if (!title) return;
@@ -312,8 +336,8 @@
             } catch (e) { alert(e.message); }
         }
 
-        async function editSection(sectionId) {
-            const title = prompt("Enter new section title:");
+        async function editSection(sectionId, currentTitle) {
+            const title = prompt("Enter new section title:", currentTitle);
             if (!title) return;
 
             try {
@@ -354,8 +378,8 @@
             } catch (e) { alert(e.message); }
         }
 
-        async function editLecture(sectionId, lectureId) {
-            const title = prompt("Enter new lecture title:");
+        async function editLecture(sectionId, lectureId, currentTitle) {
+            const title = prompt("Enter new lecture title:", currentTitle);
             if (!title) return;
 
             try {

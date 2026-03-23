@@ -17,7 +17,7 @@ router.post('/add', async (req, res) => {
     // Find course to verify it exists and get its ObjectId
     const query = mongoose.Types.ObjectId.isValid(courseId)
       ? { _id: courseId }
-      : { $or: [{ title: courseId }, { name: courseId }] };
+      : { $or: [{ title: courseId }, { name: courseId }, { slug: courseId }] };
 
     const course = await Course.findOne(query);
 
