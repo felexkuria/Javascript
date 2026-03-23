@@ -104,6 +104,7 @@ class AuthController {
         : mongoUser.role;
         
       req.session.user = { 
+        id: mongoUser._id.toString(),
         email, 
         name: mongoUser.name,
         role: mongoUser.role,

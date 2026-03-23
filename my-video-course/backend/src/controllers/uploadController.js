@@ -37,8 +37,10 @@ class UploadController {
         contentType: multerS3.AUTO_CONTENT_TYPE,
         key: function (req, file, cb) {
           const courseId = sanitizeKey(req.params.courseId || req.body.courseId || 'general');
+          const sectionId = sanitizeKey(req.body.sectionId || 'default-section');
+          const type = file.mimetype.startsWith('video/') ? 'videos' : 'resources';
           const safeName = sanitizeKey(file.originalname);
-          const key = `courses/${courseId}/${Date.now()}-${safeName}`;
+          const key = `courses/${courseId}/sections/${sectionId}/${type}/${Date.now()}-${safeName}`;
           cb(null, key);
         }
       });
@@ -60,10 +62,10 @@ class UploadController {
       storage: this.storage,
       limits: { fileSize: 1000 * 1024 * 1024 }, // 1 GB
       fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('video/') || file.mimetype.startsWith('application/')) {
+        if (file.mimetype.startsWith('video/') || file.mimetype === 'application/pdf') {
           cb(null, true);
         } else {
-          cb(new Error('Only video files are allowed'));
+          cb(new Error('Only video and PDF files are allowed'));
         }
       }
     });

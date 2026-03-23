@@ -21,7 +21,7 @@ class CourseController {
   // Get all courses with analytics
   async getAllCourses(req, res) {
     try {
-      const userId = req.user?.email || 'default_user';
+      const userId = req.user?.id || req.user?.email || 'default_user';
       const courses = await dynamoVideoService.getAllCourses(userId);
       
       // Convert to API format
@@ -70,7 +70,7 @@ class CourseController {
   async getCourseByName(req, res) {
     try {
       const { name } = req.params;
-      const userId = req.user?.email || 'default_user';
+      const userId = req.user?.id || req.user?.email || 'default_user';
       const courseName = decodeURIComponent(name);
       const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
       
@@ -111,7 +111,7 @@ class CourseController {
         title: req.body.title,
         description: req.body.description,
         category: req.body.category,
-        createdBy: req.user?.email || 'admin',
+        createdBy: req.user?.id || req.user?.email || 'admin',
         slug: req.body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         createdAt: new Date().toISOString()
       };
@@ -260,7 +260,7 @@ class CourseController {
       startDate.setDate(startDate.getDate() - days);
       
       // Return simplified analytics for the Pure Cloud architecture
-      const userId = req.user?.email || 'default_user';
+      const userId = req.user?.id || req.user?.email || 'default_user';
       const courses = await dynamoVideoService.getAllCourses(userId);
       
       const totalVideos = courses.reduce((sum, c) => sum + (c.videos?.length || 0), 0);
