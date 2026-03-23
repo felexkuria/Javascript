@@ -356,7 +356,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = await response.json();
       if (data.success && data.data.enrolled) {
         const btn = document.querySelector(`[data-btn-course-id="${courseId}"]`);
-        if (btn) { btn.disabled = true; btn.innerText = 'Enrolled'; btn.style.opacity = '0.5'; }
+        if (btn) {
+           btn.innerText = 'Continue Learning';
+           btn.classList.remove('btn-primary');
+           btn.classList.add('btn-secondary');
+           btn.onclick = () => window.location.href = `/course/${encodeURIComponent(btn.getAttribute('data-course-name'))}`;
+        }
         const progress = data.data.progress || 0;
         container.innerHTML = `
           <div class="atlas-p-bar"><div class="atlas-p-fill" style="width: ${progress}%"></div></div>

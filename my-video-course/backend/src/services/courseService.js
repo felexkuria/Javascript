@@ -186,15 +186,50 @@ class CourseService {
           const videoTitle = keyParts[2].replace('.mp4', '');
           const videoId = videoTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           
-          const success = await dynamodb.saveVideo(courseName, {
+          // ── Ensure Course exists in MongoDB too ───────────────────
+          const Course = require('../models/Course');
+          let mongoCourse = await Course.findOne({ title: courseName });
+          if (!mongoCourse) {
+            try {
+              mongoCourse = await Course.create({
+                title: courseName,
+                slug: courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                instructorId: 'engineerfelex@gmail.com',
+                isPublished: true,
+                sections: [{ title: 'Lessons', lectures: [] }]
+              });
+              console.log(`✅ Created MongoDB Course for S3 Course: ${courseName}`);
+            } catch (err) {
+              console.error(`❌ Failed to create MongoDB Course "${courseName}":`, err.message);
+            }
+          }
+
+          const success = await dynamodb.saveVideo({
             videoId: videoId,
             title: videoTitle,
-            courseName,
+            courseName: courseName,
+            sectionTitle: 'Lessons',
             s3Key: file.Key,
             s3Url: `s3://${process.env.S3_BUCKET_NAME}/${file.Key}`,
             watched: false,
             createdAt: new Date().toISOString()
           });
+
+          // Link to MongoDB if it was a missing lecture
+          if (mongoCourse) {
+            const hasLecture = mongoCourse.sections[0].lectures.some(l => l.contentId === videoId);
+            if (!hasLecture) {
+              await Course.findByIdAndUpdate(mongoCourse._id, {
+                $push: { 'sections.0.lectures': {
+                  title: videoTitle,
+                  contentId: videoId,
+                  s3Key: file.Key,
+                  type: 'video'
+                }},
+                $inc: { totalVideos: 1 }
+              });
+            }
+          }
           
           if (success) {
             console.log(`✅ Synced S3 video to DynamoDB: ${courseName}/${videoTitle}`);
