@@ -14,10 +14,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+  cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 24 * 60 * 60 * 1000 }
 }));
 
 // View engine
@@ -231,7 +231,7 @@ const ADMIN_EMAIL_AUTH = 'engineerfelex@gmail.com';
 const teacherOrAdminAuth = (req, res, next) => {
   // 1. API key check (for CLI / scripts)
   const adminKey = req.headers['x-admin-key'];
-  if (adminKey === process.env.ADMIN_KEY || adminKey === 'admin123') {
+  if (process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY) {
     return next();
   }
   
@@ -264,7 +264,7 @@ const teacherOrAdminAuth = (req, res, next) => {
 // Simple admin auth for S3 uploads
 const simpleAdminAuth = (req, res, next) => {
   const adminKey = req.headers['x-admin-key'];
-  if (adminKey === process.env.ADMIN_KEY || adminKey === 'admin123') {
+  if (process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY) {
     return next();
   }
   console.log('Auth failed, admin key:', adminKey);

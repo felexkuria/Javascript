@@ -13,7 +13,7 @@ const thumbnailGenerator = require('../services/thumbnailGenerator');
 function sanitizeKey(name) {
   return name
     .replace(/\s+/g, '_')               // spaces → underscores
-    .replace(/[^a-zA-Z0-9._\-]/g, '')   // remove all other unsafe chars
+    .replace(/[^a-zA-Z0-9._-]/g, '')   // remove all other unsafe chars
     .replace(/_{2,}/g, '_')             // collapse repeated underscores
     .toLowerCase()
     .substring(0, 180);                 // S3 key max 1024, keep reasonable

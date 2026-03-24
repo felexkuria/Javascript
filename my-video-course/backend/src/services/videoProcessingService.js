@@ -32,7 +32,7 @@ class VideoProcessingService {
       const compressedPath = await this.compressVideo(originalPath, tempDir);
       
       // Upload to S3
-      const sanitize = (str) => str.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._\-]/g, '');
+      const sanitize = (str) => str.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
       const safeCourse = sanitize(courseName);
       const safeTitle = sanitize(title);
       const s3Key = `videos/${safeCourse}/${Date.now()}-${safeTitle}.mp4`;
