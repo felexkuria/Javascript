@@ -113,6 +113,20 @@ class DynamoDBService {
         BillingMode: 'PAY_PER_REQUEST'
       });
 
+      // Create Enrollments table
+      await this.createTable({
+        TableName: `video-course-app-enrollments-${environment}`,
+        KeySchema: [
+          { AttributeName: 'userId', KeyType: 'HASH' },
+          { AttributeName: 'courseName', KeyType: 'RANGE' }
+        ],
+        AttributeDefinitions: [
+          { AttributeName: 'userId', AttributeType: 'S' },
+          { AttributeName: 'courseName', AttributeType: 'S' }
+        ],
+        BillingMode: 'PAY_PER_REQUEST'
+      });
+
       console.log('✅ All DynamoDB tables created successfully');
       return true;
     } catch (error) {
@@ -454,6 +468,47 @@ class DynamoDBService {
     } catch (error) {
       console.error('Error getting user from DynamoDB:', error);
       return null;
+    }
+  }
+
+  // Enrollment operations
+  async saveEnrollment(userId, courseName) {
+    if (!this.isConnected) return false;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const params = {
+        TableName: `video-course-app-enrollments-${environment}`,
+        Item: {
+          userId: userId,
+          courseName: courseName,
+          enrolledAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      };
+      await this.docClient.send(new PutCommand(params));
+      return true;
+    } catch (error) {
+      console.error('Error saving enrollment to DynamoDB:', error);
+      return false;
+    }
+  }
+
+  async getEnrollments(userId) {
+    if (!this.isConnected) return [];
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const params = {
+        TableName: `video-course-app-enrollments-${environment}`,
+        KeyConditionExpression: 'userId = :userId',
+        ExpressionAttributeValues: {
+          ':userId': userId
+        }
+      };
+      const result = await this.docClient.send(new QueryCommand(params));
+      return result.Items || [];
+    } catch (error) {
+      console.error('Error getting enrollments from DynamoDB:', error);
+      return [];
     }
   }
 

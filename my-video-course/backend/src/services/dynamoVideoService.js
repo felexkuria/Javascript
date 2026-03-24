@@ -583,6 +583,27 @@ class DynamoVideoService {
        return false;
     }
   }
+
+  // Enrollment operations
+  async enrollUser(userId, courseName) {
+    if (!this.isDynamoAvailable()) return false;
+    try {
+      return await dynamodb.saveEnrollment(userId, courseName);
+    } catch (error) {
+      console.error('Error enrolling user in DynamoDB:', error);
+      return false;
+    }
+  }
+
+  async getUserEnrollments(userId) {
+    if (!this.isDynamoAvailable()) return [];
+    try {
+      return await dynamodb.getEnrollments(userId);
+    } catch (error) {
+      console.error('Error getting user enrollments from DynamoDB:', error);
+      return [];
+    }
+  }
 }
 
 module.exports = new DynamoVideoService();

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const Enrollment = require('../../models/Enrollment');
 const Course = require('../../models/Course');
 const User = require('../../models/User');
+const dynamoVideoService = require('../../services/dynamoVideoService');
 
 // Enroll in a course
 router.post('/', async (req, res) => {
@@ -47,6 +48,14 @@ router.post('/', async (req, res) => {
     });
 
     await enrollment.save();
+
+    // 4. Sync to DynamoDB
+    try {
+      await dynamoVideoService.enrollUser(userEmail, course.name || course.title);
+      console.log(`✅ Enrollment synced to DynamoDB for ${userEmail} -> ${course.title}`);
+    } catch (dynamoErr) {
+      console.error('⚠️ DynamoDB Enrollment sync failed:', dynamoErr.message);
+    }
     
     // Update course enrollment count
     try {
@@ -78,13 +87,22 @@ router.get('/my-enrollments', async (req, res) => {
       return res.status(401).json({ success: false, error: 'User not authenticated' });
     }
 
-    const enrollments = await Enrollment.find({ userId: userEmail })
+    const mongoEnrollments = await Enrollment.find({ userId: userEmail })
       .populate('courseId', 'title description thumbnail')
       .sort({ enrolledAt: -1 });
 
+    // 2. Fetch from DynamoDB
+    let dynamoEnrollments = [];
+    try {
+      dynamoEnrollments = await dynamoVideoService.getUserEnrollments(userEmail);
+    } catch (err) {
+      console.error('Error fetching DynamoDB enrollments:', err);
+    }
+
     res.json({
       success: true,
-      data: enrollments
+      data: mongoEnrollments,
+      dynamoData: dynamoEnrollments
     });
   } catch (error) {
     console.error('Error getting enrollments:', error);
