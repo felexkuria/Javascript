@@ -572,7 +572,7 @@ class DynamoVideoService {
     try {
       console.log(`📡 Syncing ${videos.length} videos to Dynamo for course: ${courseName}`);
       for (const video of videos) {
-        await this.saveVideo({
+        await dynamodb.saveVideo({
           ...video,
           courseName: courseName
         });
