@@ -9,6 +9,7 @@ const app = express();
 const connectDB = require('./utils/mongodb');
 
 // Connect to MongoDB Atlas (Handled in server.js)
+app.set('trust proxy', 1); // Required for secure cookies behind proxy (ALB)
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
