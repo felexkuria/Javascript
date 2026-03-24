@@ -42,37 +42,38 @@ class WebController {
       console.log('🔍 User ID for Dashboard:', userId);
 
       // 1. Fetch from DynamoDB (Legacy/Hybrid)
-      let courses = await dynamoVideoService.getAllCourses(userId);
-      console.log(`🔍 Found ${courses?.length} DynamoDB courses`);
+      let courses = [];
+      try {
+        courses = await dynamoVideoService.getAllCourses(userId);
+        console.log(`🔍 Found ${courses?.length || 0} DynamoDB courses`);
+      } catch (dynamoErr) {
+        console.warn('⚠️ DynamoDB Course fetch failed:', dynamoErr.message);
+      }
       
       // 2. Fetch from MongoDB Enrollments (New Architecture)
+      let enrolledCourses = [];
       try {
         const mongoose = require('mongoose');
-        console.log(`📡 MongoDB State for Dashboard: ${mongoose.connection.readyState} (1=Connected)`);
-        console.log(`📡 Database Name: ${mongoose.connection.db?.databaseName}`);
+        console.log(`📡 MongoDB State: ${mongoose.connection.readyState}`);
 
-        // Broad find for debugging if specific find fails
-        const allEnrollments = await Enrollment.find({}).lean();
-        console.log(`🔍 DEBUG: Total enrollments in DB: ${allEnrollments.length}`);
-        
         const enrollments = await Enrollment.find({ 
           userId: { $regex: new RegExp(`^${userId}$`, 'i') } 
         }).populate('courseId').lean();
 
         console.log(`🔍 Found ${enrollments.length} MongoDB enrollments for: ${userId}`);
         
-        const enrolledCourses = enrollments
-          .filter(e => e.courseId) // Ensure course hasn't been deleted
+        enrolledCourses = enrollments
+          .filter(e => e && e.courseId) // Ensure course exists
           .map(e => {
             const allLectures = (e.courseId.sections || []).flatMap(s => s.lectures || []);
             return {
               _id: e.courseId._id,
-              name: e.courseId.title, // Dashboard uses .name for URL
-              title: e.courseId.title,
+              name: e.courseId.title || 'Untitled',
+              title: e.courseId.title || 'Untitled',
               instructor: 'Engineer Felex',
               category: e.courseId.category || 'Core',
-              description: e.courseId.description,
-              videos: allLectures, // Mapping the lectures to videos array
+              description: e.courseId.description || '',
+              videos: allLectures,
               videoCount: allLectures.length,
               watchedVideos: 0,
               completionPercentage: 0,
@@ -80,13 +81,11 @@ class WebController {
             };
           });
 
-        console.log(`🔍 Processed ${enrolledCourses.length} Enrolled Courses from MongoDB`);
-
         // Merge keeping DynamoDB for now but preferring MongoDB titles
-        const seenTitles = new Set(enrolledCourses.map(c => c.title.toLowerCase()));
+        const seenTitles = new Set(enrolledCourses.map(c => (c.title || '').toLowerCase()));
         courses = [
           ...enrolledCourses,
-          ...courses.filter(c => !seenTitles.has(c.name.toLowerCase()))
+          ...(courses || []).filter(c => c && c.name && !seenTitles.has(c.name.toLowerCase()))
         ];
         console.log(`🔍 Total merged courses for dashboard: ${courses.length}`);
       } catch (mongoErr) {
@@ -96,12 +95,15 @@ class WebController {
       const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
       const usingDynamoDB = dynamoVideoService.isDynamoAvailable();
 
-      res.render('dashboard', { 
-        courses, 
+      // Use pages/dashboard for the premium Tailwind design, fallback to dashboard
+      const dashboardTemplate = fs.existsSync(path.join(__dirname, '../../frontend/src/pages/dashboard.ejs')) ? 'pages/dashboard' : 'dashboard';
+      
+      res.render(dashboardTemplate, { 
+        courses: courses || [], 
         offlineMode: !usingDynamoDB,
         user: {
-          ...user,
-          isAdmin: user.role === 'admin' || user.email === 'engineerfelex@gmail.com'
+          ...(user || {}),
+          isAdmin: user?.role === 'admin' || user?.email === 'engineerfelex@gmail.com'
         },
         gamificationData: gamificationData || {
           userStats: { totalPoints: 0, currentLevel: 1, experiencePoints: 0 },
@@ -109,8 +111,8 @@ class WebController {
         }
       });
     } catch (err) {
-      console.error('Error fetching course data:', err);
-      res.status(500).send('Internal Server Error');
+      console.error('❌ Error fetching dashboard data:', err);
+      res.status(500).send('Internal Server Error: ' + err.message);
     }
   }
 
