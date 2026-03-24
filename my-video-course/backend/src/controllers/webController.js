@@ -58,28 +58,46 @@ class WebController {
 
         const enrollments = await Enrollment.find({ 
           userId: { $regex: new RegExp(`^${userId}$`, 'i') } 
-        }).populate('courseId').lean();
+        }).populate('courseId').lean().catch(err => {
+          console.warn('⚠️ Mongoose Populate failed (likely due to legacy string IDs):', err.message);
+          return Enrollment.find({ userId: { $regex: new RegExp(`^${userId}$`, 'i') } }).lean();
+        });
 
         console.log(`🔍 Found ${enrollments.length} MongoDB enrollments for: ${userId}`);
         
-        enrolledCourses = enrollments
-          .filter(e => e && e.courseId) // Ensure course exists
-          .map(e => {
-            const allLectures = (e.courseId.sections || []).flatMap(s => s.lectures || []);
-            return {
-              _id: e.courseId._id,
-              name: e.courseId.title || 'Untitled',
-              title: e.courseId.title || 'Untitled',
+        enrolledCourses = [];
+        for (const e of enrollments) {
+          if (!e) continue;
+          let courseData = e.courseId;
+          
+          // Fallback if population failed or courseId is a string
+          if (!courseData || typeof courseData === 'string') {
+            const courseId = courseData || e.courseId;
+            console.log(`📡 Attempting manual course lookup for: ${courseId}`);
+            // If it's a string name, search by title, otherwise by ID
+            const mongoose = require('mongoose');
+            const query = mongoose.Types.ObjectId.isValid(courseId) ? { _id: courseId } : { title: courseId };
+            const Course = require('../models/Course');
+            courseData = await Course.findOne(query).lean();
+          }
+
+          if (courseData) {
+            const allLectures = (courseData.sections || []).flatMap(s => s.lectures || []);
+            enrolledCourses.push({
+              _id: courseData._id,
+              name: courseData.title || 'Untitled',
+              title: courseData.title || 'Untitled',
               instructor: 'Engineer Felex',
-              category: e.courseId.category || 'Core',
-              description: e.courseId.description || '',
+              category: courseData.category || 'Core',
+              description: courseData.description || '',
               videos: allLectures,
               videoCount: allLectures.length,
               watchedVideos: 0,
               completionPercentage: 0,
               isMongo: true
-            };
-          });
+            });
+          }
+        }
 
         // Merge keeping DynamoDB for now but preferring MongoDB titles
         const seenTitles = new Set(enrolledCourses.map(c => (c.title || '').toLowerCase()));
