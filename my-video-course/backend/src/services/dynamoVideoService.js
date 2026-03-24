@@ -565,6 +565,24 @@ class DynamoVideoService {
 
     return status;
   }
+
+  // Update course videos (Save many)
+  async updateCourseVideos(courseName, videos, userId) {
+    if (!this.isDynamoAvailable()) return false;
+    try {
+      console.log(`📡 Syncing ${videos.length} videos to Dynamo for course: ${courseName}`);
+      for (const video of videos) {
+        await this.saveVideo({
+          ...video,
+          courseName: courseName
+        });
+      }
+      return true;
+    } catch (error) {
+       console.error('❌ Failed to update course videos in Dynamo:', error.message);
+       return false;
+    }
+  }
 }
 
 module.exports = new DynamoVideoService();
