@@ -76,32 +76,32 @@ exports.generateCertificate = async (req, res) => {
       doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40).stroke('#00ED64');
 
       doc.fillColor('#00ED64')
-         .fontSize(40)
-         .text('Multitouch Academy', 0, 80, { align: 'center' });
+        .fontSize(40)
+        .text('Multitouch Academy', 0, 80, { align: 'center' });
 
       doc.fillColor('#FFFFFF')
-         .fontSize(20)
-         .text('CERTIFICATE OF COMPLETION', 0, 150, { align: 'center' });
+        .fontSize(20)
+        .text('CERTIFICATE OF COMPLETION', 0, 150, { align: 'center' });
 
       doc.fontSize(16)
-         .text('This is to certify that', 0, 220, { align: 'center' });
+        .text('This is to certify that', 0, 220, { align: 'center' });
 
       doc.fillColor('#00ED64')
-         .fontSize(32)
-         .text(user.name, 0, 260, { align: 'center' });
+        .fontSize(32)
+        .text(user.name, 0, 260, { align: 'center' });
 
       doc.fillColor('#FFFFFF')
-         .fontSize(16)
-         .text('has successfully completed the course', 0, 320, { align: 'center' });
+        .fontSize(16)
+        .text('has successfully completed the course', 0, 320, { align: 'center' });
 
       doc.fontSize(24)
-         .text(course.title || course.name, 0, 360, { align: 'center' });
+        .text(course.title || course.name, 0, 360, { align: 'center' });
 
       doc.fontSize(12)
-         .text(`Issued on: ${new Date().toLocaleDateString()}`, 0, 450, { align: 'center' });
+        .text(`Issued on: ${new Date().toLocaleDateString()}`, 0, 450, { align: 'center' });
       
       doc.fontSize(10)
-         .text(`Certificate ID: ${certId}`, 0, 480, { align: 'center' });
+        .text(`Certificate ID: ${certId}`, 0, 480, { align: 'center' });
 
       doc.end();
     });

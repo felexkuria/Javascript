@@ -16,10 +16,13 @@ class SyncController {
       };
 
       // Get data from localStorage
+      const localStorageData = dynamoVideoService.getLocalStorage();
+      const courseNames = Object.keys(localStorageData);
+
       // Sync with DynamoDB (Primary)
       try {
         for (const courseName of courseNames) {
-          const localVideos = localStorage[courseName] || [];
+          const localVideos = localStorageData[courseName] || [];
           if (localVideos.length === 0) continue;
           
           const dynamoVideos = await dynamoService.getVideosForCourse(courseName);
@@ -62,7 +65,7 @@ class SyncController {
       // Sync with DynamoDB
       try {
         for (const courseName of courseNames) {
-          const localVideos = localStorage[courseName] || [];
+          const localVideos = localStorageData[courseName] || [];
           if (localVideos.length === 0) continue;
           
           const dynamoVideos = await dynamoService.getVideosForCourse(courseName);
