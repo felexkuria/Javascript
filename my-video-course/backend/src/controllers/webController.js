@@ -101,6 +101,29 @@ class WebController {
 
         // Merge keeping DynamoDB for now but preferring MongoDB titles
         const seenTitles = new Set(enrolledCourses.map(c => (c.title || '').toLowerCase()));
+        
+        // 3. Fetch from DynamoDB Enrollments (New Migration)
+        try {
+          const dynamoEnrollments = await dynamoVideoService.getUserEnrollments(userId);
+          console.log(`🔍 Found ${dynamoEnrollments.length} DynamoDB enrollments for: ${userId}`);
+          
+          for (const de of dynamoEnrollments) {
+            if (!seenTitles.has(de.courseName.toLowerCase())) {
+              // Fetch course details from DynamoDB
+              const dCourse = courses.find(c => c.name === de.courseName);
+              if (dCourse) {
+                enrolledCourses.push({
+                  ...dCourse,
+                  isDynamoEnrollment: true
+                });
+                seenTitles.add(de.courseName.toLowerCase());
+              }
+            }
+          }
+        } catch (dynamoEnrollErr) {
+          console.warn('⚠️ DynamoDB Enrollment fetch failed:', dynamoEnrollErr.message);
+        }
+
         courses = [
           ...enrolledCourses,
           ...(courses || []).filter(c => c && c.name && !seenTitles.has(c.name.toLowerCase()))
