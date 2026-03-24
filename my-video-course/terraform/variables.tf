@@ -204,3 +204,17 @@ variable "mongodb_uri" {
   type        = string
   sensitive   = true
 }
+
+variable "session_secret" {
+  description = "Secret for Express sessions"
+  type        = string
+  sensitive   = true
+  default     = "placeholder-secret-change-me"
+}
+
+variable "admin_key" {
+  description = "Administrative API key"
+  type        = string
+  sensitive   = true
+  default     = "admin123"
+}
