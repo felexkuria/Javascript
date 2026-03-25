@@ -140,7 +140,8 @@ class WebController {
 
   async renderVideo(req, res) {
     try {
-      const courseName = decodeURIComponent(req.params.courseName);
+      const courseName = decodeURIComponent(req.params.courseName).trim();
+
       const videoId = req.params.videoId || req.params.id;
       const userId = req.user?.email || 'guest';
       const autoplay = req.query.autoplay === 'true';
@@ -178,10 +179,14 @@ class WebController {
       const currentIndex = videos.findIndex(v => (v.videoId === video.videoId) || (v._id === video._id));
       const prevVideo = currentIndex > 0 ? videos[currentIndex - 1] : null;
       const nextVideo = currentIndex < videos.length - 1 ? videos[currentIndex + 1] : null;
+      const isLastVideo = currentIndex === videos.length - 1;
+      const isLastInChapter = nextVideo && (nextVideo.section !== video.section);
 
       // Handle S3 Signing
       let processedUrl = video.videoUrl || video.url;
-      if (processedUrl && (processedUrl.includes('amazonaws.com') || video.s3Key)) {
+      const isYouTube = !!(processedUrl && (processedUrl.includes('youtube.com') || processedUrl.includes('youtu.be') || video.type === 'youtube'));
+
+      if (processedUrl && (processedUrl.includes('amazonaws.com') || video.s3Key) && !isYouTube) {
         try {
           const s3VideoService = require('../services/s3VideoService');
           const processed = await s3VideoService.processVideoUrl(video, 'student', courseName);
@@ -202,6 +207,9 @@ class WebController {
         sections,
         prevVideo,
         nextVideo,
+        isLastVideo,
+        isLastInChapter,
+        isYouTube,
         autoplay,
         user: req.user,
         aiEnabled: true,
@@ -209,8 +217,9 @@ class WebController {
       });
     } catch (err) {
       console.error('Error rendering video:', err);
-      res.status(500).render('error', { message: 'Error loading video' });
+      res.status(500).render('error', { message: 'Error loading video: ' + err.message });
     }
+
   }
   
   async renderCourses(req, res) {
