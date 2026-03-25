@@ -1,311 +1,177 @@
 <!DOCTYPE html>
-<html lang="en" id="html-root">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account — Multitouch Academy</title>
-    <meta name="description" content="Create a free Multitouch Academy account to start learning.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/main.css">
+    <title>Create Account - Multitouch Academy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'mongo-green': '#00ED64',
+              'mongo-dark': '#001E2B',
+              'mongo-slate': '#023430',
+            }
+          }
+        }
+      }
+    </script>
     <style>
-        body {
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            background: var(--mdb-midnight);
-            padding: 24px;
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        .glass {
+            background: rgba(2, 52, 48, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 237, 100, 0.1);
         }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 60% 50% at 80% 20%, rgba(0,237,100,.07) 0%, transparent 70%),
-                radial-gradient(ellipse 45% 35% at 15% 80%, rgba(1,107,248,.05) 0%, transparent 70%);
-            pointer-events: none;
+        .premium-title {
+            background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .auth-card {
-            width: 100%; max-width: 460px;
-            background: #0D1B24;
-            border: 1px solid rgba(0,237,100,.15);
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(0,237,100,.08);
-            position: relative; z-index: 1;
+        .input-premium {
+            background: rgba(0, 30, 43, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .auth-brand {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 28px;
+        .input-premium:focus {
+            border-color: #00ED64;
+            box-shadow: 0 0 20px rgba(0, 237, 100, 0.1);
         }
-        .auth-leaf {
-            width: 32px; height: 32px;
-            background: var(--mdb-green);
-            border-radius: 50% 50% 50% 0 / 60% 60% 40% 40%;
-            flex-shrink: 0; position: relative;
-        }
-        .auth-leaf::after {
-            content: ''; position: absolute;
-            width: 2px; height: 16px;
-            background: var(--mdb-midnight);
-            bottom: 4px; left: 50%;
-            transform: translateX(-50%);
-            border-radius: 1px;
-        }
-        .auth-brand-name { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
-        .auth-brand-name span { color: var(--mdb-green); }
-        .auth-heading { font-size: 22px; font-weight: 600; color: #E8EDEB; margin-bottom: 4px; }
-        .auth-sub { font-size: 13px; color: #5C6B74; margin-bottom: 24px; }
-
-        /* Steps indicator */
-        .steps {
-            display: flex; align-items: center; gap: 8px;
-            margin-bottom: 24px;
-        }
-        .step-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: #1C3A52; transition: background .2s;
-        }
-        .step-dot.active { background: var(--mdb-green); }
-        .step-dot.done   { background: var(--mdb-forest); }
-        .step-line { flex: 1; height: 1px; background: #1C3A52; }
-
-        /* Field */
-        .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-        .field label { font-size: 13px; font-weight: 500; color: #89989E; }
-        .field input, .field select {
-            padding: 10px 14px;
-            background: #0F2336; border: 1px solid #1C3A52;
-            border-radius: 6px; font-size: 14px; color: #E8EDEB;
-            outline: none; transition: border-color .15s, box-shadow .15s;
-            -webkit-appearance: none;
-        }
-        .field input:focus, .field select:focus {
-            border-color: var(--mdb-green);
-            box-shadow: 0 0 0 3px rgba(0,237,100,.18);
-        }
-        .field input::placeholder { color: #3D4F58; }
-        .field .hint { font-size: 11px; color: #3D4F58; margin-top: 3px; }
-
-        /* Role cards */
-        .role-cards {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            margin-bottom: 16px;
-        }
-        .role-card {
-            padding: 12px;
-            background: #0F2336;
-            border: 2px solid #1C3A52;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all .15s;
-            text-align: center;
-        }
-        .role-card:hover { border-color: #3D4F58; }
-        .role-card.selected { border-color: var(--mdb-green); background: rgba(0,237,100,.06); }
-        .role-card-icon { font-size: 22px; margin-bottom: 6px; }
-        .role-card-label { font-size: 13px; font-weight: 600; color: #E8EDEB; }
-        .role-card-desc  { font-size: 11px; color: #5C6B74; margin-top: 2px; }
-
-        .auth-submit {
-            width: 100%; padding: 11px; margin-top: 8px;
-            background: var(--mdb-green); color: var(--mdb-midnight);
-            border: none; border-radius: 6px;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: background .15s, box-shadow .15s;
-        }
-        .auth-submit:hover { background: var(--mdb-green-dark); box-shadow: 0 2px 8px rgba(0,237,100,.3); }
-        .auth-submit:disabled { opacity: .5; cursor: not-allowed; }
-
-        .auth-alert {
-            display: flex; align-items: flex-start; gap: 8px;
-            padding: 10px 14px; border-radius: 6px;
-            font-size: 13px; font-weight: 500; margin-bottom: 16px; border-left: 3px solid;
-        }
-        .auth-alert-error   { background: rgba(193,42,42,.12); color: #F56262; border-color: #C12A2A; }
-        .auth-alert-success { background: rgba(0,237,100,.1);  color: var(--mdb-green); border-color: var(--mdb-green); }
-        .auth-alert.hidden  { display: none; }
-
-        .auth-footer { text-align: center; font-size: 13px; color: #5C6B74; margin-top: 20px; }
-        .auth-footer a { color: var(--mdb-green); font-weight: 500; }
-
-        .confirm-form { display: none; }
-        .confirm-form.active { display: block; }
-        .signup-form.hidden { display: none; }
-
-        .spinner {
-            display: inline-block; width: 14px; height: 14px;
-            border: 2px solid var(--mdb-midnight); border-top-color: transparent;
-            border-radius: 50%; animation: spin .8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
-    <div class="auth-card" role="main">
-        <div class="auth-brand">
-            <div class="auth-leaf" aria-hidden="true"></div>
-            <div class="auth-brand-name">Learn<span>DB</span></div>
-        </div>
+<body class="dark bg-[#001E2B] text-[#E7EEEB] min-h-screen flex items-center justify-center p-6 bg-[url('https://www.mongodb.com/ready-2022/static/background-blobs-c9d3b1b4d8d8d8d8d8d8d8d8d8d8d8d8.svg')] bg-cover">
+    
+    <!-- Dark Mode Toggle -->
+    <button id="themeToggle" class="fixed top-8 right-8 w-12 h-12 glass rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+        <span id="themeIcon">🌙</span>
+    </button>
 
-        <h1 class="auth-heading" id="formTitle">Create your free account</h1>
-        <p class="auth-sub" id="formSub">Start learning in minutes — no credit card required</p>
+    <div class="w-full max-w-md relative animate-in fade-in zoom-in duration-700">
+        <!-- Decoration -->
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-[#00ED64]/10 rounded-full blur-[100px]"></div>
+        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px]"></div>
 
-        <!-- Progress dots -->
-        <div class="steps" id="stepIndicator" aria-hidden="true">
-            <div class="step-dot active" id="dot1"></div>
-            <div class="step-line"></div>
-            <div class="step-dot" id="dot2"></div>
-        </div>
-
-        <div id="alertBox" class="auth-alert hidden" role="alert" aria-live="assertive"></div>
-
-        <!-- Step 1: Signup form -->
-        <form id="signupForm" class="signup-form" novalidate>
-            <div class="field">
-                <label for="name">Full name</label>
-                <input type="text" id="name" name="name" autocomplete="name" required placeholder="Alex Johnson">
-            </div>
-            <div class="field">
-                <label for="email">Email address</label>
-                <input type="email" id="email" name="email" autocomplete="email" required placeholder="you@example.com">
-            </div>
-            <div class="field">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" autocomplete="new-password" required placeholder="Min 8 chars with uppercase & number">
-                <span class="hint">Minimum 8 characters with uppercase, lowercase, and a number</span>
-            </div>
-
-            <!-- Role selector -->
-            <div style="margin-bottom: 16px;">
-                <div style="font-size: 13px; font-weight: 500; color: #89989E; margin-bottom: 10px;">I want to…</div>
-                <div class="role-cards">
-                    <label class="role-card selected" for="role-student">
-                        <input type="radio" id="role-student" name="role" value="student" style="display:none" checked>
-                        <div class="role-card-icon">🎓</div>
-                        <div class="role-card-label">Learn</div>
-                        <div class="role-card-desc">Browse &amp; take courses</div>
-                    </label>
-                    <label class="role-card" for="role-teacher">
-                        <input type="radio" id="role-teacher" name="role" value="teacher" style="display:none">
-                        <div class="role-card-icon">📖</div>
-                        <div class="role-card-label">Teach</div>
-                        <div class="role-card-desc">Create &amp; publish courses</div>
-                    </label>
+        <div class="glass p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+            <!-- Header -->
+            <div id="headerSection" class="text-center mb-10">
+                <div class="w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-[#00ED64]/20 -rotate-3">
+                    <span class="text-[#001E2B] text-3xl font-black">M</span>
                 </div>
+                <h1 class="text-3xl font-black tracking-tighter text-white">Create <span class="premium-title">Node</span></h1>
+                <p class="text-[#9FB1AD] mt-2 font-medium">Join our global learning architecture.</p>
             </div>
 
-            <button type="submit" id="signupBtn" class="auth-submit">Create Account</button>
-        </form>
+            <!-- Signup Form -->
+            <form id="signupForm" class="space-y-6">
+                <div class="relative">
+                    <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
+                    <input type="text" id="name" name="name" placeholder="Full Identity" required
+                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
+                </div>
+                
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
+                    <input type="email" id="email" name="email" placeholder="Email Address" required
+                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
+                </div>
+                
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
+                    <input type="password" id="password" name="password" placeholder="Secure Password (8+ chars)" required minlength="8"
+                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
+                </div>
 
-        <!-- Step 2: Confirm form -->
-        <form id="confirmForm" class="confirm-form" novalidate>
-            <div class="field">
-                <label for="confirmCode">Confirmation code</label>
-                <input type="text" id="confirmCode" autocomplete="one-time-code"
-                       inputmode="numeric" pattern="[0-9]*" placeholder="6-digit code" required>
-                <span class="hint">We sent a code to your email address</span>
+                <button type="submit" id="signupBtn" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:shadow-xl hover:shadow-[#00ED64]/20 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-[0.2em] text-xs">
+                    Generate Access
+                </button>
+
+                <div class="text-center mt-6">
+                    <a href="/login" class="text-[10px] font-black uppercase tracking-widest text-[#9FB1AD] hover:text-[#00ED64] transition-all">
+                        Existing Node? Initialize Login
+                    </a>
+                </div>
+            </form>
+
+            <!-- Verification Section -->
+            <div id="verifyContainer" class="hidden animate-in fade-in slide-in-from-bottom-10 duration-500">
+                <div class="text-center mb-8">
+                    <h2 class="text-xl font-black text-white mb-2 tracking-tight">Verify Identity</h2>
+                    <p class="text-[10px] font-bold text-[#9FB1AD] uppercase tracking-widest opacity-70">
+                        Code transmitted to <span id="verifyEmailDisplay" class="text-[#00ED64]"></span>
+                    </p>
+                </div>
+                <form id="verifyForm" class="space-y-6 text-center">
+                    <input type="text" id="confirmationCode" placeholder="000000" required
+                           class="w-full px-4 py-6 input-premium rounded-2xl text-3xl font-black text-center tracking-[0.5em] outline-none placeholder:opacity-10">
+                    <button type="submit" id="verifyBtn" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:shadow-xl hover:shadow-[#00ED64]/20 transition-all uppercase tracking-[0.2em] text-xs">
+                        Validate Node
+                    </button>
+                    <button type="button" id="backToSignup" class="text-[10px] font-black uppercase tracking-widest text-[#9FB1AD] hover:text-[#00ED64] transition-all mt-4">← Back</button>
+                </form>
             </div>
-            <button type="submit" id="confirmBtn" class="auth-submit">Verify &amp; Continue</button>
-        </form>
-
-        <div class="auth-footer">
-            Already have an account? <a href="/login">Sign in</a>
         </div>
     </div>
 
     <script>
-        document.getElementById('html-root').classList.add('dark');
+        function initTheme() {
+            const theme = localStorage.getItem("theme") || "dark";
+            document.documentElement.classList.toggle("dark", theme === "dark");
+            document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
+        }
+        initTheme();
 
         let userEmail = '';
+        const signupForm = document.getElementById('signupForm');
+        const verifyContainer = document.getElementById('verifyContainer');
+        const headerSection = document.getElementById('headerSection');
+        const verifyEmailDisplay = document.getElementById('verifyEmailDisplay');
 
-        function showAlert(msg, type) {
-            const box = document.getElementById('alertBox');
-            box.className = 'auth-alert auth-alert-' + type;
-            box.textContent = (type === 'error' ? '⚠ ' : '✓ ') + msg;
-        }
-        function hideAlert() {
-            const box = document.getElementById('alertBox');
-            box.className = 'auth-alert hidden';
-        }
-
-        // Role card radio toggle
-        document.querySelectorAll('.role-card').forEach(card => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-            });
-        });
-
-        // Signup
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            hideAlert();
-            const name     = document.getElementById('name').value.trim();
-            const email    = document.getElementById('email').value.trim();
+            const signupBtn = document.getElementById('signupBtn');
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const role     = document.querySelector('input[name="role"]:checked').value;
-            const btn      = document.getElementById('signupBtn');
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Creating account…';
-
+            signupBtn.disabled = true; signupBtn.textContent = 'TRANSMITTING...';
             try {
-                const res  = await fetch('/api/auth/signup', {
+                const response = await fetch('/api/auth/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password, role })
+                    body: JSON.stringify({ name, email, password })
                 });
-                const data = await res.json();
+                const data = await response.json();
                 if (data.success) {
-                    userEmail = email;
-                    // Transition to step 2
-                    document.getElementById('signupForm').classList.add('hidden');
-                    document.getElementById('confirmForm').classList.add('active');
-                    document.getElementById('formTitle').textContent = 'Check your email';
-                    document.getElementById('formSub').textContent = `We sent a code to ${email}`;
-                    document.getElementById('dot1').className = 'step-dot done';
-                    document.getElementById('dot2').className = 'step-dot active';
-                    showAlert(data.message || 'Confirmation code sent!', 'success');
-                } else {
-                    throw new Error(data.error || 'Signup failed');
-                }
-            } catch (err) {
-                showAlert(err.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Create Account';
-            }
+                    userEmail = email; verifyEmailDisplay.textContent = email;
+                    signupForm.classList.add('hidden'); headerSection.classList.add('hidden'); verifyContainer.classList.remove('hidden');
+                } else { alert(data.error); }
+            } catch (error) { alert('Transmission failed: ' + error.message); }
+            finally { signupBtn.disabled = false; signupBtn.textContent = 'Generate Access'; }
         });
 
-        // Confirm
-        document.getElementById('confirmForm').addEventListener('submit', async (e) => {
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            hideAlert();
-            const code = document.getElementById('confirmCode').value.trim();
-            const btn  = document.getElementById('confirmBtn');
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Verifying…';
-
+            const verifyBtn = document.getElementById('verifyBtn');
+            const confirmationCode = document.getElementById('confirmationCode').value;
+            verifyBtn.disabled = true; verifyBtn.textContent = 'VALIDATING...';
             try {
-                const res  = await fetch('/api/auth/confirm', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: userEmail, confirmationCode: code })
+                const response = await fetch('/api/auth/confirm', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail, confirmationCode })
                 });
-                const data = await res.json();
-                if (data.success) {
-                    showAlert('Account confirmed! Redirecting…', 'success');
-                    setTimeout(() => window.location.href = '/login?confirmed=true', 1500);
-                } else {
-                    throw new Error(data.error || 'Invalid code');
-                }
-            } catch (err) {
-                showAlert(err.message, 'error');
-                btn.disabled = false;
-                btn.textContent = 'Verify & Continue';
-            }
+                const data = await response.json();
+                if (data.success) { alert('Success: Node Validated'); window.location.href = '/login'; }
+                else { alert(data.error); }
+            } catch (error) { alert('Validation error: ' + error.message); }
+            finally { verifyBtn.disabled = false; verifyBtn.textContent = 'Validate Node'; }
+        });
+
+        document.getElementById('backToSignup').addEventListener('click', () => {
+            verifyContainer.classList.add('hidden'); signupForm.classList.remove('hidden'); headerSection.classList.remove('hidden');
         });
     </script>
 </body>

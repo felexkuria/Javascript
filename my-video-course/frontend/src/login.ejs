@@ -1,284 +1,214 @@
 <!DOCTYPE html>
-<html lang="en" id="html-root">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In — Multitouch Academy</title>
-    <meta name="description" content="Sign in to your Multitouch Academy account to access your courses.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/main.css">
+    <title>Sign In - Multitouch Academy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'mongo-green': '#00ED64',
+              'mongo-dark': '#001E2B',
+              'mongo-slate': '#023430',
+            }
+          }
+        }
+      }
+    </script>
     <style>
-        body {
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            background: var(--mdb-midnight);
-            padding: 24px;
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        .glass {
+            background: rgba(2, 52, 48, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 237, 100, 0.1);
         }
-
-        /* Subtle animated background */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 60% 50% at 20% 30%, rgba(0,237,100,.07) 0%, transparent 70%),
-                radial-gradient(ellipse 50% 40% at 80% 70%, rgba(1,107,248,.06) 0%, transparent 70%);
-            pointer-events: none;
+        .premium-title {
+            background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        .auth-card {
-            width: 100%;
-            max-width: 440px;
-            background: #0D1B24;
-            border: 1px solid rgba(0,237,100,.15);
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(0,237,100,.08);
-            position: relative;
-            z-index: 1;
+        .input-premium {
+            background: rgba(0, 30, 43, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        /* Top brand strip */
-        .auth-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 32px;
+        .input-premium:focus {
+            border-color: #00ED64;
+            box-shadow: 0 0 20px rgba(0, 237, 100, 0.1);
         }
-        .auth-leaf {
-            width: 32px; height: 32px;
-            background: var(--mdb-green);
-            border-radius: 50% 50% 50% 0 / 60% 60% 40% 40%;
-            flex-shrink: 0;
-            position: relative;
-        }
-        .auth-leaf::after {
-            content: '';
-            position: absolute;
-            width: 2px; height: 16px;
-            background: var(--mdb-midnight);
-            bottom: 4px; left: 50%;
-            transform: translateX(-50%);
-            border-radius: 1px;
-        }
-        .auth-brand-name {
-            font-size: 18px; font-weight: 700;
-            color: #fff; letter-spacing: -.01em;
-        }
-        .auth-brand-name span { color: var(--mdb-green); }
-
-        .auth-heading {
-            font-size: 22px; font-weight: 600;
-            color: #E8EDEB;
-            margin-bottom: 4px;
-        }
-        .auth-sub {
-            font-size: 13px;
-            color: #5C6B74;
-            margin-bottom: 28px;
-        }
-
-        /* Input group */
-        .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
-        .field label { font-size: 13px; font-weight: 500; color: #89989E; }
-        .field input {
-            padding: 10px 14px;
-            background: #0F2336;
-            border: 1px solid #1C3A52;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #E8EDEB;
-            outline: none;
-            transition: border-color .15s, box-shadow .15s;
-        }
-        .field input:focus {
-            border-color: var(--mdb-green);
-            box-shadow: 0 0 0 3px rgba(0,237,100,.18);
-        }
-        .field input::placeholder { color: #3D4F58; }
-
-        /* CTA */
-        .auth-submit {
-            width: 100%;
-            padding: 11px;
-            margin-top: 4px;
-            background: var(--mdb-green);
-            color: var(--mdb-midnight);
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background .15s, box-shadow .15s;
-        }
-        .auth-submit:hover { background: var(--mdb-green-dark); box-shadow: 0 2px 8px rgba(0,237,100,.3); }
-        .auth-submit:disabled { opacity: .5; cursor: not-allowed; }
-
-        /* Divider */
-        .auth-divider {
-            display: flex; align-items: center; gap: 12px;
-            margin: 20px 0;
-            color: #3D4F58; font-size: 12px;
-        }
-        .auth-divider::before, .auth-divider::after {
-            content: ''; flex: 1; height: 1px; background: #1C3A52;
-        }
-
-        .auth-footer {
-            text-align: center;
-            font-size: 13px;
-            color: #5C6B74;
-            margin-top: 20px;
-        }
-        .auth-footer a { color: var(--mdb-green); font-weight: 500; }
-        .auth-footer a:hover { text-decoration: underline; }
-
-        /* Alert */
-        .auth-alert {
-            display: flex; align-items: flex-start; gap: 8px;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 16px;
-            border-left: 3px solid;
-        }
-        .auth-alert-error   { background: rgba(193,42,42,.12); color: #F56262; border-color: #C12A2A; }
-        .auth-alert-success { background: rgba(0,237,100,.1);  color: var(--mdb-green); border-color: var(--mdb-green); }
-        .auth-alert.hidden  { display: none; }
-
-        /* Admin hint */
-        .admin-hint {
-            background: rgba(245,166,35,.07);
-            border: 1px solid rgba(245,166,35,.2);
-            border-radius: 6px;
-            padding: 10px 14px;
-            font-size: 12px;
-            color: #B8860B;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        /* Forgot link */
-        .forgot-link {
-            font-size: 12px;
-            color: var(--mdb-blue);
-            float: right;
-        }
-        .forgot-link:hover { text-decoration: underline; }
-
-        /* Spinner */
-        .spinner {
-            display: inline-block; width: 14px; height: 14px;
-            border: 2px solid var(--mdb-midnight);
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin .8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
-    <div class="auth-card" role="main">
-        <div class="auth-brand">
-            <div class="auth-leaf" aria-hidden="true"></div>
-            <div class="auth-brand-name">Learn<span>DB</span></div>
-        </div>
+<body class="dark bg-[#001E2B] text-[#E7EEEB] min-h-screen flex items-center justify-center p-6 bg-[url('https://www.mongodb.com/ready-2022/static/background-blobs-c9d3b1b4d8d8d8d8d8d8d8d8d8d8d8d8.svg')] bg-cover">
+    
+    <!-- Dark Mode Toggle -->
+    <button id="themeToggle" class="fixed top-8 right-8 w-12 h-12 glass rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+        <span id="themeIcon">🌙</span>
+    </button>
 
-        <h1 class="auth-heading">Welcome back</h1>
-        <p class="auth-sub">Sign in to continue to your courses</p>
+    <div class="w-full max-w-md relative animate-in fade-in zoom-in duration-700">
+        <!-- Decorative Glow -->
+        <div class="absolute -top-24 -left-24 w-64 h-64 bg-[#00ED64]/10 rounded-full blur-[100px]"></div>
+        <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px]"></div>
 
-        <% if (typeof error !== 'undefined' && error) { %>
-        <div class="auth-alert auth-alert-error" role="alert">⚠ <%= error %></div>
-        <% } %>
-        <% if (typeof success !== 'undefined' && success) { %>
-        <div class="auth-alert auth-alert-success" role="alert">✓ <%= success %></div>
-        <% } %>
-
-        <div id="jsAlert" class="auth-alert hidden" role="alert" aria-live="assertive"></div>
-
-        <form id="loginForm" novalidate>
-            <div class="field">
-                <label for="email">
-                    Email address
-                    <a href="/forgot-password" class="forgot-link">Forgot password?</a>
-                </label>
-                <input type="email" id="email" name="email" autocomplete="email" required placeholder="you@example.com">
+        <div class="glass p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+            <!-- Header -->
+            <div class="text-center mb-10">
+                <div class="w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-[#00ED64]/20 rotate-3">
+                    <span class="text-[#001E2B] text-3xl font-black">M</span>
+                </div>
+                <h1 class="text-3xl font-black tracking-tighter text-white">Multitouch <span class="premium-title">Academy</span></h1>
+                <p class="text-[#9FB1AD] mt-2 font-medium">Access your expert learning architecture.</p>
             </div>
 
-            <div class="field">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="••••••••">
+            <% if (typeof error !== 'undefined' && error) { %>
+            <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-xs font-bold text-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i> <%= error %>
+            </div>
+            <% } %>
+
+            <!-- Role Selection -->
+            <div class="mb-8 p-1.5 bg-[#001E2B]/50 rounded-2xl flex gap-1 border border-white/5">
+                <button id="studentTab" class="flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg shadow-[#00ED64]/10">
+                    <i class="fas fa-user-graduate mr-2"></i> Student
+                </button>
+                <button id="teacherTab" class="flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-[#9FB1AD] hover:text-white">
+                    <i class="fas fa-chalkboard-teacher mr-2"></i> Teacher
+                </button>
             </div>
 
-            <button type="submit" id="loginBtn" class="auth-submit">
-                Sign In
-            </button>
-        </form>
+            <form id="loginForm" class="space-y-6">
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
+                    <input type="email" id="email" name="email" placeholder="Email Address" required
+                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
+                </div>
+                
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
+                    <input type="password" id="password" name="password" placeholder="Password" required
+                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
+                </div>
 
-        <div class="auth-divider">or</div>
+                <div id="teacherNote" class="hidden p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+                    <p class="text-[10px] font-black uppercase tracking-wider text-amber-500 text-center leading-relaxed">
+                        <i class="fas fa-info-circle mr-2 text-xs"></i> Instructor verification required for node access
+                    </p>
+                </div>
 
-        <div class="admin-hint">
-            🔑 <strong>Super Admin:</strong> engineerfelex@gmail.com
-        </div>
+                <button type="submit" id="loginBtn" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:shadow-xl hover:shadow-[#00ED64]/20 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-[0.2em] text-xs">
+                    <span id="loginText">Initialize Access</span>
+                </button>
 
-        <div class="auth-footer">
-            Don't have an account? <a href="/signup">Create one free</a>
+                <div class="flex justify-between items-center px-2">
+                    <a href="/forgot-password" class="text-[10px] font-black uppercase tracking-widest text-[#00ED64] hover:opacity-70 transition-opacity">Reset Path</a>
+                    <a href="/signup" class="text-[10px] font-black uppercase tracking-widest text-[#9FB1AD] hover:text-[#00ED64] transition-all">Create Node</a>
+                </div>
+            </form>
+
+            <!-- Debug Gateway -->
+            <div id="superAdminSection" class="mt-10 pt-8 border-t border-white/5">
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" onclick="loginAsSuperAdmin()" class="py-3 px-4 glass rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/5 transition-all text-blue-400 border-blue-400/20">Auto-Credential</button>
+                    <button type="button" id="setupAdminBtn" onclick="setupSuperAdmin()" class="py-3 px-4 glass rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/5 transition-all text-purple-400 border-purple-400/20">Sync Cognito</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Dark mode init (always dark on auth pages — matches MongoDB Atlas)
-        document.getElementById('html-root').classList.add('dark');
+        let selectedRole = 'student';
+        const studentTab = document.getElementById('studentTab');
+        const teacherTab = document.getElementById('teacherTab');
+        const loginText = document.getElementById('loginText');
+        const teacherNote = document.getElementById('teacherNote');
 
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email    = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const btn      = document.getElementById('loginBtn');
-            const alert    = document.getElementById('jsAlert');
-
-            // Reset alert
-            alert.className = 'auth-alert hidden';
-            alert.textContent = '';
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Signing in…';
-
-            try {
-                const res  = await fetch('/api/auth/signin', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    localStorage.setItem('accessToken',  data.accessToken);
-                    localStorage.setItem('refreshToken', data.refreshToken);
-                    localStorage.setItem('idToken',      data.idToken);
-                    localStorage.setItem('user',         JSON.stringify(data.user));
-                    btn.innerHTML = '✓ Redirecting…';
-                    btn.style.background = '#00A854';
-                    setTimeout(() => window.location.href = data.redirect, 900);
-                } else {
-                    throw new Error(data.error || 'Invalid credentials');
-                }
-            } catch (err) {
-                alert.className = 'auth-alert auth-alert-error';
-                alert.textContent = '⚠ ' + err.message;
-                btn.disabled = false;
-                btn.textContent = 'Sign In';
+        function updateRole(role) {
+            selectedRole = role;
+            if (role === 'student') {
+                studentTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg shadow-[#00ED64]/10';
+                teacherTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-[#9FB1AD] hover:text-white';
+                teacherNote.classList.add('hidden');
+                loginText.textContent = 'Initialize Student Access';
+            } else {
+                teacherTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg shadow-[#00ED64]/10';
+                studentTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-[#9FB1AD] hover:text-white';
+                teacherNote.classList.remove('hidden');
+                loginText.textContent = 'Initialize Instructor Access';
             }
         }
 
-        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        studentTab.addEventListener('click', () => updateRole('student'));
+        teacherTab.addEventListener('click', () => updateRole('teacher'));
+
+        function initTheme() {
+            const theme = localStorage.getItem("theme") || "dark";
+            document.documentElement.classList.toggle("dark", theme === "dark");
+            document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
+        }
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const isDark = document.documentElement.classList.contains("dark");
+            const newTheme = isDark ? "light" : "dark";
+            document.documentElement.classList.toggle("dark", newTheme === "dark");
+            localStorage.setItem("theme", newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === "dark" ? '☀️' : '🌙';
+        });
+        initTheme();
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const loginTextVal = document.getElementById('loginText');
+            
+            loginBtn.disabled = true;
+            loginTextVal.textContent = 'VERIFYING...';
+            
+            try {
+                const response = await fetch('/api/auth/signin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, requestedRole: selectedRole })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('selectedRole', selectedRole);
+                    window.location.href = '/dashboard';
+                } else { alert(data.error); }
+            } catch (error) { alert('Runtime error: ' + error.message); }
+            finally { 
+                loginBtn.disabled = false;
+                loginTextVal.textContent = selectedRole === 'teacher' ? 'Initialize Instructor Access' : 'Initialize Student Access';
+            }
+        });
+
+        function loginAsSuperAdmin() {
+            document.getElementById('email').value = 'engineerfelex@gmail.com';
+            document.getElementById('password').value = 'test12345';
+            updateRole('teacher');
+        }
+
+        async function setupSuperAdmin() {
+            const adminKey = prompt("Enter ADMIN_KEY:");
+            if (!adminKey) return;
+            try {
+                const response = await fetch('/api/auth/setup-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'engineerfelex@gmail.com', password: 'test12345', adminKey })
+                });
+                const data = await response.json();
+                alert(data.success ? 'Success' : 'Error: ' + data.error);
+            } catch (error) { alert('Error: ' + error.message); }
+        }
     </script>
 </body>
 </html>
