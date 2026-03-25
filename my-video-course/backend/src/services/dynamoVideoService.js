@@ -197,7 +197,17 @@ class DynamoVideoService {
         userGamification.userStats.videosWatched[videoId] = watched;
         await this.updateUserGamificationData(userId, userGamification);
         
+        // --- NEW: Sync enrollment progress ---
+        if (success && watched) {
+          try {
+            await this.syncEnrollmentProgress(userId, courseName);
+          } catch (syncErr) {
+            console.warn('Enrollment progress sync failed (non-critical):', syncErr.message);
+          }
+        }
+        
         return success;
+
       } catch (error) {
         console.error('DynamoDB error, falling back to localStorage:', error);
       }
@@ -598,12 +608,53 @@ class DynamoVideoService {
   async enrollUser(userId, courseName) {
     if (!this.isDynamoAvailable()) return false;
     try {
-      return await dynamodb.saveEnrollment(userId, courseName);
+      const sanitizedCourseName = courseName.toString().trim();
+      return await dynamodb.saveEnrollment(userId, sanitizedCourseName, {
+        progress: 0,
+        completedLectures: [],
+        status: 'active',
+        enrolledAt: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error enrolling user in DynamoDB:', error);
       return false;
     }
   }
+
+  async syncEnrollmentProgress(userId, courseName) {
+    if (!this.isDynamoAvailable()) return false;
+    try {
+      const sanitizedUserId = userId.toString().trim();
+      const sanitizedCourseName = courseName.toString().trim();
+      
+      const videos = await this.getVideosForCourse(sanitizedCourseName, sanitizedUserId);
+      if (!videos || videos.length === 0) return false;
+
+      const completedLectures = videos
+        .filter(v => v.watched)
+        .map(v => ({
+          lectureId: v.videoId || v._id,
+          completedAt: v.watchedAt || new Date().toISOString()
+        }));
+
+      const progress = Math.round((completedLectures.length / videos.length) * 100);
+      
+      // Get existing enrollment to preserve enrolledAt
+      const enrollments = await this.getUserEnrollments(sanitizedUserId);
+      const existing = enrollments.find(e => e.courseName === sanitizedCourseName);
+
+      return await dynamodb.saveEnrollment(sanitizedUserId, sanitizedCourseName, {
+        progress,
+        completedLectures,
+        enrolledAt: existing?.enrolledAt || new Date().toISOString(),
+        status: existing?.status || 'active'
+      });
+    } catch (error) {
+      console.error('Error syncing enrollment progress:', error);
+      return false;
+    }
+  }
+
 
   async getUserEnrollments(userId) {
     if (!this.isDynamoAvailable()) return [];

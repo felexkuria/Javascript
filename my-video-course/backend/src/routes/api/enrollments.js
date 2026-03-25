@@ -6,20 +6,22 @@ const dynamodb = require('../../utils/dynamodb');
 // Enroll in a course
 router.post('/', async (req, res) => {
   try {
-    const { courseId } = req.body; // courseId is likely courseName
-    const userEmail = req.user?.email;
+    const { courseId } = req.body; 
+    const userEmail = req.user?.email?.trim();
+    const sanitizedCourseId = courseId?.toString().trim();
 
     if (!userEmail) {
       return res.status(401).json({ success: false, error: 'User not authenticated' });
     }
 
     // 1. Find course in DynamoDB
-    const course = await dynamoVideoService.getCourseByTitle(courseId, userEmail);
+    const course = await dynamoVideoService.getCourseByTitle(sanitizedCourseId, userEmail);
     if (!course) {
       return res.status(404).json({ success: false, error: 'Course not found' });
     }
 
-    const courseName = course.name || course.title;
+    const courseName = (course.name || course.title).trim();
+
 
     // 2. Check if already enrolled in DynamoDB
     const enrollments = await dynamoVideoService.getUserEnrollments(userEmail);
