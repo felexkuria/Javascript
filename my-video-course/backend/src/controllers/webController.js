@@ -102,20 +102,31 @@ class WebController {
         isEnrolled = enrollments.some(e => e.courseName === courseName);
       }
 
-      // Group videos by section
-      const sections = [];
-      const sectionMap = {};
+      // Group videos by section (Source of truth: course.sections if available)
+      let sections = course.sections;
       
-      allVideos.forEach(v => {
-        const sName = v.section || v.sectionTitle || 'Course Content';
-        if (!sectionMap[sName]) {
-          sectionMap[sName] = { title: sName, lectures: [] };
-          sections.push(sectionMap[sName]);
-        }
-        sectionMap[sName].lectures.push({
-          ...v,
-          contentId: v.videoId || v._id,
-          basename: v.videoUrl ? path.basename(v.videoUrl) : null
+      if (!sections || sections.length === 0) {
+        sections = [];
+        const sectionMap = {};
+        allVideos.forEach(v => {
+          const sName = v.section || v.sectionTitle || 'Course Content';
+          if (!sectionMap[sName]) {
+            sectionMap[sName] = { title: sName, lectures: [] };
+            sections.push(sectionMap[sName]);
+          }
+          sectionMap[sName].lectures.push({
+            ...v,
+            contentId: v.videoId || v._id,
+            basename: v.videoUrl ? path.basename(v.videoUrl) : null
+          });
+        });
+      }
+
+      // Ensure all lectures in sections have contentId for template compatibility
+      sections.forEach(s => {
+        s.lectures = s.lectures || [];
+        s.lectures.forEach(l => {
+          if (!l.contentId) l.contentId = l.videoId || l._id;
         });
       });
 
@@ -158,20 +169,33 @@ class WebController {
         return res.status(404).render('error', { message: 'Video not found' });
       }
 
-      // Group for sidebar
-      const sections = [];
-      const sectionMap = {};
-      videos.forEach(v => {
-        const sName = v.section || v.sectionTitle || 'Course Content';
-        if (!sectionMap[sName]) {
-          sectionMap[sName] = { title: sName, lectures: [] };
-          sections.push(sectionMap[sName]);
-        }
-        sectionMap[sName].lectures.push({
-          ...v,
-          contentId: v.videoId || v._id,
-          id: v.videoId || v._id,
-          title: v.title
+      // Group for sidebar (Source of truth: course.sections if available)
+      let sections = course.sections;
+      
+      if (!sections || sections.length === 0) {
+        sections = [];
+        const sectionMap = {};
+        videos.forEach(v => {
+          const sName = v.section || v.sectionTitle || 'Course Content';
+          if (!sectionMap[sName]) {
+            sectionMap[sName] = { title: sName, lectures: [] };
+            sections.push(sectionMap[sName]);
+          }
+          sectionMap[sName].lectures.push({
+            ...v,
+            contentId: v.videoId || v._id,
+            id: v.videoId || v._id,
+            title: v.title
+          });
+        });
+      }
+
+      // Ensure all lectures in sections have contentId for template compatibility
+      sections.forEach(s => {
+        s.lectures = s.lectures || [];
+        s.lectures.forEach(l => {
+          if (!l.contentId) l.contentId = l.videoId || l._id;
+          if (!l.id) l.id = l.videoId || l._id;
         });
       });
 
