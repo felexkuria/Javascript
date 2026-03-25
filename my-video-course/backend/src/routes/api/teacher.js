@@ -59,7 +59,7 @@ router.delete('/courses/:id', async (req, res) => {
 
 // ── Sections & Lectures (Simplified for DynamoDB Flat List) ────
 
-// Add Section (Mocked for flat list)
+// Add Section
 router.post('/courses/:id/sections', async (req, res) => {
   try {
     const { id } = req.params;
@@ -69,18 +69,65 @@ router.post('/courses/:id/sections', async (req, res) => {
     const course = await dynamoVideoService.getCourseByTitle(id, userId);
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
     
-    // In our flat list model, we don't have a separate sections array
-    // We just return success to keep the frontend happy
-    res.json({ success: true, message: 'Section added metadata-only' });
+    const newSection = {
+      _id: Date.now().toString(),
+      title,
+      lectures: []
+    };
+
+    course.sections = course.sections || [];
+    course.sections.push(newSection);
+    
+    await dynamodb.saveCourse(course);
+    res.json({ success: true, section: newSection });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
+// Rename Section
+router.patch('/courses/:id/sections/:sectionId', async (req, res) => {
+  try {
+    const { id, sectionId } = req.params;
+    const { title } = req.body;
+    const userId = req.user?.email || 'admin';
+    
+    const course = await dynamoVideoService.getCourseByTitle(id, userId);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+    
+    const sectionIndex = (course.sections || []).findIndex(s => s._id === sectionId);
+    if (sectionIndex === -1) return res.status(404).json({ success: false, message: 'Section not found' });
+    
+    course.sections[sectionIndex].title = title;
+    await dynamodb.saveCourse(course);
+    res.json({ success: true, message: 'Section renamed' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Delete Section
+router.delete('/courses/:id/sections/:sectionId', async (req, res) => {
+  try {
+    const { id, sectionId } = req.params;
+    const userId = req.user?.email || 'admin';
+    
+    const course = await dynamoVideoService.getCourseByTitle(id, userId);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+    
+    course.sections = (course.sections || []).filter(s => s._id !== sectionId);
+    await dynamodb.saveCourse(course);
+    res.json({ success: true, message: 'Section deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+
 // Add Lecture
 router.post('/courses/:id/sections/:sectionId/lectures', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id, sectionId } = req.params;
     const { title, type = 'video' } = req.body;
     const userId = req.user?.email || 'admin';
     
@@ -91,21 +138,73 @@ router.post('/courses/:id/sections/:sectionId/lectures', async (req, res) => {
         _id: Date.now().toString(),
         title, 
         type, 
-        section: req.params.sectionId,
+        sectionId: sectionId, // Ensure consistency with frontend
         url: '',
         watched: false,
         createdAt: new Date().toISOString()
     };
     
+    // 1. Add to Legacy Flat List for playback compatibility
     course.videos = course.videos || [];
-    course.videos.push(newLecture);
+    const flatLecture = { ...newLecture, courseName: id, section: sectionId };
+    course.videos.push(flatLecture); 
     
+    // 2. Add to Nested Sections for Editor compatibility
+    const sectionIndex = (course.sections || []).findIndex(s => s._id === sectionId);
+    if (sectionIndex !== -1) {
+        course.sections[sectionIndex].lectures = course.sections[sectionIndex].lectures || [];
+        course.sections[sectionIndex].lectures.push(newLecture);
+    }
+    
+    // 3. Persist to Both Tables
     await dynamodb.saveCourse(course);
+    await dynamodb.saveVideo(flatLecture); // STANDALONE TABLE
+
     res.json({ success: true, lecture: newLecture });
+  } catch (error) {
+
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Rename Lecture
+router.patch('/courses/:id/sections/:sectionId/lectures/:lectureId', async (req, res) => {
+  try {
+    const { id, sectionId, lectureId } = req.params;
+    const { title } = req.body;
+    const userId = req.user?.email || 'admin';
+    
+    const course = await dynamoVideoService.getCourseByTitle(id, userId);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+    
+    // Update in Sections
+    const sectionIndex = (course.sections || []).findIndex(s => s._id === sectionId);
+    if (sectionIndex !== -1) {
+        const lectureIndex = (course.sections[sectionIndex].lectures || []).findIndex(l => l._id === lectureId);
+        if (lectureIndex !== -1) course.sections[sectionIndex].lectures[lectureIndex].title = title;
+    }
+    
+    // Update in flat list
+    const videoIndex = (course.videos || []).findIndex(v => v._id === lectureId);
+    if (videoIndex !== -1) {
+        course.videos[videoIndex].title = title;
+        // Also update in standalone table
+        await dynamodb.saveVideo({ 
+            ...course.videos[videoIndex], 
+            courseName: id,
+            videoId: lectureId,
+            title 
+        });
+    }
+
+    await dynamodb.saveCourse(course);
+
+    res.json({ success: true, message: 'Lecture renamed' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
 
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
