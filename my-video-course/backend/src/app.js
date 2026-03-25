@@ -6,9 +6,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 
 const app = express();
-const connectDB = require('./utils/mongodb');
 
-// Connect to MongoDB Atlas (Handled in server.js)
 app.set('trust proxy', 1); // Required for secure cookies behind proxy (ALB)
 app.use(cors());
 app.use(express.json());
@@ -36,14 +34,9 @@ app.get('/health', async (req, res) => {
   const dynamoVideoService = require('./services/dynamoVideoService');
   const dbStatus = await dynamoVideoService.healthCheck();
   
-  // Check MongoDB Status
-  const mongoose = require('mongoose');
-  const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-  
   res.json({ 
     status: 'healthy', 
     database: dbStatus,
-    mongodb: mongoStatus,
     timestamp: new Date().toISOString() 
   });
 });
@@ -638,30 +631,19 @@ app.post('/api/ai/chat', cognitoAuth, async (req, res) => {
 async function getSRTContent(courseName, videoId) {
   const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
   const s3Client = new S3Client({ region: process.env.AWS_REGION });
-  const Course = require('./models/Course');
-  const mongoose = require('mongoose');
 
   let video = null;
   
-  // Try MongoDB first
+  // Try DynamoDB
   try {
-    const course = await Course.findOne({ 
-      $or: [{ title: courseName }, { name: courseName }] 
-    }).lean();
-    
-    if (course) {
-      // Find lecture by ID or title
-      for (const section of course.sections || []) {
-        video = section.lectures?.find(l => 
-          (l._id && l._id.toString() === videoId) || 
-          (l.id === videoId) || 
-          (l.title === videoId)
-        );
-        if (video) break;
-      }
-    }
+    const videos = await dynamoVideoService.getVideosForCourse(courseName, 'admin');
+    video = videos.find(v => 
+      (v._id && v._id.toString() === videoId) || 
+      (v.id === videoId) || 
+      (v.title === videoId)
+    );
   } catch (err) {
-    console.log('MongoDB fetch failed for SRT, falling back to DynamoDB');
+    console.log('DynamoDB fetch failed for SRT');
   }
 
   // Fallback to DynamoDB if not found
@@ -700,20 +682,6 @@ async function getSRTContent(courseName, videoId) {
 
 app.post('/api/videos/upload', simpleAdminAuth, require('multer')({ dest: 'uploads/' }).single('video'), async (req, res) => {
   try {
-    const { courseName, title, chapter } = req.body;
-    const file = req.file;
-    
-    if (!file) {
-      return res.status(400).json({ success: false, error: 'No file uploaded' });
-    }
-    
-    // Generate S3 key
-    const timestamp = Date.now();
-    const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_');
-    const s3Key = `videos/${courseName}/${timestamp}_${sanitizedTitle}.${file.originalname.split('.').pop()}`;
-    
-    // Upload to S3
-    const fs = require('fs');
     const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
     
     const fileContent = fs.readFileSync(file.path);
@@ -830,13 +798,11 @@ app.get('/admin/course-manager', sessionAuth, async (req, res) => {
   }
   
   try {
-    const Course = require('./models/Course'); // Use MongoDB model for the new ERD
-    const courses = await Course.find({}).lean();
-    console.log('Admin courses loaded from MongoDB:', courses.length);
+    const courses = await dynamoVideoService.getAllCourses('admin');
+    console.log('Admin courses loaded from DynamoDB:', courses.length);
     res.render('admin-course-manager', { courses: courses || [] });
   } catch (error) {
-    console.error('Error loading courses from MongoDB for admin:', error);
-    // Fallback if needed, or render empty
+    console.error('Error loading courses from DynamoDB for admin:', error);
     res.render('admin-course-manager', { courses: [] });
   }
 });
@@ -848,32 +814,22 @@ app.get('/admin/super', sessionAuth, async (req, res) => {
   if (req.user?.email !== ADMIN_EMAIL) return res.redirect('/dashboard');
 
   try {
-    const User    = require('./models/User');
-    const Course  = require('./models/Course');
-    const Enrollment = require('./models/Enrollment');
     const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 
     // ── Parallel data fetch ───────────────────────────────────────
-    const [allUsers, allCourses, allEnrollments] = await Promise.all([
-      User.find({}).lean(),
-      Course.find({}).lean(),
-      Enrollment.find({}).lean()
+    const [allUsers, allCourses] = await Promise.all([
+      dynamodb.getAllUsers(),
+      dynamoVideoService.getAllCourses('admin')
     ]);
 
     const students = allUsers.filter(u => u.role !== 'teacher' && u.role !== 'admin');
     const teachers = allUsers.filter(u => u.role === 'teacher' || u.email === ADMIN_EMAIL);
 
-    // ── Enrollment counts per course ──────────────────────────────
-    const enrollMap = {};
-    allEnrollments.forEach(e => {
-      const cid = e.course?.toString();
-      if (cid) enrollMap[cid] = (enrollMap[cid] || 0) + 1;
-    });
-
+    // ── Enrollment counts (Simulated from course.enrollments) ──────
     const coursesWithStats = allCourses.map(c => ({
       ...c,
-      enrollmentCount: enrollMap[c._id.toString()] || 0,
-      lectureCount: (c.sections || []).reduce((sum, s) => sum + (s.lectures?.length || 0), 0)
+      enrollmentCount: c.enrollments || 0,
+      lectureCount: (c.videos || []).length
     }));
 
     // ── S3 Storage per teacher ────────────────────────────────────
@@ -939,22 +895,28 @@ app.get('/admin/super', sessionAuth, async (req, res) => {
 // ── Super admin API actions ───────────────────────────────────────────
 app.post('/api/admin/users/:id/deactivate', sessionAuth, async (req, res) => {
   if (req.user?.email !== ADMIN_EMAIL) return res.status(403).json({ success: false });
-  const User = require('./models/User');
-  await User.findByIdAndUpdate(req.params.id, { isDeactivated: true });
+  const user = await dynamodb.getUser(req.params.id);
+  if (user) {
+    user.isDeactivated = true;
+    await dynamodb.saveUser(user);
+  }
   res.json({ success: true });
 });
 
 app.post('/api/admin/users/:id/reactivate', sessionAuth, async (req, res) => {
   if (req.user?.email !== ADMIN_EMAIL) return res.status(403).json({ success: false });
-  const User = require('./models/User');
-  await User.findByIdAndUpdate(req.params.id, { isDeactivated: false });
+  const user = await dynamodb.getUser(req.params.id);
+  if (user) {
+    user.isDeactivated = false;
+    await dynamodb.saveUser(user);
+  }
   res.json({ success: true });
 });
 
 app.delete('/api/admin/courses/:id', sessionAuth, async (req, res) => {
   if (req.user?.email !== ADMIN_EMAIL) return res.status(403).json({ success: false });
-  const Course = require('./models/Course');
-  await Course.findByIdAndDelete(req.params.id);
+  // id is courseName
+  await dynamodb.deleteCourse(req.params.id);
   res.json({ success: true, message: 'Course deleted' });
 });
 

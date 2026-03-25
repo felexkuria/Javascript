@@ -1,7 +1,6 @@
 const dynamoVideoService = require('../services/dynamoVideoService');
 const videoProcessingService = require('../services/videoProcessingService');
 const dynamodb = require('../utils/dynamodb');
-const Course = require('../models/Course');
 const multer = require('multer');
 
 // Configure multer for video uploads
@@ -119,27 +118,10 @@ class CourseController {
       // Save to DynamoDB
       const success = await dynamodb.saveCourse(courseData);
       
-      // Also Save to MongoDB
-      let mongoSuccess = false;
-      try {
-        await Course.create({
-          title: courseData.title,
-          description: courseData.description,
-          category: courseData.category,
-          instructorId: courseData.createdBy,
-          slug: courseData.slug,
-          sections: []
-        });
-        mongoSuccess = true;
-        console.log('✅ Course also saved to MongoDB');
-      } catch (mongoError) {
-        console.error('❌ Failed to save course to MongoDB:', mongoError.message);
-      }
-
-      if (!success && !mongoSuccess) {
+      if (!success) {
         return res.status(500).json({
           success: false,
-          message: 'Failed to deploy course to any persistence layer.'
+          message: 'Failed to deploy course to DynamoDB.'
         });
       }
 
@@ -215,35 +197,11 @@ class CourseController {
         targetTitle
       );
 
-      // ── Link lecture to MongoDB section ────────────────────────
-      if (targetCourseId && sectionId) {
-        try {
-          const lectureEntry = {
-            title: targetTitle,
-            type: 'video',
-            contentId: processedVideo?.videoId || processedVideo?._id || (Date.now().toString()),
-            s3Key: processedVideo?.s3Key || processedVideo?.key || '',
-            duration: processedVideo?.duration || 0,
-            isFree: false
-          };
-
-          await Course.findOneAndUpdate(
-            { _id: targetCourseId, 'sections._id': sectionId },
-            { $push: { 'sections.$.lectures': lectureEntry }, $set: { updatedAt: new Date() } },
-            { new: true }
-          );
-          console.log(`✅ Lecture linked to section ${sectionId} in course ${targetCourseId}`);
-        } catch (mongoErr) {
-          console.error('❌ Failed to link lecture to MongoDB section:', mongoErr.message);
-          // Don't fail the S3 upload response — log and continue
-        }
-      }
-      
       res.json({
         success: true,
         data: processedVideo,
         sectionId: sectionId || null,
-        message: 'Video uploaded and linked to section successfully'
+        message: 'Video uploaded and linked successfully'
       });
     } catch (error) {
       console.error('Error uploading video:', error);

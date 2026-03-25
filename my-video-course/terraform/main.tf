@@ -124,7 +124,7 @@ module "compute" {
     nova_api_key         = var.nova_api_key
     cognito_user_pool_id = module.security.cognito_user_pool_id
     cognito_client_id    = module.security.cognito_client_id
-    mongodb_uri          = var.mongodb_uri
+
     session_secret       = var.session_secret
     admin_key            = var.admin_key
   }))

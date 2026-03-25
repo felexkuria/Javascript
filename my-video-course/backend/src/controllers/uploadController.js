@@ -78,8 +78,7 @@ class UploadController {
 
   async renderUpload(req, res) {
     try {
-      const Course = require('../models/Course');
-      const courses = await Course.find({}).lean();
+      const courses = await dynamoVideoService.getAllCourses('admin');
       res.render('upload', {
         title: 'Upload Video',
         s3BucketName: process.env.S3_BUCKET_NAME || '',
@@ -95,12 +94,10 @@ class UploadController {
   async uploadDirect(req, res) {
     try {
       const { title, description, sectionName = 'Default Section' } = req.body;
-      // Support both route param and body for courseId
-      const courseId = req.params.courseId || req.body.courseId;
+      const courseId = req.params.courseId || req.body.courseId; // This is courseName for DynamoDB
       const sectionId = req.body.sectionId;
       const type = req.body.type || 'video';
       const file = req.file || req.files?.video?.[0] || req.files?.file?.[0];
-      const Course = require('../models/Course');
 
       if (!file) {
         return res.status(400).json({ success: false, message: 'No file uploaded' });
@@ -124,49 +121,30 @@ class UploadController {
         videoUrl = path.join(courseId || 'general', fileName).replace(/\\/g, '/');
       }
 
-      // ── Link into MongoDB section ─────────────────────────────
-      const course = await Course.findById(courseId).catch(() => null);
-      if (!course) {
-        return res.status(404).json({ success: false, message: 'Course not found in MongoDB' });
-      }
-
-      const newLecture = {
+      // ── Link into DynamoDB ─────────────────────────────
+      const courseName = courseId || 'general';
+      const videoData = {
+        _id: videoIdStr,
         title: title || file.originalname,
-        contentId: videoIdStr,
-        s3Key,
+        description: description || '',
+        url: videoUrl,
+        videoUrl: videoUrl, // Legacy compat
+        s3Key: s3Key,
         type: type,
+        section: sectionName,
         duration: 0,
-        isFree: false
+        watched: false,
+        createdAt: new Date().toISOString()
       };
 
-      if (sectionId) {
-        // Push into specific section by _id
-        const idx = course.sections.findIndex(s => s._id.toString() === sectionId);
-        if (idx !== -1) {
-          course.sections[idx].lectures.push(newLecture);
-        } else {
-          course.sections.push({ title: sectionName, lectures: [newLecture] });
-        }
-      } else {
-        // Find or create by title
-        let section = course.sections.find(s => s.title === sectionName);
-        if (!section) {
-          course.sections.push({ title: sectionName, lectures: [] });
-          section = course.sections[course.sections.length - 1];
-        }
-        section.lectures.push(newLecture);
-      }
-
-      course.totalVideos = (course.totalVideos || 0) + 1;
-      await course.save();
-
-      console.log(`✅ MongoDB: Added lecture "${newLecture.title}" to course "${course.title}"`);
+      await dynamoVideoService.addVideoToCourse(courseName, videoData);
+      console.log(`✅ DynamoDB: Added lecture "${videoData.title}" to course "${courseName}"`);
 
       // Respond appropriately
       if (req.accepts('json')) {
         return res.json({ success: true, data: { videoUrl, s3Key, videoId: videoIdStr }, message: 'Video uploaded successfully' });
       }
-      res.redirect(`/course/${encodeURIComponent(course.slug || course.title)}`);
+      res.redirect(`/dashboard`);
     } catch (err) {
       console.error('Error uploading file:', err);
       if (req.accepts('json')) {

@@ -106,7 +106,7 @@ class VideoUploadProcessor {
         }).promise();
       }
       
-      // Store in MongoDB
+      // Store in DynamoDB
       await srtQuizGenerator.storeSRT(videoTitle, srtContent);
       
       return { success: true, srtContent, vttContent };

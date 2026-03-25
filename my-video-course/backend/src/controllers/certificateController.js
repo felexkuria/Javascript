@@ -1,28 +1,25 @@
 const PDFDocument = require('pdfkit');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const Certificate = require('../models/Certificate');
-const User = require('../models/User');
-const Course = require('../models/Course');
+const dynamodb = require('../utils/dynamodb');
+const dynamoVideoService = require('../services/dynamoVideoService');
 const { v4: uuidv4 } = require('uuid');
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
 exports.generateCertificate = async (req, res) => {
   try {
-    const { courseId } = req.body;
-    const userId = req.user.id;
+    const { courseId } = req.body; // courseId is likely courseName now
+    const userId = req.user.email || req.user.id;
 
     // 1. Verify 100% Progress
-    const user = await User.findById(userId);
-    const course = await Course.findById(courseId);
+    const user = await dynamodb.getUser(userId);
+    const course = await dynamoVideoService.getCourseByTitle(courseId, userId);
     
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
 
-    // Simple progress check: for demo, we check if all videos in the course are watched
-    // In a real system, you'd check a progress tracking model
-    // Let's assume for now the client only calls this when progress is 100%
-    
-    const existing = await Certificate.findOne({ userId, courseId });
+    // Check if certificate already exists in DynamoDB
+    const certs = await dynamodb.getCertificates(userId);
+    const existing = certs.find(c => c.courseName === (course.title || course.name));
     if (existing) {
       return res.json({ success: true, certificate: existing });
     }
@@ -52,16 +49,16 @@ exports.generateCertificate = async (req, res) => {
           await s3Client.send(uploadCmd);
           const s3Url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${fileName}`;
 
-          // 4. Save to DB
-          const certificate = new Certificate({
+          // 4. Save to DynamoDB
+          const certificate = {
             userId,
-            courseId,
+            courseId: courseId,
             courseName: course.title || course.name,
             certificateId: certId,
             s3Url
-          });
+          };
 
-          await certificate.save();
+          await dynamodb.saveCertificate(certificate);
           res.json({ success: true, certificate });
           resolve();
         } catch (s3Err) {
@@ -114,7 +111,8 @@ exports.generateCertificate = async (req, res) => {
 
 exports.getUserCertificates = async (req, res) => {
   try {
-    const certificates = await Certificate.find({ userId: req.user.id });
+    const userId = req.user.email || req.user.id;
+    const certificates = await dynamodb.getCertificates(userId);
     res.json({ success: true, certificates });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch certificates' });

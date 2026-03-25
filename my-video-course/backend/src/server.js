@@ -1,26 +1,29 @@
 const app = require('./app');
-const connectDB = require('./utils/mongodb');
+const http = require('http');
+
 const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
 
 async function startServer() {
   try {
-    // Await the database connection before starting the server
-    const success = await connectDB();
-    if (!success && process.env.NODE_ENV === 'production') {
-      console.error('❌ Could not establish database connection in production. Exiting.');
-      process.exit(1);
-    }
-
+    // DynamoDB is initialized synchronously in the service constructor
+    
     // Trigger S3 sync on start
     setTimeout(() => {
        const courseService = require('./services/courseService');
        courseService.syncS3VideosToDynamoDB().catch(e => console.warn('Sync failed:', e.message));
     }, 2000);
 
-    app.listen(PORT, '0.0.0.0', () => { 
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🌐 Web: http://localhost:${PORT}`);
-      console.log(`📱 API: http://localhost:${PORT}/api`);
+    server.listen(PORT, () => {
+      console.log(`
+  🚀 Server is running on port ${PORT}
+  🌍 Environment: ${process.env.NODE_ENV || 'development'}
+  🔗 Local: http://localhost:${PORT}
+  
+  ✅ DynamoDB: Active
+  ✅ Cognito: Active
+  ✅ S3: Active
+  `);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

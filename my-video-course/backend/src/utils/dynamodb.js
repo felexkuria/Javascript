@@ -43,6 +43,22 @@ class DynamoDBService {
     }
   }
 
+  // Helper to sanitize data for DynamoDB (converts ObjectIds to strings, etc.)
+  sanitize(data) {
+    if (!data) return data;
+    return JSON.parse(JSON.stringify(data, (key, value) => {
+      // Convert legacy IDs to strings
+      if (value && typeof value === 'object' && value.hasOwnProperty('_bsontype')) {
+        return value.toString();
+      }
+      // Handle Date objects
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      return value;
+    }));
+  }
+
   async createTables() {
     if (!this.isConnected) return false;
 
@@ -127,6 +143,20 @@ class DynamoDBService {
         BillingMode: 'PAY_PER_REQUEST'
       });
 
+      // Create Certificates table
+      await this.createTable({
+        TableName: `video-course-app-certificates-${environment}`,
+        KeySchema: [
+          { AttributeName: 'userId', KeyType: 'HASH' },
+          { AttributeName: 'certificateId', KeyType: 'RANGE' }
+        ],
+        AttributeDefinitions: [
+          { AttributeName: 'userId', AttributeType: 'S' },
+          { AttributeName: 'certificateId', AttributeType: 'S' }
+        ],
+        BillingMode: 'PAY_PER_REQUEST'
+      });
+
       console.log('✅ All DynamoDB tables created successfully');
       return true;
     } catch (error) {
@@ -178,7 +208,7 @@ class DynamoDBService {
         }
       };
 
-      // Ensure _id doesn't leak into the DynamoDB item if it's a Mongoose object
+      // Ensure _id doesn't leak into the DynamoDB item if it originated from legacy source
       if (params.Item._id) delete params.Item._id;
 
       await this.docClient.send(new PutCommand(params));
@@ -402,12 +432,13 @@ class DynamoDBService {
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
     try {
+      const sanitized = this.sanitize(course);
       const params = {
         TableName: `video-course-app-courses-${environment}`,
         Item: {
-          courseName: course.name,
-          ...course,
-          createdAt: course.createdAt || new Date().toISOString(),
+          courseName: sanitized.name || sanitized.courseName || sanitized.title,
+          ...sanitized,
+          createdAt: sanitized.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
       };
@@ -427,19 +458,12 @@ class DynamoDBService {
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
     try {
-      // Convert Date objects to ISO strings
-      const sanitizedUser = JSON.parse(JSON.stringify(user, (key, value) => {
-        if (value instanceof Date) {
-          return value.toISOString();
-        }
-        return value;
-      }));
-
+      const sanitized = this.sanitize(user);
       const params = {
         TableName: `video-course-app-users-${environment}`,
         Item: {
-          ...sanitizedUser,
-          createdAt: sanitizedUser.createdAt || new Date().toISOString(),
+          ...sanitized,
+          createdAt: sanitized.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
       };
@@ -471,6 +495,21 @@ class DynamoDBService {
     }
   }
 
+  async getAllUsers() {
+    if (!this.isConnected) return [];
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const params = {
+        TableName: `video-course-app-users-${environment}`
+      };
+      const result = await this.docClient.send(new ScanCommand(params));
+      return result.Items || [];
+    } catch (error) {
+      console.error('Error getting all users from DynamoDB:', error);
+      return [];
+    }
+  }
+
   // Enrollment operations
   async saveEnrollment(userId, courseName) {
     if (!this.isConnected) return false;
@@ -479,8 +518,8 @@ class DynamoDBService {
       const params = {
         TableName: `video-course-app-enrollments-${environment}`,
         Item: {
-          userId: userId,
-          courseName: courseName,
+          userId: userId.toString(),
+          courseName: courseName.toString(),
           enrolledAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
@@ -512,6 +551,47 @@ class DynamoDBService {
     }
   }
 
+  // Certificate operations
+  async saveCertificate(certificate) {
+    if (!this.isConnected) return false;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const sanitized = this.sanitize(certificate);
+      const params = {
+        TableName: `video-course-app-certificates-${environment}`,
+        Item: {
+          ...sanitized,
+          issuedDate: sanitized.issuedDate || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      };
+      await this.docClient.send(new PutCommand(params));
+      return true;
+    } catch (error) {
+      console.error('Error saving certificate to DynamoDB:', error);
+      return false;
+    }
+  }
+
+  async getCertificates(userId) {
+    if (!this.isConnected) return [];
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const params = {
+        TableName: `video-course-app-certificates-${environment}`,
+        KeyConditionExpression: 'userId = :userId',
+        ExpressionAttributeValues: {
+          ':userId': userId
+        }
+      };
+      const result = await this.docClient.send(new QueryCommand(params));
+      return result.Items || [];
+    } catch (error) {
+      console.error('Error getting certificates from DynamoDB:', error);
+      return [];
+    }
+  }
+
   // Delete operations
   async deleteCourse(courseName) {
     if (!this.isConnected) return false;
@@ -519,9 +599,10 @@ class DynamoDBService {
     try {
       const params = {
         TableName: `video-course-app-courses-${environment}`,
-        Key: { courseName: { S: courseName } }
+        Key: { courseName: courseName }
       };
-      await this.dynamodb.send(new DeleteItemCommand(params));
+      const { DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+      await this.docClient.send(new DeleteCommand(params));
       return true;
     } catch (error) {
       console.error('Error deleting course:', error);
@@ -536,14 +617,32 @@ class DynamoDBService {
       const params = {
         TableName: `video-course-app-videos-${environment}`,
         Key: { 
-          courseName: { S: courseName },
-          videoId: { S: videoId }
+          courseName: courseName,
+          videoId: videoId
         }
       };
-      await this.dynamodb.send(new DeleteItemCommand(params));
+      const { DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+      await this.docClient.send(new DeleteCommand(params));
       return true;
     } catch (error) {
       console.error('Error deleting video:', error);
+      return false;
+    }
+  }
+
+  async deleteUser(email) {
+    if (!this.isConnected) return false;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const params = {
+        TableName: `video-course-app-users-${environment}`,
+        Key: { email: email }
+      };
+      const { DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+      await this.docClient.send(new DeleteCommand(params));
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
       return false;
     }
   }
