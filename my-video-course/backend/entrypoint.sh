@@ -4,9 +4,8 @@
 # Clean up any potential artifacts
 rm -rf /tmp/mongodb-* 2>/dev/null
 
-echo "🔄 Syncing data to DynamoDB..."
-# Run the migration script to sync local JSON to Cloud
-npm run migrate-dynamodb
+# echo "🔄 Syncing data to DynamoDB (Completed)..."
+# Migration is now handled out-of-band or via separate jobs.
 
 echo "🚀 Starting Node.js application..."
 # Execute the application
