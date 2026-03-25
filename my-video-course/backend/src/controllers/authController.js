@@ -38,6 +38,7 @@ class AuthController {
         currentRole: 'admin',
         isAdmin: true,
         isTeacher: true,
+        role: 'admin',
         token: result.accessToken
       };
       
@@ -87,6 +88,8 @@ class AuthController {
         roles: isAdmin ? ['admin', 'teacher', 'student'] : ['student'],
         currentRole: isAdmin ? 'admin' : 'student',
         isAdmin: isAdmin,
+        isTeacher: isAdmin,
+        role: isAdmin ? 'admin' : 'student',
         token: result.accessToken
       };
 
