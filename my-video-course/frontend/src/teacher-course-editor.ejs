@@ -277,7 +277,7 @@
     </div>
 
     <script>
-        const courseId = '<%= course._id %>';
+        const courseId = '<%= encodeURIComponent(course._id) %>';
 
         // Theme management
         function initTheme() {
@@ -409,7 +409,7 @@
                 formData.append('video', sanitizedFile);
                 formData.append('sectionId', sectionId);
 
-                performUpload(`/api/teacher/courses/${courseId}/lectures/${lectureId}/upload`, formData, lectureId);
+                performUpload(`/api/teacher/courses/${courseId}/lectures/${encodeURIComponent(lectureId)}/upload`, formData, lectureId);
             };
             input.click();
         }

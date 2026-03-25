@@ -291,7 +291,7 @@
 
                     // Simulate chunked progress (XHR gives real progress)
                     const xhr = new XMLHttpRequest();
-                    xhr.open('POST', `/api/courses/${courseId}/upload-video`);
+                    xhr.open('POST', `/api/courses/${encodeURIComponent(courseId)}/upload-video`);
 
                     // Set auth headers
                     const token = localStorage.getItem('accessToken');
