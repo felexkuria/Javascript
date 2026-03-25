@@ -665,6 +665,18 @@ class DynamoVideoService {
       return [];
     }
   }
+
+  async deleteCourse(courseName) {
+    if (this.isDynamoAvailable()) {
+      try {
+        await dynamodb.deleteVideosForCourse(courseName);
+        return await dynamodb.deleteCourse(courseName);
+      } catch (error) {
+        console.error('DynamoDB error deleting course:', error);
+      }
+    }
+    return false;
+  }
 }
 
 module.exports = new DynamoVideoService();
