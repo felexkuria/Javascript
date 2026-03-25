@@ -1,267 +1,253 @@
-<%- include('partials/header', { title: 'AI Infrastructure Assistant', extraStyles: `
+<%- include('partials/header', { title: 'Neural Support Hub', activePage: 'chatbot' }) %>
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+
 <style>
-  :root {
-      --atlas-green: #00ED64;
-      --atlas-forest: #00684A;
-      --glass-bg: rgba(255, 255, 255, 0.7);
-      --glass-border: rgba(0, 30, 43, 0.1);
-  }
+    :root {
+        --mdb-green: #00ED64;
+        --mdb-midnight: #001E2B;
+        --glass-bg: rgba(2, 52, 48, 0.4);
+        --glass-border: rgba(0, 237, 100, 0.1);
+    }
 
-  .dark {
-      --glass-bg: rgba(2, 52, 48, 0.3);
-      --glass-border: rgba(0, 237, 100, 0.15);
-  }
+    body {
+        font-family: 'Outfit', sans-serif;
+        background-color: var(--mdb-midnight);
+        color: #E7EEEB;
+        -webkit-font-smoothing: antialiased;
+    }
 
-  body {
-      font-family: 'Outfit', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      background-color: #F9FBFA;
-  }
+    .premium-glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid var(--glass-border);
+    }
 
-  .dark body {
-      background-color: #001E2B;
-  }
+    .chat-terminal {
+        height: calc(100vh - 420px);
+        min-height: 540px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 237, 100, 0.1) transparent;
+    }
 
-  .premium-glass {
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-  }
+    .chat-terminal::-webkit-scrollbar { width: 4px; }
+    .chat-terminal::-webkit-scrollbar-thumb { background: rgba(0, 237, 100, 0.1); border-radius: 10px; }
 
-  .terminal-box {
-      height: calc(100vh - 400px);
-      min-height: 500px;
-  }
+    .message-node {
+        animation: atlasFadeUp 0.5s cubic-bezier(0.2, 0, 0, 1) forwards;
+        opacity: 0;
+        transform: translateY(12px);
+    }
 
-  .message-node {
-    animation: slideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  }
+    @keyframes atlasFadeUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+    .ai-bubble {
+        background: rgba(0, 237, 100, 0.03);
+        border-left: 3px solid var(--mdb-green);
+        border-radius: 6px 32px 32px 32px;
+        position: relative;
+    }
 
-  .ai-bubble {
-      background: rgba(0, 237, 100, 0.03);
-      border-left: 4px solid var(--atlas-green);
-      border-radius: 4px 24px 24px 24px;
-  }
+    .user-bubble {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 32px 32px 6px 32px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
 
-  .user-bubble {
-      background: #001E2B;
-      color: white;
-      border-radius: 24px 24px 4px 24px;
-      box-shadow: 0 4px 15px rgba(0, 30, 43, 0.1);
-  }
+    .input-atlas {
+        background: rgba(0, 30, 43, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 18px 24px;
+        color: white;
+        outline: none;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
 
-  .dark .user-bubble {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-  }
+    .input-atlas:focus {
+        border-color: var(--mdb-green);
+        background: rgba(0, 30, 43, 0.8);
+        box-shadow: 0 0 0 4px rgba(0, 237, 100, 0.1);
+    }
 
-  .pulse-send {
-      background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
-      color: #001E2B;
-      font-weight: 900;
-      box-shadow: 0 8px 20px rgba(0, 237, 100, 0.2);
-  }
+    .btn-atlas-execute {
+        background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+        color: #001E2B;
+        font-weight: 900;
+        border-radius: 20px;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-size: 11px;
+    }
 
-  .pulse-send:hover {
-      transform: scale(1.05);
-      box-shadow: 0 12px 30px rgba(0, 237, 100, 0.4);
-  }
+    .btn-atlas-execute:hover {
+        box-shadow: 0 0 30px rgba(0, 237, 100, 0.3);
+        transform: scale(1.02);
+    }
 
-  .code-token {
-      font-family: 'JetBrains Mono', monospace;
-      background: rgba(0, 237, 100, 0.1);
-      color: #00A35C;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.9em;
-  }
+    .code-snippet {
+        font-family: 'Fira Code', 'JetBrains Mono', monospace;
+        background: #001E2B;
+        color: #00ED64;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 0.9em;
+    }
 </style>
-` }) %>
 
-<main class="flex-grow px-10 py-12">
-  <div class="max-w-5xl mx-auto">
-    <!-- Header -->
-    <header class="mb-12">
-        <div class="flex items-center gap-3 mb-4">
-            <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00684A] dark:text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">AI Infrastructure Assistant</span>
-            <div class="h-px w-12 bg-gray-200 dark:bg-white/10"></div>
-        </div>
-        <h1 class="text-5xl font-black tracking-tighter text-[#001E2B] dark:text-white mb-2">Neural Support Hub</h1>
-        <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Orchestrating technical explanations with 2026-grade linguistic precision.</p>
-    </header>
+<div class="flex min-h-screen pt-32 pb-24 px-8 lg:px-12">
+    <!-- Student Sidebar Integration -->
+    <%- include('partials/student-sidebar', { activePage: 'chatbot' }) %>
 
-    <div class="premium-glass rounded-[40px] overflow-hidden shadow-2xl">
-      <!-- Chat Interface -->
-      <div id="chatContainer" class="terminal-box overflow-y-auto p-10 space-y-8 scroll-smooth">
-        <!-- Initial Message -->
-        <div class="message-node flex items-start gap-6">
-            <div class="w-12 h-12 rounded-2xl bg-[#00ED64] flex items-center justify-center text-[#001E2B] shadow-lg shadow-[#00ED64]/20 flex-shrink-0">
-                <i class="fas fa-microchip text-xl"></i>
-            </div>
-            <div class="ai-bubble p-8 premium-glass max-w-3xl">
-                <h3 class="text-sm font-black uppercase tracking-widest text-[#00ED64] mb-4">System Initialized</h3>
-                <p class="text-[#001E2B] dark:text-gray-300 font-medium leading-relaxed mb-6">
-                    Greetings, Engineer. I am your integrated AI architecture assistant. I possess comprehensive knowledge of your curriculum and can synthesize complex technical concepts into modular, actionable insights.
-                </p>
-                <div class="grid grid-cols-2 gap-4">
-                    <button class="text-left p-4 rounded-xl border border-gray-100 dark:border-white/5 hover:border-[#00ED64] transition-colors group" onclick="fillInput('Explain Git architecture')">
-                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Architecture</span>
-                        <span class="text-xs font-bold text-[#001E2B] dark:text-white">"Explain Git internal architecture"</span>
-                    </button>
-                    <button class="text-left p-4 rounded-xl border border-gray-100 dark:border-white/5 hover:border-[#00ED64] transition-colors group" onclick="fillInput('What is a MongoDB Cluster?')">
-                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Database</span>
-                        <span class="text-xs font-bold text-[#001E2B] dark:text-white">"What is a MongoDB high-availability cluster?"</span>
-                    </button>
+    <main class="lg:ml-72 flex-grow">
+        <div class="max-w-5xl mx-auto">
+            <header class="mb-12">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="px-4 py-1.5 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-[0.3em] rounded-full border border-[#00ED64]/20">Neural Interface</span>
+                    <div class="h-px w-16 bg-white/5"></div>
+                </div>
+                <h1 class="text-6xl font-black tracking-tighter text-white">Neural <span class="text-[#00ED64]">Support</span> Hub</h1>
+                <p class="text-gray-400 text-lg font-medium mt-2">Quantum linguistic synthesis of architectural concepts.</p>
+            </header>
+
+            <div class="premium-glass rounded-[48px] overflow-hidden shadow-4xl flex flex-col">
+                <!-- Chat Window -->
+                <div id="chatContainer" class="chat-terminal overflow-y-auto p-12 space-y-10 scroll-smooth">
+                    <!-- Initial State -->
+                    <div class="message-node flex items-start gap-8">
+                        <div class="w-14 h-14 bg-[#00ED64] rounded-2xl flex items-center justify-center text-[#001E2B] shadow-xl shadow-[#00ED64]/20">
+                            <i class="fas fa-brain text-2xl"></i>
+                        </div>
+                        <div class="ai-bubble p-10 premium-glass max-w-3xl">
+                            <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-[#00ED64] mb-4">Core Initialized</h3>
+                            <p class="text-gray-300 font-medium leading-relaxed mb-10">
+                                Greetings, Engineer. I am your integrated AI architecture assistant. My neural buffer is synced with the Academy's curriculum manifest. How may I assist your technical ascent today?
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <button onclick="fillInput('Explain the fundamentals of MongoDB Sharding')" class="text-left p-6 premium-glass rounded-2xl border border-white/5 hover:border-[#00ED64] transition-all group">
+                                    <span class="block text-[9px] font-black text-[#00ED64]/60 uppercase tracking-widest mb-2">Inquiry Node A</span>
+                                    <span class="text-xs font-bold text-white group-hover:text-white transition-colors">"Explain MongoDB Sharding Architecture"</span>
+                                </button>
+                                <button onclick="fillInput('How do I handle authentication with Amazon Cognito?')" class="text-left p-6 premium-glass rounded-2xl border border-white/5 hover:border-[#00ED64] transition-all group">
+                                    <span class="block text-[9px] font-black text-[#00ED64]/60 uppercase tracking-widest mb-2">Inquiry Node B</span>
+                                    <span class="text-xs font-bold text-white group-hover:text-white transition-colors">"Handle Global Auth with Amazon Cognito"</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Console -->
+                <div class="p-10 bg-[#001E2B]/40 border-t border-white/5">
+                    <div class="flex gap-6 items-center">
+                        <div class="flex-grow">
+                            <input type="text" id="messageInput" placeholder="Synthesize your technical query..." 
+                                   class="input-atlas w-full">
+                        </div>
+                        <button id="sendButton" class="btn-atlas-execute px-10 py-5 flex items-center gap-3">
+                            <span>Execute</span>
+                            <i class="fas fa-bolt"></i>
+                        </button>
+                    </div>
+                    <div class="mt-8 flex justify-between items-center px-2">
+                        <div class="flex items-center gap-3">
+                            <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
+                            <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Neural Continuity: Active</span>
+                        </div>
+                        <button onclick="clearHistory()" class="text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-red-400 transition-colors">
+                            Purge Neural Buffer
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-      </div>
-
-      <!-- Input Area -->
-      <div class="p-10 border-t border-gray-100 dark:border-white/5 bg-white/30 dark:bg-[#001E2B]/50">
-        <div class="flex gap-6 items-center">
-          <div class="flex-grow relative">
-            <input
-              type="text"
-              id="messageInput"
-              placeholder="Synthesize your query here..."
-              class="w-full bg-white/50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl px-8 py-5 text-[#001E2B] dark:text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#00ED64]/10 transition-all font-semibold"
-            />
-          </div>
-          <button
-            id="sendButton"
-            class="pulse-send px-10 py-5 rounded-2xl transition-all flex items-center gap-3"
-          >
-            <span>Execute</span>
-            <i class="fas fa-bolt"></i>
-          </button>
-        </div>
-        <div class="mt-6 flex justify-between items-center px-2">
-            <div class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
-                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Neural Link Active</span>
-            </div>
-            <button
-                id="clearHistoryButton"
-                class="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors"
-                onclick="clearHistory()"
-            >
-                Purge Buffer History
-            </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</main>
+    </main>
+</div>
 
 <script>
-  function fillInput(text) {
-      document.getElementById('messageInput').value = text;
-      document.getElementById('messageInput').focus();
-  }
-
-  function clearHistory() {
-      if(confirm('Purge all neural buffer history?')) {
-          localStorage.removeItem("chatbot_history");
-          location.reload();
-      }
-  }
-
-  document.addEventListener("DOMContentLoaded", function () {
-    const chatContainer = document.getElementById("chatContainer");
-    const messageInput = document.getElementById("messageInput");
-    const sendButton = document.getElementById("sendButton");
-
-    let chatHistory = JSON.parse(localStorage.getItem("chatbot_history") || "[]");
-
-    function addMessage(content, isUser = false, saveToHistory = true) {
-      content = content.replace(/\*\*(.*?)\*\*/g, "<span class='font-black text-[#00ED64]'>$1</span>");
-      content = content.replace(/\*(.*?)\*/g, "<em class='text-gray-400'>$1</em>");
-      content = content.replace(/`(.*?)`/g, "<span class='code-token'>$1</span>");
-
-      const messageDiv = document.createElement("div");
-      messageDiv.className = "message-node flex items-start gap-6 " + (isUser ? "flex-row-reverse" : "");
-
-      messageDiv.innerHTML = `
-        <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg ${isUser ? "bg-[#001E2B] text-[#00ED64] border border-[#00ED64]/30" : "bg-[#00ED64] text-[#001E2B]"}">
-            <i class="fas ${isUser ? "fa-user-ninja" : "fa-microchip"} text-xl"></i>
-        </div>
-        <div class="${isUser ? "user-bubble" : "ai-bubble premium-glass"} p-6 max-w-3xl font-medium leading-relaxed">
-            ${content}
-        </div>
-      `;
-
-      chatContainer.appendChild(messageDiv);
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-
-      if (saveToHistory) {
-        chatHistory.push({ content, isUser, timestamp: Date.now() });
-        localStorage.setItem("chatbot_history", JSON.stringify(chatHistory));
-      }
+    function fillInput(t) {
+        const i = document.getElementById('messageInput');
+        i.value = t; i.focus();
     }
 
-    if (chatHistory.length > 0) {
-      chatContainer.innerHTML = "";
-      chatHistory.forEach((msg) => addMessage(msg.content, msg.isUser, false));
+    function clearHistory() {
+        if(confirm('PURGE NEURAL BUFFER? All session context will be lost.')) {
+            localStorage.removeItem("chatbot_history");
+            location.reload();
+        }
     }
 
-    function showTyping() {
-      const typingDiv = document.createElement("div");
-      typingDiv.id = "typing";
-      typingDiv.className = "message-node flex items-start gap-6";
-      typingDiv.innerHTML = `
-        <div class="w-12 h-12 rounded-2xl bg-[#00ED64] flex items-center justify-center text-[#001E2B] flex-shrink-0 shadow-lg">
-            <i class="fas fa-brain animate-pulse"></i>
-        </div>
-        <div class="ai-bubble p-6 premium-glass flex gap-3 items-center">
-            <div class="w-2 h-2 bg-[#00ED64] rounded-full animate-bounce"></div>
-            <div class="w-2 h-2 bg-[#00ED64] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-            <div class="w-2 h-2 bg-[#00ED64] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-            <span class="text-[10px] font-black text-[#00ED64] ml-2 tracking-widest uppercase">Synthesizing Response...</span>
-        </div>
-      `;
-      chatContainer.appendChild(typingDiv);
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
+    document.addEventListener("DOMContentLoaded", () => {
+        const container = document.getElementById("chatContainer");
+        const input = document.getElementById("messageInput");
+        const btn = document.getElementById("sendButton");
+        let history = JSON.parse(localStorage.getItem("chatbot_history") || "[]");
 
-    async function sendMessage() {
-      const message = messageInput.value.trim();
-      if (!message) return;
+        function addMessage(c, user = false, save = true) {
+            c = c.replace(/\*\*(.*?)\*\*/g, "<span class='font-black text-[#00ED64]'>$1</span>")
+                 .replace(/`(.*?)`/g, "<span class='code-snippet'>$1</span>");
 
-      addMessage(message, true);
-      messageInput.value = "";
-      sendButton.disabled = true;
-      showTyping();
+            const div = document.createElement("div");
+            div.className = `message-node flex items-start gap-8 ${user ? "flex-row-reverse" : ""}`;
 
-      try {
-        const response = await fetch("/api/chatbot", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message }),
-        });
-        const data = await response.json();
-        const typing = document.getElementById("typing");
-        if (typing) typing.remove();
+            div.innerHTML = `
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xl ${user ? "bg-[#001E2B] text-[#00ED64] border border-[#00ED64]/30" : "bg-[#00ED64] text-[#001E2B]"}">
+                    <i class="fas ${user ? "fa-user-astronaut" : "fa-brain"} text-2xl"></i>
+                </div>
+                <div class="${user ? "user-bubble" : "ai-bubble premium-glass"} p-8 max-w-3xl font-medium leading-relaxed">
+                    ${c}
+                </div>
+            `;
 
-        if (data.response) addMessage(data.response.replace(/\n/g, "<br>"));
-        else addMessage("ERROR: Neural synthesis interrupted. Please re-initialize.");
-      } catch (error) {
-        const typing = document.getElementById("typing");
-        if (typing) typing.remove();
-        addMessage("CRITICAL: Infrastructure communication failure.");
-      }
-      sendButton.disabled = false;
-    }
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            if (save) {
+                history.push({ c, user });
+                localStorage.setItem("chatbot_history", JSON.stringify(history));
+            }
+        }
 
-    sendButton.addEventListener("click", sendMessage);
-    messageInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
-  });
+        if (history.length) {
+            container.innerHTML = "";
+            history.forEach(m => addMessage(m.c, m.user, false));
+        }
+
+        async function send() {
+            const m = input.value.trim(); if (!m) return;
+            addMessage(m, true); input.value = ""; btn.disabled = true;
+
+            const tDiv = document.createElement("div");
+            tDiv.id = "typing"; tDiv.className = "message-node flex items-start gap-8";
+            tDiv.innerHTML = `<div class='ai-bubble p-8 premium-glass text-[10px] font-black uppercase text-[#00ED64] tracking-widest animate-pulse'>Synthesizing...</div>`;
+            container.appendChild(tDiv); container.scrollTop = container.scrollHeight;
+
+            try {
+                const r = await fetch("/api/chatbot", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: m })
+                });
+                const d = await r.json();
+                document.getElementById("typing").remove();
+                if (d.response) addMessage(d.response.replace(/\n/g, "<br>"));
+            } catch (e) {
+                document.getElementById("typing").remove();
+                addMessage("COMMUNICATION ERROR: Neural pipe obstructed.");
+            }
+            btn.disabled = false;
+        }
+
+        btn.onclick = send;
+        input.onkeypress = (e) => { if (e.key === "Enter") send(); };
+    });
 </script>
 
 <%- include('partials/footer') %>

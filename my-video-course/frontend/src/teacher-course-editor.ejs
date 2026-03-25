@@ -4,290 +4,255 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Curriculum Architect - <%= course.title %></title>
-    <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'mdb-green': '#00ED64',
+              'mdb-forest': '#00684A',
+              'mdb-midnight': '#001E2B',
+              'mdb-slate': '#023430',
+            }
+          }
+        }
+      }
+    </script>
     <style>
         :root {
-            --atlas-green: #00ED64;
-            --atlas-forest: #00684A;
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(0, 30, 43, 0.1);
-        }
-
-        .dark {
-            --glass-bg: rgba(2, 52, 48, 0.3);
-            --glass-border: rgba(0, 237, 100, 0.15);
+            --mdb-green: #00ED64;
+            --mdb-midnight: #001E2B;
+            --glass-bg: rgba(2, 52, 48, 0.4);
+            --glass-border: rgba(0, 237, 100, 0.1);
         }
 
         body {
             font-family: 'Outfit', sans-serif;
+            background-color: var(--mdb-midnight);
+            color: #E7EEEB;
             -webkit-font-smoothing: antialiased;
         }
 
         .premium-glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0, 30, 43, 0.05);
         }
 
-        /* ── Section & Lecture Cards ── */
-        .curriculum-feed {
-            max-width: 1000px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .curriculum-feed::before {
+        .curriculum-timeline::before {
             content: '';
             position: absolute;
             left: 36px;
-            top: 100px;
-            bottom: 50px;
+            top: 20px;
+            bottom: 20px;
             width: 2px;
-            background: linear-gradient(to bottom, var(--atlas-green) 0%, transparent 100%);
-            opacity: 0.2;
-            z-index: 0;
+            background: linear-gradient(to bottom, var(--mdb-green) 0%, transparent 100%);
+            opacity: 0.15;
         }
 
-        .section-node {
+        .section-box {
             position: relative;
-            z-index: 1;
-            margin-bottom: 40px;
+            transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
         }
 
-        .section-header-premium {
+        .section-header-atlas {
             padding: 24px 32px;
-            border-radius: 24px;
+            border-radius: 28px;
             cursor: move;
-            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            transition: all 0.3s ease;
         }
 
-        .section-header-premium:hover {
-            border-color: var(--atlas-green);
+        .section-header-atlas:hover {
+            border-color: var(--mdb-green);
             background: rgba(0, 237, 100, 0.05);
         }
 
-        .lecture-card {
-            margin-left: 60px;
-            margin-top: 12px;
+        .lesson-card-atlas {
+            margin-left: 64px;
             padding: 16px 24px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            transition: all 0.2s;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
 
-        .lecture-card:hover {
-            border-color: var(--atlas-green);
-            transform: translateX(8px);
+        .lesson-card-atlas:hover {
+            border-color: var(--mdb-green);
             background: rgba(0, 237, 100, 0.03);
+            transform: translateX(8px);
         }
 
-        /* ── Special Buttons ── */
-        .btn-ghost-alt {
-            border: 1px dashed var(--atlas-green);
-            color: var(--atlas-green);
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 700;
-            transition: all 0.2s;
-        }
-
-        .btn-ghost-alt:hover {
-            background: rgba(0, 237, 100, 0.1);
-            transform: scale(1.02);
-        }
-
-        .btn-add-section {
-            width: 100%;
-            padding: 24px;
-            border-radius: 24px;
-            border: 2px dashed var(--glass-border);
-            color: var(--color-text-muted);
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            transition: all 0.3s;
-        }
-
-        .btn-add-section:hover {
-            border-color: var(--atlas-green);
-            color: var(--atlas-green);
-            background: rgba(0, 237, 100, 0.02);
-            box-shadow: 0 0 20px rgba(0, 237, 100, 0.1);
-        }
-
-        .publish-glow {
-            position: relative;
+        .btn-atlas-glow {
             background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
             color: #001E2B;
-            font-weight: 900;
-            padding: 14px 32px;
+            font-weight: 800;
             border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 237, 100, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 237, 100, 0.2);
             transition: all 0.3s;
         }
 
-        .publish-glow:hover:not(:disabled) {
+        .btn-atlas-glow:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(0, 237, 100, 0.5);
+            box-shadow: 0 12px 40px rgba(0, 237, 100, 0.4);
         }
 
-        .publish-glow:disabled {
-            opacity: 0.5;
-            filter: grayscale(1);
-            cursor: default;
+        .btn-add-ghost {
+            border: 1px dashed rgba(0, 237, 100, 0.3);
+            color: #00ED64;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.3s;
         }
 
-        /* ── Progress & Status ── */
-        .progress-micro {
-            width: 100%;
-            height: 4px;
-            background: rgba(0, 30, 43, 0.05);
-            border-radius: 2px;
-            margin-top: 8px;
+        .btn-add-ghost:hover {
+            background: rgba(0, 237, 100, 0.1);
+            border-style: solid;
+        }
+
+        .progress-micro-line {
+            height: 3px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 99px;
             overflow: hidden;
             display: none;
         }
 
-        .dark .progress-micro { background: rgba(255, 255, 255, 0.05); }
-
-        .progress-fill-neon {
+        .progress-flow-neon {
             height: 100%;
-            background: var(--atlas-green);
-            box-shadow: 0 0 10px var(--atlas-green);
-            transition: width 0.3s ease;
-        }
-
-        .status-badge {
-            font-size: 10px;
-            font-weight: 900;
-            padding: 4px 10px;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .status-synced {
-            background: rgba(0, 237, 100, 0.15);
-            color: #00A35C;
-        }
-
-        .status-alert {
-            background: rgba(255, 59, 48, 0.1);
-            color: #ff3b30;
+            background: #00ED64;
+            box-shadow: 0 0 10px #00ED64;
         }
     </style>
 </head>
-<body class="bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
-    <div class="instructor-layout">
+<body class="dark overflow-x-hidden">
+    <div class="flex">
+        <!-- Sidebar -->
         <%- include('partials/instructor-sidebar', { activePage: 'curriculum' }) %>
-        <main class="instructor-main flex-grow p-10 overflow-auto">
-            <div class="curriculum-feed">
-                <header class="flex justify-between items-end mb-16">
+
+        <main class="flex-grow p-10 lg:p-16">
+            <div class="max-w-5xl mx-auto">
+                <header class="flex flex-col md:flex-row justify-between items-end gap-12 mb-20">
                     <div>
-                        <div class="flex items-center gap-3 mb-4">
-                            <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00684A] dark:text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">Architect Mode</span>
-                            <div class="h-px w-12 bg-gray-200 dark:bg-white/10"></div>
+                        <div class="flex items-center gap-4 mb-6">
+                            <span class="px-4 py-1.5 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-[0.3em] rounded-full border border-[#00ED64]/20">Architect Console</span>
+                            <div class="h-px w-16 bg-white/5"></div>
                         </div>
-                        <h1 id="course-title-display" class="text-5xl font-black tracking-tighter text-[#001E2B] dark:text-white mb-2 flex items-center gap-4">
+                        <h1 class="text-6xl font-black tracking-tighter text-white mb-2 flex items-center gap-6">
                             <%= course.title %>
-                            <button onclick="renameCourse()" class="text-gray-300 hover:text-[#00ED64] transition-colors">
-                                <i class="fas fa-fingerprint text-xl"></i>
+                            <button onclick="renameCourse()" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-[#00ED64]/10 hover:text-[#00ED64] transition-all">
+                                <i class="fas fa-edit text-xs"></i>
                             </button>
                         </h1>
-                        <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Engineer the modular structure of your technical curriculum.</p>
+                        <p class="text-gray-400 text-lg font-medium opacity-80">Design the strategic progression of your engineering curriculum.</p>
                     </div>
-                    <button class="publish-glow group" onclick="publishCourse()" <%= course.isPublished ? 'disabled' : '' %>>
-                        <i class="fas fa-rocket mr-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
-                        <%= course.isPublished ? 'Live in Production' : 'Deploy to Production' %>
+                    <button class="btn-atlas-glow px-10 py-5 uppercase tracking-[0.2em] text-xs flex items-center gap-3" 
+                            onclick="publishCourse()" <%= course.isPublished ? 'disabled' : '' %>>
+                        <i class="fas <%= course.isPublished ? 'fa-check-circle' : 'fa-rocket' %>"></i>
+                        <%= course.isPublished ? 'Deployed to Production' : 'Deploy Curriculum' %>
                     </button>
                 </header>
 
-                <div id="sections-container">
+                <!-- Curriculum Construction Bay -->
+                <div class="relative curriculum-timeline" id="sections-container">
                     <% if (course.sections && course.sections.length > 0) { %>
                         <% course.sections.forEach((section, sIdx) => { %>
-                            <div class="section-node" data-section-id="<%= section._id %>" data-title="<%= section.title %>">
-                                <div class="section-header-premium premium-glass flex justify-between items-center group">
-                                    <div class="flex items-center gap-6">
-                                        <div class="w-10 h-10 rounded-full border-2 border-[#00ED64]/30 flex items-center justify-center font-black text-[#00ED64] text-sm">
+                            <div class="section-box mb-12" data-section-id="<%= section._id %>" data-title="<%= section.title %>">
+                                <!-- Section Header -->
+                                <div class="section-header-atlas premium-glass flex justify-between items-center group">
+                                    <div class="flex items-center gap-8">
+                                        <div class="w-12 h-12 rounded-2xl bg-[#001E2B] border border-[#00ED64]/30 flex items-center justify-center font-black text-[#00ED64] text-lg shadow-inner">
                                             <%= sIdx + 1 %>
                                         </div>
                                         <div>
-                                            <h3 class="text-xl font-bold text-[#001E2B] dark:text-white leading-tight"><%= section.title %></h3>
-                                            <p class="text-[11px] font-black uppercase tracking-widest text-[#00ED64]/50">Strategic Module</p>
+                                            <h3 class="text-2xl font-black text-white tracking-tight"><%= section.title %></h3>
+                                            <div class="text-[10px] font-black uppercase tracking-[0.2em] text-[#00ED64]/60 mt-1">Strategic Section Node</div>
                                         </div>
                                     </div>
-                                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button class="w-10 h-10 rounded-xl hover:bg-[#00ED64]/10 text-gray-400 hover:text-[#00ED64] transition-all" onclick="editSection('<%= section._id %>', this.closest('.section-node').dataset.title)">
-                                            <i class="fas fa-terminal"></i>
+                                    <div class="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="editSection('<%= section._id %>', '<%= section.title %>')" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-[#00ED64]/10 hover:text-[#00ED64] transition-all">
+                                            <i class="fas fa-terminal text-xs"></i>
                                         </button>
-                                        <button class="w-10 h-10 rounded-xl hover:bg-red-500/10 text-gray-400 hover:text-red-500 transition-all" onclick="deleteSection('<%= section._id %>')">
-                                            <i class="fas fa-trash-alt"></i>
+                                        <button onclick="deleteSection('<%= section._id %>')" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-red-500/10 hover:text-red-400 transition-all">
+                                            <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="lecture-feed mt-2">
+                                <!-- Lessons Feed -->
+                                <div class="mt-6 space-y-4">
                                     <% section.lectures.forEach((lecture, lIdx) => { %>
-                                        <div class="lecture-card premium-glass" data-lecture-id="<%= lecture._id %>" data-title="<%= lecture.title %>">
-                                            <i class="fas <%= lecture.s3Key && lecture.s3Key.endsWith('.pdf') ? 'fa-file-pdf text-[#ff3b30]' : 'fa-play-circle text-[#00ED64]' %> text-lg"></i>
+                                        <div class="lesson-card-atlas premium-glass flex items-center gap-6 group" data-lecture-id="<%= lecture._id %>" data-title="<%= lecture.title %>">
+                                            <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-[#00ED64]/60 group-hover:text-[#00ED64] transition-colors">
+                                                <i class="fas <%= lecture.type === 'pdf' ? 'fa-file-pdf' : 'fa-play-circle' %>"></i>
+                                            </div>
                                             <div class="flex-grow">
-                                                <div class="flex items-center gap-3">
-                                                    <span class="text-sm font-bold text-[#001E2B] dark:text-white"><%= lecture.title %></span>
-                                                    <button onclick="editLecture('<%= section._id %>', '<%= lecture._id %>', this.closest('.lecture-card').dataset.title)" class="text-gray-300 hover:text-[#00ED64] transition-colors">
+                                                <div class="flex items-center gap-4 mb-2">
+                                                    <span class="text-base font-bold text-white/90 group-hover:text-white"><%= lecture.title %></span>
+                                                    <button onclick="editLecture('<%= section._id %>', '<%= lecture._id %>', '<%= lecture.title %>')" class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-[#00ED64]">
                                                         <i class="fas fa-pen text-[10px]"></i>
                                                     </button>
                                                 </div>
-                                                <div class="progress-micro" id="progress-<%= lecture._id %>">
-                                                    <div class="progress-fill-neon" style="width: 0%"></div>
+                                                <div class="progress-micro-line" id="progress-<%= lecture._id %>">
+                                                    <div class="progress-flow-neon w-0 h-full"></div>
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-4">
                                                 <% if (lecture.s3Key) { %>
-                                                    <span class="status-badge status-synced border border-[#00ED64]/20">
-                                                        <i class="fas fa-satellite-dish mr-1"></i> Synced
-                                                    </span>
+                                                    <div class="px-3 py-1.5 bg-[#00ED64]/10 border border-[#00ED64]/20 rounded-lg text-[9px] font-black text-[#00ED64] uppercase tracking-widest">
+                                                        <i class="fas fa-check-circle mr-2"></i> Synced
+                                                    </div>
                                                 <% } else { %>
-                                                    <button class="btn-ghost-alt" onclick="triggerUpload('<%= section._id %>', '<%= lecture._id %>')">
-                                                        <i class="fas fa-cloud-upload-alt mr-2"></i> Deploy Data
+                                                    <button class="btn-add-ghost py-2 !text-[9px]" onclick="triggerUpload('<%= section._id %>', '<%= lecture._id %>')">
+                                                        <i class="fas fa-cloud-upload-alt mr-2"></i> Deploy Media
                                                     </button>
                                                 <% } %>
                                             </div>
                                         </div>
                                     <% }) %>
-                                    
-                                    <!-- Action Row -->
-                                    <div class="ml-[60px] mt-4 flex gap-4">
-                                        <button class="btn-ghost-alt border-[#00ED64]/30" onclick="addLecture('<%= section._id %>')">
-                                            <i class="fas fa-plus-circle mr-2"></i> Append Lecture
+
+                                    <!-- Action Interface -->
+                                    <div class="ml-16 pt-4 flex gap-4">
+                                        <button onclick="addLecture('<%= section._id %>')" class="btn-add-ghost">
+                                            <i class="fas fa-plus mr-2"></i> Append Lesson
                                         </button>
-                                        <button class="btn-ghost-alt border-[#00ED64]/30" onclick="triggerResourceUpload('<%= section._id %>')">
-                                            <i class="fas fa-file-invoice mr-2"></i> Append Resource (PDF)
+                                        <button onclick="triggerResourceUpload('<%= section._id %>')" class="btn-add-ghost !border-blue-500/30 !text-blue-400 hover:!bg-blue-500/10">
+                                            <i class="fas fa-file-pdf mr-2"></i> Append Resource
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         <% }) %>
                     <% } else { %>
-                        <div class="py-32 text-center premium-glass rounded-[40px] mb-12">
-                            <div class="text-5xl mb-6">🛰️</div>
-                            <h3 class="text-2xl font-black text-[#001E2B] dark:text-white mb-2">Awaiting Architecture</h3>
-                            <p class="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-8 font-medium">Start building your technical curriculum by initializing the first strategic module.</p>
-                            <button class="btn-add-section max-w-xs" onclick="addSection()">Initialize Module</button>
+                        <div class="py-40 premium-glass rounded-[60px] border-dashed border-white/10 flex flex-col items-center justify-center text-center">
+                            <div class="w-24 h-24 bg-[#00ED64]/5 rounded-full flex items-center justify-center mb-10 border border-[#00ED64]/10">
+                                <i class="fas fa-project-diagram text-[#00ED64] text-4xl"></i>
+                            </div>
+                            <h2 class="text-4xl font-black text-white mb-6">Manifest Empty</h2>
+                            <p class="text-gray-400 text-lg font-medium max-w-sm mx-auto mb-12">Initialize your first strategic curriculum section to begin the orchestration process.</p>
+                            <button onclick="addSection()" class="btn-atlas-glow px-12 py-5 uppercase tracking-widest text-xs">Initialize First Section</button>
                         </div>
                     <% } %>
                 </div>
 
-                <button class="btn-add-section mt-8 mb-20" onclick="addSection()">
-                    <i class="fas fa-cubes mr-3"></i> Initialize Strategic Module
-                </button>
+                <div class="mt-16 mb-40 flex justify-center">
+                    <button onclick="addSection()" class="w-full py-10 rounded-[40px] border-2 border-dashed border-white/5 hover:border-[#00ED64]/30 hover:bg-[#00ED64]/5 transition-all group">
+                        <div class="flex flex-col items-center gap-4">
+                            <div class="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-gray-600 group-hover:text-[#00ED64] group-hover:scale-110 transition-all">
+                                <i class="fas fa-plus text-xl"></i>
+                            </div>
+                            <span class="text-xs font-black uppercase tracking-[0.4em] text-gray-500 group-hover:text-white">Initialize New Curriculum Section</span>
+                        </div>
+                    </button>
+                </div>
             </div>
         </main>
     </div>
@@ -295,197 +260,157 @@
     <script>
         const courseId = '<%= encodeURIComponent(course._id) %>';
 
+        // Core Orchestration Logic
         async function publishCourse() {
-            if (!confirm('Deploy this curriculum to production?')) return;
+            if (!confirm('COMMIT ARCHITECTURE TO PRODUCTION?')) return;
             try {
                 const res = await fetch(`/api/teacher/courses/${courseId}/publish`, { method: 'PATCH' });
                 const data = await res.json();
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Deployment failed: ' + data.message);
-                }
+                if (data.success) location.reload();
+                else alert('DEPLOYMENT ERROR: ' + data.message);
             } catch (e) { console.error(e); }
         }
 
         async function renameCourse() {
-            const newTitle = prompt("Enter new curriculum designation:", "<%= course.title %>");
-            if (!newTitle || newTitle === "<%= course.title %>") return;
-
-            try {
-                const res = await fetch(`/api/teacher/courses/${courseId}/metadata`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: newTitle })
-                });
-                const data = await res.json();
-                if (data.success) location.reload();
-            } catch (e) { console.error(e); }
+            const title = prompt("New Designation:", "<%= course.title %>");
+            if (!title || title === "<%= course.title %>") return;
+            updateMetadata({ title });
         }
 
         async function addSection() {
-            const title = prompt("Strategic Module Title:");
+            const title = prompt("Section Designation:");
             if (!title) return;
-
             try {
                 const res = await fetch(`/api/teacher/courses/${courseId}/sections`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title })
                 });
-                const data = await res.json();
-                if (data.success) location.reload();
+                if ((await res.json()).success) location.reload();
             } catch (e) { console.error(e); }
         }
 
-        async function editSection(sectionId, currentTitle) {
-            const title = prompt("Update Module Title:", currentTitle);
-            if (!title) return;
-
+        async function editSection(id, old) {
+            const title = prompt("Update Designation:", old);
+            if (!title || title === old) return;
             try {
-                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sectionId}`, {
+                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title })
                 });
-                const data = await res.json();
-                if (data.success) location.reload();
+                if ((await res.json()).success) location.reload();
             } catch (e) { console.error(e); }
         }
 
-        async function deleteSection(sectionId) {
-            if (!confirm('Decommission this module and all associated sections?')) return;
+        async function deleteSection(id) {
+            if (!confirm('DECOMMISSION SECTION? All lessons will be purged.')) return;
             try {
-                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sectionId}`, {
-                    method: 'DELETE'
-                });
-                const data = await res.json();
-                if (data.success) location.reload();
+                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${id}`, { method: 'DELETE' });
+                if ((await res.json()).success) location.reload();
             } catch (e) { console.error(e); }
         }
 
-        async function addLecture(sectionId) {
-            const title = prompt("Lesson Title:");
+        async function addLecture(sid) {
+            const title = prompt("Lesson Designation:");
             if (!title) return;
-
             try {
-                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sectionId}/lectures`, {
+                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sid}/lectures`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title })
                 });
-                const data = await res.json();
-                if (data.success) location.reload();
+                if ((await res.json()).success) location.reload();
             } catch (e) { console.error(e); }
         }
 
-        async function editLecture(sectionId, lectureId, currentTitle) {
-            const title = prompt("Update Lesson Title:", currentTitle);
-            if (!title) return;
-
+        async function editLecture(sid, lid, old) {
+            const title = prompt("Update Lesson Designation:", old);
+            if (!title || title === old) return;
             try {
-                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sectionId}/lectures/${lectureId}`, {
+                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sid}/lectures/${lid}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title })
                 });
-                const data = await res.json();
-                if (data.success) location.reload();
+                if ((await res.json()).success) location.reload();
             } catch (e) { console.error(e); }
         }
 
-        function triggerUpload(sectionId, lectureId) {
+        function triggerUpload(sid, lid) {
             const input = document.createElement('input');
             input.type = 'file';
-            input.accept = 'video/*';
-            input.onchange = async (e) => {
+            input.onchange = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-
-                const formData = new FormData();
-                const safeName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._\-]/g, '');
-                const sanitizedFile = new File([file], safeName, { type: file.type });
-                
-                formData.append('video', sanitizedFile);
-                formData.append('sectionId', sectionId);
-
-                performUpload(`/api/teacher/courses/${courseId}/lectures/${encodeURIComponent(lectureId)}/upload`, formData, lectureId);
+                const fd = new FormData();
+                fd.append('video', file);
+                fd.append('sectionId', sid);
+                performUpload(`/api/teacher/courses/${courseId}/lectures/${lid}/upload`, fd, lid);
             };
             input.click();
         }
 
-        function triggerResourceUpload(sectionId) {
+        function triggerResourceUpload(sid) {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.pdf';
-            input.onchange = async (e) => {
+            input.onchange = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-
-                const formData = new FormData();
-                const safeName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._\-]/g, '');
-                const sanitizedFile = new File([file], safeName, { type: file.type });
-                
-                formData.append('video', sanitizedFile);
-                formData.append('sectionId', sectionId);
-                formData.append('type', 'resource');
-
-                performUpload(`/api/teacher/courses/${courseId}/upload`, formData, sectionId);
+                const fd = new FormData();
+                fd.append('video', file);
+                fd.append('sectionId', sid);
+                fd.append('type', 'resource');
+                performUpload(`/api/teacher/courses/${courseId}/upload`, fd, sid);
             };
             input.click();
         }
 
-        function performUpload(url, formData, progressId) {
+        function performUpload(url, fd, pid) {
             const xhr = new XMLHttpRequest();
-            const progressContainer = document.getElementById(`progress-${progressId}`);
-            const progressBar = progressContainer?.querySelector('.progress-fill-neon');
-            
-            if (progressContainer) progressContainer.style.display = 'block';
-
+            const progress = document.getElementById(`progress-${pid}`);
+            if (progress) progress.style.display = 'block';
             xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
-                    const percent = (e.loaded / e.total) * 100;
-                    if (progressBar) progressBar.style.width = percent + '%';
+                    const pct = (e.loaded / e.total) * 100;
+                    if (progress) progress.querySelector('div').style.width = pct + '%';
                 }
             };
-
-            xhr.onload = function() {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    location.reload();
-                } else {
-                    const data = JSON.parse(xhr.responseText || '{"message":"Internal error"}');
-                    alert('Sync error: ' + data.message);
-                }
-            };
-
+            xhr.onload = () => location.reload();
             xhr.open('POST', url, true);
-            xhr.send(formData);
+            xhr.send(fd);
         }
 
-        function initSortable() {
-            const container = document.getElementById('sections-container');
-            if (!container) return;
+        async function updateMetadata(data) {
+            try {
+                const res = await fetch(`/api/teacher/courses/${courseId}/metadata`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if ((await res.json()).success) location.reload();
+            } catch (e) { console.error(e); }
+        }
 
-            Sortable.create(container, {
-                animation: 150,
-                handle: '.section-header-premium',
-                onEnd: async function(evt) {
-                    const sectionIds = Array.from(container.querySelectorAll('.section-node'))
-                                           .map(card => card.dataset.sectionId);
-                    
-                    try {
-                        const res = await fetch(`/api/teacher/courses/${courseId}/reorder`, {
+        // Initialize UI Systems
+        (function() {
+            const container = document.getElementById('sections-container');
+            if (container) {
+                Sortable.create(container, {
+                    animation: 150,
+                    handle: '.section-header-atlas',
+                    onEnd: async (evt) => {
+                        const sids = Array.from(container.children).map(c => c.dataset.sectionId).filter(id => id);
+                        await fetch(`/api/teacher/courses/${courseId}/reorder`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ sectionIds })
+                            body: JSON.stringify({ sectionIds: sids })
                         });
-                        const data = await res.json();
-                        if (!data.success) console.error('Failed to persist order');
-                    } catch (e) { console.error(e); }
-                }
-            });
-        }
-        initSortable();
+                    }
+                });
+            }
+        })();
     </script>
 </body>
 </html>

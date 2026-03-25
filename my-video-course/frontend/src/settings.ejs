@@ -1,170 +1,157 @@
 <%- include('partials/header', { title: 'Account Governance' }) %>
 
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+
 <style>
     :root {
-        --atlas-green: #00ED64;
-        --atlas-forest: #00684A;
-        --glass-bg: rgba(255, 255, 255, 0.7);
-        --glass-border: rgba(0, 30, 43, 0.1);
-    }
-
-    .dark {
-        --glass-bg: rgba(2, 52, 48, 0.3);
-        --glass-border: rgba(0, 237, 100, 0.15);
+        --mdb-green: #00ED64;
+        --mdb-midnight: #001E2B;
+        --glass-bg: rgba(2, 52, 48, 0.4);
+        --glass-border: rgba(0, 237, 100, 0.1);
     }
 
     body {
         font-family: 'Outfit', sans-serif;
+        background-color: var(--mdb-midnight);
+        color: #E7EEEB;
         -webkit-font-smoothing: antialiased;
     }
 
     .premium-glass {
         background: var(--glass-bg);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         border: 1px solid var(--glass-border);
-        box-shadow: 0 8px 32px rgba(0, 30, 43, 0.05);
     }
 
-    .form-input-premium {
-        width: 100%;
-        padding: 14px 20px;
+    .atlas-input {
+        background: rgba(0, 30, 43, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 16px;
-        border: 1px solid var(--glass-border);
-        background: rgba(255, 255, 255, 0.5);
-        color: #001E2B;
-        font-weight: 600;
-        outline: none;
-        transition: all 0.2s;
-    }
-
-    .dark .form-input-premium {
-        background: rgba(0, 30, 43, 0.4);
+        padding: 16px 20px;
         color: white;
+        outline: none;
+        transition: all 0.3s;
+        width: 100%;
+        font-weight: 500;
     }
 
-    .form-input-premium:focus {
-        border-color: var(--atlas-green);
+    .atlas-input:focus {
+        border-color: var(--mdb-green);
+        background: rgba(0, 30, 43, 0.8);
         box-shadow: 0 0 0 4px rgba(0, 237, 100, 0.1);
     }
 
-    .btn-premium-save {
-        background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+    .btn-atlas-action {
+        background: #00ED64;
         color: #001E2B;
-        font-weight: 900;
-        padding: 12px 32px;
+        font-weight: 800;
         border-radius: 14px;
         transition: all 0.3s;
-        box-shadow: 0 4px 15px rgba(0, 237, 100, 0.2);
     }
 
-    .btn-premium-save:hover {
+    .btn-atlas-action:hover {
+        box-shadow: 0 0 25px rgba(0, 237, 100, 0.3);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 237, 100, 0.4);
     }
 
-    .danger-zone-premium {
-        background: rgba(255, 59, 48, 0.05);
-        border: 1px solid rgba(255, 59, 48, 0.1);
-        border-radius: 24px;
-        padding: 32px;
+    .btn-atlas-ghost {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        border-radius: 14px;
+        transition: all 0.3s;
     }
 
-    .dark .danger-zone-premium {
-        background: rgba(255, 59, 48, 0.03);
-        border-color: rgba(255, 59, 48, 0.2);
-    }
-
-    .settings-hero {
-        margin-bottom: 48px;
+    .btn-atlas-ghost:hover {
+        border-color: var(--mdb-green);
+        background: rgba(0, 237, 100, 0.05);
     }
 </style>
 
-<main class="flex-grow overflow-y-auto px-10 py-12 bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
-  <div class="max-w-4xl mx-auto">
-    <!-- Header -->
-    <div class="settings-hero">
-        <div class="flex items-center gap-3 mb-4">
-            <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00684A] dark:text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">Governance & Identity</span>
-            <div class="h-px w-12 bg-gray-200 dark:bg-white/10"></div>
-        </div>
-        <h1 class="text-5xl font-black tracking-tighter text-[#001E2B] dark:text-white mb-2">Account Governance</h1>
-        <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Define your professional identity and orchestrate security parameters.</p>
-    </div>
+<div class="flex min-h-screen pt-32 pb-24 px-8 lg:px-12">
+    <!-- Integration with Student Sidebar -->
+    <%- include('partials/student-sidebar', { activePage: 'settings' }) %>
 
-    <div class="space-y-10">
-        <!-- Identity Section -->
-        <div class="premium-glass rounded-[40px] overflow-hidden">
-            <div class="px-10 py-6 border-b border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/5">
-                <h2 class="text-xl font-black text-[#001E2B] dark:text-white flex items-center gap-3 tracking-tighterUppercase uppercase tracking-widest text-[11px] opacity-60">
-                    <i class="fas fa-id-badge text-[#00ED64]"></i> Core Identity
-                </h2>
-            </div>
-            <div class="p-10 space-y-8">
-                <div class="grid grid-cols-2 gap-8">
-                    <div>
-                        <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-3">Display Designation</label>
-                        <input type="text" value="<%= user.name %>" class="form-input-premium">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-3">System Identity (Primary Email)</label>
-                        <input type="email" value="<%= user.email %>" disabled class="form-input-premium opacity-50 cursor-not-allowed">
-                    </div>
+    <main class="lg:ml-72 flex-grow">
+        <div class="max-w-4xl mx-auto">
+            <header class="mb-16">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="px-4 py-1.5 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-[0.3em] rounded-full border border-[#00ED64]/20">Governance Portal</span>
+                    <div class="h-px w-16 bg-white/5"></div>
                 </div>
-                <div>
-                    <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-3">Professional Bio (Global Mission)</label>
-                    <textarea rows="4" class="form-input-premium" placeholder="Briefly describe your technical expertise and mission statement..."></textarea>
-                </div>
-                <div class="flex justify-end pt-4">
-                    <button class="btn-premium-save">
-                        Apply Identity Changes
-                    </button>
+                <h1 class="text-6xl font-black tracking-tighter text-white">Account <span class="text-[#00ED64]">Governance</span></h1>
+                <p class="text-gray-400 text-lg font-medium mt-2">Define your professional identity and session parameters.</p>
+            </header>
+
+            <div class="space-y-12">
+                <!-- Identity Section -->
+                <section class="premium-glass rounded-[40px] overflow-hidden">
+                    <div class="px-10 py-6 border-b border-white/5 bg-white/5 flex items-center gap-4">
+                        <i class="fas fa-id-card text-[#00ED64]"></i>
+                        <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Core Identity</h2>
+                    </div>
+                    <div class="p-10 space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 ml-1">Designated Name</label>
+                                <input type="text" value="<%= user.name %>" class="atlas-input">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 ml-1">System Identifier (Email)</label>
+                                <input type="email" value="<%= user.email %>" disabled class="atlas-input opacity-40 cursor-not-allowed">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 ml-1">Professional Manifest (Bio)</label>
+                            <textarea rows="4" class="atlas-input resize-none" placeholder="Briefly describe your technical objectives..."></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button class="btn-atlas-action px-10 py-4 uppercase tracking-widest text-[10px]">Synchronize Identity</button>
+                        </div>
+                    </div>
+section>
+
+                <!-- Security Section -->
+                <section class="premium-glass rounded-[40px] overflow-hidden">
+                    <div class="px-10 py-6 border-b border-white/5 bg-white/5 flex items-center gap-4">
+                        <i class="fas fa-shield-halved text-[#00ED64]"></i>
+                        <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Security Parameters</h2>
+                    </div>
+                    <div class="p-10 space-y-10">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-xl font-black text-white tracking-tight">Access Token (Password)</h3>
+                                <p class="text-sm text-gray-400 font-medium mt-1">Rotate your primary authentication credential regularly.</p>
+                            </div>
+                            <button class="btn-atlas-ghost px-8 py-3 text-[10px] font-black uppercase tracking-widest">Rotate Credentials</button>
+                        </div>
+                        <div class="h-px bg-white/5"></div>
+                        <div class="flex justify-between items-center opacity-40">
+                            <div>
+                                <h3 class="text-xl font-black text-white tracking-tight">Quantum Authentication (MFA)</h3>
+                                <p class="text-sm text-gray-400 font-medium mt-1">Multi-factor orchestration for high-fidelity security.</p>
+                            </div>
+                            <div class="w-14 h-8 bg-white/10 rounded-full p-1 relative">
+                                <div class="w-6 h-6 bg-gray-500 rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+section>
+
+                <!-- Decommission Section -->
+                <div class="p-10 bg-red-500/5 border border-red-500/10 rounded-[32px]">
+                    <h3 class="text-lg font-black text-red-400 mb-2 flex items-center gap-3">
+                        <i class="fas fa-radiation"></i> Decommission Account
+                    </h3>
+                    <p class="text-sm text-red-500/60 font-medium mb-6">Initiating this protocol will permanently purge all curriculum progress, certifications, and identity data. This action is immutable.</p>
+                    <button class="text-red-400 font-black text-[10px] uppercase tracking-widest hover:underline">Execute Decompression Protocol</button>
                 </div>
             </div>
         </div>
-
-        <!-- Security Architecture -->
-        <div class="premium-glass rounded-[40px] overflow-hidden">
-            <div class="px-10 py-6 border-b border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/5">
-                <h2 class="text-xl font-black text-[#001E2B] dark:text-white flex items-center gap-3 tracking-tighterUppercase uppercase tracking-widest text-[11px] opacity-60">
-                    <i class="fas fa-shield-alt text-[#00ED64]"></i> Security architecture
-                </h2>
-            </div>
-            <div class="p-10 space-y-10">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-black text-[#001E2B] dark:text-white tracking-tight">Access Token (Password)</h3>
-                        <p class="text-sm text-gray-500 font-medium">Rotate your primary authentication credential regularly.</p>
-                    </div>
-                    <button class="px-6 py-3 border-2 border-[#00ED64]/30 text-[#00684A] dark:text-[#00ED64] font-black rounded-2xl hover:bg-[#00ED64] hover:text-[#001E2B] transition-all text-xs uppercase tracking-widest">
-                        Initiate Rotation
-                    </button>
-                </div>
-                
-                <div class="h-px bg-gray-100 dark:bg-white/5"></div>
-
-                <div class="flex items-center justify-between opacity-50">
-                    <div>
-                        <h3 class="text-lg font-black text-[#001E2B] dark:text-white tracking-tight">Quantum Auth (MFA)</h3>
-                        <p class="text-sm text-gray-500 font-medium">Multi-factor orchestration for maximum security perimeter. (Awaiting activation)</p>
-                    </div>
-                    <div class="w-14 h-8 bg-gray-200 dark:bg-white/10 rounded-full relative p-1">
-                        <div class="w-6 h-6 bg-white dark:bg-gray-500 rounded-full shadow-sm"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Danger Zone -->
-        <div class="danger-zone-premium">
-            <h3 class="text-lg font-black text-red-600 dark:text-red-400 mb-2 flex items-center gap-2 tracking-tight">
-                <i class="fas fa-exclamation-triangle"></i> Decommission Account
-            </h3>
-            <p class="text-sm text-red-500/70 font-medium mb-6">Initiating this protocol will permanently purge all curriculum progress, certifications, and identity data from the academy infrastructure. This action is immutable.</p>
-            <button class="text-red-600 dark:text-red-400 font-black text-xs uppercase tracking-widest hover:underline px-2">Initiate Decompression Protocol</button>
-        </div>
-    </div>
-  </div>
-</main>
+    </main>
+</div>
 
 <%- include('partials/footer') %>

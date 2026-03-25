@@ -1,5 +1,5 @@
 # Use Ubuntu 22.04 for stable OS support (Pure Cloud Architecture)
-FROM --platform=linux/amd64 ubuntu:22.04
+FROM ubuntu:22.04
 
 # Avoid prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -10,8 +10,7 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     unzip \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g npm@latest
+    && apt-get install -y nodejs
 
 # Install AWS CLI (Multi-arch support: aarch64 for Silicon Mac, x86_64 for Cloud)
 RUN arch=$(uname -m) && \
