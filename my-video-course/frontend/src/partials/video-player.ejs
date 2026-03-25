@@ -7,10 +7,16 @@
                 allowfullscreen>
         </iframe>
         <% } else if (video && video.videoUrl && (video.videoUrl.toLowerCase().endsWith('.pdf') || video.type === 'resource')) { %>
-        <iframe src="<%= video.videoUrl %>" 
-                style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; border: none;"
-                id="pdfViewer">
-        </iframe>
+        <div class="pdf-viewer-container" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: #525659; display: flex; flex-direction: column;">
+            <iframe src="<%= video.videoUrl %>" 
+                    style="flex: 1; border: none;"
+                    id="pdfViewer">
+            </iframe>
+            <div class="pdf-fallback" style="padding: 10px; background: rgba(0,0,0,0.8); color: white; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                <span>Unable to view PDF?</span>
+                <a href="<%= video.videoUrl %>" download="<%= video.title %>.pdf" style="color: #00ED64; text-decoration: none; font-weight: 600;">Download Document ↓</a>
+            </div>
+        </div>
         <% } else { %>
         <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video" preload="metadata" 
                poster="/thumbnails/<%= video._id %>.jpg"

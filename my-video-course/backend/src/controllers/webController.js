@@ -185,7 +185,7 @@ class WebController {
         try {
           const s3VideoService = require('../services/s3VideoService');
           const processed = await s3VideoService.processVideoUrl(video, 'student', courseName);
-          processedUrl = processed.videoUrl;
+          processedUrl = processed.fullVideoUrl || processed.videoUrl;
         } catch (s3Err) {
           console.warn('S3 Signing failed:', s3Err.message);
         }

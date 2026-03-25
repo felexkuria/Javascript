@@ -222,17 +222,29 @@
                 <div class="tab-content" id="overview">
                     <h2 style="font-size: 24px; margin-bottom: var(--space-4);"><%= video ? video.title : 'Lecture Title' %></h2>
                     <p style="color: var(--color-text-muted); line-height: 1.6;">
-                        In this lecture, we dive into the core concepts of <%= video ? video.title : 'this topic' %>. 
-                        Follow along with the hands-on segments to reinforce your learning.
+                        In this lecture, we dive into the core concepts. Follow along with the hands-on segments to reinforce your learning.
                     </p>
-                    
-                    <div style="margin-top: var(--space-8);">
-                        <h4 style="font-size: 16px; margin-bottom: var(--space-4);">Learning Objectives</h4>
-                        <ul style="padding-left: var(--space-5); color: var(--color-text-muted);">
-                            <li>Understand the fundamental principles of the topic</li>
-                            <li>Configure and deploy sample environments</li>
-                            <li>Troubleshoot common implementation issues</li>
-                        </ul>
+                </div>
+
+                <div class="tab-content hidden" id="resources">
+                    <h3 style="font-size: 18px; margin-bottom: var(--space-4);">Downloadable Resources</h3>
+                    <div class="resource-list">
+                        <% if (video && video.videoUrl && (video.videoUrl.toLowerCase().endsWith('.pdf') || video.type === 'resource')) { %>
+                            <div class="resource-item" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(0,237,100,0.05); border-radius: 8px; border: 1px solid rgba(0,237,100,0.2);">
+                                <span>📄 <%= video.title %></span>
+                                <a href="<%= video.videoUrl %>" download class="btn btn-sm" style="background: var(--mdb-green-dark); color: white;">Download PDF</a>
+                            </div>
+                        <% } else { %>
+                            <p style="color: var(--color-text-muted);">No additional resources for this lecture.</p>
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="tab-content hidden" id="qa">
+                    <div style="text-align: center; padding: 40px;">
+                        <span style="font-size: 40px;">💬</span>
+                        <h4 style="margin-top: 16px;">Community Q&A</h4>
+                        <p style="color: var(--color-text-muted);">This lecture's discussion forum is loading...</p>
                     </div>
                 </div>
 
