@@ -203,6 +203,7 @@ class DynamoDBService {
           ...video,
           courseName: video.courseName,
           videoId: id,
+          instructorEmail: video.instructorEmail || 'engineerfelex@gmail.com',
           createdAt: video.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
@@ -331,6 +332,25 @@ class DynamoDBService {
     }
   }
 
+  async getCoursesByInstructor(email) {
+    if (!this.isConnected) return [];
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const params = {
+        TableName: `video-course-app-courses-${environment}`,
+        FilterExpression: 'instructorEmail = :email OR createdBy = :email',
+        ExpressionAttributeValues: {
+          ':email': email
+        }
+      };
+      const result = await this.docClient.send(new ScanCommand(params));
+      return result.Items || [];
+    } catch (error) {
+      console.error('Error getting instructor courses:', error);
+      return [];
+    }
+  }
+
   async updateVideoWatchStatus(courseName, videoId, watched, userId = 'engineerfelex@gmail.com') {
     if (!this.isConnected) return false;
 
@@ -444,6 +464,7 @@ class DynamoDBService {
         Item: {
           courseName: sanitized.name || sanitized.courseName || sanitized.title,
           ...sanitized,
+          instructorEmail: sanitized.instructorEmail || 'engineerfelex@gmail.com',
           createdAt: sanitized.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
@@ -527,6 +548,7 @@ class DynamoDBService {
         Item: {
           userId: userId.toString(),
           courseName: sanitizedCourseName,
+          instructorEmail: data.instructorEmail || 'engineerfelex@gmail.com',
           enrolledAt: data.enrolledAt || new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           progress: data.progress || 0,

@@ -51,8 +51,9 @@ class WebController {
       const totalVideos = enrolledCourses.reduce((sum, c) => sum + (c.videos?.length || 0), 0);
       const watchedVideos = enrolledCourses.reduce((sum, c) => sum + (c.videos?.filter(v => v.watched).length || 0), 0);
 
-      // Template selection
-      const dashboardTemplate = fs.existsSync(path.join(__dirname, '../../frontend/src/pages/dashboard.ejs')) ? 'pages/dashboard' : 'dashboard';
+      // Template selection - Correcting path logic to check root-relative frontend dir
+      const frontendPath = path.join(__dirname, '../../../frontend/src/pages/dashboard.ejs');
+      const dashboardTemplate = fs.existsSync(frontendPath) ? 'pages/dashboard' : 'dashboard';
       
       res.render(dashboardTemplate, {
         user: {

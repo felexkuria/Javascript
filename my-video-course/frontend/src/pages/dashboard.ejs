@@ -23,130 +23,173 @@
       }
     </script>
 </head>
-<body class="bg-[#F9FBFA] dark:bg-[#001E2B] font-sans antialiased transition-colors duration-200">
+<body class="bg-[#F9FBFA] dark:bg-[#001E2B] font-sans antialiased transition-colors duration-200" style="background: var(--color-bg);">
     <!-- Dark Mode Toggle -->
-    <button id="themeToggle" class="fixed top-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-10">
+    <button id="themeToggle" class="fixed top-6 right-6 p-3 glass rounded-xl shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 z-[100]">
         <span id="themeIcon" class="text-xl">🌙</span>
     </button>
     
     <!-- Header -->
-    <header class="bg-white/80 dark:bg-[#001E2B]/80 border-b border-gray-200 dark:border-[#133A41] transition-colors duration-200 sticky top-0 z-50 backdrop-blur-xl">
+    <header class="bg-white/70 dark:bg-[#001E2B]/70 border-b border-gray-200 dark:border-[#133A41] transition-all duration-300 sticky top-0 z-50 backdrop-blur-2xl">
         <div class="max-w-7xl mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    <div class="w-10 h-10 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-xl flex items-center justify-center shadow-lg shadow-[#00ED64]/20 border border-white/20">
-                        <span class="text-[#001E2B] text-xl font-bold">M</span>
+                <div class="flex items-center space-x-6">
+                    <div class="w-12 h-12 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-2xl flex items-center justify-center shadow-xl shadow-[#00ED64]/10 border border-white/20 rotate-3 hover:rotate-0 transition-transform duration-500">
+                        <span class="text-[#001E2B] text-2xl font-black">M</span>
                     </div>
                     <div>
-                        <h1 class="text-xl font-bold text-gray-900 dark:text-[#E7EEEB] tracking-tight">Multitouch <span class="font-normal text-gray-500">Academy</span></h1>
-                        <p id="userRole" class="text-xs font-semibold uppercase tracking-wider text-[#00ED64] opacity-80">Student</p>
+                        <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tighter">Multitouch <span class="font-light text-gray-400 dark:text-[#9FB1AD]">Academy</span></h1>
+                        <div class="flex items-center gap-2">
+                             <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
+                             <p id="userRole" class="text-[10px] font-black uppercase tracking-[0.2em] text-[#00ED64]">Premium Member</p>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="flex items-center space-x-3">
-                    <span id="userName" class="text-gray-700 dark:text-[#E7EEEB] font-medium text-sm"></span>
-                    <button id="logoutBtn" class="px-4 py-2 bg-gray-100 dark:bg-[#023430] text-gray-700 dark:text-[#00ED64] border border-transparent dark:border-[#00ED64]/20 rounded-xl hover:bg-gray-200 dark:hover:bg-[#00684A] dark:hover:text-white transition-all text-sm font-bold">
-                        Logout
+                <div class="flex items-center space-x-6">
+                    <div class="hidden md:flex flex-col items-end">
+                        <span id="userName" class="text-gray-900 dark:text-white font-bold text-sm tracking-tight"></span>
+                        <span class="text-[10px] text-gray-400 dark:text-[#9FB1AD] font-medium uppercase tracking-widest">Active Session</span>
+                    </div>
+                    <button id="logoutBtn" class="px-6 py-2.5 bg-gray-900 dark:bg-[#023430] text-white dark:text-[#00ED64] border border-transparent dark:border-[#00ED64]/30 rounded-xl hover:bg-black dark:hover:bg-[#00ED64] dark:hover:text-black transition-all text-xs font-black shadow-lg shadow-black/5 hover:shadow-[#00ED64]/10">
+                        LOGOUT
                     </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-6 py-8">
-        <!-- Super Admin Panel -->
-        <div id="adminPanel" class="hidden mb-12">
-            <div class="bg-white dark:bg-[#023430] rounded-2xl shadow-xl shadow-black/5 border border-gray-100 dark:border-[#133A41] p-8 transition-colors duration-200">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB] mb-6 flex items-center gap-3">
-                    <span class="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-xl">🛡️</span>
-                    Super Admin Console
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                        <h3 class="font-medium text-gray-900 dark:text-white mb-2">Grant Teacher Access</h3>
-                        <form id="grantTeacherForm" class="space-y-3">
-                            <input type="email" id="teacherEmail" placeholder="Teacher Email" required
-                                   class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue">
-                            <button type="submit" class="w-full bg-apple-blue text-white py-2 rounded-lg hover:bg-blue-600 transition-all">
-                                Grant Access
-                            </button>
-                        </form>
+    <div class="max-w-7xl mx-auto px-6 pt-12 pb-24">
+        <!-- Hero Section -->
+        <div class="relative mb-16 rounded-[2.5rem] overflow-hidden group shadow-2xl">
+            <div class="absolute inset-0 bg-[var(--atlas-gradient)] opacity-95"></div>
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none"></div>
+            <div class="relative p-12 md:p-20 flex flex-col md:flex-row items-center justify-between gap-12">
+                <div class="flex-1 text-center md:text-left">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 glass rounded-full mb-8">
+                        <span class="flex h-2 w-2 rounded-full bg-[#00ED64]"></span>
+                        <span class="text-[10px] font-bold text-[#00ED64] uppercase tracking-widest">Platform Status: Optimal</span>
                     </div>
-                    
-                    <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                        <h3 class="font-medium text-gray-900 dark:text-white mb-2">Teacher Requests</h3>
-                        <a href="/admin/teacher-requests" class="inline-block w-full bg-purple-500 text-white text-center py-2 rounded-lg hover:bg-purple-600 transition-all mb-2 relative">
-                            Manage Requests
-                            <span id="requestBadge" class="hidden absolute -top-2 -right-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full"></span>
-                        </a>
-                        <a href="/admin/course-manager" class="inline-block w-full bg-orange-500 text-white text-center py-2 rounded-lg hover:bg-orange-600 transition-all">
-                            Manage Courses
-                        </a>
+                    <h2 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-none">
+                        Master the <span class="premium-title">Cloud</span>
+                    </h2>
+                    <p class="text-lg text-gray-400 dark:text-[#9FB1AD] max-w-xl font-medium leading-relaxed mb-10">
+                        Experience engineering education redefined. Access premium labs, real-time analytics, and expert-led curriculum.
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                        <button class="px-8 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
+                            RESUME LEARNING
+                        </button>
+                        <button class="px-8 py-4 glass text-white font-black rounded-2xl hover:bg-white/10 transition-all">
+                            VIEW ROADMAP
+                        </button>
+                    </div>
+                </div>
+                <div class="hidden lg:block w-72 h-72 relative">
+                    <div class="absolute inset-0 bg-[#00ED64] blur-[100px] opacity-20 animate-pulse"></div>
+                    <div class="relative glass rounded-[3rem] p-8 aspect-square flex items-center justify-center border-white/10 shadow-3xl">
+                        <div class="text-center">
+                             <div id="progressPercentHero" class="text-6xl font-black text-[#00ED64] mb-2">0%</div>
+                             <div class="text-[10px] font-black text-white uppercase tracking-[0.3em] opacity-60">Avg. Completion</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white dark:bg-[#023430] rounded-2xl shadow-sm border border-gray-100 dark:border-[#133A41] p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Enrolled Courses</p>
-                        <p id="enrolledCount" class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB]">0</p>
-                    </div>
-                    <div class="w-12 h-12 bg-gray-100 dark:bg-[#001E2B] rounded-xl flex items-center justify-center">
-                        <span class="text-[#00ED64] text-xl">📖</span>
-                    </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16 px-4">
+            <div class="glass p-8 rounded-3xl border-white/5 hover:border-[#00ED64]/30 transition-all group">
+                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Total Courses</p>
+                <div class="flex items-end justify-between">
+                    <h3 id="enrolledCount" class="text-4xl font-black text-gray-900 dark:text-white">0</h3>
+                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500">📚</span>
                 </div>
             </div>
             
-            <div class="bg-white dark:bg-[#023430] rounded-2xl shadow-sm border border-gray-100 dark:border-[#133A41] p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Completed</p>
-                        <p id="completedCount" class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB]">0</p>
-                    </div>
-                    <div class="w-12 h-12 bg-[#00ED64]/10 rounded-xl flex items-center justify-center">
-                        <span class="text-[#00ED64] text-xl">✅</span>
-                    </div>
+            <div class="glass p-8 rounded-3xl border-white/5 hover:border-[#00ED64]/30 transition-all group">
+                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Completed</p>
+                <div class="flex items-end justify-between">
+                    <h3 id="completedCount" class="text-4xl font-black text-gray-900 dark:text-white">0</h3>
+                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500">🏆</span>
                 </div>
             </div>
             
-            <div class="bg-white dark:bg-[#023430] rounded-2xl shadow-sm border border-gray-100 dark:border-[#133A41] p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Avg. Progress</p>
-                        <p id="progressPercent" class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB]">0%</p>
-                    </div>
-                    <div class="w-12 h-12 bg-[#00C152]/10 rounded-xl flex items-center justify-center">
-                        <span class="text-[#00C152] text-xl">⚡</span>
-                    </div>
+            <div class="glass p-8 rounded-3xl border-white/5 hover:border-[#00ED64]/30 transition-all group">
+                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Certificates</p>
+                <div class="flex items-end justify-between">
+                    <h3 class="text-4xl font-black text-gray-900 dark:text-white">0</h3>
+                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500">📜</span>
+                </div>
+            </div>
+
+            <div class="glass p-8 rounded-3xl border-white/5 hover:border-[#00ED64]/30 transition-all group">
+                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Global Rank</p>
+                <div class="flex items-end justify-between">
+                    <h3 class="text-4xl font-black text-gray-900 dark:text-white">#12</h3>
+                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500">🌍</span>
                 </div>
             </div>
         </div>
 
-        <!-- Available Courses -->
-        <div class="mb-12">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB]">Available Courses</h2>
-                <div class="flex gap-2">
-                    <span class="px-3 py-1 bg-gray-100 dark:bg-[#00684A]/30 text-gray-600 dark:text-[#00ED64] text-xs font-bold rounded-full border dark:border-[#00ED64]/20">Trending</span>
+        <!-- Toolbar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 px-4">
+            <div class="flex bg-gray-100 dark:bg-[#023430]/50 p-1.5 rounded-2xl border border-gray-200 dark:border-[#133A41] backdrop-blur-md">
+                <button onclick="switchTab('all')" id="tab-all" class="tab-btn active px-8 py-3 rounded-xl text-xs font-black tracking-widest transition-all">
+                    ALL REPOSITORIES
+                </button>
+                <button onclick="switchTab('inprogress')" id="tab-inprogress" class="tab-btn px-8 py-3 rounded-xl text-xs font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
+                    IN PROGRESS
+                </button>
+                <button onclick="switchTab('completed')" id="tab-completed" class="tab-btn px-8 py-3 rounded-xl text-xs font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
+                    COMPLETED
+                </button>
+                <button onclick="switchTab('wishlist')" id="tab-wishlist" class="tab-btn px-8 py-3 rounded-xl text-xs font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
+                    WISHLIST
+                </button>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <input type="text" placeholder="Filter courses..." class="pl-12 pr-6 py-4 glass rounded-2xl text-sm font-bold w-full md:w-64 focus:ring-2 focus:ring-[#00ED64] outline-none transition-all">
+                    <span class="absolute left-5 top-1/2 -translate-y-1/2 opacity-30">🔍</span>
                 </div>
             </div>
-            <div id="courseGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        </div>
+
+        <!-- Wishlist Section (Integrated into tabs now) -->
+        <div id="wishlistSection" class="hidden mb-12 tab-content">
+            <div id="wishlistGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Wishlist items will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Courses Grid -->
+        <div id="coursesSection" class="tab-content">
+            <div id="courseGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Courses will be loaded here -->
             </div>
         </div>
     </div>
     
     <script>
-        let currentUser = null;
+        let allCourses = [];
+        let myEnrollments = [];
+        let wishlistItems = [];
         
         document.addEventListener('DOMContentLoaded', () => {
             loadUser();
-            loadCourses();
+            initDashboard();
         });
+
+        async function initDashboard() {
+            await Promise.all([
+                loadCourses(),
+                loadWishlist(),
+                loadEnrollmentStats()
+            ]);
+            switchTab('all');
+        }
         
         // Include auth persistence if not already present
         if (!window.authPersistenceLoaded) {
@@ -185,14 +228,78 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    renderCourses(data.data || []);
-                    updateStats(data.data || []);
+                    allCourses = data.data || [];
                 }
             } catch (error) {
                 console.error('Error loading courses:', error);
             }
         }
         
+        async function loadWishlist() {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/wishlist', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    wishlistItems = data.wishlist || [];
+                    renderWishlist(wishlistItems);
+                }
+            } catch (error) {
+                console.error('Error loading wishlist:', error);
+            }
+        }
+
+        function renderWishlist(courses) {
+            const grid = document.getElementById('wishlistGrid');
+            grid.innerHTML = courses.map(course => `
+                <div class="atlas-card glass p-8 relative flex flex-col h-full group">
+                    <button onclick="removeFromWishlist('${course.name || course.title}')" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 transition-colors z-10">
+                        <i class="fas fa-heart-circle-minus text-xl"></i>
+                    </button>
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#00ED64]/20 to-[#00684A]/20 rounded-2xl flex items-center justify-center mb-8 shadow-inner border border-[#00ED64]/10 group-hover:scale-110 transition-transform duration-500">
+                        <span class="text-[#00ED64] text-3xl font-black">${(course.title || course.name || 'C').charAt(0)}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="px-2 py-0.5 bg-[#00ED64]/10 text-[#00ED64] text-[9px] font-black uppercase tracking-widest rounded-md border border-[#00ED64]/20">Wishlist</span>
+                        </div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-3 text-xl tracking-tight leading-tight">${course.title || course.name || 'Untitled Course'}</h3>
+                        <p class="text-gray-500 dark:text-[#9FB1AD] text-sm mb-8 line-clamp-3 font-medium leading-relaxed">${course.description || 'On your wishlist.'}</p>
+                    </div>
+                    <div class="pt-6 border-t border-gray-100 dark:border-[#133A41] mt-auto">
+                        <button onclick="enrollInCourse('${course._id || course.name}')" 
+                                class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0">
+                            PROVISION COURSE
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function removeFromWishlist(courseId) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/wishlist/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ courseId })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    loadWishlist();
+                }
+            } catch (error) {
+                console.error('Error removing from wishlist:', error);
+            }
+        }
+
         function updateStats(courses) {
             // Update enrolled count from actual enrollments
             loadEnrollmentStats();
@@ -207,18 +314,60 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    const enrollments = data.data || [];
-                    document.getElementById('enrolledCount').textContent = enrollments.length;
+                    myEnrollments = data.data || [];
                     
-                    const completed = enrollments.filter(e => e.status === 'completed').length;
+                    document.getElementById('enrolledCount').textContent = myEnrollments.length;
+                    
+                    const completed = myEnrollments.filter(e => e.status === 'completed').length;
                     document.getElementById('completedCount').textContent = completed;
                     
-                    const progress = enrollments.length > 0 ? Math.round((completed / enrollments.length) * 100) : 0;
+                    const progress = myEnrollments.length > 0 ? Math.round((completed / myEnrollments.length) * 100) : 0;
                     document.getElementById('progressPercent').textContent = progress + '%';
                 }
             } catch (error) {
                 console.error('Error loading enrollment stats:', error);
             }
+        }
+
+        function switchTab(tab) {
+            // Update Tab UI
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-[#00ED64]', 'text-[#001E2B]', 'font-black', 'shadow-lg', 'shadow-[#00ED64]/10');
+                btn.classList.add('text-gray-500', 'dark:text-[#9FB1AD]', 'hover:text-gray-900', 'dark:hover:text-white');
+            });
+            
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            activeBtn.classList.add('active', 'bg-[#00ED64]', 'text-[#001E2B]', 'font-black', 'shadow-lg', 'shadow-[#00ED64]/10');
+            activeBtn.classList.remove('text-gray-500', 'dark:text-[#9FB1AD]', 'hover:text-gray-900', 'dark:hover:text-white');
+
+            // Show/Hide Sections
+            const wishlistSection = document.getElementById('wishlistSection');
+            const coursesSection = document.getElementById('coursesSection');
+            
+            if (tab === 'wishlist') {
+                wishlistSection.classList.remove('hidden');
+                coursesSection.classList.add('hidden');
+            } else {
+                wishlistSection.classList.add('hidden');
+                coursesSection.classList.remove('hidden');
+                filterCourses(tab);
+            }
+        }
+
+        function filterCourses(tab) {
+            let filtered = [];
+            
+            if (tab === 'all') {
+                filtered = allCourses;
+            } else if (tab === 'inprogress') {
+                const enrolledNames = myEnrollments.filter(e => e.status !== 'completed').map(e => e.courseName);
+                filtered = allCourses.filter(c => enrolledNames.includes(c.name || c.courseName));
+            } else if (tab === 'completed') {
+                const completedNames = myEnrollments.filter(e => e.status === 'completed').map(e => e.courseName);
+                filtered = allCourses.filter(c => completedNames.includes(c.name || c.courseName));
+            }
+            
+            renderCourses(filtered);
         }
         
         function renderCourses(courses) {
@@ -230,20 +379,26 @@
             }
             
             grid.innerHTML = courses.map(course => `
-                <div class="bg-gray-50 dark:bg-[#001E2B] rounded-2xl p-6 hover:shadow-lg dark:hover:shadow-[#00ED64]/10 border border-transparent dark:border-[#133A41] transition-all group">
-                    <div class="w-14 h-14 bg-white dark:bg-[#023430] rounded-2xl flex items-center justify-center mb-6 shadow-sm border dark:border-[#00ED64]/10 transition-transform group-hover:scale-110">
-                        <span class="text-[#00ED64] text-2xl font-black">${(course.title || course.name || 'C').charAt(0)}</span>
+                <div class="atlas-card glass p-8 relative flex flex-col h-full group">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#00ED64]/20 to-[#00684A]/20 rounded-2xl flex items-center justify-center mb-8 shadow-inner border border-[#00ED64]/10 group-hover:scale-110 transition-transform duration-500">
+                        <span class="text-[#00ED64] text-3xl font-black">${(course.title || course.name || 'C').charAt(0)}</span>
                     </div>
-                    <h3 class="font-bold text-gray-900 dark:text-[#E7EEEB] mb-2 text-lg">${course.title || course.name || 'Untitled Course'}</h3>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 line-clamp-2">${course.description || 'Master this course with Multitouch Academy.'}</p>
-                    <div class="space-y-3">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="px-2 py-0.5 bg-[#00ED64]/10 text-[#00ED64] text-[9px] font-black uppercase tracking-widest rounded-md border border-[#00ED64]/20">v1.2.0</span>
+                            <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-md border border-blue-500/20">Stable</span>
+                        </div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-3 text-xl tracking-tight leading-tight">${course.title || course.name || 'Untitled Course'}</h3>
+                        <p class="text-gray-500 dark:text-[#9FB1AD] text-sm mb-8 line-clamp-3 font-medium leading-relaxed">${course.description || 'Deploy next-generation infrastructure with this expert-led course.'}</p>
+                    </div>
+                    <div class="pt-6 border-t border-gray-100 dark:border-[#133A41] mt-auto flex flex-col gap-3">
                         <button onclick="enrollInCourse('${course._id || course.name}')" 
-                                class="w-full px-4 py-3 bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] font-bold rounded-xl transition-all enroll-btn hover:shadow-lg" 
+                                class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl transition-all enroll-btn hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0" 
                                 data-course-id="${course._id || course.name}">
-                            Enroll Now
+                            DEPLOY COURSE
                         </button>
-                        <a href="/course/${encodeURIComponent(course.name || course.title || 'unknown')}" class="block w-full px-4 py-3 bg-gray-200 dark:bg-[#023430] text-gray-700 dark:text-[#00ED64] text-center font-bold rounded-xl hover:bg-gray-300 dark:hover:bg-[#00684A] dark:hover:text-white transition-all text-sm">
-                            View Syllabus
+                        <a href="/course/${encodeURIComponent(course.name || course.title || 'unknown')}" class="block w-full px-6 py-4 glass text-gray-700 dark:text-white text-center font-black rounded-2xl hover:bg-white/10 transition-all text-xs tracking-widest">
+                            ACCESS SYLLABUS
                         </a>
                     </div>
                 </div>

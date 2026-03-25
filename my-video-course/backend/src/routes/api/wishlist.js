@@ -35,6 +35,8 @@ router.post('/add', async (req, res) => {
     wishlist.push(courseName);
     user.wishlist = wishlist;
     await dynamodb.saveUser(user);
+    if (req.user) req.user.wishlist = wishlist;
+    if (req.session && req.session.user) req.session.user.wishlist = wishlist;
 
     res.json({ success: true, message: 'Added to wishlist' });
   } catch (error) {
@@ -54,6 +56,8 @@ router.post('/remove', async (req, res) => {
 
     user.wishlist = (user.wishlist || []).filter(name => name !== courseId);
     await dynamodb.saveUser(user);
+    if (req.user) req.user.wishlist = user.wishlist;
+    if (req.session && req.session.user) req.session.user.wishlist = user.wishlist;
 
     res.json({ success: true, message: 'Removed from wishlist' });
   } catch (error) {

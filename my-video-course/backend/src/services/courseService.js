@@ -117,38 +117,50 @@ class CourseService {
       // 1. Delete Enrollments (Handled via DynamoDB)
       console.log(`🗑️ Initiating deletion for course: ${title}`);
 
-      // 2. Delete from S3 (Curriculum files)
+      // 2. Delete from S3 (Curriculum files, Videos, and Resources)
       const { S3Client, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
       const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
       
-      if (process.env.S3_BUCKET_NAME) {
-        try {
-          const prefix = `courses/${slug}/`;
-          const listCommand = new ListObjectsV2Command({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Prefix: prefix
-          });
-          const listResponse = await s3Client.send(listCommand);
-          
-          if (listResponse.Contents && listResponse.Contents.length > 0) {
-            const deleteParams = {
-              Bucket: process.env.S3_BUCKET_NAME,
-              Delete: {
-                Objects: listResponse.Contents.map(obj => ({ Key: obj.Key }))
-              }
-            };
-            await s3Client.send(new DeleteObjectsCommand(deleteParams));
-            console.log(`🗑️ Deleted ${listResponse.Contents.length} objects from S3 for course: ${title}`);
+      const bucketName = process.env.S3_BUCKET_NAME;
+      if (bucketName) {
+        // List of prefixes to clean up
+        const prefixes = [
+          `courses/${slug}/`,
+          `videos/${decodedTitle}/`,
+          `resources/${decodedTitle}/`
+        ];
+
+        for (const prefix of prefixes) {
+          try {
+            const listCommand = new ListObjectsV2Command({
+              Bucket: bucketName,
+              Prefix: prefix
+            });
+            const listResponse = await s3Client.send(listCommand);
+            
+            if (listResponse.Contents && listResponse.Contents.length > 0) {
+              const deleteParams = {
+                Bucket: bucketName,
+                Delete: {
+                  Objects: listResponse.Contents.map(obj => ({ Key: obj.Key }))
+                }
+              };
+              await s3Client.send(new DeleteObjectsCommand(deleteParams));
+              console.log(`🗑️ Deleted ${listResponse.Contents.length} objects from S3 prefix: ${prefix}`);
+            }
+          } catch (s3Err) {
+            console.error(`⚠️ S3 cleanup failed for prefix ${prefix}:`, s3Err.message);
           }
-        } catch (s3Err) {
-          console.error('⚠️ S3 cleanup failed during course deletion:', s3Err.message);
         }
       }
 
       // 3. Delete from DynamoDB
       try {
+        // Delete all video items for this course
+        await dynamoVideoService.deleteVideosForCourse(decodedTitle);
+        // Delete the course item itself
         await dynamoVideoService.deleteCourse(decodedTitle);
-        console.log(`🗑️ Deleted course "${decodedTitle}" from DynamoDB`);
+        console.log(`🗑️ Deleted course "${decodedTitle}" and all associated videos from DynamoDB`);
       } catch (dynamoErr) {
         console.error('⚠️ DynamoDB cleanup failed during course deletion:', dynamoErr.message);
       }

@@ -22,13 +22,13 @@
         }
         
         .container {
-            max-width: 1080px;
+            max-width: 1140px;
             margin: 0 auto;
-            padding: 60px 24px;
+            padding: 32px 24px;
         }
         
         .course-header {
-            text-align: center;
+            text-align: left;
             margin-bottom: 24px;
         }
         
@@ -435,25 +435,23 @@
         
         <div style="display: grid; grid-template-columns: 1fr 350px; gap: 48px; margin-top: 64px;">
             <div class="course-main-info">
-                <% if (typeof watchedVideos !== 'undefined' && watchedVideos > 0) { %>
-                <div class="progress-card" style="margin-bottom: 48px;">
+                <div class="progress-card" style="margin-bottom: 32px;">
                     <div class="progress-header">
                         <span class="progress-title">Continue Learning</span>
-                        <span class="progress-stats"><%= watchedVideos %>/<%= totalVideos %> lectures completed</span>
+                        <span class="progress-stats"><%= watchedVideos %>/<%= totalVideos %> completed</span>
                     </div>
                     <div class="progress-bar">
                         <div id="courseProgressFill" class="progress-fill" style="width: 0%;"></div>
                     </div>
                 </div>
-                <% } %>
                 <h2 class="section-title">Course Content</h2>
                 <div class="curriculum-accordion bg-white dark:bg-[#001E2B] dark:border-[#133A41]" style="border: 1px solid rgba(0,237,100,0.2); border-radius: 12px; overflow: hidden;">
                     <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
                         <% sections.forEach((section, sIndex) => { %>
-                            <div class="curriculum-section border-b border-gray-100 dark:border-[#133A41] last:border-0">
-                                <div class="section-header cursor-pointer flex justify-between items-center transition-colors hover:bg-gray-50 dark:hover:bg-[#023430] bg-gray-50 dark:bg-[#001E2B] dark:text-[#F9FBFA]" 
+                            <div class="curriculum-section" style="border-bottom: 1px solid var(--color-border);">
+                                <div class="section-header bg-white dark:bg-[#0D2137] dark:hover:bg-[#00ED64]/10 transition-colors <%= hasActive ? 'bg-[rgba(0,237,100,0.15)]' : '' %>" 
                                      onclick="toggleSection(this)"
-                                     style="padding: 16px 24px; font-size: 15px;">
+                                     style="padding: 12px 20px; font-size: 14px;">
                                     <div class="flex items-center gap-3">
                                         <span class="toggle-icon transition-transform duration-200 dark:text-[#00ED64]">▶</span>
                                         <strong class="dark:text-[#F9FBFA] text-[#1d1d1f]">Section <%= sIndex + 1 %>: <%= section.title %></strong>
@@ -462,18 +460,18 @@
                                 </div>
                                 <div class="section-lectures" style="display:none;">
                                     <% section.lectures.forEach((lecture, lIndex) => { %>
-                                        <div class="lecture-row hover:bg-gray-50 dark:hover:bg-[#023430]/30 transition-colors dark:border-[#133A41]" 
-                                             style="padding: 12px 24px 12px 48px; border-bottom: 1px solid rgba(0,237,100,0.1); display: flex; justify-content: space-between; align-items: center;">
+                                        <div class="lecture-row hover:bg-gray-50 dark:hover:bg-[#023430]/30 transition-colors border-b border-gray-50 dark:border-[#133A41] last:border-0" 
+                                             style="padding: 10px 20px 10px 48px; display: flex; justify-content: space-between; align-items: center;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
-                                                <span class="text-lg opacity-70 dark:text-[#00ED64]"><%= lecture.type === 'video' ? '📺' : '📄' %></span>
-                                                <a href="/course/<%= courseName %>/video/<%= lecture.contentId %>" 
-                                                   class="lecture-link text-sm font-medium hover:text-[#00ED64] dark:text-[#F9FBFA]" 
+                                                <span class="text-base opacity-70 dark:text-[#00ED64]"><%= lecture.type === 'pdf' ? '📄' : '📺' %></span>
+                                                <a href="/course/<%= encodeURIComponent(courseName) %>/video/<%= lecture.contentId %>" 
+                                                   class="lecture-link text-xs font-semibold hover:text-[#00ED64] dark:text-[#F9FBFA]" 
                                                    data-content-id="<%= lecture.contentId %>" 
-                                                   style="color: inherit; text-decoration: none;">
+                                                   style="text-decoration: none;">
                                                     <%= lIndex + 1 %>. <%= lecture.title %>
                                                 </a>
                                             </div>
-                                            <span class="text-[11px] opacity-50 font-mono dark:text-[#9FB1AD]"><%= Math.floor((lecture.duration || 0) / 60) %>:00</span>
+                                            <span class="text-[10px] opacity-50 font-mono dark:text-[#9FB1AD]"><%= lecture.duration || '0:00' %></span>
                                         </div>
                                     <% }); %>
                                 </div>
@@ -559,7 +557,8 @@
             if (isHidden) {
                 lectures.style.display = 'block';
                 if (icon) icon.style.transform = 'rotate(90deg)';
-                header.style.background = 'rgba(0,237,100,0.05)';
+                const isDark = document.documentElement.classList.contains('dark');
+            header.style.background = isDark ? 'rgba(0,237,100,0.15)' : 'rgba(0,237,100,0.05)';
             } else {
                 lectures.style.display = 'none';
                 if (icon) icon.style.transform = 'rotate(0deg)';

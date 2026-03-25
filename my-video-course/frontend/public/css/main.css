@@ -88,6 +88,58 @@
   --mdb-success-bg: #001E12;
   --mdb-info-bg:    #001929;
   --mdb-warning-bg: #1E1000;
+  
+  /* Atlas Premium Background Gradient */
+  --atlas-gradient: radial-gradient(circle at top left, #001E2B 0%, #001E2B 40%, #023430 100%);
+}
+
+/* ---- Atlas Patterns ----------------------------------------- */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.atlas-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.dark .atlas-card {
+  background: linear-gradient(135deg, rgba(13, 33, 55, 0.8) 0%, rgba(0, 30, 43, 0.9) 100%);
+  border-color: rgba(19, 58, 65, 0.8);
+}
+
+.atlas-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  border-color: var(--mdb-green);
+}
+
+/* Custom Scrollbar — Atlas Style */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { 
+  background: var(--mdb-slate-mid); 
+  border-radius: 10px;
+  border: 2px solid var(--color-bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--mdb-slate-light); }
+
+.premium-title {
+  background: linear-gradient(to right, #ffffff 0%, #00ED64 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
 }
 
 /* ---- Reset -------------------------------------------------- */
@@ -105,10 +157,10 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.015em;
+  font-weight: 700;
+  letter-spacing: -0.025em;
   color: var(--color-text);
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 a { color: var(--color-link); text-decoration: none; }
