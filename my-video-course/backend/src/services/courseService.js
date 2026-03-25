@@ -108,10 +108,11 @@ class CourseService {
 
   async deleteCourseData(title) {
     try {
-      const course = await dynamoVideoService.getCourseByTitle(title);
-      if (!course) throw new Error('Course not found');
+      const decodedTitle = decodeURIComponent(title);
+      const course = await dynamoVideoService.getCourseByTitle(decodedTitle);
+      if (!course) throw new Error(`Course not found: ${decodedTitle}`);
 
-      const slug = title.toLowerCase().replace(/\s+/g, '-');
+      const slug = decodedTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
       // 1. Delete Enrollments (Handled via DynamoDB)
       console.log(`🗑️ Initiating deletion for course: ${title}`);
