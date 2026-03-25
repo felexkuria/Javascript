@@ -291,7 +291,8 @@
                     alert('Stack update failed: ' + (data.error || 'Already in stack?'));
                 }
             } catch (error) {
-                alert('Stack update error: ' + error.message);
+                console.error('Stack update error:', error);
+                alert('Stack update error: ' + error.message + (error.stack ? '\n' + error.stack.split('\n')[0] : ''));
             }
         }
 
