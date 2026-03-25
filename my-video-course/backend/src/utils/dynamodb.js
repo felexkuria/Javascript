@@ -513,21 +513,26 @@ class DynamoDBService {
   }
 
   // Enrollment operations
-  async saveEnrollment(userId, courseName) {
+  async saveEnrollment(userId, courseName, data = {}) {
     if (!this.isConnected) return false;
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
     try {
+      const sanitizedCourseName = courseName.toString().trim();
       const params = {
         TableName: `video-course-app-enrollments-${environment}`,
         Item: {
           userId: userId.toString(),
-          courseName: courseName.toString(),
-          enrolledAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          courseName: sanitizedCourseName,
+          enrolledAt: data.enrolledAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          progress: data.progress || 0,
+          completedLectures: data.completedLectures || [],
+          status: data.status || 'active'
         }
       };
       await this.docClient.send(new PutCommand(params));
       return true;
+
     } catch (error) {
       console.error('Error saving enrollment to DynamoDB:', error);
       return false;
@@ -538,15 +543,22 @@ class DynamoDBService {
     if (!this.isConnected) return [];
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
     try {
+      const sanitizedUserId = userId.toString().trim();
       const params = {
         TableName: `video-course-app-enrollments-${environment}`,
         KeyConditionExpression: 'userId = :userId',
         ExpressionAttributeValues: {
-          ':userId': userId
+          ':userId': sanitizedUserId
         }
       };
       const result = await this.docClient.send(new QueryCommand(params));
-      return result.Items || [];
+      return (result.Items || []).map(item => ({
+        ...item,
+        progress: item.progress || 0,
+        completedLectures: item.completedLectures || [],
+        status: item.status || 'active'
+      }));
+
     } catch (error) {
       console.error('Error getting enrollments from DynamoDB:', error);
       return [];

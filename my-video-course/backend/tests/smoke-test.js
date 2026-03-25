@@ -1,4 +1,5 @@
-const fetch = require('node-fetch');
+// Use native fetch available in Node.js 18+
+
 
 const PORT = process.env.PORT || 3000;
 const BASE_URL = `http://localhost:${PORT}`;
