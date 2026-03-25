@@ -198,830 +198,200 @@
     <script src="/js/video-quiz-functions.js"></script>
     <link rel="preload" as="image" href="/thumbnails/<%= video ? video._id : '' %>.jpg">
 </head>
-<body class="dark:bg-[#001E2B]">
-    <%- include('partials/header', { title: (video ? video.title : 'Play Video') + ' - ' + courseName, activePage: 'courses' }) %>
+<body class="dark bg-[#001E2B] font-sans antialiased text-[#E7EEEB] min-h-screen">
+    <%- include('partials/header', { title: (video ? video.title : 'Lecture') + ' - ' + courseName, activePage: 'video' }) %>
 
-    <div class="course-player-container">
-        <!-- Hidden states for JS -->
-        <input type="hidden" id="isLastVideo" value="<%= (typeof isLastVideo !== 'undefined' && isLastVideo) ? 'true' : 'false' %>">
-        <input type="hidden" id="isLastInChapter" value="<%= (typeof isLastInChapter !== 'undefined' && isLastInChapter) ? 'true' : 'false' %>">
-
-        <!-- Main Player Area -->
-        <main class="player-main">
-            <div class="player-video-wrapper">
-                <%- include('partials/video-player', { video, courseName, isYouTube }) %>
+    <!-- Corner Stats (Atlas Style) -->
+    <div class="fixed top-24 left-8 flex flex-col gap-4 z-[100] hidden md:flex">
+        <div class="atlas-card glass p-4 flex items-center gap-4 group">
+            <div class="w-8 h-8 rounded-lg bg-[#00ED64]/10 flex items-center justify-center text-[#00ED64] border border-[#00ED64]/20 group-hover:scale-110 transition-transform">
+                <i class="fas fa-bolt text-[10px]"></i>
             </div>
-            
-            <div class="player-content-tabs">
-                <nav class="tabs-nav">
-                    <button class="tab-btn active" data-tab="overview">Overview</button>
-                    <button class="tab-btn" data-tab="qa">Q&A</button>
-                    <button class="tab-btn" data-tab="ai">AI Tutor (David Malan)</button>
-                    <button class="tab-btn" data-tab="resources">Resources</button>
-                </nav>
+            <div>
+                <p class="text-[8px] font-black uppercase tracking-widest text-[#9FB1AD]">Current Velocity</p>
+                <p id="userPoints" class="text-sm font-black text-white">0 XP</p>
+            </div>
+        </div>
+        <div class="atlas-card glass p-4 flex items-center gap-4 group">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 group-hover:scale-110 transition-transform">
+                <i class="fas fa-fire text-[10px]"></i>
+            </div>
+            <div>
+                <p class="text-[8px] font-black uppercase tracking-widest text-[#9FB1AD]">Learning Streak</p>
+                <p id="userStreak" class="text-sm font-black text-white">0 DAYS</p>
+            </div>
+        </div>
+    </div>
 
-                <div class="tab-content" id="overview">
-                    <h2 style="font-size: 24px; margin-bottom: var(--space-4);"><%= video ? video.title : 'Lecture Title' %></h2>
-                    <p style="color: var(--color-text-muted); line-height: 1.6;">
-                        In this lecture, we dive into the core concepts. Follow along with the hands-on segments to reinforce your learning.
-                    </p>
+    <main class="max-w-[1600px] mx-auto px-6 py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+            
+            <!-- Player Section -->
+            <div class="lg:col-span-2 space-y-8">
+                <div class="video-section atlas-card group">
+                    <div class="video-container relative">
+                        <% if (video && (video.isYouTube || video.url && video.url.includes('youtube.com'))) { %>
+                            <% 
+                                let embedUrl = video.url;
+                                if (embedUrl.includes('watch?v=')) {
+                                    embedUrl = embedUrl.replace('watch?v=', 'embed/');
+                                }
+                                if (!embedUrl.includes('?')) embedUrl += '?rel=0&showinfo=0&modestbranding=1';
+                            %>
+                            <iframe src="<%= embedUrl %>" allowfullscreen></iframe>
+                        <% } else if (video && video.type === 'pdf') { %>
+                            <div class="pdf-container h-full">
+                                <i class="fas fa-file-pdf pdf-icon-hero"></i>
+                                <div class="text-center">
+                                    <h3 class="text-2xl font-black mb-2 uppercase tracking-tight">Technical Documentation</h3>
+                                    <p class="text-sm text-[#9FB1AD] font-bold uppercase tracking-widest opacity-60"><%= video.title %></p>
+                                </div>
+                                <a href="<%= video.url %>" target="_blank" class="btn-atlas btn-atlas-primary">
+                                    <i class="fas fa-external-link-alt"></i> LAUNCH READER
+                                </a>
+                            </div>
+                        <% } else if (video && video.url) { %>
+                            <video id="videoPlayer" controls crossorigin="anonymous" playsinline <%= video.thumbnail ? `poster="${video.thumbnail}"` : '' %>>
+                                <source src="<%= video.url %>" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        <% } else { %>
+                            <div class="flex items-center justify-center h-full bg-[#001E2B]">
+                                <p class="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic">Provisioning Asset...</p>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <div class="video-controls-bar">
+                        <div class="flex items-center gap-6">
+                            <button id="markWatchedButton" class="btn-atlas btn-atlas-primary <%= video && video.watched ? 'opacity-50' : '' %>">
+                                <i class="fas <%= video && video.watched ? 'fa-check-double' : 'fa-check' %>"></i>
+                                <%= video && video.watched ? 'MARK AS DONE' : 'MARK AS DONE' %>
+                            </button>
+                            <span class="h-8 w-px bg-white/5"></span>
+                            <div class="flex items-center gap-4">
+                                <button id="prevButton" class="w-12 h-12 glass rounded-2xl flex items-center justify-center hover:bg-white/10 transition-all">
+                                    <i class="fas fa-chevron-left text-xs"></i>
+                                </button>
+                                <button id="nextButton" class="w-12 h-12 glass rounded-2xl flex items-center justify-center hover:bg-white/10 transition-all">
+                                    <i class="fas fa-chevron-right text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-mono text-[#9FB1AD] uppercase tracking-widest opacity-40">Command Console</span>
+                            <div class="flex gap-2">
+                                <span class="px-2 py-1 glass rounded text-[9px] font-mono opacity-50">F</span>
+                                <span class="px-2 py-1 glass rounded text-[9px] font-mono opacity-50">J</span>
+                                <span class="px-2 py-1 glass rounded text-[9px] font-mono opacity-50">K</span>
+                                <span class="px-2 py-1 glass rounded text-[9px] font-mono opacity-50">L</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="tab-content hidden" id="resources">
-                    <h3 style="font-size: 18px; margin-bottom: var(--space-4);">Downloadable Resources</h3>
-                    <div class="resource-list">
-                        <% if (video && video.videoUrl && (video.videoUrl.toLowerCase().endsWith('.pdf') || video.type === 'resource')) { %>
-                            <div class="resource-item" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(0,237,100,0.05); border-radius: 8px; border: 1px solid rgba(0,237,100,0.2);">
-                                <span>📄 <%= video.title %></span>
-                                <a href="<%= video.videoUrl %>" download class="btn btn-sm" style="background: var(--mdb-green-dark); color: white;">Download PDF</a>
-                            </div>
-                        <% } else { %>
-                            <p style="color: var(--color-text-muted);">No additional resources for this lecture.</p>
+                <div class="atlas-card glass p-10">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-3xl font-black tracking-tight mb-2"><%= video ? video.title : 'Lecture Module' %></h2>
+                            <p class="text-xs font-bold text-[#00ED64] uppercase tracking-[0.2em]"><%= courseName %></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-widest mb-1 opacity-50">Technical Lead</p>
+                            <p class="text-sm font-black text-white">Engineer Felex</p>
+                        </div>
+                    </div>
+                    <div class="prose prose-invert max-w-none text-[#9FB1AD] text-sm font-medium leading-relaxed">
+                        <%= video ? video.description : 'Welcome to this module. In this lecture, we explore core engineering principles and architecture patterns defined by the Multitouch Academy standard.' %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar space-y-8">
+                <div class="atlas-card glass p-8">
+                    <h3 class="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                        <i class="fas fa-bars-staggered text-[#00ED64]"></i> Curriculum Nodes
+                    </h3>
+                    <div class="curriculum-list">
+                        <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
+                            <% sections.forEach((section, sIndex) => { %>
+                                <div class="mb-4">
+                                    <div class="px-4 py-2 text-[9px] font-black text-[#9FB1AD] uppercase tracking-widest opacity-40 mb-2">
+                                        Section <%= sIndex + 1 %>: <%= section.title %>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <% if (section.lectures) { %>
+                                            <% section.lectures.forEach(lec => { %>
+                                                <% const isActive = video && video._id.toString() === (lec._id || lec.contentId).toString(); %>
+                                                <a href="/course/<%= encodeURIComponent(courseName) %>/video/<%= encodeURIComponent(lec._id || lec.contentId) %>" 
+                                                   class="lecture-item <%= isActive ? 'active' : '' %>">
+                                                    <div class="lecture-icon">
+                                                        <i class="fas <%= lec.type === 'pdf' ? 'fa-file-pdf' : 'fa-play' %>"></i>
+                                                    </div>
+                                                    <div class="flex-1 overflow-hidden">
+                                                        <p class="lecture-title"><%= lec.title %></p>
+                                                        <p class="lecture-meta"><%= lec.duration || '0:00' %></p>
+                                                    </div>
+                                                    <% if (lec.watched) { %>
+                                                        <i class="fas fa-check-circle text-[#00ED64] text-[10px]"></i>
+                                                    <% } %>
+                                                </a>
+                                            <% }); %>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }); %>
                         <% } %>
                     </div>
                 </div>
-
-                <div class="tab-content hidden" id="qa">
-                    <div style="text-align: center; padding: 40px;">
-                        <span style="font-size: 40px;">💬</span>
-                        <h4 style="margin-top: 16px;">Community Q&A</h4>
-                        <p style="color: var(--color-text-muted);">This lecture's discussion forum is loading...</p>
-                    </div>
-                </div>
-
-                <div class="tab-content hidden" id="ai">
-                    <div class="ai-chat-interface">
-                        <%- include('partials/floating-chatbot') %>
-                    </div>
-                </div>
             </div>
-        </main>
+        </div>
+    </main>
 
-        <!-- Sidebar Curriculum -->
-        <aside class="sidebar-curriculum">
-            <div class="sidebar-header">
-                <h3 style="font-size: 14px; font-weight: 700;">Course Content</h3>
-            </div>
-            <div class="curriculum-list">
-                <% 
-                    // Determine active lecture from current URL / video param
-                    const activeVideoId = (typeof video !== 'undefined' && video) ? (video._id || video.videoId || '') : '';
-                    const activeUrlId = (typeof video !== 'undefined' && video) ? (video._id || video.videoId || "") : "";
-                %>
-                <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
-                    <% sections.forEach((section, sIndex) => { %>
-                        <% 
-                            // Auto-expand section that contains the current video
-                            const hasActive = section.lectures.some(l => l.contentId === activeVideoId);
-                        %>
-                        <div class="curriculum-section" style="border-bottom: 1px solid var(--color-border);">
-                            <div class="section-header bg-[var(--color-surface)] dark:hover:bg-[#00ED64]/10 transition-colors <%= hasActive ? 'bg-[rgba(0,237,100,0.15)]' : '' %>" 
-                                 onclick="toggleVideoSection(this)"
-                                 style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
-                                    <span class="dark:text-[#00ED64]" style="font-size: 10px; flex-shrink: 0; transition: transform 0.2s; transform: <%= hasActive ? 'rotate(90deg)' : 'rotate(0deg)' %>;">▶</span>
-                                    <span class="dark:text-[#F9FBFA]" style="font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">§<%= sIndex + 1 %>: <%= section.title %></span>
-                                </div>
-                                <span class="dark:text-[#9FB1AD]" style="font-size: 10px; opacity: 0.7; flex-shrink: 0; margin-left: 4px;"><%= section.lectures.length %></span>
-                            </div>
-                            <div class="section-lectures" style="display: <%= hasActive ? 'block' : 'none' %>;">
-                                <% section.lectures.forEach((lecture, lIndex) => { %>
-                                    <% const isActive = lecture.contentId === activeVideoId; %>
-                                    <div class="lecture-item <%= isActive ? 'active' : '' %> dark:hover:bg-[#023430]/30" 
-                                         style="padding: 10px 16px 10px 28px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; border-left: 3px solid <%= isActive ? '#00ED64' : 'transparent' %>; background: <%= isActive ? 'rgba(0,237,100,0.08)' : 'transparent' %>; transition: all 0.15s;"
-                                         onclick="navigateToLecture('<%= encodeURIComponent(courseName) %>', '<%= lecture.contentId %>')">
-                                        <div class="dark:text-[#00ED64]" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;">
-                                            <%= isActive ? '▶️' : (lecture.type === 'video' ? '▷' : '📄') %>
-                                        </div>
-                                        <div class="lecture-info" style="flex: 1; min-width: 0;">
-                                            <div class="lecture-title" style="font-size: 11px; font-weight: <%= isActive ? '700' : '500' %>; color: <%= isActive ? '#00ED64' : 'inherit' %>; line-height: 1.4;"><%= lIndex + 1 %>. <%= lecture.title %></div>
-                                            <div class="lecture-meta" style="font-size: 10px; opacity: 0.7; margin-top: 2px;">
-                                                <span><%= lecture.duration || '0:00' %></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <% }); %>
-                            </div>
-                        </div>
-                    <% }); %>
-                <% } else { %>
-                    <div style="padding: var(--space-4); text-align: center; color: var(--color-text-muted);">
-                        <p>No sections found. Syncing repository...</p>
-                    </div>
-                <% } %>
-            </div>
-        </aside>
-    </div>
-
-
-    <div id="keyHint" class="key-hint"></div>
-    
-    <%- include('partials/achievement-popup') %>
-    <%- include('partials/floating-chatbot') %>
-
-    <link rel="stylesheet" href="/css/quiz-system.css">
-    <script src="/js/confetti.min.js"></script>
-    <script src="/js/gamification.js"></script>
-    <script src="/js/quiz-system.js"></script>
     <%- include('partials/video-scripts', { video, courseName, isLastVideo, isLastInChapter }) %>
     <script>
-        function initTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.classList.toggle('dark', theme === 'dark');
-            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
-        }
-
-        // ── Sidebar section collapse ──────────────────────────────
-        function toggleVideoSection(header) {
-            const lectures = header.nextElementSibling;
-            if (!lectures) return;
-            const icon = header.querySelector('.toggle-icon');
-            const isOpen = lectures.style.display !== 'none';
-
-            if (isOpen) {
-                lectures.style.display = 'none';
-                if (icon) icon.style.transform = 'rotate(0deg)';
-                header.style.background = 'transparent';
-            } else {
-                lectures.style.display = 'block';
-                if (icon) icon.style.transform = 'rotate(90deg)';
-                header.style.background = 'rgba(0,237,100,0.06)';
-            }
-        }
-
-        // ── Navigate to lecture & highlight active ────────────────
-        function navigateToLecture(courseName, lectureId) {
-            const url = `/course/${courseName}/video/${lectureId}`;
-            // Update active states immediately for fast UI feedback
-            document.querySelectorAll('.lecture-item').forEach(el => {
-                const isTarget = el.getAttribute('onclick')?.includes(lectureId);
-                el.style.borderLeft = isTarget ? '3px solid #00ED64' : '3px solid transparent';
-                el.style.background = isTarget ? 'rgba(0,237,100,0.08)' : '';
-                const title = el.querySelector('.lecture-title');
-                if (title) {
-                    title.style.color = isTarget ? '#00ED64' : '';
-                    title.style.fontWeight = isTarget ? '700' : '500';
-                }
-            });
-            window.location.href = url;
-        }
-
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const newTheme = isDark ? 'light' : 'dark';
-            document.documentElement.classList.toggle('dark', newTheme === 'dark');
-            localStorage.setItem('theme', newTheme);
-            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
-        }
-        
-        initTheme();
-        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
-        // Tab Switching Logic
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabId = btn.getAttribute('data-tab');
-                
-                // Update buttons
-                tabBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                // Update content
-                tabContents.forEach(content => {
-                    content.classList.toggle('hidden', content.id !== tabId);
-                });
-            });
-        });
-
+        // Atlas Interactive Logic
         document.addEventListener('DOMContentLoaded', function() {
-            const videoPlayer = document.getElementById('videoPlayer');
-            const markWatchedButton = document.getElementById('markWatchedButton');
-            const prevButton = document.getElementById('prevButton');
-            const nextButton = document.getElementById('nextButton');
-            const keyHint = document.getElementById('keyHint');
+            const player = document.getElementById('videoPlayer');
+            const markBtn = document.getElementById('markWatchedButton');
             
-            let courseName = '<%= courseName %>';
-            let videoId = '<%= video ? video._id : "" %>';
-            
-            function showKeyHint(text) {
-                if (keyHint) {
-                    keyHint.textContent = text;
-                    keyHint.classList.add('visible');
-                    setTimeout(() => keyHint.classList.remove('visible'), 1000);
-                }
+            // Sync initial state
+            if (markBtn && '<%= video && video.watched ? "true" : "false" %>' === 'true') {
+                markBtn.classList.add('opacity-50');
             }
 
-            function markVideoAsWatched() {
-                fetch(`/api/videos/${encodeURIComponent(courseName)}/${videoId}/watch`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const badge = document.querySelector('.status-badge');
-                    if (badge) {
-                        badge.className = 'status-badge status-watched';
-                        badge.innerHTML = '✓ Watched';
-                    }
-                    
-                    updateVideoCount();
-                    
-                    if (window.gamificationSystem) {
-                        const isLastVideoVal = document.getElementById('isLastVideo')?.value === 'true';
-                        const isLastInChapterVal = document.getElementById('isLastInChapter')?.value === 'true';
-                        
-                        window.gamificationSystem.onVideoCompleted({
-                            videoId: videoId,
-                            courseName: courseName,
-                            isLastVideo: isLastVideoVal,
-                            isLastInChapter: isLastInChapterVal
-                        });
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            }
-
-            // Event listeners
-            if (markWatchedButton) {
-                markWatchedButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    console.log('Mark watched button clicked');
-                    markVideoAsWatched();
-                });
-            } else {
-                console.log('Mark watched button not found');
-            }
-            
-            if (prevButton) {
-                prevButton.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    console.log('Previous button clicked');
-                    try {
-                        const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${encodeURIComponent(courseName)}&direction=prev`);
-                        if (response.ok) {
-                            const prevVideo = await response.json();
-                            console.log('Previous video:', prevVideo);
-                            window.location.href = `/videos/${encodeURIComponent(courseName)}/${prevVideo._id}`;
-                        } else {
-                            console.error('No previous video found');
-                        }
-                    } catch (error) {
-                        console.error('Error getting previous video:', error);
-                    }
-                });
-            } else {
-                console.log('Previous button not found');
-            }
-            
-            if (nextButton) {
-                nextButton.addEventListener('click', async () => {
-                    try {
-                        const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${encodeURIComponent(courseName)}&direction=next`);
-                        if (response.ok) {
-                            const nextVideo = await response.json();
-                            if (nextVideo && nextVideo._id) {
-                                window.location.href = `/videos/${encodeURIComponent(courseName)}/${nextVideo._id}?autoplay=true`;
-                            } else {
-                                console.error('Next video has no valid ID:', nextVideo);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error getting next video:', error);
-                    }
-                });
-            }
-
-            // Award points for keyboard shortcuts
-            async function awardKeyboardPoints(action) {
-                try {
-                    const response = await fetch('/api/gamification/keyboard-shortcut', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action })
-                    });
-                    const data = await response.json();
-                    if (data.success && window.gamificationSystem) {
-                        window.gamificationSystem.updateStats({
-                            totalPoints: data.points,
-                            level: data.level
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error awarding keyboard points:', error);
-                }
-            }
-
-            // Keyboard shortcuts
-            document.addEventListener('keydown', function(e) {
-                if (!videoPlayer || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
-
+            // Keyboard Shortcuts Sync
+            document.addEventListener('keydown', (e) => {
                 const key = e.key.toLowerCase();
+                const hint = document.getElementById('keyHint');
+                if (!hint) return;
                 
-                switch(key) {
-                    case 'f':
-                        e.preventDefault();
-                        if (document.fullscreenElement) {
-                            document.exitFullscreen();
-                            showKeyHint('Exit Fullscreen');
-                        } else {
-                            videoPlayer.requestFullscreen();
-                            showKeyHint('Fullscreen');
-                        }
-                        awardKeyboardPoints('fullscreen');
-                        break;
-                    case 'j':
-                        e.preventDefault();
-                        if (videoPlayer.currentTime) {
-                            videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
-                            showKeyHint('⏪ -10s');
-                        }
-                        awardKeyboardPoints('seek_backward');
-                        break;
-                    case 'k':
-                    case ' ':
-                        e.preventDefault();
-                        if (videoPlayer.paused) {
-                            videoPlayer.play();
-                            showKeyHint('▶️ Play');
-                        } else {
-                            videoPlayer.pause();
-                            showKeyHint('⏸️ Pause');
-                        }
-                        awardKeyboardPoints('play_pause');
-                        break;
-                    case 'l':
-                        e.preventDefault();
-                        if (videoPlayer.duration) {
-                            videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 10);
-                            showKeyHint('⏩ +10s');
-                        }
-                        awardKeyboardPoints('seek_forward');
-                        break;
-                }
-            });
-
-            // Video event listeners
-            if (videoPlayer) {
-                videoPlayer.addEventListener('ended', markVideoAsWatched);
-                
-                let watchedMarked = false;
-                videoPlayer.addEventListener('timeupdate', function() {
-                    if (!videoPlayer.duration) return;
-                    const watchPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
-                    
-                    if (watchPercent >= 90 && !watchedMarked) {
-                        markVideoAsWatched();
-                        watchedMarked = true;
-                    }
-                });
-            }
-
-            // Floating Chatbot Functions
-            window.showFloatingChatbot = function() {
-                const chatbot = document.getElementById('floating-chatbot');
-                const trigger = document.getElementById('chatbot-trigger');
-                
-                if (chatbot) {
-                    chatbot.style.display = 'flex';
-                }
-                if (trigger) {
-                    trigger.style.display = 'none';
-                }
-                
-                setTimeout(() => {
-                    const input = document.getElementById('floating-chat-input');
-                    if (input) input.focus();
-                }, 300);
-            };
-            
-            window.toggleFloatingChatbot = function() {
-                const chatbot = document.getElementById('floating-chatbot');
-                const trigger = document.getElementById('chatbot-trigger');
-                
-                if (chatbot) {
-                    chatbot.style.display = 'none';
-                }
-                if (trigger) {
-                    trigger.style.display = 'flex';
-                }
-            };
-
-            window.sendFloatingChatMessage = async function() {
-                const input = document.getElementById('floating-chat-input');
-                const messages = document.getElementById('floating-chat-messages');
-                
-                if (!input || !messages) return;
-                
-                const message = input.value.trim();
-                if (!message) return;
-                
-                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                messages.innerHTML += `
-                    <div class="chat-message user">
-                        <div class="message-content">${message}</div>
-                        <div class="message-meta">You • ${time}</div>
-                    </div>
-                `;
-                
-                input.value = '';
-                messages.scrollTop = messages.scrollHeight;
-                
-                // Add typing indicator
-                const typingId = 'typing-' + Date.now();
-                messages.innerHTML += `
-                    <div class="chat-message bot" id="${typingId}">
-                        <div class="message-content">
-                            <div class="typing-indicator">
-                                <span></span><span></span><span></span>
-                            </div>
-                        </div>
-                        <div class="message-meta">Nova Pro • typing...</div>
-                    </div>
-                `;
-                messages.scrollTop = messages.scrollHeight;
-                
-                try {
-                    const response = await fetch('/api/ai/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            message, 
-                            aiModel: 'nova-pro',
-                            context: {
-                                videoTitle: '<%= video ? video.title : "" %>',
-                                courseName: courseName,
-                                videoId: videoId
-                            }
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    
-                    // Remove typing indicator
-                    document.getElementById(typingId)?.remove();
-                    
-                    if (data.success) {
-                        // Ensure response is a string
-                        let responseText = '';
-                        if (typeof data.response === 'string') {
-                            responseText = data.response;
-                        } else if (data.response && typeof data.response === 'object') {
-                            responseText = JSON.stringify(data.response);
-                        } else {
-                            responseText = String(data.response || 'No response available');
-                        }
-                        
-                        // Parse markdown-like formatting
-                        let formattedResponse = responseText
-                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                            .replace(/`(.*?)`/g, '<code style="background: #f2f2f7; padding: 2px 4px; border-radius: 4px; font-family: SF Mono, Monaco, monospace;">$1</code>')
-                            .replace(/```([\s\S]*?)```/g, '<pre style="background: #f2f2f7; padding: 12px; border-radius: 8px; overflow-x: auto; font-family: SF Mono, Monaco, monospace; margin: 8px 0;"><code>$1</code></pre>')
-                            .replace(/\n/g, '<br>');
-                        
-                        messages.innerHTML += `
-                            <div class="chat-message bot">
-                                <div class="message-content">${formattedResponse}</div>
-                                <div class="message-meta">
-                                    <span>🤖 Nova Pro • ${botTime}</span>
-                                    <button onclick="copyMessage(this)" style="margin-left: 8px; padding: 2px 6px; background: #f2f2f7; border: none; border-radius: 4px; font-size: 10px; cursor: pointer;">📋</button>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        messages.innerHTML += `
-                            <div class="chat-message bot">
-                                <div class="message-content">Sorry, I couldn't process that.</div>
-                                <div class="message-meta">🤖 Nova Pro • ${botTime}</div>
-                            </div>
-                        `;
-                    }
-                } catch (error) {
-                    // Remove typing indicator on error
-                    document.getElementById(typingId)?.remove();
-                    
-                    const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    messages.innerHTML += `
-                        <div class="chat-message bot">
-                            <div class="message-content">Connection error. Please try again.</div>
-                            <div class="message-meta">🤖 Nova Pro • ${botTime}</div>
-                        </div>
-                    `;
-                }
-                
-                messages.scrollTop = messages.scrollHeight;
-            };
-
-            // Enter key for chat
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'floating-chat-input') {
-                    e.preventDefault();
-                    sendFloatingChatMessage();
-                }
-            });
-
-            // Quiz function
-            window.startVideoQuiz = async function() {
-                try {
-                    const response = await fetch(`/api/quizzes/${videoId}`);
-                    const data = await response.json();
-                    
-                    if (data.success && data.quiz && window.quizSystem) {
-                        window.quizSystem.startQuiz('video-specific', data.quiz);
-                    } else if (window.quizSystem) {
-                        window.quizSystem.startQuiz('terraform');
-                    }
-                } catch (error) {
-                    console.error('Error loading quiz:', error);
-                }
-            };
-
-            // SRT Generation
-            const generateSRTButton = document.getElementById('generateSRTButton');
-            if (generateSRTButton) {
-                generateSRTButton.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    console.log('Generate SRT button clicked');
-                    this.disabled = true;
-                    this.innerHTML = '<span>⏳</span> Generating...';
-                    
-                    try {
-                        const response = await fetch('/api/generate-srt', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                videoTitle: '<%= video ? video.title : "" %>',
-                                courseName,
-                                videoId
-                            })
-                        });
-                        
-                        const data = await response.json();
-                        if (data.status === 'processing') {
-                            this.innerHTML = '<span>🔄</span> Processing...';
-                        } else {
-                            this.innerHTML = '<span>✅</span> Ready';
-                            this.disabled = false;
-                        }
-                    } catch (error) {
-                        console.error('SRT generation failed:', error);
-                        this.innerHTML = '<span>❌</span> Failed';
-                        this.disabled = false;
-                    }
-                });
-            } else {
-                console.log('Generate SRT button not found');
-            }
-
-            // Fetch and update video count
-            async function updateVideoCount() {
-                try {
-                    const response = await fetch(`/api/videos/course/${encodeURIComponent(courseName)}/count`);
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        const progressText = document.getElementById('videoProgress');
-                        if (progressText) {
-                            progressText.textContent = `${data.data.watched}/${data.data.total} videos`;
-                        }
-                        
-                        const progressFill = document.querySelector('.progress-fill');
-                        if (progressFill && data.data.total > 0) {
-                            const percentage = Math.round((data.data.watched / data.data.total) * 100);
-                            progressFill.style.width = `${percentage}%`;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error fetching video count:', error);
-                }
-            }
-            
-            // Copy message function
-            window.copyMessage = function(button) {
-                const messageContent = button.closest('.chat-message').querySelector('.message-content').innerText;
-                navigator.clipboard.writeText(messageContent).then(() => {
-                    button.textContent = '✓';
-                    setTimeout(() => button.textContent = '📋', 1000);
-                });
-            };
-            
-            // Load cached todos from DynamoDB
-            async function loadCachedTodos() {
-                try {
-                    const videoTitle = '<%= video ? video.title : "" %>';
-                    const response = await fetch(`/api/todos/${encodeURIComponent(videoTitle)}`);
-                    const data = await response.json();
-                    
-                    if (data.success && data.todos.length > 0) {
-                        const todoContainer = document.getElementById('todo-container');
-                        if (todoContainer) {
-                            renderCachedTodos(data.todos);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error loading cached todos:', error);
-                }
-            }
-            
-            function renderCachedTodos(todos) {
-                const todoContainer = document.getElementById('todo-container');
-                if (!todoContainer) return;
-                
-                let html = '';
-                todos.forEach((todo, index) => {
-                    html += `
-                        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 8px; background: rgba(255,255,255,0.5); border-radius: 12px; border: 1px solid #f2f2f7;">
-                            <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleCachedTodo('${todo.id}', this.checked)" style="margin-top: 2px; accent-color: #007aff;">
-                            <div style="flex: 1;">
-                                <div style="font-size: 14px; font-weight: 500; color: #1d1d1f; margin-bottom: 4px;">${todo.task}</div>
-                                <div style="font-size: 11px; color: #86868b;">${todo.completed && todo.completedAt ? 'Completed: ' + new Date(todo.completedAt).toLocaleDateString() : 'From SRT analysis'}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                todoContainer.innerHTML = html;
-                
-                // Update progress
-                const completed = todos.filter(t => t.completed).length;
-                const total = todos.length;
-                const progressText = document.getElementById('todo-progress');
-                const progressBar = document.getElementById('todo-progress-bar');
-                
-                if (progressText) {
-                    progressText.textContent = `${completed}/${total} completed`;
-                }
-                if (progressBar && total > 0) {
-                    const percentage = Math.round((completed / total) * 100);
-                    progressBar.style.width = `${percentage}%`;
-                }
-            }
-            
-            window.toggleCachedTodo = function(todoId, completed) {
-                // Update local state and sync to backend if needed
-                console.log('Todo toggled:', todoId, completed);
-            };
-            
-            // Optimized video loading for better LCP
-            function initSecureVideo() {
-                const videoPlayer = document.getElementById('videoPlayer');
-                const videoSource = document.getElementById('videoSource');
-                if (!videoPlayer || !videoSource) return;
-                
-                let videoKey = '<%= video ? video.s3Key || "" : "" %>';
-                if (!videoKey) {
-                    const videoUrl = '<%= video ? video.videoUrl : "" %>';
-                    if (videoUrl.includes('s3.')) {
-                        const urlParts = videoUrl.split('/');
-                        videoKey = urlParts.slice(3).join('/');
-                    }
-                }
-                if (videoKey && videoKey.startsWith('videos/videos/')) {
-                    videoKey = videoKey.replace('videos/videos/', 'videos/');
-                }
-                if (!videoKey) return;
-                
-                // Use requestIdleCallback for non-blocking execution
-                const loadVideo = () => {
-                    fetch('/api/videos/stream-url', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ videoKey })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        videoSource.src = data.streamUrl;
-                        videoPlayer.load();
-                    })
-                    .catch(error => {
-                        console.error('Video loading failed:', error);
-                        videoSource.src = '<%= video ? video.videoUrl : "" %>';
-                        videoPlayer.load();
-                    });
+                const showHint = (text) => {
+                    hint.textContent = text;
+                    hint.classList.add('visible');
+                    setTimeout(() => hint.classList.remove('visible'), 1200);
                 };
-                
-                if ('requestIdleCallback' in window) {
-                    requestIdleCallback(loadVideo);
-                } else {
-                    setTimeout(loadVideo, 0);
-                }
-            }
-            
-            // Initialize video loading
-            initSecureVideo();
-            
-            // Learning API functions
-            window.loadSummary = async function() {
-                const content = document.getElementById('learningContent');
-                content.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Generating summary from SRT...</div>';
-                
-                try {
-                    const response = await fetch(`/api/learning/summary/${encodeURIComponent(courseName)}/${videoId}`);
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        content.innerHTML = `<div style="color: #1d1d1f;"><strong>📝 Summary:</strong><br>${data.summary}</div>`;
-                    } else {
-                        content.innerHTML = '<div style="color: #ff3b30;">❌ Failed to generate summary</div>';
-                    }
-                } catch (error) {
-                    content.innerHTML = '<div style="color: #ff3b30;">❌ Error loading summary</div>';
-                }
-            };
-            
-            window.loadQuiz = async function() {
-                const content = document.getElementById('learningContent');
-                content.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Generating interactive quiz from SRT...</div>';
-                
-                try {
-                    const response = await fetch(`/api/learning/quiz/${encodeURIComponent(courseName)}/${videoId}`);
-                    const data = await response.json();
-                    
-                    if (data.success && data.quiz.length > 0) {
-                        // Use the existing interactive quiz system
-                        if (window.quizSystem) {
-                            content.innerHTML = '<div style="color: #34c759; text-align: center; padding: 20px;"><strong>✅ Interactive Quiz Ready!</strong><br><br><button onclick="window.quizSystem.startQuiz(\'srt-generated\', window.currentSRTQuiz)" style="padding: 12px 24px; background: #007aff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">🎯 Start Interactive Quiz</button></div>';
-                            window.currentSRTQuiz = data.quiz;
-                        } else {
-                            // Fallback to simple display
-                            let html = '<div style="color: #1d1d1f;"><strong>🧠 Quiz Questions:</strong><br><br>';
-                            data.quiz.forEach((q, i) => {
-                                html += `<div style="margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px;">`;
-                                html += `<div style="font-weight: 600; margin-bottom: 8px;">${i+1}. ${q.question}</div>`;
-                                q.options.forEach((option, j) => {
-                                    html += `<div style="margin: 4px 0; padding: 4px 8px; background: white; border-radius: 4px; cursor: pointer;" onclick="showAnswer(${i}, ${j}, ${q.correct})">${String.fromCharCode(65+j)}. ${option}</div>`;
-                                });
-                                html += `<div id="answer${i}" style="display: none; margin-top: 8px; padding: 8px; background: #e8f5e8; border-radius: 4px; font-size: 12px;"><strong>Answer:</strong> ${q.options[q.correct]}<br><strong>Explanation:</strong> ${q.explanation}</div>`;
-                                html += '</div>';
-                            });
-                            html += '</div>';
-                            content.innerHTML = html;
-                        }
-                    } else {
-                        content.innerHTML = '<div style="color: #ff3b30;">❌ Failed to generate quiz</div>';
-                    }
-                } catch (error) {
-                    content.innerHTML = '<div style="color: #ff3b30;">❌ Error loading quiz</div>';
-                }
-            };
-            
-            window.loadAITodos = async function() {
-                const container = document.getElementById('todoContainer');
-                container.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Generating todos from SRT...</div>';
-                
-                try {
-                    const response = await fetch(`/api/learning/todo/${encodeURIComponent(courseName)}/${videoId}`);
-                    const data = await response.json();
-                    
-                    if (data.success && data.todo.length > 0) {
-                        let html = '';
-                        data.todo.forEach((task, i) => {
-                            const priorityColor = task.priority === 'high' ? '#ff3b30' : task.priority === 'medium' ? '#ff9500' : '#34c759';
-                            html += `<div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 8px; background: rgba(255,255,255,0.5); border-radius: 12px; border: 1px solid #f2f2f7;">`;
-                            html += `<input type="checkbox" style="margin-top: 2px; accent-color: #007aff;">`;
-                            html += `<div style="flex: 1;">`;
-                            html += `<div style="font-size: 14px; font-weight: 500; color: #1d1d1f; margin-bottom: 4px;">${task.task}</div>`;
-                            html += `<div style="font-size: 11px; color: #86868b;">Priority: <span style="color: ${priorityColor}; font-weight: 600;">${task.priority}</span> • Time: ${task.estimated_time}</div>`;
-                            html += '</div></div>';
-                        });
-                        container.innerHTML = html;
-                        
-                        // Update progress
-                        const progressText = document.getElementById('todoProgress');
-                        const progressBar = document.getElementById('todoProgressBar');
-                        if (progressText) {
-                            progressText.textContent = `0/${data.todo.length} completed`;
-                        }
-                        if (progressBar) {
-                            progressBar.style.width = '0%';
-                        }
-                    } else {
-                        container.innerHTML = '<div style="color: #ff3b30; text-align: center; padding: 20px;">❌ Failed to generate todos</div>';
-                    }
-                } catch (error) {
-                    container.innerHTML = '<div style="color: #ff3b30; text-align: center; padding: 20px;">❌ Error loading todos</div>';
-                }
-            };
-            
-            window.showAnswer = function(questionIndex, selectedOption, correctOption) {
-                const answerDiv = document.getElementById(`answer${questionIndex}`);
-                if (answerDiv) {
-                    answerDiv.style.display = 'block';
-                    if (selectedOption === correctOption) {
-                        answerDiv.style.background = '#e8f5e8';
-                    } else {
-                        answerDiv.style.background = '#ffebee';
-                    }
-                }
-            };
 
-            // Update count and load todos on page load
-            updateVideoCount();
-            loadAITodos();
+                if (player) {
+                    if (key === 'f') {
+                        if (document.fullscreenElement) document.exitFullscreen();
+                        else player.requestFullscreen();
+                        showHint('FULLSCREEN MODE');
+                    }
+                    if (key === 'k' || key === ' ') {
+                        e.preventDefault();
+                        if (player.paused) player.play(); else player.pause();
+                        showHint(player.paused ? 'PAUSED' : 'PLAYING');
+                    }
+                }
+            });
+
+            // Tab Management
+            window.switchAtlasTab = function(tabId) {
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                document.getElementById(tabId)?.classList.remove('hidden');
+            };
         });
     </script>
 </body>

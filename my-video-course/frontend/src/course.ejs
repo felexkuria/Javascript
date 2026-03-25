@@ -3,690 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= courseName %> - Multitouch Academy</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Euclid Circular A', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #fbfbfd;
-            color: #1d1d1f;
-            line-height: 1.5;
-            font-weight: 400;
-            letter-spacing: -0.01em;
-        }
-        
-        .dark body {
-            background: #001E2B;
-            color: #E7EEEB;
-        }
-        
-        .container {
-            max-width: 1140px;
-            margin: 0 auto;
-            padding: 32px 24px;
-        }
-        
-        .course-header {
-            text-align: left;
-            margin-bottom: 24px;
-        }
-        
-        .course-title {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1d1d1f;
-            letter-spacing: -0.03em;
-            line-height: 1.1;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .dark .course-title {
-            color: #E7EEEB;
-        }
-        
-        .course-subtitle {
-            font-size: 19px;
-            color: #6e6e73;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-        
-        .course-actions {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 24px;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 980px;
-            font-size: 17px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            min-height: 44px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(to right, #00ED64, #00C152);
-            color: #001E2B;
-            font-weight: 700;
-        }
-        
-        .btn-primary:hover {
-            box-shadow: 0 0 20px rgba(0, 237, 100, 0.3);
-            transform: scale(1.02);
-        }
-        
-        .progress-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            border-radius: 12px;
-            padding: 16px 20px;
-            border: 0.5px solid rgba(0, 0, 0, 0.04);
-            margin-bottom: 32px;
-        }
-        
-        .dark .progress-card {
-            background: rgba(2, 52, 48, 0.8);
-            border: 0.5px solid rgba(0, 237, 100, 0.2);
-        }
-        
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        
-        .progress-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-        
-        .dark .progress-title {
-            color: #00ED64;
-        }
-        
-        .progress-stats {
-            font-size: 13px;
-            font-weight: 500;
-            color: #6e6e73;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: #f2f2f7;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        
-        .dark .progress-bar {
-            background: #2c2c2e;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #00ED64;
-            border-radius: 2px;
-            transition: width 0.4s ease;
-        }
-        
-        .section-title {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 32px;
-            color: #1d1d1f;
-            letter-spacing: -0.02em;
-        }
-        
-        .dark .section-title {
-            color: #f5f5f7;
-        }
-        
-        .chapter-section {
-            margin-bottom: 48px;
-        }
-        
-        .chapter-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #1d1d1f;
-            letter-spacing: -0.01em;
-        }
-        
-        .dark .chapter-title {
-            color: #f5f5f7;
-        }
-        
-        .videos-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        
-        .video-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px);
-            border-radius: 16px;
-            overflow: hidden;
-            border: 0.5px solid rgba(0, 0, 0, 0.04);
-            transition: all 0.2s ease;
-        }
-        
-        .dark .video-card {
-            background: rgba(28, 28, 30, 0.7);
-            border: 0.5px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .video-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(0, 237, 100, 0.3);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-        
-        .video-thumbnail {
-            position: relative;
-            width: 100%;
-            height: 160px;
-            background: linear-gradient(135deg, #001E2B 0%, #00684A 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-        
-        .video-thumbnail img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .video-placeholder {
-            text-align: center;
-        }
-        
-        .video-placeholder-icon {
-            font-size: 32px;
-            margin-bottom: 4px;
-            opacity: 0.9;
-        }
-        
-        .video-placeholder-text {
-            font-size: 13px;
-            font-weight: 500;
-            opacity: 0.8;
-        }
-        
-        .video-badges {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            right: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        
-        .lesson-badge {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-        
-        .watched-badge {
-            background: #00ED64;
-            color: #001E2B;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-        
-        .video-content {
-            padding: 20px;
-        }
-        
-        .video-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #1d1d1f;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            line-height: 1.3;
-        }
-        
-        .dark .video-title {
-            color: #f5f5f7;
-        }
-        
-        .btn-watch {
-            width: 100%;
-            background: linear-gradient(to right, #00ED64, #00C152);
-            color: #001E2B;
-            font-weight: 700;
-            justify-content: center;
-        }
-        
-        .btn-watch:hover {
-            box-shadow: 0 0 15px rgba(0, 237, 100, 0.2);
-        }
-        
-        .btn-locked {
-            width: 100%;
-            background: #8e8e93;
-            color: white;
-            justify-content: center;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        
-        .btn-locked:hover {
-            transform: none;
-        }
-        
-        .btn-pdf {
-            width: 100%;
-            background: #ff3b30;
-            color: white;
-            justify-content: center;
-        }
-        
-        .btn-pdf:hover {
-            background: #d70015;
-        }
-        
-        .error-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 0.5px solid rgba(0, 0, 0, 0.04);
-        }
-        
-        .dark .error-state {
-            background: rgba(28, 28, 30, 0.8);
-            border: 0.5px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .error-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.8;
-        }
-        
-        .error-title {
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1d1d1f;
-        }
-        
-        .dark .error-title {
-            color: #00ED64;
-        }
-        
-        .error-message {
-            color: #6e6e73;
-            font-size: 15px;
-        }
-        
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            border: none;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            border: 0.5px solid rgba(0, 0, 0, 0.04);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.15s ease;
-            z-index: 1000;
-        }
-        
-        .dark .theme-toggle {
-            background: rgba(28, 28, 30, 0.8);
-            border: 0.5px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .theme-toggle:hover {
-            transform: scale(1.05);
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 40px 20px;
+    <title><%= (typeof course !== 'undefined' && course.title) ? course.title : 'Course Details' %> - Multitouch Academy</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'mongo-green': '#00ED64',
+              'mongo-slate': '#001E2B',
+              'mongo-forest': '#00684A'
             }
-            
-            .course-title {
-                font-size: 36px;
-            }
-            
-            .videos-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-            
-            .video-content {
-                padding: 16px;
-            }
+          }
         }
-    </style>
+      }
+    </script>
 </head>
-<body class="dark:bg-[#001E2B]">
-    <%- include('partials/header', { title: courseName + ' - Multitouch Academy', activePage: 'courses' }) %>
-    
-    <div class="container" style="margin-top: 40px;">
-        <div class="course-header animate-slide-up" style="text-align: left; max-width: 800px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
-                <span class="badge badge-green">Premium Course</span>
-                <span class="badge badge-blue">Verified Content</span>
-            </div>
-            <h1 class="course-title dark:text-[#E7EEEB]" style="font-size: 48px; letter-spacing: -0.03em;"><%= courseName %></h1>
-            <p class="course-subtitle dark:text-[#9FB1AD]" style="font-size: 20px; line-height: 1.4; margin-top: 16px;">Master state-of-the-art engineering patterns with the Multitouch Academy curriculum.</p>
-            
-            <div style="display: flex; gap: 24px; margin: 32px 0; font-size: 14px; opacity: 0.8;" class="dark:text-[#9FB1AD]">
-                <span class="flex items-center gap-2">👤 <strong>Engineer Felex</strong></span>
-                <span class="flex items-center gap-2">📅 Updated March 2026</span>
-                <span class="flex items-center gap-2">🌐 Global Access</span>
-            </div>
+<body class="bg-[#F9FBFA] dark:bg-[#001E2B] font-sans antialiased transition-colors duration-200" style="background: var(--color-bg);">
+    <!-- Dark Mode Toggle -->
+    <button id="themeToggle" class="fixed top-6 right-6 p-3 glass rounded-xl shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 z-[100]">
+        <span id="themeIcon" class="text-xl">🌙</span>
+    </button>
 
-            <div class="course-actions" style="justify-content: flex-start;">
-                <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
-                <a href="/course/<%= courseName %>/video/start" class="btn btn-primary" style="padding: 14px 40px; font-size: 16px; border-radius: 12px; background: #00684A; color: #fff;">
-                    Continue Learning
+    <!-- Header -->
+    <header class="bg-white/70 dark:bg-[#001E2B]/70 border-b border-gray-200 dark:border-[#133A41] transition-all duration-300 sticky top-0 z-50 backdrop-blur-2xl">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/dashboard" class="flex items-center space-x-4 group">
+                    <div class="w-10 h-10 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-xl flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform">
+                        <span class="text-[#001E2B] text-xl font-black">M</span>
+                    </div>
+                    <span class="text-xl font-black tracking-tighter dark:text-white">Multitouch <span class="font-light text-gray-400 dark:text-[#9FB1AD]">Academy</span></span>
                 </a>
-                <% } else { %>
-                <button id="enrollBtn" class="btn btn-primary" style="padding: 14px 40px; font-size: 16px; border-radius: 12px;">
-                    Enroll Now
-                </button>
-                <button id="wishlistBtn" class="btn btn-secondary" style="padding: 14px 24px; font-size: 16px; border-radius: 12px; margin-left: 12px;">
-                    Add to Wishlist
-                </button>
-                <% } %>
+                <button id="logoutBtn" class="text-xs font-black tracking-widest text-gray-500 hover:text-red-500 transition-colors uppercase">Logout</button>
             </div>
         </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 350px; gap: 48px; margin-top: 64px;">
-            <div class="course-main-info">
-                <div class="progress-card" style="margin-bottom: 32px;">
-                    <div class="progress-header">
-                        <span class="progress-title">Continue Learning</span>
-                        <span class="progress-stats"><%= watchedVideos %>/<%= totalVideos %> completed</span>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        <!-- Hero Section -->
+        <div class="relative mb-16 rounded-[2.5rem] overflow-hidden shadow-2xl bg-[#001E2B]">
+            <div class="absolute inset-0 bg-[var(--atlas-gradient)] opacity-90"></div>
+            <div class="relative p-12 md:p-20 flex flex-col md:flex-row items-center gap-12">
+                <div class="flex-1">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 glass rounded-full mb-8">
+                        <span class="w-2 h-2 rounded-full bg-[#00ED64] animate-pulse"></span>
+                        <span class="text-[10px] font-bold text-[#00ED64] uppercase tracking-widest">Premium Learning Track</span>
                     </div>
-                    <div class="progress-bar">
-                        <div id="courseProgressFill" class="progress-fill" style="width: 0%;"></div>
+                    <h1 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-none">
+                        <%= (typeof course !== 'undefined' && course.title) ? course.title : (typeof courseName !== 'undefined' ? courseName : 'Untitled Course') %>
+                    </h1>
+                    <p class="text-xl text-gray-400 dark:text-[#9FB1AD] max-w-2xl font-medium leading-relaxed mb-10">
+                        <%= (typeof course !== 'undefined' && course.description) ? course.description : 'Master high-performance engineering with our professional-grade curriculum components.' %>
+                    </p>
+                    <div class="flex items-center gap-6 text-sm font-bold text-white/60">
+                        <div class="flex items-center gap-2">
+                             <span class="opacity-50">Instructor:</span>
+                             <span class="text-[#00ED64]"><%= (typeof course !== 'undefined' && course.instructor) ? course.instructor : 'Engineer Felex' %></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                             <span class="opacity-50">Modules:</span>
+                             <span class="text-white"><%= totalVideos %> Specialized Units</span>
+                        </div>
                     </div>
                 </div>
-                <h2 class="section-title">Course Content</h2>
-                <div class="curriculum-accordion bg-white dark:bg-[#001E2B] dark:border-[#133A41]" style="border: 1px solid rgba(0,237,100,0.2); border-radius: 12px; overflow: hidden;">
-                    <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
-                        <% sections.forEach((section, sIndex) => { %>
-                            <div class="curriculum-section" style="border-bottom: 1px solid var(--color-border);">
-                                <div class="section-header bg-white dark:bg-[#0D2137] dark:hover:bg-[#00ED64]/10 transition-colors <%= hasActive ? 'bg-[rgba(0,237,100,0.15)]' : '' %>" 
-                                     onclick="toggleSection(this)"
-                                     style="padding: 12px 20px; font-size: 14px;">
-                                    <div class="flex items-center gap-3">
-                                        <span class="toggle-icon transition-transform duration-200 dark:text-[#00ED64]">▶</span>
-                                        <strong class="dark:text-[#F9FBFA] text-[#1d1d1f]">Section <%= sIndex + 1 %>: <%= section.title %></strong>
-                                    </div>
-                                    <span class="text-xs opacity-60 dark:text-[#9FB1AD] text-[#6e6e73]"><%= section.lectures.length %> Lectures</span>
-                                </div>
-                                <div class="section-lectures" style="display:none;">
-                                    <% section.lectures.forEach((lecture, lIndex) => { %>
-                                        <div class="lecture-row hover:bg-gray-50 dark:hover:bg-[#023430]/30 transition-colors border-b border-gray-50 dark:border-[#133A41] last:border-0" 
-                                             style="padding: 10px 20px 10px 48px; display: flex; justify-content: space-between; align-items: center;">
-                                            <div style="display: flex; align-items: center; gap: 12px;">
-                                                <span class="text-base opacity-70 dark:text-[#00ED64]"><%= lecture.type === 'pdf' ? '📄' : '📺' %></span>
-                                                <a href="/course/<%= encodeURIComponent(courseName) %>/video/<%= lecture.contentId %>" 
-                                                   class="lecture-link text-xs font-semibold hover:text-[#00ED64] dark:text-[#F9FBFA]" 
-                                                   data-content-id="<%= lecture.contentId %>" 
-                                                   style="text-decoration: none;">
-                                                    <%= lIndex + 1 %>. <%= lecture.title %>
-                                                </a>
-                                            </div>
-                                            <span class="text-[10px] opacity-50 font-mono dark:text-[#9FB1AD]"><%= lecture.duration || '0:00' %></span>
-                                        </div>
-                                    <% }); %>
+                
+                <!-- CTA Sidebar in Hero -->
+                <div class="w-full md:w-80">
+                    <div class="glass p-8 rounded-[2rem] border-white/10 shadow-3xl text-center">
+                        <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
+                            <div class="mb-6">
+                                <div class="text-[10px] font-black text-[#00ED64] uppercase tracking-widest mb-2">Learning Velocity</div>
+                                <div class="text-4xl font-black text-white mb-4"><%- (totalVideos > 0 ? Math.round((watchedVideos/totalVideos)*100) : 0) %>%</div>
+                                <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                    <div class="h-full bg-[#00ED64] shadow-[0_0_10px_#00ED64]" style="width: <%- (totalVideos > 0 ? (watchedVideos/totalVideos)*100 : 0) %>%"></div>
                                 </div>
                             </div>
-                        <% }); %>
-                    <% } else { %>
-                        <div style="padding: 24px; text-align: center; color: #6e6e73;">
-                            <p>Curriculum is being updated. Individual videos are available below.</p>
-                        </div>
-                    <% } %>
+                            <button onclick="window.location.href='/video/<%= typeof courseName !== 'undefined' ? encodeURIComponent(courseName) : (typeof course !== 'undefined' ? encodeURIComponent(course.name) : '') %>'" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
+                                RESUME MODULE
+                            </button>
+                        <% } else { %>
+                            <div class="text-4xl font-black text-white mb-2">$99.00</div>
+                            <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-8">One-time Professional Access</div>
+                            <button id="enrollBtn" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20 mb-4">
+                                PROVISION NOW
+                            </button>
+                            <button id="wishlistBtn" class="w-full py-4 glass text-white font-black rounded-2xl hover:bg-white/10 transition-all border-white/5">
+                                ADD TO STACK
+                            </button>
+                        <% } %>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <aside class="course-sidebar">
-                <div id="sidebar-enrollment-card" class="card bg-white dark:bg-[#023430] dark:border-[#133A41]" style="position: sticky; top: 24px; border: 1px solid rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden; <%= (typeof isEnrolled !== 'undefined' && isEnrolled) ? 'display:none;' : '' %>">
-                    <div style="width: 100%; aspect-ratio: 16/9; background: #001E2B; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 48px;">
-                        📽️
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-12">
+                <section>
+                    <div class="flex items-center gap-4 mb-10">
+                        <div class="h-10 w-1.5 bg-[#00ED64] rounded-full"></div>
+                        <h2 class="text-3xl font-black tracking-tight dark:text-white">Curriculum <span class="premium-title">Blueprint</span></h2>
                     </div>
-                    <div class="card-body" style="padding: 24px;">
-                        <div style="font-size: 32px; font-weight: 800; margin-bottom: 16px;" class="dark:text-[#E7EEEB]">Free <span style="font-size: 16px; text-decoration: line-through; opacity: 0.5;">$94.99</span></div>
-                        <button id="enrollBtnSidebar" onclick="enroll()" class="btn btn-primary" style="margin-bottom: 12px; height: 48px; width: 100%; justify-content: center;">Enroll Now</button>
-                        <button id="wishlistBtnSidebar" onclick="addToWishlist()" class="btn border border-gray-200 dark:border-[#133A41] dark:text-[#E7EEEB]" style="height: 48px; width: 100%; justify-content: center;">Add to Wishlist</button>
-                        
-                        <div style="margin-top: 24px;">
-                            <h4 style="font-size: 14px; margin-bottom: 12px;" class="dark:text-[#E7EEEB]">This course includes:</h4>
-                            <ul style="list-style: none; padding: 0; font-size: 13px; display: flex; flex-direction: column; gap: 8px; opacity: 0.8;" class="dark:text-[#9FB1AD]">
-                                <li>🎥 <%= (typeof totalVideos !== 'undefined' ? totalVideos : 0) %> On-demand videos</li>
-                                <li>📄 Downloadable resources</li>
-                                <li>📱 Access on mobile and TV</li>
-                                <li>🏆 Certificate of completion</li>
-                            </ul>
+
+                    <div class="space-y-4">
+                        <% if (typeof course !== 'undefined' && course.sections && course.sections.length > 0) { %>
+                            <% course.sections.forEach((section, sIndex) => { %>
+                                <div class="atlas-card glass group">
+                                    <div class="p-6 flex items-center justify-between cursor-pointer" onclick="toggleSection('<%= sIndex %>')">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center font-bold text-[#00ED64]">
+                                                0<%= sIndex + 1 %>
+                                            </div>
+                                            <div>
+                                                <h3 class="font-bold text-gray-900 dark:text-white"><%= section.title %></h3>
+                                                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest"><%= section.lectures ? section.lectures.length : 0 %> Components</p>
+                                            </div>
+                                        </div>
+                                        <div id="icon-<%= sIndex %>" class="text-gray-400 transition-transform duration-300">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                    </div>
+                                    <div id="section-<%= sIndex %>" class="hidden border-t border-white/5">
+                                        <% if (section.lectures && section.lectures.length > 0) { %>
+                                            <% section.lectures.forEach((lecture, lIndex) => { %>
+                                                <div class="p-6 hover:bg-white/5 transition-colors flex items-center gap-4 group/item">
+                                                    <div class="text-xs font-black text-gray-500 opacity-30">0<%= sIndex + 1 %>.<%= lIndex + 1 %></div>
+                                                    <div class="w-2 h-2 rounded-full bg-[#00ED64]/30 group-hover/item:bg-[#00ED64]"></div>
+                                                    <div class="flex-1">
+                                                        <span class="text-sm font-bold text-gray-700 dark:text-[#9FB1AD] group-hover/item:text-white transition-colors">
+                                                            <%= lecture.title %>
+                                                        </span>
+                                                        <% if (lecture.type === 'pdf') { %>
+                                                            <span class="ml-2 py-0.5 px-1.5 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest rounded border border-blue-500/20">DOCUMENT</span>
+                                                        <% } %>
+                                                    </div>
+                                                    <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
+                                                        <a href="/video/<%= typeof courseName !== 'undefined' ? encodeURIComponent(courseName) : encodeURIComponent(course.name) %>?lecture=<%= lecture.id %>" class="text-[10px] font-black text-[#00ED64] opacity-0 group-hover/item:opacity-100 uppercase tracking-widest">Load Asset</a>
+                                                    <% } %>
+                                                </div>
+                                            <% }) %>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else if (typeof course !== 'undefined' && course.videos) { %>
+                            <!-- Flat version if no sections (legacy support) -->
+                            <% (course.videos || []).forEach((video, vIndex) => { %>
+                                <div class="atlas-card glass p-6 flex items-center justify-between group">
+                                    <div class="flex items-center gap-6">
+                                        <div class="text-xs font-black text-gray-500 opacity-30">0<%= vIndex + 1 %></div>
+                                        <h3 class="font-bold text-gray-900 dark:text-white"><%= video.title %></h3>
+                                    </div>
+                                    <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
+                                        <a href="/video/<%= typeof courseName !== 'undefined' ? encodeURIComponent(courseName) : encodeURIComponent(course.name) %>?v=<%= vIndex %>" class="text-[10px] font-black text-[#00ED64] opacity-0 group-hover:opacity-100 transition-all uppercase tracking-widest">Execute</a>
+                                    <% } %>
+                                </div>
+                            <% }) %>
+                        <% } %>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-8">
+                <div class="atlas-card glass p-8">
+                    <h4 class="text-xs font-black tracking-widest uppercase mb-6 text-[#9FB1AD]">Learning Stack</h4>
+                    <ul class="space-y-6">
+                        <li class="flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-lg bg-[#00ED64]/10 flex items-center justify-center text-[#00ED64]">
+                                <i class="fas fa-video text-sm"></i>
+                            </div>
+                            <span class="text-sm font-bold text-gray-700 dark:text-white"><%= totalVideos %> Specialized Modules</span>
+                        </li>
+                        <li class="flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                <i class="fas fa-infinity text-sm"></i>
+                            </div>
+                            <span class="text-sm font-bold text-gray-700 dark:text-white">LIFETIME INFRASTRUCTURE ACCESS</span>
+                        </li>
+                        <li class="flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400">
+                                <i class="fas fa-certificate text-sm"></i>
+                            </div>
+                            <span class="text-sm font-bold text-gray-700 dark:text-white">VERIFIED SECTOR CERTIFICATE</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="atlas-card glass p-8 bg-gradient-to-br from-[#00ED64]/5 to-transparent">
+                    <h4 class="text-xs font-black tracking-widest uppercase mb-4 text-[#00ED64]">Course Governance</h4>
+                    <p class="text-xs text-gray-500 dark:text-[#9FB1AD] font-medium leading-relaxed mb-6">
+                        This content is provisioned by the Multitouch Academy Engineering Council. All labs are periodically synced with industry benchmarks.
+                    </p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-[#001E2B] border border-white/10 flex items-center justify-center text-[#00ED64] font-black text-xs">M</div>
+                        <div>
+                             <p class="text-[10px] font-black dark:text-white">COUNCIL VERIFIED</p>
+                             <p class="text-[8px] font-bold text-[#9FB1AD] uppercase">ID: MTA-992-PX</p>
                         </div>
                     </div>
                 </div>
-            </aside>
+            </div>
         </div>
-    </div>
-    <!-- Data for JS -->
-    <input type="hidden" id="course_id_data" value="<%= typeof courseId !== 'undefined' ? courseId : '' %>">
-    <input type="hidden" id="watched_percent_data" value="<%= typeof watchedPercent !== 'undefined' ? watchedPercent : 0 %>">
-    <input type="hidden" id="is_admin_data" value="<%= typeof isAdmin !== 'undefined' ? isAdmin : 'false' %>">
-    <input type="hidden" id="course_name_data" value="<%= courseName %>">
+    </main>
 
     <script>
-        // Theme management
-        function initTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.classList.toggle('dark', theme === 'dark');
-        }
-        
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const newTheme = isDark ? 'light' : 'dark';
-            document.documentElement.classList.toggle('dark', newTheme === 'dark');
-            localStorage.setItem('theme', newTheme);
-        }
-        
-        initTheme();
-
-        let isEnrolled = false;
-        let isAdmin = false;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedUser = localStorage.getItem('user');
-            if (savedUser) {
-                const user = JSON.parse(savedUser);
-                isAdmin = user.email === 'engineerfelex@gmail.com' || user.isAdmin;
-            }
-            
-            checkEnrollmentStatus();
-            
-            // Open first section by default
-            const firstSection = document.querySelector('.section-header');
-            if (firstSection) toggleSection(firstSection);
-        });
-
-        function toggleSection(header) {
-            const lectures = header.nextElementSibling;
-            if (!lectures) return;
-            const icon = header.querySelector('.toggle-icon');
-            const isHidden = lectures.style.display === 'none' || lectures.style.display === '';
-            
-            if (isHidden) {
-                lectures.style.display = 'block';
-                if (icon) icon.style.transform = 'rotate(90deg)';
-                const isDark = document.documentElement.classList.contains('dark');
-            header.style.background = isDark ? 'rgba(0,237,100,0.15)' : 'rgba(0,237,100,0.05)';
-            } else {
-                lectures.style.display = 'none';
-                if (icon) icon.style.transform = 'rotate(0deg)';
-                header.style.background = '';
-            }
-        }
-
-        async function checkEnrollmentStatus() {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const courseName = '<%= courseName %>';
-                
-                const response = await fetch(`/api/enrollments/check/${encodeURIComponent(courseName)}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                const data = await response.json();
-                if (data.success && data.data.enrolled) {
-                    isEnrolled = true;
-                    // Hide the entire enrollment sidebar card
-                    const card = document.getElementById('sidebar-enrollment-card');
-                    if (card) card.style.display = 'none';
-                    // Also hide the inline CTA buttons
-                    if (document.getElementById('enrollBtn')) document.getElementById('enrollBtn').style.display = 'none';
-                    if (document.getElementById('wishlistBtn')) document.getElementById('wishlistBtn').style.display = 'none';
-                }
-                
-                applyDynamicStates();
-            } catch (error) {
-                console.error('Error checking enrollment:', error);
-                applyDynamicStates();
-            }
-        }
-
-        function applyDynamicStates() {
-            const watchedPercent = parseInt(document.getElementById('watched_percent_data').value || '0');
-            const progressFill = document.getElementById('courseProgressFill');
-            if (progressFill) progressFill.style.width = watchedPercent + '%';
-
-            const lectureLinks = document.querySelectorAll('.lecture-link');
-            lectureLinks.forEach(link => {
-                if (!isAdmin && !isEnrolled) {
-                    link.style.pointerEvents = 'none';
-                    link.style.opacity = '0.6';
-                    link.parentElement.style.cursor = 'not-allowed';
-                } else {
-                    link.style.pointerEvents = 'auto';
-                    link.style.opacity = '1';
-                    link.style.color = '#00ED64';
-                    link.parentElement.style.cursor = 'pointer';
-                }
-            });
+        function toggleSection(id) {
+            const section = document.getElementById(`section-${id}`);
+            const icon = document.getElementById(`icon-${id}`);
+            if (section) section.classList.toggle('hidden');
+            if (icon) icon.classList.toggle('rotate-180');
         }
 
         async function enroll() {
-            if (isEnrolled) return;
-            const token = localStorage.getItem('accessToken');
-            const courseIdVal = document.getElementById('course_id_data').value;
-            const courseNameVal = document.getElementById('course_name_data').value;
-            const targetId = courseIdVal || courseNameVal;
-            
-            if (!token) {
-                window.location.href = '/login';
-                return;
-            }
-
+            const courseName = '<%= typeof courseName !== 'undefined' ? courseName : (typeof course !== 'undefined' ? course.name : '') %>';
+            const btn = document.getElementById('enrollBtn');
             try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) { window.location.href = '/login'; return; }
+                
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'PROVISIONING...';
+                }
+                
                 const response = await fetch('/api/enrollments', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ courseId: targetId })
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ courseName })
                 });
-                
                 const data = await response.json();
                 if (data.success) {
-                    isEnrolled = true;
-                    location.reload();
+                    window.location.reload();
                 } else {
-                    alert('Failed to enroll: ' + (data.error || 'Check authentication'));
+                    alert('Provisioning failed: ' + (data.error || 'Unknown error'));
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = 'PROVISION NOW';
+                    }
                 }
-            } catch (error) {
-                alert('Error enrolling: ' + error.message);
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred during provisioning.');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'PROVISION NOW';
+                }
             }
         }
 
         async function addToWishlist() {
-            const token = localStorage.getItem('accessToken');
-            const courseIdVal = document.getElementById('course_id_data').value;
-            const courseNameVal = document.getElementById('course_name_data').value;
-            const targetId = courseIdVal || courseNameVal;
-            
-            if (!token) {
-                alert('Please login to add to wishlist');
-                return;
-            }
-
+            const courseName = '<%= typeof courseName !== 'undefined' ? courseName : (typeof course !== 'undefined' ? course.name : '') %>';
+            const btn = document.getElementById('wishlistBtn');
             try {
-                const response = await fetch('/api/wishlist/add', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ courseId: targetId })
-                });
+                const token = localStorage.getItem('accessToken');
+                if (!token) { window.location.href = '/login'; return; }
                 
+                const response = await fetch('/api/wishlist', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ courseName })
+                });
                 const data = await response.json();
                 if (data.success) {
-                    const btn = document.getElementById('wishlistBtn');
                     if (btn) {
-                        btn.textContent = 'Wishlisted ✓';
-                        btn.style.color = '#00ED64';
-                        btn.disabled = true;
+                        btn.textContent = 'ADDED TO STACK ✓';
+                        btn.classList.add('text-[#00ED64]');
+                        setTimeout(() => {
+                            btn.textContent = 'ADD TO STACK';
+                            btn.classList.remove('text-[#00ED64]');
+                        }, 3000);
+                    } else {
+                        alert('Added to stack!');
                     }
                 } else {
-                    alert('Wishlist failed: ' + (data.error || 'Already in wishlist?'));
+                    alert('Stack update failed: ' + (data.error || 'Already in stack?'));
                 }
             } catch (error) {
-                alert('Wishlist error: ' + error.message);
+                alert('Stack update error: ' + error.message);
             }
         }
 
-        if (document.getElementById('enrollBtn')) document.getElementById('enrollBtn').addEventListener('click', enroll);
-        if (document.getElementById('enrollBtnSidebar')) document.getElementById('enrollBtnSidebar').addEventListener('click', enroll);
-        if (document.getElementById('wishlistBtn')) document.getElementById('wishlistBtn').addEventListener('click', addToWishlist);
+        function initTheme() {
+            const theme = localStorage.getItem("theme") || "light";
+            document.documentElement.classList.toggle("dark", theme === "dark");
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) themeIcon.textContent = theme === "dark" ? '☀️' : '🌙';
+        }
+        
+        function toggleTheme() {
+            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
+            document.documentElement.classList.toggle("dark", newTheme === "dark");
+            localStorage.setItem("theme", newTheme);
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) themeIcon.textContent = newTheme === "dark" ? '☀️' : '🌙';
+        }
+
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) themeToggle.onclick = toggleTheme;
+        
+        const enrollBtn = document.getElementById('enrollBtn');
+        if (enrollBtn) enrollBtn.onclick = enroll;
+        
+        const wishlistBtn = document.getElementById('wishlistBtn');
+        if (wishlistBtn) wishlistBtn.onclick = addToWishlist;
+        
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.onclick = () => {
+            localStorage.clear();
+            window.location.href = '/login';
+        };
+
+        initTheme();
     </script>
 </body>
 </html>

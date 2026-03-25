@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Engineering Console - Multitouch Academy</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -34,25 +36,25 @@
         <div class="max-w-7xl mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-6">
-                    <div class="w-12 h-12 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-2xl flex items-center justify-center shadow-xl shadow-[#00ED64]/10 border border-white/20 rotate-3 hover:rotate-0 transition-transform duration-500">
+                    <div class="w-12 h-12 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-2xl flex items-center justify-center shadow-xl border border-white/20 hover:rotate-6 transition-transform">
                         <span class="text-[#001E2B] text-2xl font-black">M</span>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tighter">Multitouch <span class="font-light text-gray-400 dark:text-[#9FB1AD]">Academy</span></h1>
+                        <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tighter leading-tight">Multitouch <span class="font-light text-gray-400 dark:text-[#9FB1AD]">Academy</span></h1>
                         <div class="flex items-center gap-2">
                              <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
-                             <p id="userRole" class="text-[10px] font-black uppercase tracking-[0.2em] text-[#00ED64]">Premium Member</p>
+                             <p id="userRole" class="text-[10px] font-black uppercase tracking-[0.2em] text-[#00ED64]">Premium Engineer</p>
                         </div>
                     </div>
                 </div>
                 
                 <div class="flex items-center space-x-6">
                     <div class="hidden md:flex flex-col items-end">
-                        <span id="userName" class="text-gray-900 dark:text-white font-bold text-sm tracking-tight"></span>
-                        <span class="text-[10px] text-gray-400 dark:text-[#9FB1AD] font-medium uppercase tracking-widest">Active Session</span>
+                        <span id="userName" class="text-gray-900 dark:text-white font-bold text-sm tracking-tight opacity-90"></span>
+                        <span class="text-[10px] text-gray-400 dark:text-[#9FB1AD] font-medium uppercase tracking-widest">Console Session Active</span>
                     </div>
-                    <button id="logoutBtn" class="px-6 py-2.5 bg-gray-900 dark:bg-[#023430] text-white dark:text-[#00ED64] border border-transparent dark:border-[#00ED64]/30 rounded-xl hover:bg-black dark:hover:bg-[#00ED64] dark:hover:text-black transition-all text-xs font-black shadow-lg shadow-black/5 hover:shadow-[#00ED64]/10">
-                        LOGOUT
+                    <button id="logoutBtn" class="px-6 py-2.5 bg-gray-900 dark:bg-[#023430] text-white dark:text-[#00ED64] border border-transparent dark:border-[#00ED64]/30 rounded-xl hover:bg-black dark:hover:bg-[#00ED64] dark:hover:text-black transition-all text-[10px] font-black tracking-widest shadow-lg shadow-black/5">
+                        TERMINATE
                     </button>
                 </div>
             </div>
@@ -62,26 +64,27 @@
     <div class="max-w-7xl mx-auto px-6 pt-12 pb-24">
         <!-- Hero Section -->
         <div class="relative mb-16 rounded-[2.5rem] overflow-hidden group shadow-2xl">
-            <div class="absolute inset-0 bg-[var(--atlas-gradient)] opacity-95"></div>
+            <div class="absolute inset-0 bg-[#001E2B] opacity-95"></div>
+            <div class="absolute inset-0 bg-[var(--atlas-gradient)] opacity-90"></div>
             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none"></div>
             <div class="relative p-12 md:p-20 flex flex-col md:flex-row items-center justify-between gap-12">
                 <div class="flex-1 text-center md:text-left">
                     <div class="inline-flex items-center gap-2 px-4 py-2 glass rounded-full mb-8">
-                        <span class="flex h-2 w-2 rounded-full bg-[#00ED64]"></span>
-                        <span class="text-[10px] font-bold text-[#00ED64] uppercase tracking-widest">Platform Status: Optimal</span>
+                        <span class="flex h-2 w-2 rounded-full bg-[#00ED64] animate-pulse"></span>
+                        <span class="text-[10px] font-bold text-[#00ED64] uppercase tracking-widest">Infrastructure Status: Optimal</span>
                     </div>
                     <h2 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-none">
-                        Master the <span class="premium-title">Cloud</span>
+                        Scale Your <span class="premium-title">Architectural Mind</span>
                     </h2>
                     <p class="text-lg text-gray-400 dark:text-[#9FB1AD] max-w-xl font-medium leading-relaxed mb-10">
-                        Experience engineering education redefined. Access premium labs, real-time analytics, and expert-led curriculum.
+                        Access high-fidelity engineering labs, real-time curriculum sync, and elite governance-driven blueprints.
                     </p>
                     <div class="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                        <button class="px-8 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
-                            RESUME LEARNING
+                        <button onclick="switchTab('inprogress')" class="px-8 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
+                            RESUME DEPLOYMENT
                         </button>
-                        <button class="px-8 py-4 glass text-white font-black rounded-2xl hover:bg-white/10 transition-all">
-                            VIEW ROADMAP
+                        <button onclick="switchTab('all')" class="px-8 py-4 glass text-white font-black rounded-2xl hover:bg-white/10 transition-all border-white/5">
+                            GLOBAL REGISTRY
                         </button>
                     </div>
                 </div>
@@ -89,8 +92,8 @@
                     <div class="absolute inset-0 bg-[#00ED64] blur-[100px] opacity-20 animate-pulse"></div>
                     <div class="relative glass rounded-[3rem] p-8 aspect-square flex items-center justify-center border-white/10 shadow-3xl">
                         <div class="text-center">
-                             <div id="progressPercentHero" class="text-6xl font-black text-[#00ED64] mb-2">0%</div>
-                             <div class="text-[10px] font-black text-white uppercase tracking-[0.3em] opacity-60">Avg. Completion</div>
+                             <div id="progressPercent" class="text-6xl font-black text-[#00ED64] mb-2">0%</div>
+                             <div class="text-[10px] font-black text-white uppercase tracking-[0.3em] opacity-60">Avg. Capacity</div>
                         </div>
                     </div>
                 </div>
@@ -99,35 +102,35 @@
 
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16 px-4">
-            <div class="glass p-8 rounded-3xl border-white/5 hover:border-[#00ED64]/30 transition-all group">
-                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Total Courses</p>
+            <div class="atlas-card glass p-8 group">
+                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Deployed Repos</p>
                 <div class="flex items-end justify-between">
                     <h3 id="enrolledCount" class="text-4xl font-black text-gray-900 dark:text-white">0</h3>
-                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500">📚</span>
+                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500 opacity-30 group-hover:opacity-100">📚</span>
                 </div>
             </div>
             
-            <div class="glass p-8 rounded-3xl border-white/5 hover:border-[#00ED64]/30 transition-all group">
-                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Completed</p>
+            <div class="atlas-card glass p-8 group">
+                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Verified Skills</p>
                 <div class="flex items-end justify-between">
                     <h3 id="completedCount" class="text-4xl font-black text-gray-900 dark:text-white">0</h3>
-                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500">🏆</span>
+                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500 opacity-30 group-hover:opacity-100">🏆</span>
                 </div>
             </div>
             
-            <div class="glass p-8 rounded-3xl border-white/5 hover:border-[#00ED64]/30 transition-all group">
-                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Certificates</p>
+            <div class="atlas-card glass p-8 group">
+                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Certifications</p>
                 <div class="flex items-end justify-between">
                     <h3 class="text-4xl font-black text-gray-900 dark:text-white">0</h3>
-                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500">📜</span>
+                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500 opacity-30 group-hover:opacity-100">📜</span>
                 </div>
             </div>
 
-            <div class="glass p-8 rounded-3xl border-white/5 hover:border-[#00ED64]/30 transition-all group">
-                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Global Rank</p>
+            <div class="atlas-card glass p-8 group">
+                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Global Index</p>
                 <div class="flex items-end justify-between">
                     <h3 class="text-4xl font-black text-gray-900 dark:text-white">#12</h3>
-                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500">🌍</span>
+                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500 opacity-30 group-hover:opacity-100">🌍</span>
                 </div>
             </div>
         </div>
@@ -135,38 +138,74 @@
         <!-- Toolbar -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 px-4">
             <div class="flex bg-gray-100 dark:bg-[#023430]/50 p-1.5 rounded-2xl border border-gray-200 dark:border-[#133A41] backdrop-blur-md">
-                <button onclick="switchTab('all')" id="tab-all" class="tab-btn active px-8 py-3 rounded-xl text-xs font-black tracking-widest transition-all">
-                    ALL REPOSITORIES
+                <button onclick="switchTab('all')" id="tab-all" class="tab-btn active px-8 py-3 rounded-xl text-[10px] font-black tracking-widest transition-all">
+                    MASTER
                 </button>
-                <button onclick="switchTab('inprogress')" id="tab-inprogress" class="tab-btn px-8 py-3 rounded-xl text-xs font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
-                    IN PROGRESS
+                <button onclick="switchTab('inprogress')" id="tab-inprogress" class="tab-btn px-8 py-3 rounded-xl text-[10px] font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
+                    STAGING
                 </button>
-                <button onclick="switchTab('completed')" id="tab-completed" class="tab-btn px-8 py-3 rounded-xl text-xs font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
-                    COMPLETED
+                <button onclick="switchTab('completed')" id="tab-completed" class="tab-btn px-8 py-3 rounded-xl text-[10px] font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
+                    PRODUCTION
                 </button>
-                <button onclick="switchTab('wishlist')" id="tab-wishlist" class="tab-btn px-8 py-3 rounded-xl text-xs font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
-                    WISHLIST
+                <button onclick="switchTab('wishlist')" id="tab-wishlist" class="tab-btn px-8 py-3 rounded-xl text-[10px] font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
+                    BACKLOG
                 </button>
             </div>
 
             <div class="flex items-center gap-4">
                 <div class="relative">
-                    <input type="text" placeholder="Filter courses..." class="pl-12 pr-6 py-4 glass rounded-2xl text-sm font-bold w-full md:w-64 focus:ring-2 focus:ring-[#00ED64] outline-none transition-all">
+                    <input type="text" placeholder="Filter stack..." class="pl-12 pr-6 py-4 glass rounded-2xl text-sm font-bold w-full md:w-64 focus:ring-2 focus:ring-[#00ED64] outline-none transition-all">
                     <span class="absolute left-5 top-1/2 -translate-y-1/2 opacity-30">🔍</span>
                 </div>
             </div>
         </div>
 
-        <!-- Wishlist Section (Integrated into tabs now) -->
-        <div id="wishlistSection" class="hidden mb-12 tab-content">
-            <div id="wishlistGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="hidden mb-16 px-4 animate-slide-up">
+            <div class="bg-gradient-to-r from-[#00ED64]/10 to-transparent border border-[#00ED64]/20 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-[#00ED64] blur-[120px] opacity-5 -translate-y-1/2 translate-x-1/2"></div>
+                
+                <div class="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="px-2 py-1 bg-[#00ED64] text-[#001E2B] text-[9px] font-black uppercase tracking-widest rounded shadow-lg shadow-[#00ED64]/20">Governance</span>
+                            <span class="text-xs font-bold text-gray-500 dark:text-[#9FB1AD]">SUPER ADMIN CONSOLE</span>
+                        </div>
+                        <h2 class="text-3xl font-black tracking-tight mb-4 dark:text-white leading-tight">Platform <span class="premium-title">Orchestration</span></h2>
+                        <p class="text-gray-500 dark:text-[#9FB1AD] font-medium leading-relaxed max-w-xl">
+                            Elite access enabled. Monitor teacher provisioning, manage curriculum lifecycle, and oversee global academy scale operations.
+                        </p>
+                    </div>
+                    
+                    <div class="flex flex-col gap-4 w-full md:w-auto">
+                        <a href="/admin/teacher-requests" class="flex items-center justify-between gap-12 px-8 py-5 glass border-[#00ED64]/30 hover:bg-[#00ED64]/10 transition-all rounded-2xl group/link">
+                            <div>
+                                <h4 class="font-black text-sm tracking-tight dark:text-white">Teacher Requests</h4>
+                                <p class="text-[10px] font-bold text-gray-400 dark:text-[#9FB1AD] uppercase tracking-widest">Awaiting Provisioning</p>
+                            </div>
+                            <span id="requestBadge" class="hidden px-2 py-1 bg-[#00ED64] text-[#001E2B] text-[10px] font-black rounded-md animate-bounce">0</span>
+                        </a>
+                        
+                        <form id="grantTeacherForm" class="flex gap-2">
+                            <input type="email" id="teacherEmail" placeholder="Engineer Email" class="flex-1 px-6 py-4 glass border-white/10 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[#00ED64] outline-none">
+                            <button type="submit" class="px-6 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 active:scale-95">
+                                GRANT
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content Containers -->
+        <div id="wishlistSection" class="hidden mb-12 tab-content px-4 animate-slide-up">
+            <div id="wishlistGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Wishlist items will be loaded here -->
             </div>
         </div>
 
-        <!-- Courses Grid -->
-        <div id="coursesSection" class="tab-content">
-            <div id="courseGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="coursesSection" class="tab-content px-4 animate-slide-up">
+            <div id="courseGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Courses will be loaded here -->
             </div>
         </div>
@@ -176,6 +215,7 @@
         let allCourses = [];
         let myEnrollments = [];
         let wishlistItems = [];
+        let currentUser = null;
         
         document.addEventListener('DOMContentLoaded', () => {
             loadUser();
@@ -191,14 +231,6 @@
             switchTab('all');
         }
         
-        // Include auth persistence if not already present
-        if (!window.authPersistenceLoaded) {
-            const script = document.createElement('script');
-            script.src = '/js/auth-persistence.js';
-            document.head.appendChild(script);
-            window.authPersistenceLoaded = true;
-        }
-        
         function loadUser() {
             const userStr = localStorage.getItem('user');
             const token = localStorage.getItem('accessToken');
@@ -211,10 +243,11 @@
             currentUser = JSON.parse(userStr);
             document.getElementById('userName').textContent = currentUser.name || currentUser.email;
             
-            // Show admin panel for super admin
             if (currentUser.email === 'engineerfelex@gmail.com') {
-                document.getElementById('adminPanel').classList.remove('hidden');
-                document.getElementById('userRole').textContent = 'Super Admin';
+                const adminPanel = document.getElementById('adminPanel');
+                if (adminPanel) adminPanel.classList.remove('hidden');
+                const userRole = document.getElementById('userRole');
+                if (userRole) userRole.textContent = 'Super Admin';
                 loadPendingRequests();
             }
         }
@@ -225,7 +258,6 @@
                 const response = await fetch('/api/courses', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
                 if (response.ok) {
                     const data = await response.json();
                     allCourses = data.data || [];
@@ -241,7 +273,6 @@
                 const response = await fetch('/api/wishlist', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
                 if (response.ok) {
                     const data = await response.json();
                     wishlistItems = data.wishlist || [];
@@ -252,77 +283,26 @@
             }
         }
 
-        function renderWishlist(courses) {
-            const grid = document.getElementById('wishlistGrid');
-            grid.innerHTML = courses.map(course => `
-                <div class="atlas-card glass p-8 relative flex flex-col h-full group">
-                    <button onclick="removeFromWishlist('${course.name || course.title}')" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 transition-colors z-10">
-                        <i class="fas fa-heart-circle-minus text-xl"></i>
-                    </button>
-                    <div class="w-16 h-16 bg-gradient-to-br from-[#00ED64]/20 to-[#00684A]/20 rounded-2xl flex items-center justify-center mb-8 shadow-inner border border-[#00ED64]/10 group-hover:scale-110 transition-transform duration-500">
-                        <span class="text-[#00ED64] text-3xl font-black">${(course.title || course.name || 'C').charAt(0)}</span>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="px-2 py-0.5 bg-[#00ED64]/10 text-[#00ED64] text-[9px] font-black uppercase tracking-widest rounded-md border border-[#00ED64]/20">Wishlist</span>
-                        </div>
-                        <h3 class="font-black text-gray-900 dark:text-white mb-3 text-xl tracking-tight leading-tight">${course.title || course.name || 'Untitled Course'}</h3>
-                        <p class="text-gray-500 dark:text-[#9FB1AD] text-sm mb-8 line-clamp-3 font-medium leading-relaxed">${course.description || 'On your wishlist.'}</p>
-                    </div>
-                    <div class="pt-6 border-t border-gray-100 dark:border-[#133A41] mt-auto">
-                        <button onclick="enrollInCourse('${course._id || course.name}')" 
-                                class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0">
-                            PROVISION COURSE
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function removeFromWishlist(courseId) {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('/api/wishlist/remove', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ courseId })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    loadWishlist();
-                }
-            } catch (error) {
-                console.error('Error removing from wishlist:', error);
-            }
-        }
-
-        function updateStats(courses) {
-            // Update enrolled count from actual enrollments
-            loadEnrollmentStats();
-        }
-        
         async function loadEnrollmentStats() {
             try {
                 const token = localStorage.getItem('accessToken');
                 const response = await fetch('/api/enrollments/my-enrollments', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
                 if (response.ok) {
                     const data = await response.json();
                     myEnrollments = data.data || [];
                     
-                    document.getElementById('enrolledCount').textContent = myEnrollments.length;
+                    const enrolledCount = document.getElementById('enrolledCount');
+                    if (enrolledCount) enrolledCount.textContent = myEnrollments.length;
                     
                     const completed = myEnrollments.filter(e => e.status === 'completed').length;
-                    document.getElementById('completedCount').textContent = completed;
+                    const completedCount = document.getElementById('completedCount');
+                    if (completedCount) completedCount.textContent = completed;
                     
                     const progress = myEnrollments.length > 0 ? Math.round((completed / myEnrollments.length) * 100) : 0;
-                    document.getElementById('progressPercent').textContent = progress + '%';
+                    const progressPercent = document.getElementById('progressPercent');
+                    if (progressPercent) progressPercent.textContent = progress + '%';
                 }
             } catch (error) {
                 console.error('Error loading enrollment stats:', error);
@@ -330,17 +310,17 @@
         }
 
         function switchTab(tab) {
-            // Update Tab UI
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active', 'bg-[#00ED64]', 'text-[#001E2B]', 'font-black', 'shadow-lg', 'shadow-[#00ED64]/10');
                 btn.classList.add('text-gray-500', 'dark:text-[#9FB1AD]', 'hover:text-gray-900', 'dark:hover:text-white');
             });
             
             const activeBtn = document.getElementById(`tab-${tab}`);
-            activeBtn.classList.add('active', 'bg-[#00ED64]', 'text-[#001E2B]', 'font-black', 'shadow-lg', 'shadow-[#00ED64]/10');
-            activeBtn.classList.remove('text-gray-500', 'dark:text-[#9FB1AD]', 'hover:text-gray-900', 'dark:hover:text-white');
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'bg-[#00ED64]', 'text-[#001E2B]', 'font-black', 'shadow-lg', 'shadow-[#00ED64]/10');
+                activeBtn.classList.remove('text-gray-500', 'dark:text-[#9FB1AD]', 'hover:text-gray-900', 'dark:hover:text-white');
+            }
 
-            // Show/Hide Sections
             const wishlistSection = document.getElementById('wishlistSection');
             const coursesSection = document.getElementById('coursesSection');
             
@@ -356,7 +336,6 @@
 
         function filterCourses(tab) {
             let filtered = [];
-            
             if (tab === 'all') {
                 filtered = allCourses;
             } else if (tab === 'inprogress') {
@@ -366,55 +345,97 @@
                 const completedNames = myEnrollments.filter(e => e.status === 'completed').map(e => e.courseName);
                 filtered = allCourses.filter(c => completedNames.includes(c.name || c.courseName));
             }
-            
             renderCourses(filtered);
         }
-        
-        function renderCourses(courses) {
-            const grid = document.getElementById('courseGrid');
-            
+
+        function renderWishlist(courses) {
+            const grid = document.getElementById('wishlistGrid');
             if (courses.length === 0) {
-                grid.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">No courses available</p>';
+                grid.innerHTML = '<div class="col-span-full py-20 text-center glass rounded-3xl border-dashed border-white/10"><p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Your backlog is currently empty</p></div>';
                 return;
             }
-            
             grid.innerHTML = courses.map(course => `
+                <div class="atlas-card glass p-8 relative flex flex-col h-full group">
+                    <button onclick="removeFromWishlist('${course.name || course.title}')" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 transition-colors z-10 p-2 glass rounded-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#00ED64]/20 to-[#00684A]/20 rounded-2xl flex items-center justify-center mb-8 shadow-inner border border-[#00ED64]/10 group-hover:scale-110 transition-transform duration-500">
+                        <span class="text-[#00ED64] text-3xl font-black">${(course.title || course.name || 'C').charAt(0)}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="px-2 py-0.5 bg-[#00ED64]/10 text-[#00ED64] text-[9px] font-black uppercase tracking-widest rounded-md border border-[#00ED64]/20">BACKLOG</span>
+                        </div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-3 text-xl tracking-tight leading-tight">${course.title || course.name || 'Untitled Course'}</h3>
+                        <p class="text-gray-500 dark:text-[#9FB1AD] text-sm mb-8 line-clamp-3 font-medium leading-relaxed">${course.description || 'Premium blueprint awaiting deployment.'}</p>
+                    </div>
+                    <div class="pt-6 border-t border-gray-100 dark:border-[#133A41] mt-auto">
+                        <button onclick="enrollInCourse('${course.name || course._id}')" 
+                                class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0">
+                            PROVISION STACK
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCourses(courses) {
+            const grid = document.getElementById('courseGrid');
+            if (courses.length === 0) {
+                grid.innerHTML = '<div class="col-span-full py-20 text-center glass rounded-3xl border-dashed border-white/10"><p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]">No definitions found in this branch</p></div>';
+                return;
+            }
+            grid.innerHTML = courses.map(course => {
+                const enrolled = myEnrollments.find(e => e.courseName === (course.name || course.title));
+                const progress = enrolled ? enrolled.progress || 0 : 0;
+                const isCompleted = enrolled && enrolled.status === 'completed';
+                return `
                 <div class="atlas-card glass p-8 relative flex flex-col h-full group">
                     <div class="w-16 h-16 bg-gradient-to-br from-[#00ED64]/20 to-[#00684A]/20 rounded-2xl flex items-center justify-center mb-8 shadow-inner border border-[#00ED64]/10 group-hover:scale-110 transition-transform duration-500">
                         <span class="text-[#00ED64] text-3xl font-black">${(course.title || course.name || 'C').charAt(0)}</span>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-3">
-                            <span class="px-2 py-0.5 bg-[#00ED64]/10 text-[#00ED64] text-[9px] font-black uppercase tracking-widest rounded-md border border-[#00ED64]/20">v1.2.0</span>
-                            <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-md border border-blue-500/20">Stable</span>
+                            <span class="px-2 py-0.5 bg-[#00ED64]/10 text-[#00ED64] text-[9px] font-black uppercase tracking-widest rounded-md border border-[#00ED64]/20">v2.4.0</span>
+                            <span class="px-2 py-0.5 ${isCompleted ? 'bg-[#00ED64]/20 text-[#00ED64]' : 'bg-blue-500/10 text-blue-400'} text-[9px] font-black uppercase tracking-widest rounded-md border ${isCompleted ? 'border-[#00ED64]/30' : 'border-blue-500/20'}">${isCompleted ? 'VERIFIED' : 'STABLE'}</span>
                         </div>
                         <h3 class="font-black text-gray-900 dark:text-white mb-3 text-xl tracking-tight leading-tight">${course.title || course.name || 'Untitled Course'}</h3>
-                        <p class="text-gray-500 dark:text-[#9FB1AD] text-sm mb-8 line-clamp-3 font-medium leading-relaxed">${course.description || 'Deploy next-generation infrastructure with this expert-led course.'}</p>
+                        <p class="text-gray-500 dark:text-[#9FB1AD] text-sm mb-8 line-clamp-2 font-medium leading-relaxed">${course.description || 'Deploy next-generation infrastructure with this expert-led course.'}</p>
+                        ${enrolled ? `
+                        <div class="mb-8">
+                            <div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+                                <span class="text-gray-400">Sync Status</span>
+                                <span class="text-[#00ED64]">${progress}%</span>
+                            </div>
+                            <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full bg-[#00ED64] shadow-[0_0_8px_#00ED64]" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                        ` : ''}
                     </div>
                     <div class="pt-6 border-t border-gray-100 dark:border-[#133A41] mt-auto flex flex-col gap-3">
-                        <button onclick="enrollInCourse('${course._id || course.name}')" 
-                                class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl transition-all enroll-btn hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0" 
-                                data-course-id="${course._id || course.name}">
-                            DEPLOY COURSE
-                        </button>
-                        <a href="/course/${encodeURIComponent(course.name || course.title || 'unknown')}" class="block w-full px-6 py-4 glass text-gray-700 dark:text-white text-center font-black rounded-2xl hover:bg-white/10 transition-all text-xs tracking-widest">
-                            ACCESS SYLLABUS
+                        ${enrolled ? `
+                            <a href="/video/${encodeURIComponent(course.name || course.title || 'unknown')}" class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] text-center font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0">
+                                ${isCompleted ? 'REVIEW MODULE' : 'RESUME DEPLOYMENT'}
+                            </a>
+                        ` : `
+                            <button onclick="enrollInCourse('${course.name || course._id}')" 
+                                    class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0" 
+                                    data-course-id="${course.name || course._id}">
+                                PROVISION CLUSTER
+                            </button>
+                        `}
+                        <a href="/course/${encodeURIComponent(course.name || course.title || 'unknown')}" class="block w-full px-6 py-4 glass text-gray-700 dark:text-white text-center font-black rounded-2xl hover:bg-white/10 transition-all text-[10px] tracking-[0.2em]">
+                            ACCESS BLUEPRINT
                         </a>
                     </div>
-                </div>
-            `).join('');
-            
-            checkEnrollmentStatus();
+                </div>`;
+            }).join('');
         }
         
         async function enrollInCourse(courseId) {
             try {
                 const token = localStorage.getItem('accessToken');
-                const button = document.querySelector(`[data-course-id="${courseId}"]`);
-                
-                button.disabled = true;
-                button.textContent = 'Enrolling...';
-                
                 const response = await fetch('/api/enrollments', {
                     method: 'POST',
                     headers: {
@@ -423,127 +444,107 @@
                     },
                     body: JSON.stringify({ courseId })
                 });
-                
                 const data = await response.json();
-                
                 if (data.success) {
-                    button.textContent = 'Enrolled ✓';
-                    button.classList.remove('bg-apple-blue', 'hover:bg-blue-600');
-                    button.classList.add('bg-green-500');
+                    initDashboard();
                 } else {
-                    throw new Error(data.error);
+                    alert('Provisioning failed: ' + data.error);
                 }
             } catch (error) {
-                alert('Failed to enroll: ' + error.message);
-                button.disabled = false;
-                button.textContent = 'Enroll';
+                alert('Connection error: ' + error.message);
             }
         }
         
-        async function checkEnrollmentStatus() {
-            const token = localStorage.getItem('accessToken');
-            const buttons = document.querySelectorAll('.enroll-btn');
-            
-            for (const button of buttons) {
-                const courseId = button.dataset.courseId;
-                try {
-                    const response = await fetch(`/api/enrollments/check/${courseId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success && data.data.enrolled) {
-                        button.style.display = 'none';
-                    }
-                } catch (error) {
-                    console.error('Error checking enrollment:', error);
-                }
-            }
-        }
-        
-        // Grant teacher access
-        document.getElementById('grantTeacherForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('teacherEmail').value;
-            const token = localStorage.getItem('accessToken');
-            
+        async function removeFromWishlist(courseId) {
             try {
-                const response = await fetch('/api/admin/grant-teacher', {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/wishlist/remove', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email })
+                    body: JSON.stringify({ courseId })
                 });
-                
                 const data = await response.json();
-                
                 if (data.success) {
-                    alert('Teacher access granted ✅');
-                    document.getElementById('teacherEmail').value = '';
-                } else {
-                    alert(data.error);
+                    loadWishlist();
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
+                console.error('Error removing from stash:', error);
             }
-        });
+        }
         
-        // Load pending teacher requests count
         async function loadPendingRequests() {
             try {
                 const token = localStorage.getItem('accessToken');
                 const response = await fetch('/api/admin/teacher-requests', {
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'x-admin-key': 'admin123'
-                    }
+                    headers: { 'Authorization': `Bearer ${token}`, 'x-admin-key': 'admin123' }
                 });
-                
                 if (response.ok) {
                     const data = await response.json();
                     const pendingCount = data.data.filter(r => r.status === 'pending').length;
                     const badge = document.getElementById('requestBadge');
-                    if (pendingCount > 0) {
+                    if (badge && pendingCount > 0) {
                         badge.textContent = pendingCount;
                         badge.classList.remove('hidden');
                     }
                 }
             } catch (error) {
-                console.error('Error loading pending requests:', error);
+                console.error('Error loading orchestration queue:', error);
             }
         }
-        
-        // Dark theme toggle
+
         function initTheme() {
             const theme = localStorage.getItem("theme") || "light";
             document.documentElement.classList.toggle("dark", theme === "dark");
-            document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = theme === "dark" ? '☀️' : '🌙';
         }
         
         function toggleTheme() {
             const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
             document.documentElement.classList.toggle("dark", newTheme === "dark");
             localStorage.setItem("theme", newTheme);
-            document.getElementById('themeIcon').textContent = newTheme === "dark" ? '☀️' : '🌙';
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = newTheme === "dark" ? '☀️' : '🌙';
         }
+
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
         
-        initTheme();
-        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-        
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            try {
-                await fetch('/api/auth/logout', { method: 'POST' });
-            } catch (error) {
-                console.error('Logout failed:', error);
-            } finally {
-                localStorage.clear();
-                window.location.href = '/login';
-            }
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = '/login';
         });
+
+        const grantTeacherForm = document.getElementById('grantTeacherForm');
+        if (grantTeacherForm) {
+            grantTeacherForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('teacherEmail').value;
+                const token = localStorage.getItem('accessToken');
+                try {
+                    const response = await fetch('/api/admin/grant-teacher', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Account provisioned as Engineer ✅');
+                        document.getElementById('teacherEmail').value = '';
+                    } else {
+                        alert(data.error);
+                    }
+                } catch (error) {
+                    alert('Orchestration error: ' + error.message);
+                }
+            });
+        }
+
+        initTheme();
     </script>
 </body>
 </html>

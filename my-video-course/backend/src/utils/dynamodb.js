@@ -103,14 +103,24 @@ class DynamoDBService {
         BillingMode: 'PAY_PER_REQUEST'
       });
 
-      // Create Courses table
+      // Create Courses table with GSI for Instructor lookup
       await this.createTable({
         TableName: `video-course-app-courses-${environment}`,
         KeySchema: [
           { AttributeName: 'courseName', KeyType: 'HASH' }
         ],
         AttributeDefinitions: [
-          { AttributeName: 'courseName', AttributeType: 'S' }
+          { AttributeName: 'courseName', AttributeType: 'S' },
+          { AttributeName: 'instructorEmail', AttributeType: 'S' }
+        ],
+        GlobalSecondaryIndexes: [
+          {
+            IndexName: 'InstructorIndex',
+            KeySchema: [
+              { AttributeName: 'instructorEmail', KeyType: 'HASH' }
+            ],
+            Projection: { ProjectionType: 'ALL' }
+          }
         ],
         BillingMode: 'PAY_PER_REQUEST'
       });
@@ -129,7 +139,7 @@ class DynamoDBService {
         BillingMode: 'PAY_PER_REQUEST'
       });
 
-      // Create Enrollments table
+      // Create Enrollments table with GSI for Student/Course lookups
       await this.createTable({
         TableName: `video-course-app-enrollments-${environment}`,
         KeySchema: [
@@ -138,7 +148,17 @@ class DynamoDBService {
         ],
         AttributeDefinitions: [
           { AttributeName: 'userId', AttributeType: 'S' },
-          { AttributeName: 'courseName', AttributeType: 'S' }
+          { AttributeName: 'courseName', AttributeType: 'S' },
+          { AttributeName: 'instructorEmail', AttributeType: 'S' }
+        ],
+        GlobalSecondaryIndexes: [
+          {
+            IndexName: 'InstructorEnrollmentIndex',
+            KeySchema: [
+              { AttributeName: 'instructorEmail', KeyType: 'HASH' }
+            ],
+            Projection: { ProjectionType: 'ALL' }
+          }
         ],
         BillingMode: 'PAY_PER_REQUEST'
       });
@@ -336,6 +356,21 @@ class DynamoDBService {
     if (!this.isConnected) return [];
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
     try {
+      // Use GSI for efficient querying
+      const params = {
+        TableName: `video-course-app-courses-${environment}`,
+        IndexName: 'InstructorIndex',
+        KeyConditionExpression: 'instructorEmail = :email',
+        ExpressionAttributeValues: {
+          ':email': email
+        }
+      };
+      
+      const result = await this.docClient.send(new QueryCommand(params));
+      return result.Items || [];
+    } catch (error) {
+      console.warn('GSI Query failed (may not be indexed yet), falling back to filter:', error.message);
+      // Fallback to Filter if GSI is still creating
       const params = {
         TableName: `video-course-app-courses-${environment}`,
         FilterExpression: 'instructorEmail = :email OR createdBy = :email',
@@ -345,9 +380,6 @@ class DynamoDBService {
       };
       const result = await this.docClient.send(new ScanCommand(params));
       return result.Items || [];
-    } catch (error) {
-      console.error('Error getting instructor courses:', error);
-      return [];
     }
   }
 

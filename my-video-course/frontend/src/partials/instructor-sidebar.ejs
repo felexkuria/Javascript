@@ -1,36 +1,49 @@
 <!-- instructor-sidebar.ejs -->
-<aside class="instructor-sidebar">
-    <div class="sidebar-brand">
-        <span class="nav-leaf">🍃</span> Multitouch <span>Academy</span>
-    </div>
-    <nav class="sidebar-nav">
-        <a href="/teacher/dashboard" class="nav-item <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">
-            <i class="fas fa-chart-line"></i> Dashboard
-        </a>
-        <a href="/admin/course-manager" class="nav-item <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'active' : '' %>">
-            <i class="fas fa-layer-group"></i> Course Manager
-        </a>
-        <a href="/teacher/upload-center" class="nav-item <%= typeof activePage !== 'undefined' && activePage === 'upload' ? 'active' : '' %>">
-            <i class="fas fa-cloud-upload-alt"></i> Upload Center
-        </a>
-        
-        <div style="margin: var(--space-6) 0 var(--space-2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.4; font-weight: 700;">System Management</div>
-        <a href="/admin/settings" class="nav-item <%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'active' : '' %>">
-            <i class="fas fa-cog"></i> Settings
-        </a>
-    </nav>
-    <div style="margin-top: auto; padding-top: var(--space-6); border-top: 1px solid rgba(255,255,255,0.08);">
-        <a href="/logout" class="nav-item" style="color: #ff3b30; margin-top: 8px;">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </a>
+<aside class="w-72 bg-[#001E2B] border-r border-white/5 flex flex-col min-h-screen sticky top-0 self-start">
+    <div class="px-8 py-10">
+        <div class="flex items-center space-x-4 group cursor-pointer">
+            <div class="w-10 h-10 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-xl flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform">
+                <span class="text-[#001E2B] text-xl font-black">M</span>
+            </div>
+            <span class="text-xl font-black tracking-tighter text-white">Multitouch <span class="font-light text-gray-400">Academy</span></span>
+        </div>
     </div>
 
-    <!-- Theme Toggle -->
-    <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid rgba(120, 120, 120, 0.1);">
-        <button id="sidebarThemeToggle" class="nav-item" style="width: 100%; background: transparent; border: none; cursor: pointer; color: inherit;">
-            <i class="fas id-icon fa-moon" id="sidebarThemeIcon"></i> 
+    <nav class="flex-1 px-4 space-y-2">
+        <div class="px-4 py-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">Command Center</div>
+        
+        <a href="/teacher/dashboard" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20' : 'text-[#9FB1AD] hover:bg-white/5 hover:text-white border border-transparent' %>">
+            <i class="fas fa-chart-line w-5"></i> Dashboard
+        </a>
+        
+        <a href="/admin/course-manager" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20' : 'text-[#9FB1AD] hover:bg-white/5 hover:text-white border border-transparent' %>">
+            <i class="fas fa-layer-group w-5"></i> Course Manager
+        </a>
+        
+        <a href="/teacher/upload-center" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all <%= typeof activePage !== 'undefined' && activePage === 'upload' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20' : 'text-[#9FB1AD] hover:bg-white/5 hover:text-white border border-transparent' %>">
+            <i class="fas fa-cloud-upload-alt w-5"></i> Upload Center
+        </a>
+        
+        <div class="px-4 py-2 pt-8 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">Systems</div>
+        
+        <a href="/admin/settings" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all <%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20' : 'text-[#9FB1AD] hover:bg-white/5 hover:text-white border border-transparent' %>">
+            <i class="fas fa-cog w-5"></i> Governance
+        </a>
+        
+        <a href="/dashboard" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold text-[#9FB1AD] hover:bg-white/5 hover:text-white transition-all border border-transparent">
+            <i class="fas fa-desktop w-5"></i> Student View
+        </a>
+    </nav>
+
+    <div class="p-6 border-t border-white/5 mt-auto">
+        <button id="sidebarThemeToggle" class="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold text-[#9FB1AD] hover:bg-white/5 hover:text-white transition-all mb-4">
+            <i class="fas fa-moon w-5" id="sidebarThemeIcon"></i>
             <span id="sidebarThemeText">Dark Mode</span>
         </button>
+        
+        <a href="/logout" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 transition-all">
+            <i class="fas fa-power-off w-5"></i> Terminal Exit
+        </a>
     </div>
 
     <script>
@@ -43,10 +56,10 @@
                 const isDark = theme === 'dark';
                 document.documentElement.classList.toggle('dark', isDark);
                 if (icon) {
-                    icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                    icon.className = isDark ? 'fas fa-sun w-5' : 'fas fa-moon w-5';
                 }
                 if (text) {
-                    text.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+                    text.textContent = isDark ? 'Solar Mode' : 'Lunar Mode';
                 }
             }
 
