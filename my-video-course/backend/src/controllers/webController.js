@@ -166,6 +166,7 @@ class WebController {
         }
         sectionMap[sName].lectures.push({
           ...v,
+          contentId: v.videoId || v._id,
           id: v.videoId || v._id,
           title: v.title
         });
