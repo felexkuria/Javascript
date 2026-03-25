@@ -288,14 +288,18 @@ class DynamoDBService {
         const videos = await this.getVideosForCourse(courseItem.courseName, userId);
         
         courses.push({
+          ...courseItem,
           _id: courseItem.courseName, // For frontend compatibility
           name: courseItem.courseName,
           title: courseItem.title,
           description: courseItem.description,
-          totalVideos: courseItem.totalVideos,
-          videos: videos || [],
+          totalVideos: courseItem.totalVideos || (videos ? videos.length : 0),
+          videos: (courseItem.videos && courseItem.videos.length > 0) ? courseItem.videos : (videos || []),
+          sections: courseItem.sections || [],
           offlineMode: false
         });
+
+
       }
       
       // Also get courses from videos table (for backward compatibility)
