@@ -75,9 +75,14 @@ app.get('/api/next-video', sessionAuth, (req, res) => videoController.getNextVid
 // ── ADMIN & TEACHER ROUTES ─────────────────────────────────────────────
 app.get('/admin/super', sessionAuth, (req, res) => adminController.renderSuperDashboard(req, res));
 app.get('/admin/course-manager', sessionAuth, (req, res) => adminController.renderCourseManager(req, res));
+app.get('/admin/teacher-requests', sessionAuth, (req, res) => adminController.renderTeacherRequests(req, res));
 app.post('/api/admin/users/:id/deactivate', sessionAuth, (req, res) => adminController.deactivateUser(req, res));
 app.post('/api/admin/users/:id/reactivate', sessionAuth, (req, res) => adminController.reactivateUser(req, res));
 app.delete('/api/admin/courses/:id', sessionAuth, (req, res) => adminController.deleteCourse(req, res));
+
+// ── USER PROFILE & CERTIFICATE ROUTES ──────────────────────────────────
+app.get('/profile', sessionAuth, (req, res) => webController.renderProfile(req, res));
+app.get('/certificates', sessionAuth, (req, res) => webController.renderCertificates(req, res));
 
 // ── MODULARIZED ROUTES ───────────────────────────────────────────────
 app.use('/api/auth', require('./routes/api/auth'));
