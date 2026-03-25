@@ -457,7 +457,7 @@
                     if (progressContainer) progressContainer.style.display = 'none';
 
                     // Find the item being updated
-                    const lectureItem = document.querySelector(`[data-lecture-id="${progressId}"]`);
+                    const lectureItem = document.querySelector(`[data-lecture-id="${CSS.escape(progressId)}"]`);
                     if (lectureItem) {
                         // Update Video Upload Status
                         const uploadBtn = lectureItem.querySelector('.btn-upload');
@@ -466,12 +466,10 @@
                             statusPill.className = 'status-pill status-published';
                             statusPill.style.padding = '2px 8px';
                             statusPill.textContent = 'Uploaded';
-                            uploadBtn.replaceWith(statusPill);
                         }
                     } else {
                         // This might be a new resource upload to a section
-                        // In this case progressId was the sectionId
-                        const sectionCard = document.querySelector(`[data-section-id="${progressId}"]`);
+                        const sectionCard = document.querySelector(`[data-section-id="${CSS.escape(progressId)}"]`);
                         if (sectionCard) {
                             const lectList = sectionCard.querySelector('.lecture-list');
                             const addBtn = lectList.querySelector('.btn-add'); // Find the first add button to insert before
