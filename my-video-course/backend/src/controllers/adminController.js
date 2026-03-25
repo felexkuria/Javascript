@@ -115,6 +115,18 @@ class AdminController {
       res.render('admin-course-manager', { courses: [] });
     }
   }
+
+  async renderTeacherRequests(req, res) {
+    if (req.user?.email !== ADMIN_EMAIL) return res.redirect('/dashboard');
+    try {
+      // Fetch teacher requests from DynamoDB (if available) or render empty
+      const requests = []; // TODO: Implement dynamodb.getTeacherRequests() if needed
+      res.render('admin-teacher-requests', { requests: requests || [], user: req.user });
+    } catch (error) {
+      console.error('Error loading teacher requests:', error);
+      res.render('admin-teacher-requests', { requests: [], user: req.user });
+    }
+  }
 }
 
 module.exports = new AdminController();
