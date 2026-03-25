@@ -4,10 +4,12 @@ const sessionAuth = require('../middleware/sessionAuth');
 
 const teacherAuth = (req, res, next) => {
   const user = req.user || req.session?.user;
-  const userRole = user?.role;
+  const roles = user?.roles || [];
+  const isAdmin = user?.isAdmin || roles.includes('admin') || user?.email === 'engineerfelex@gmail.com';
+  const isTeacher = user?.isTeacher || roles.includes('teacher');
   
-  if (userRole !== 'teacher' && userRole !== 'admin') {
-    console.log(`🚫 Access Denied for role: ${userRole}`);
+  if (!isAdmin && !isTeacher) {
+    console.log(`🚫 Access Denied for roles: ${roles.join(', ') || 'none'}`);
     return res.redirect('/dashboard');
   }
   next();
