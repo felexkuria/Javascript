@@ -766,18 +766,55 @@ class DynamoDBService {
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
     try {
+      // 1. Save to Flat Videos Table
       const params = {
         TableName: `video-course-app-videos-${environment}`,
         Item: {
           courseName: courseName,
-          videoId: Date.now().toString(),
+          videoId: videoData.videoId || Date.now().toString(),
           ...videoData,
-          createdAt: new Date().toISOString(),
+          createdAt: videoData.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
       };
-
       await this.docClient.send(new PutCommand(params));
+
+      // 2. If it has a sectionId, also update the Courses table's nested sections array
+      if (videoData.sectionId || videoData.section) {
+        const courseParams = {
+          TableName: `video-course-app-courses-${environment}`,
+          Key: { courseName: courseName }
+        };
+        const courseResult = await this.docClient.send(new GetCommand(courseParams));
+        
+        if (courseResult.Item) {
+          const course = courseResult.Item;
+          course.sections = course.sections || [];
+          
+          // Find section by ID or Title
+          const section = course.sections.find(s => s._id === videoData.sectionId || s.title === videoData.section);
+          
+          if (section) {
+            section.lectures = section.lectures || [];
+            // Remove duplicates and add
+            section.lectures = section.lectures.filter(l => l._id !== videoData.videoId && l.title !== videoData.title);
+            section.lectures.push({
+              _id: videoData.videoId || params.Item.videoId,
+              title: videoData.title,
+              type: videoData.type || 'video',
+              url: videoData.url || '',
+              s3Key: videoData.s3Key || '',
+              createdAt: new Date().toISOString()
+            });
+
+            await this.docClient.send(new PutCommand({
+              TableName: `video-course-app-courses-${environment}`,
+              Item: course
+            }));
+          }
+        }
+      }
+
       return true;
     } catch (error) {
       console.error('Error adding video to DynamoDB:', error);

@@ -125,6 +125,7 @@ class UploadController {
       const courseName = courseId || 'general';
       const videoData = {
         _id: videoIdStr,
+        videoId: videoIdStr,
         title: title || file.originalname,
         description: description || '',
         url: videoUrl,
@@ -132,6 +133,7 @@ class UploadController {
         s3Key: s3Key,
         type: type,
         section: sectionName,
+        sectionId: sectionId, // CRITICAL: Pass sectionId for nesting
         duration: 0,
         watched: false,
         createdAt: new Date().toISOString()
