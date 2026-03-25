@@ -1,6 +1,7 @@
 const dynamodb = require('../utils/dynamodb');
 const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 const courseService = require('../services/courseService');
+const dynamoVideoService = require('../services/dynamoVideoService');
 
 const ADMIN_EMAIL = 'engineerfelex@gmail.com';
 

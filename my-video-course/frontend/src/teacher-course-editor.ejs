@@ -8,65 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
-        .instructor-layout {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            min-height: 100vh;
-            background: var(--color-bg);
-            font-family: 'Euclid Circular A', 'Inter', system-ui, sans-serif;
-        }
-
-        .instructor-sidebar {
-            background: var(--mdb-midnight);
-            color: #fff;
-            padding: var(--space-6);
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-4);
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            border-right: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .sidebar-brand {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--mdb-green);
-            margin-bottom: var(--space-8);
-            letter-spacing: -0.02em;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .nav-item {
-            padding: var(--space-3) var(--space-4);
-            border-radius: var(--radius-md);
-            color: rgba(255,255,255,0.7);
-            text-decoration: none;
-            font-weight: 500;
-            transition: all var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-        }
-
-        .nav-item.active {
-            color: var(--mdb-green);
-            background: rgba(0, 237, 100, 0.08);
-        }
-
-        .instructor-main {
-            padding: var(--space-8);
-            background: var(--color-bg);
-            overflow-y: auto;
-        }
+        /* Using global instructor-layout styles from main.css */
 
         /* ── Curriculum Builder Styles ────────────────────────── */
         .curriculum-container {
@@ -280,11 +222,7 @@
         const courseId = '<%= encodeURIComponent(course._id) %>';
 
         // Theme management
-        function initTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.classList.toggle('dark', theme === 'dark');
-        }
-        initTheme();
+        // initTheme is now handled within instructor-sidebar.ejs partial
 
         // ── Navigation & Meta ──────────────────────────────────
         async function publishCourse() {
