@@ -7,64 +7,7 @@
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .instructor-layout {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            min-height: 100vh;
-            background: var(--color-bg);
-        }
-
-        .instructor-sidebar {
-            background: var(--mdb-midnight);
-            color: #fff;
-            padding: var(--space-6);
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-4);
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            border-right: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .sidebar-brand {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--mdb-green);
-            margin-bottom: var(--space-8);
-            letter-spacing: -0.02em;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .nav-item {
-            padding: var(--space-3) var(--space-4);
-            border-radius: var(--radius-md);
-            color: rgba(255,255,255,0.7);
-            text-decoration: none;
-            font-weight: 500;
-            transition: all var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-        }
-
-        .nav-item.active {
-            color: var(--mdb-green);
-            background: rgba(0, 237, 100, 0.08);
-        }
-
-        .instructor-main {
-            padding: var(--space-8);
-            background: var(--color-bg);
-            overflow-y: auto;
-        }
+        /* Using global instructor-layout styles from main.css */
 
         .stats-grid {
             display: grid;
@@ -296,11 +239,7 @@
     </div>
 
     <script>
-        function initTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.classList.toggle('dark', theme === 'dark');
-        }
-        initTheme();
+        // initTheme is now handled within instructor-sidebar.ejs partial
 
         function showCreateModal() {
             document.getElementById('createModal').classList.add('active');

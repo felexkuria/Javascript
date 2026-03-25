@@ -101,6 +101,27 @@ class TeacherController {
         return res.status(404).render('error', { message: 'Course not found or access denied.' });
       }
 
+      // Ensure sections are populated for the editor (fallback to flat videos if empty)
+      if (!course.sections || course.sections.length === 0) {
+        const videos = course.videos || [];
+        const sectionMap = {};
+        const sections = [];
+        
+        videos.forEach(v => {
+          const sName = v.section || v.sectionTitle || 'Course Content';
+          if (!sectionMap[sName]) {
+            sectionMap[sName] = { _id: 'fallback-' + Date.now(), title: sName, lectures: [] };
+            sections.push(sectionMap[sName]);
+          }
+          sectionMap[sName].lectures.push({
+            ...v,
+            _id: v.videoId || v._id,
+            title: v.title
+          });
+        });
+        course.sections = sections;
+      }
+
       res.render('teacher-course-editor', {
         user,
         course,
