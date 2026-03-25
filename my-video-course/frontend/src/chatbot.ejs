@@ -1,107 +1,159 @@
-<%- include('partials/header', { title: 'AI Assistant', extraStyles: `
+<%- include('partials/header', { title: 'AI Infrastructure Assistant', extraStyles: `
 <style>
+  :root {
+      --atlas-green: #00ED64;
+      --atlas-forest: #00684A;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(0, 30, 43, 0.1);
+  }
+
+  .dark {
+      --glass-bg: rgba(2, 52, 48, 0.3);
+      --glass-border: rgba(0, 237, 100, 0.15);
+  }
+
   body {
-    background-color: #001E2B;
-    color: #E7EEEB;
-    font-family: 'Inter', sans-serif;
+      font-family: 'Outfit', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: #F9FBFA;
   }
-  .chat-container {
-    height: calc(100vh - 250px);
-    background-color: rgba(2, 52, 48, 0.5);
-    backdrop-filter: blur(10px);
-    border-radius: 0;
+
+  .dark body {
+      background-color: #001E2B;
   }
-  .message {
-    animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .premium-glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
   }
-  .message .bg-mongo-green {
-    background-color: #00ED64;
-    color: #001E2B;
+
+  .terminal-box {
+      height: calc(100vh - 400px);
+      min-height: 500px;
   }
-  .message .bg-mongo-slate {
-    background-color: #001E2B;
-    border: 1px solid rgba(0, 237, 100, 0.2);
-    color: #E7EEEB;
+
+  .message-node {
+    animation: slideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  .ai-bubble {
+      background: rgba(0, 237, 100, 0.03);
+      border-left: 4px solid var(--atlas-green);
+      border-radius: 4px 24px 24px 24px;
+  }
+
+  .user-bubble {
+      background: #001E2B;
+      color: white;
+      border-radius: 24px 24px 4px 24px;
+      box-shadow: 0 4px 15px rgba(0, 30, 43, 0.1);
+  }
+
+  .dark .user-bubble {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .pulse-send {
+      background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+      color: #001E2B;
+      font-weight: 900;
+      box-shadow: 0 8px 20px rgba(0, 237, 100, 0.2);
+  }
+
+  .pulse-send:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 30px rgba(0, 237, 100, 0.4);
+  }
+
+  .code-token {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0, 237, 100, 0.1);
+      color: #00A35C;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
   }
 </style>
 ` }) %>
 
-<main class="flex-grow px-4 py-8 md:px-8">
-  <div class="max-w-4xl mx-auto">
-    <div class="bg-[#023430] border border-[#00ED64]/20 rounded-2xl shadow-2xl overflow-hidden mt-4">
-      <div class="bg-gradient-to-r from-[#00ED64] to-[#00684A] p-8">
-        <h1 class="text-3xl font-black text-[#001E2B] mb-2 brand-font">🍃 Multitouch AI Assistant</h1>
-        <p class="text-[#001E2B]/80 font-medium">
-          Ask me anything about your course content. I'll explain complex concepts with modern clarity.
-        </p>
-      </div>
+<main class="flex-grow px-10 py-12">
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <header class="mb-12">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00684A] dark:text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">AI Infrastructure Assistant</span>
+            <div class="h-px w-12 bg-gray-200 dark:bg-white/10"></div>
+        </div>
+        <h1 class="text-5xl font-black tracking-tighter text-[#001E2B] dark:text-white mb-2">Neural Support Hub</h1>
+        <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Orchestrating technical explanations with 2026-grade linguistic precision.</p>
+    </header>
 
-      <div
-        id="chatContainer"
-        class="chat-container overflow-y-auto p-6 space-y-6"
-      >
-        <div class="message mb-4">
-          <div class="flex items-start">
-            <div
-              class="bg-[#00ED64] text-[#001E2B] rounded-xl w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg overflow-hidden p-1.5"
-            >
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                <path d="M12 2C12 2 12 10 2 12C12 14 12 22 12 22C12 22 12 14 22 12C12 10 12 2 12 2Z" fill="currentColor"/>
-              </svg>
+    <div class="premium-glass rounded-[40px] overflow-hidden shadow-2xl">
+      <!-- Chat Interface -->
+      <div id="chatContainer" class="terminal-box overflow-y-auto p-10 space-y-8 scroll-smooth">
+        <!-- Initial Message -->
+        <div class="message-node flex items-start gap-6">
+            <div class="w-12 h-12 rounded-2xl bg-[#00ED64] flex items-center justify-center text-[#001E2B] shadow-lg shadow-[#00ED64]/20 flex-shrink-0">
+                <i class="fas fa-microchip text-xl"></i>
             </div>
-            <div class="bg-[#001E2B] border border-[#00ED64]/20 rounded-2xl p-6 shadow-xl max-w-3xl">
-              <p class="text-[#E7EEEB]/90 font-medium leading-relaxed">
-                Hello! I'm your course assistant. I have knowledge from all your
-                video courses and can explain concepts in an engaging, David J.
-                Malan style. Try asking me:
-              </p>
-              <ul class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-[#00ED64]/70 italic">
-                <li>🍃 "Explain Git architecture"</li>
-                <li>🍃 "What is a Cluster in MongoDB?"</li>
-                <li>🍃 "How does the Event Loop work?"</li>
-                <li>🍃 "Explain AWS IAM roles"</li>
-              </ul>
-              <p class="text-gray-300 mt-4">
-                Additionally, I can help you manage your tasks. Here's a sample of what you can do:
-              </p>
-              <ul class="mt-2 text-sm text-gray-400">
-                <li>• "Add 'Complete project report' to my todos"</li>
-                <li>• "Show me my todos"</li>
-                <li>• "Mark 'Complete project report' as done"</li>
-                <li>• "Clear all completed todos"</li>
-              </ul>
+            <div class="ai-bubble p-8 premium-glass max-w-3xl">
+                <h3 class="text-sm font-black uppercase tracking-widest text-[#00ED64] mb-4">System Initialized</h3>
+                <p class="text-[#001E2B] dark:text-gray-300 font-medium leading-relaxed mb-6">
+                    Greetings, Engineer. I am your integrated AI architecture assistant. I possess comprehensive knowledge of your curriculum and can synthesize complex technical concepts into modular, actionable insights.
+                </p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="text-left p-4 rounded-xl border border-gray-100 dark:border-white/5 hover:border-[#00ED64] transition-colors group" onclick="fillInput('Explain Git architecture')">
+                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Architecture</span>
+                        <span class="text-xs font-bold text-[#001E2B] dark:text-white">"Explain Git internal architecture"</span>
+                    </button>
+                    <button class="text-left p-4 rounded-xl border border-gray-100 dark:border-white/5 hover:border-[#00ED64] transition-colors group" onclick="fillInput('What is a MongoDB Cluster?')">
+                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Database</span>
+                        <span class="text-xs font-bold text-[#001E2B] dark:text-white">"What is a MongoDB high-availability cluster?"</span>
+                    </button>
+                </div>
             </div>
-          </div>
         </div>
       </div>
 
-      <div class="border-t border-[#00ED64]/10 bg-[#001E2B] p-6">
-        <div class="flex gap-4">
-          <input
-            type="text"
-            id="messageInput"
-            placeholder="Ask your technical questions here..."
-            class="flex-1 bg-[#023430] border border-[#00ED64]/20 rounded-xl px-6 py-3 text-[#E7EEEB] placeholder-[#E7EEEB]/30 focus:outline-none focus:ring-2 focus:ring-[#00ED64]/50 transition-all font-medium"
-          />
+      <!-- Input Area -->
+      <div class="p-10 border-t border-gray-100 dark:border-white/5 bg-white/30 dark:bg-[#001E2B]/50">
+        <div class="flex gap-6 items-center">
+          <div class="flex-grow relative">
+            <input
+              type="text"
+              id="messageInput"
+              placeholder="Synthesize your query here..."
+              class="w-full bg-white/50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl px-8 py-5 text-[#001E2B] dark:text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-[#00ED64]/10 transition-all font-semibold"
+            />
+          </div>
           <button
             id="sendButton"
-            class="bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] px-8 py-3 rounded-xl font-black hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] transition-all flex items-center gap-2"
+            class="pulse-send px-10 py-5 rounded-2xl transition-all flex items-center gap-3"
           >
-            <span>Send</span>
-            <i class="fas fa-paper-plane text-xs"></i>
+            <span>Execute</span>
+            <i class="fas fa-bolt"></i>
           </button>
         </div>
-        <div class="mt-4 flex justify-end">
-          <button
-            id="clearHistoryButton"
-            class="text-xs font-bold uppercase tracking-widest text-[#E7EEEB]/20 hover:text-red-400 transition-colors"
-          >
-            Clear History
-          </button>
+        <div class="mt-6 flex justify-between items-center px-2">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Neural Link Active</span>
+            </div>
+            <button
+                id="clearHistoryButton"
+                class="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors"
+                onclick="clearHistory()"
+            >
+                Purge Buffer History
+            </button>
         </div>
       </div>
     </div>
@@ -109,96 +161,73 @@
 </main>
 
 <script>
+  function fillInput(text) {
+      document.getElementById('messageInput').value = text;
+      document.getElementById('messageInput').focus();
+  }
+
+  function clearHistory() {
+      if(confirm('Purge all neural buffer history?')) {
+          localStorage.removeItem("chatbot_history");
+          location.reload();
+      }
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     const chatContainer = document.getElementById("chatContainer");
     const messageInput = document.getElementById("messageInput");
     const sendButton = document.getElementById("sendButton");
 
-    // Load chat history from localStorage
-    let chatHistory = JSON.parse(
-      localStorage.getItem("chatbot_history") || "[]"
-    );
+    let chatHistory = JSON.parse(localStorage.getItem("chatbot_history") || "[]");
 
     function addMessage(content, isUser = false, saveToHistory = true) {
+      content = content.replace(/\*\*(.*?)\*\*/g, "<span class='font-black text-[#00ED64]'>$1</span>");
+      content = content.replace(/\*(.*?)\*/g, "<em class='text-gray-400'>$1</em>");
+      content = content.replace(/`(.*?)`/g, "<span class='code-token'>$1</span>");
+
       const messageDiv = document.createElement("div");
-      // Format words enclosed in **<words>** as bold
-
-      content = content.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-
-      // Format words enclosed in *<word>* as italic
-      content = content.replace(/\*(.*?)\*/g, "<em>$1</em>");
-      messageDiv.className = "message mb-4";
+      messageDiv.className = "message-node flex items-start gap-6 " + (isUser ? "flex-row-reverse" : "");
 
       messageDiv.innerHTML = `
-      <div class="flex items-start ${isUser ? "justify-end" : ""}">
-        ${
-          !isUser
-            ? `<div class="bg-[#00ED64] text-[#001E2B] rounded-xl w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg overflow-hidden p-1.5">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                  <path d="M12 2C12 2 12 10 2 12C12 14 12 22 12 22C12 22 12 14 22 12C12 10 12 2 12 2Z" fill="currentColor"/>
-                </svg>
-              </div>`
-            : ""
-        }
-        <div class="${
-          isUser ? "bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] ml-12 font-bold" : "bg-[#001E2B] text-[#E7EEEB] border border-[#00ED64]/20"
-        } rounded-2xl p-4 shadow-xl max-w-3xl leading-relaxed relative overflow-hidden">
-          ${!isUser ? '<div class="absolute inset-0 opacity-5 pointer-events-none bg-leaf-pattern"></div>' : ''}
-          <div class="relative z-10">${content}</div>
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg ${isUser ? "bg-[#001E2B] text-[#00ED64] border border-[#00ED64]/30" : "bg-[#00ED64] text-[#001E2B]"}">
+            <i class="fas ${isUser ? "fa-user-ninja" : "fa-microchip"} text-xl"></i>
         </div>
-        ${
-          isUser
-            ? '<div class="bg-[#00684A] text-[#00ED64] border border-[#00ED64]/30 rounded-xl w-10 h-10 flex items-center justify-center ml-4 flex-shrink-0 shadow-lg">👤</div>'
-            : ""
-        }
-      </div>
-    `;
+        <div class="${isUser ? "user-bubble" : "ai-bubble premium-glass"} p-6 max-w-3xl font-medium leading-relaxed">
+            ${content}
+        </div>
+      `;
 
       chatContainer.appendChild(messageDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
-      // Save to history
       if (saveToHistory) {
         chatHistory.push({ content, isUser, timestamp: Date.now() });
         localStorage.setItem("chatbot_history", JSON.stringify(chatHistory));
       }
     }
 
-    // Load existing chat history
-    function loadChatHistory() {
-      // Clear welcome message if history exists
-      if (chatHistory.length > 0) {
-        chatContainer.innerHTML = "";
-        chatHistory.forEach((msg) => {
-          addMessage(msg.content, msg.isUser, false);
-        });
-      }
+    if (chatHistory.length > 0) {
+      chatContainer.innerHTML = "";
+      chatHistory.forEach((msg) => addMessage(msg.content, msg.isUser, false));
     }
 
     function showTyping() {
       const typingDiv = document.createElement("div");
       typingDiv.id = "typing";
-      typingDiv.className = "message mb-4";
+      typingDiv.className = "message-node flex items-start gap-6";
       typingDiv.innerHTML = `
-      <div class="flex items-start">
-        <div class="bg-[#00ED64] text-[#001E2B] rounded-xl w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg">🍃</div>
-        <div class="bg-[#001E2B] border border-[#00ED64]/20 rounded-2xl p-6 shadow-xl">
-          <div class="flex gap-2 items-center">
+        <div class="w-12 h-12 rounded-2xl bg-[#00ED64] flex items-center justify-center text-[#001E2B] flex-shrink-0 shadow-lg">
+            <i class="fas fa-brain animate-pulse"></i>
+        </div>
+        <div class="ai-bubble p-6 premium-glass flex gap-3 items-center">
             <div class="w-2 h-2 bg-[#00ED64] rounded-full animate-bounce"></div>
             <div class="w-2 h-2 bg-[#00ED64] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
             <div class="w-2 h-2 bg-[#00ED64] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-            <span class="text-xs font-bold text-[#00ED64] ml-2 tracking-widest uppercase">Thinking...</span>
-          </div>
+            <span class="text-[10px] font-black text-[#00ED64] ml-2 tracking-widest uppercase">Synthesizing Response...</span>
         </div>
-      </div>
-    `;
+      `;
       chatContainer.appendChild(typingDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    function hideTyping() {
-      const typing = document.getElementById("typing");
-      if (typing) typing.remove();
     }
 
     async function sendMessage() {
@@ -208,7 +237,6 @@
       addMessage(message, true);
       messageInput.value = "";
       sendButton.disabled = true;
-
       showTyping();
 
       try {
@@ -217,30 +245,22 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message }),
         });
-
         const data = await response.json();
-        hideTyping();
+        const typing = document.getElementById("typing");
+        if (typing) typing.remove();
 
-        if (data.response) {
-          addMessage(data.response.replace(/\n/g, "<br>"));
-        } else {
-          addMessage("Sorry, I encountered an error. Please try again.");
-        }
+        if (data.response) addMessage(data.response.replace(/\n/g, "<br>"));
+        else addMessage("ERROR: Neural synthesis interrupted. Please re-initialize.");
       } catch (error) {
-        hideTyping();
-        addMessage("Sorry, I'm having trouble connecting. Please try again.");
+        const typing = document.getElementById("typing");
+        if (typing) typing.remove();
+        addMessage("CRITICAL: Infrastructure communication failure.");
       }
-
       sendButton.disabled = false;
     }
 
-    // Load chat history on page load
-    loadChatHistory();
-
     sendButton.addEventListener("click", sendMessage);
-    messageInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") sendMessage();
-    });
+    messageInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
   });
 </script>
 

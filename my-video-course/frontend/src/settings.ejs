@@ -1,77 +1,168 @@
-<%- include('partials/header', { title: 'Settings' }) %>
+<%- include('partials/header', { title: 'Account Governance' }) %>
 
-<main class="flex-grow overflow-y-auto px-4 py-8 md:px-8 bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
-  <div class="max-w-3xl mx-auto space-y-8">
+<style>
+    :root {
+        --atlas-green: #00ED64;
+        --atlas-forest: #00684A;
+        --glass-bg: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(0, 30, 43, 0.1);
+    }
+
+    .dark {
+        --glass-bg: rgba(2, 52, 48, 0.3);
+        --glass-border: rgba(0, 237, 100, 0.15);
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .premium-glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 8px 32px rgba(0, 30, 43, 0.05);
+    }
+
+    .form-input-premium {
+        width: 100%;
+        padding: 14px 20px;
+        border-radius: 16px;
+        border: 1px solid var(--glass-border);
+        background: rgba(255, 255, 255, 0.5);
+        color: #001E2B;
+        font-weight: 600;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .dark .form-input-premium {
+        background: rgba(0, 30, 43, 0.4);
+        color: white;
+    }
+
+    .form-input-premium:focus {
+        border-color: var(--atlas-green);
+        box-shadow: 0 0 0 4px rgba(0, 237, 100, 0.1);
+    }
+
+    .btn-premium-save {
+        background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+        color: #001E2B;
+        font-weight: 900;
+        padding: 12px 32px;
+        border-radius: 14px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(0, 237, 100, 0.2);
+    }
+
+    .btn-premium-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 237, 100, 0.4);
+    }
+
+    .danger-zone-premium {
+        background: rgba(255, 59, 48, 0.05);
+        border: 1px solid rgba(255, 59, 48, 0.1);
+        border-radius: 24px;
+        padding: 32px;
+    }
+
+    .dark .danger-zone-premium {
+        background: rgba(255, 59, 48, 0.03);
+        border-color: rgba(255, 59, 48, 0.2);
+    }
+
+    .settings-hero {
+        margin-bottom: 48px;
+    }
+</style>
+
+<main class="flex-grow overflow-y-auto px-10 py-12 bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
+  <div class="max-w-4xl mx-auto">
     <!-- Header -->
-    <div>
-      <h1 class="text-3xl font-extrabold text-[#001E2B] dark:text-[#E7EEEB] tracking-tight">Settings</h1>
-      <p class="text-gray-500 dark:text-gray-400">Manage your account preferences and security</p>
+    <div class="settings-hero">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00684A] dark:text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">Governance & Identity</span>
+            <div class="h-px w-12 bg-gray-200 dark:bg-white/10"></div>
+        </div>
+        <h1 class="text-5xl font-black tracking-tighter text-[#001E2B] dark:text-white mb-2">Account Governance</h1>
+        <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Define your professional identity and orchestrate security parameters.</p>
     </div>
 
-    <!-- Profile Section -->
-    <div class="bg-white dark:bg-[#023430] rounded-2xl shadow-sm border border-gray-100 dark:border-[#133A41] overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 dark:border-[#133A41] bg-gray-50/50 dark:bg-[#001E2B]/50">
-        <h2 class="text-lg font-bold text-[#001E2B] dark:text-[#00ED64]">Profile Information</h2>
-      </div>
-      <div class="p-6 space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Display Name</label>
-            <input type="text" value="<%= user.name %>" 
-                   class="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-[#001E2B] dark:text-[#E7EEEB] rounded-xl focus:ring-2 focus:ring-[#00ED64] outline-none transition-all">
-          </div>
-          <div class="space-y-2">
-            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Email Address</label>
-            <input type="email" value="<%= user.email %>" disabled
-                   class="w-full px-4 py-2.5 bg-gray-100 dark:bg-[#001E2B]/50 border border-gray-200 dark:border-[#133A41] text-gray-500 rounded-xl cursor-not-allowed">
-          </div>
+    <div class="space-y-10">
+        <!-- Identity Section -->
+        <div class="premium-glass rounded-[40px] overflow-hidden">
+            <div class="px-10 py-6 border-b border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/5">
+                <h2 class="text-xl font-black text-[#001E2B] dark:text-white flex items-center gap-3 tracking-tighterUppercase uppercase tracking-widest text-[11px] opacity-60">
+                    <i class="fas fa-id-badge text-[#00ED64]"></i> Core Identity
+                </h2>
+            </div>
+            <div class="p-10 space-y-8">
+                <div class="grid grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-3">Display Designation</label>
+                        <input type="text" value="<%= user.name %>" class="form-input-premium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-3">System Identity (Primary Email)</label>
+                        <input type="email" value="<%= user.email %>" disabled class="form-input-premium opacity-50 cursor-not-allowed">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-3">Professional Bio (Global Mission)</label>
+                    <textarea rows="4" class="form-input-premium" placeholder="Briefly describe your technical expertise and mission statement..."></textarea>
+                </div>
+                <div class="flex justify-end pt-4">
+                    <button class="btn-premium-save">
+                        Apply Identity Changes
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Bio</label>
-          <textarea rows="3" placeholder="Tell students about yourself..."
-                    class="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-[#001E2B] dark:text-[#E7EEEB] rounded-xl focus:ring-2 focus:ring-[#00ED64] outline-none transition-all"></textarea>
-        </div>
-        <div class="flex justify-end">
-          <button class="px-6 py-2.5 bg-[#00684A] hover:bg-[#00ED64] text-white hover:text-[#001E2B] font-bold rounded-xl transition-all">
-            Save Changes
-          </button>
-        </div>
-      </div>
-    </div>
 
-    <!-- Security Section -->
-    <div class="bg-white dark:bg-[#023430] rounded-2xl shadow-sm border border-gray-100 dark:border-[#133A41] overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 dark:border-[#133A41] bg-gray-50/50 dark:bg-[#001E2B]/50">
-        <h2 class="text-lg font-bold text-[#001E2B] dark:text-[#00ED64]">Security</h2>
-      </div>
-      <div class="p-6 space-y-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-bold text-[#001E2B] dark:text-[#E7EEEB]">Password</h3>
-            <p class="text-sm text-gray-500">Change your password to keep your account secure</p>
-          </div>
-          <button class="px-4 py-2 border border-[#00684A] text-[#00684A] dark:text-[#00ED64] dark:border-[#00ED64] font-bold rounded-xl hover:bg-[#00ED64] hover:text-[#001E2B] transition-all">
-            Update
-          </button>
-        </div>
-        <hr class="border-gray-100 dark:border-[#133A41]">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-bold text-[#001E2B] dark:text-[#E7EEEB]">Two-Factor Authentication</h3>
-            <p class="text-sm text-gray-500">Add an extra layer of security (Coming Soon)</p>
-          </div>
-          <div class="w-12 h-6 bg-gray-200 dark:bg-gray-700 rounded-full relative cursor-not-allowed opacity-50">
-            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+        <!-- Security Architecture -->
+        <div class="premium-glass rounded-[40px] overflow-hidden">
+            <div class="px-10 py-6 border-b border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/5">
+                <h2 class="text-xl font-black text-[#001E2B] dark:text-white flex items-center gap-3 tracking-tighterUppercase uppercase tracking-widest text-[11px] opacity-60">
+                    <i class="fas fa-shield-alt text-[#00ED64]"></i> Security architecture
+                </h2>
+            </div>
+            <div class="p-10 space-y-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-black text-[#001E2B] dark:text-white tracking-tight">Access Token (Password)</h3>
+                        <p class="text-sm text-gray-500 font-medium">Rotate your primary authentication credential regularly.</p>
+                    </div>
+                    <button class="px-6 py-3 border-2 border-[#00ED64]/30 text-[#00684A] dark:text-[#00ED64] font-black rounded-2xl hover:bg-[#00ED64] hover:text-[#001E2B] transition-all text-xs uppercase tracking-widest">
+                        Initiate Rotation
+                    </button>
+                </div>
+                
+                <div class="h-px bg-gray-100 dark:bg-white/5"></div>
 
-    <!-- Danger Zone -->
-    <div class="p-6 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-2xl">
-      <h3 class="font-bold text-red-700 dark:text-red-400 mb-2">Danger Zone</h3>
-      <p class="text-sm text-red-600 dark:text-red-400/80 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
-      <button class="text-red-700 dark:text-red-400 font-bold hover:underline">Delete Account</button>
+                <div class="flex items-center justify-between opacity-50">
+                    <div>
+                        <h3 class="text-lg font-black text-[#001E2B] dark:text-white tracking-tight">Quantum Auth (MFA)</h3>
+                        <p class="text-sm text-gray-500 font-medium">Multi-factor orchestration for maximum security perimeter. (Awaiting activation)</p>
+                    </div>
+                    <div class="w-14 h-8 bg-gray-200 dark:bg-white/10 rounded-full relative p-1">
+                        <div class="w-6 h-6 bg-white dark:bg-gray-500 rounded-full shadow-sm"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="danger-zone-premium">
+            <h3 class="text-lg font-black text-red-600 dark:text-red-400 mb-2 flex items-center gap-2 tracking-tight">
+                <i class="fas fa-exclamation-triangle"></i> Decommission Account
+            </h3>
+            <p class="text-sm text-red-500/70 font-medium mb-6">Initiating this protocol will permanently purge all curriculum progress, certifications, and identity data from the academy infrastructure. This action is immutable.</p>
+            <button class="text-red-600 dark:text-red-400 font-black text-xs uppercase tracking-widest hover:underline px-2">Initiate Decompression Protocol</button>
+        </div>
     </div>
   </div>
 </main>
