@@ -65,6 +65,7 @@ app.get('/logout', (req, res) => authController.logout(req, res));
 
 // ── VIDEO & COURSE ROUTES ─────────────────────────────────────────────
 app.get('/dashboard', sessionAuth, (req, res) => webController.renderDashboard(req, res));
+app.get('/courses', sessionAuth, (req, res) => webController.renderCourses(req, res));
 app.get('/course/:courseName', sessionAuth, (req, res) => webController.renderCourse(req, res));
 app.get('/course/:courseName/video/:videoId?', sessionAuth, (req, res) => webController.renderVideo(req, res));
 app.get('/videos/:courseName/:videoId', sessionAuth, (req, res) => webController.renderVideo(req, res));

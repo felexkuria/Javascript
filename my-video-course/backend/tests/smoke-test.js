@@ -8,6 +8,7 @@ const routesToTest = [
   { path: '/signup', expectedStatus: 200, name: 'Signup Page' },
   { path: '/forgot-password', expectedStatus: 200, name: 'Forgot Password Page' },
   { path: '/admin', expectedStatus: 200, name: 'Admin Login Page' },
+  { path: '/courses', expectedStatus: 200, name: 'Courses Catalog' },
   { path: '/health', expectedStatus: 200, name: 'Health Check' }
 ];
 
