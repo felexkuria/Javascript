@@ -1,0 +1,27 @@
+{
+  "689c751e824113979c6255a4": [
+    {
+      "id": "terraform_intro_1",
+      "question": "What does IaC stand for in the context of Terraform?",
+      "options": ["Internet as Code", "Infrastructure as Code", "Integration as Code", "Interface as Code"],
+      "correct": 1,
+      "explanation": "Infrastructure as Code (IaC) is the practice of managing and provisioning infrastructure through code rather than manual processes."
+    },
+    {
+      "id": "terraform_intro_2", 
+      "question": "Which company created Terraform?",
+      "options": ["Amazon", "Google", "HashiCorp", "Microsoft"],
+      "correct": 2,
+      "explanation": "Terraform was created by HashiCorp and is one of their flagship products for infrastructure automation."
+    }
+  ],
+  "689c751e824113979c6255a5": [
+    {
+      "id": "terraform_basics_1",
+      "question": "What file extension do Terraform configuration files use?",
+      "options": [".tf", ".terraform", ".config", ".hcl"],
+      "correct": 0,
+      "explanation": "Terraform configuration files use the .tf extension and are written in HashiCorp Configuration Language (HCL)."
+    }
+  ]
+}

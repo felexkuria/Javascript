@@ -1,7 +1,5 @@
 const dynamoVideoService = require('../services/dynamoVideoService');
-const Course = require('../models/Course');
-const User = require('../models/User');
-const Enrollment = require('../models/Enrollment');
+const dynamodb = require('../utils/dynamodb');
 
 const ADMIN_EMAIL = 'engineerfelex@gmail.com';
 
@@ -11,33 +9,30 @@ class TeacherController {
       const user = req.user || req.session?.user;
       const userId = user?.id || user?.email || 'guest';
       
-      // 1. Fetch courses from MongoDB (ONLY courses for this instructor)
-      const courses = await Course.find({ instructorId: userId }).lean();
+      // 1. Fetch courses from DynamoDB
+      const allCourses = await dynamoVideoService.getAllCourses(userId);
+      const instructorCourses = allCourses.filter(c => c.instructorId === userId || c.createdBy === userId || userId === ADMIN_EMAIL);
       
-      // 2. Fetch all enrollments to calculate student stats
-      const enrollments = await Enrollment.find({}).lean();
-      
-      // Calculate instructor stats
-      const totalCourses = courses.length;
-      const publishedCourses = courses.filter(c => c.isPublished).length;
-      const totalStudents = new Set(enrollments.map(e => e.userId)).size;
+      // 2. Fetch enrollments from DynamoDB (Note: DynamoDB scans or global queries needed for instructor view)
+      // For now, we'll use a simplified approach since DynamoDB doesn't support easy "all enrollments for my courses" without indexes
+      // We'll mock student count or fetch if possible
+      const totalStudents = instructorCourses.reduce((sum, c) => sum + (c.enrollments || 0), 0);
       
       // Map courses to a simpler format for the view
-      const courseStats = courses.map(course => {
-        const courseEnrollments = enrollments.filter(e => e.courseId && e.courseId.toString() === course._id.toString());
+      const courseStats = instructorCourses.map(course => {
         return {
-          id: course._id,
-          title: course.title,
-          isPublished: course.isPublished,
-          enrollments: courseEnrollments.length,
+          id: course.name,
+          title: course.title || course.name,
+          isPublished: course.isPublished !== false,
+          enrollments: course.enrollments || 0,
           lastUpdated: course.updatedAt
         };
       });
 
       res.render('teacher-dashboard', {
         user,
-        totalCourses,
-        publishedCourses,
+        totalCourses: instructorCourses.length,
+        publishedCourses: instructorCourses.filter(c => c.isPublished !== false).length,
         totalStudents,
         courses: courseStats,
         recentActivity: []
@@ -53,28 +48,25 @@ class TeacherController {
       const user = req.user || req.session?.user;
       const userId = user?.email || 'default_user';
       
-      const enrollments = await Enrollment.find({ userId: userId })
-        .populate('courseId')
-        .lean();
+      const dynamoEnrollments = await dynamoVideoService.getUserEnrollments(userId);
+      const allCourses = await dynamoVideoService.getAllCourses(userId);
       
-      const allCourses = await Course.find({ isPublished: true }).lean();
-      
-      const studentCourses = enrollments.map(enrol => {
-        const course = enrol.courseId;
+      const studentCourses = dynamoEnrollments.map(enrol => {
+        const course = allCourses.find(c => c.name === enrol.courseName);
         if (!course) return null;
         
-        const totalLectures = course.sections?.reduce((sum, s) => sum + (s.lectures?.length || 0), 0) || 0;
-        const watchedLectures = enrol.progress?.watchedLectures?.length || 0;
+        const totalLectures = course.videos?.length || 0;
+        const watchedLectures = course.videos?.filter(v => v.watched).length || 0;
         const progressPercent = totalLectures > 0 ? Math.round((watchedLectures / totalLectures) * 100) : 0;
         
         return {
-          id: course._id,
-          name: course.title,
+          id: course.name,
+          name: course.name,
           instructor: course.instructor || 'David Malan',
           progress: progressPercent,
           totalVideos: totalLectures,
           watchedVideos: watchedLectures,
-          videos: course.sections?.flatMap(s => s.lectures) || []
+          videos: course.videos || []
         };
       }).filter(c => c !== null);
 
@@ -102,13 +94,8 @@ class TeacherController {
       const userId = user?.id || user?.email || 'guest';
       const isAdmin = userId === ADMIN_EMAIL || user?.isAdmin || user?.role === 'admin' || user?.email === ADMIN_EMAIL;
 
-      // Robust ObjectId casting for lookup
-      const mongoose = require('mongoose');
-      const objectId = mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id;
-
       // Admin can open any course; teachers can only open their own
-      const query = isAdmin ? { _id: objectId } : { _id: objectId, instructorId: userId };
-      const course = await Course.findOne(query).lean();
+      const course = await dynamoVideoService.getCourseByTitle(id, userId);
       
       if (!course) {
         return res.status(404).render('error', { message: 'Course not found or access denied.' });
@@ -138,7 +125,8 @@ class TeacherController {
       
       const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
       
-      const newCourse = new Course({
+      const newCourse = {
+        name: title,
         title,
         slug,
         category: category || 'General',
@@ -146,11 +134,13 @@ class TeacherController {
         instructor: user?.name || 'Instructor',
         instructorId: userId,
         isPublished: false,
-        sections: []
-      });
-
-      await newCourse.save();
-      res.redirect(`/teacher/course-editor/${newCourse._id}`);
+        videos: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+ 
+      await dynamodb.saveCourse(newCourse);
+      res.redirect(`/teacher/course-editor/${encodeURIComponent(newCourse.name)}`);
     } catch (error) {
       console.error('Error creating course:', error);
       res.status(500).render('error', { message: 'Error creating course: ' + error.message });
@@ -162,7 +152,8 @@ class TeacherController {
       const user = req.user || req.session?.user;
       const userId = user?.id || user?.email || 'guest';
       
-      const courses = await Course.find({ instructorId: userId }).lean();
+      const courses = await dynamoVideoService.getAllCourses(userId);
+      const instructorCourses = courses.filter(c => c.instructorId === userId || c.createdBy === userId || userId === ADMIN_EMAIL);
       
       res.render('teacher-upload-center', { 
         user,

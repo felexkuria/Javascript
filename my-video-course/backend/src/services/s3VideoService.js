@@ -41,7 +41,7 @@ class S3VideoService {
       // Generate direct signed URL for video element
       video.fullVideoUrl = await this.generateSignedUrl(video.videoUrl, 3600);
     } else if (this.isRelativeUrl(video.videoUrl)) {
-      // Convert relative URLs from old MongoDB data to S3 URLs
+      // Convert relative URLs from legacy data to S3 URLs
       const s3Url = this.convertToS3Url(video.videoUrl);
       video.isS3Video = true;
       video.fullVideoUrl = await this.generateSignedUrl(s3Url, 3600);

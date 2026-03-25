@@ -66,7 +66,7 @@ class VideoManager {
       await this.processVideo(video, courseName);
     }
 
-    // Save to MongoDB and localStorage
+    // Save to DynamoDB and sync status
     await this.saveCourseData(courseName, videos);
     
     // Generate course summary

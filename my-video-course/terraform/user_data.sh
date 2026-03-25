@@ -30,7 +30,7 @@ GEMINI_API_KEY=${gemini_api_key}
 NOVA_API_KEY=${nova_api_key}
 COGNITO_USER_POOL_ID=${cognito_user_pool_id}
 COGNITO_CLIENT_ID=${cognito_client_id}
-MONGODB_URI=${mongodb_uri}
+
 SESSION_SECRET=${session_secret}
 ADMIN_KEY=${admin_key}
 EOF

@@ -199,11 +199,7 @@ variable "create_s3_bucket" {
   default     = true
 }
 
-variable "mongodb_uri" {
-  description = "MongoDB Connection URI"
-  type        = string
-  sensitive   = true
-}
+
 
 variable "session_secret" {
   description = "Secret for Express sessions"

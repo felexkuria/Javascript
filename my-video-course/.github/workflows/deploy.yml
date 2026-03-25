@@ -108,9 +108,7 @@ jobs:
 
     # ------------------------------------------------------------------
     # Build terraform.tfvars — only real Terraform variables go here.
-    # NOTE: mongodb_uri is NOT a Terraform variable; it goes in Secrets
-    #       Manager / SSM and is injected at runtime by user_data.sh.
-    #       create_ecr_repo = false because ECR already exists.
+    # NOTE: create_ecr_repo = true if we want Terraform to manage ECR.
     # ------------------------------------------------------------------
     - name: Create terraform.tfvars
       run: |
@@ -181,10 +179,10 @@ jobs:
         ACTIVE_REFRESH=$(aws autoscaling describe-instance-refreshes \
           --auto-scaling-group-name "$ASG_NAME" \
           --query 'InstanceRefreshes[?Status==`InProgress` || Status==`Pending`].InstanceRefreshId' \
-          --output text)
+          --output text | awk '{print $1}')
 
         if [ -n "$ACTIVE_REFRESH" ] && [ "$ACTIVE_REFRESH" != "None" ]; then
-          echo "⚠️  Active refresh detected (ID: $ACTIVE_REFRESH). Cancelling..."
+          echo "⚠️  Active refresh(es) detected. Focusing on ID: $ACTIVE_REFRESH. Cancelling..."
           aws autoscaling cancel-instance-refresh --auto-scaling-group-name "$ASG_NAME" || true
 
           echo "⏳ Waiting for cancellation to complete (max 5 min)..."
@@ -196,7 +194,7 @@ jobs:
               --instance-refresh-ids "$ACTIVE_REFRESH" \
               --query 'InstanceRefreshes[0].Status' \
               --output text)
-            echo "   Status: $CURRENT_STATUS (attempt $((COUNT+1))/$MAX_WAIT)"
+            echo "   Refresh Status ($ACTIVE_REFRESH): $CURRENT_STATUS (attempt $((COUNT+1))/$MAX_WAIT)"
             # Terminal states: Successful, Failed, Cancelled, RollbackSuccessful, RollbackFailed
             case "$CURRENT_STATUS" in
               Successful|Failed|Cancelled|RollbackSuccessful|RollbackFailed)

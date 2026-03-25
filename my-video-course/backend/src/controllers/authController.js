@@ -62,16 +62,16 @@ class AuthController {
       
       const result = await cognitoService.signIn(email, password);
       
-      // Synchronize with MongoDB User model
-      const User = require('../models/User');
-      let mongoUser = await User.findOne({ email });
+      // Synchronize with DynamoDB User table
+      const dynamodb = require('../utils/dynamodb');
+      let dbUser = await dynamodb.getUser(email);
       
-      if (mongoUser && mongoUser.isDeactivated) {
+      if (dbUser && dbUser.isDeactivated) {
         return res.json({ success: false, error: 'Your account has been deactivated. Please contact support.' });
       }
 
-      if (!mongoUser) {
-        console.log('👤 Creating initial user in MongoDB...');
+      if (!dbUser) {
+        console.log('👤 Creating initial user in DynamoDB...');
         let role = 'student';
         if (email === 'engineerfelex@gmail.com') {
           role = 'admin';
@@ -79,38 +79,40 @@ class AuthController {
           role = 'teacher';
         }
         
-        mongoUser = new User({
+        dbUser = {
           email,
           name: email.split('@')[0],
-          role: role
-        });
-        await mongoUser.save();
-      } else if (email === 'engineerfelex@gmail.com' && mongoUser.role !== 'admin') {
-        mongoUser.role = 'admin';
-        await mongoUser.save();
+          role: role,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        await dynamodb.saveUser(dbUser);
+      } else if (email === 'engineerfelex@gmail.com' && dbUser.role !== 'admin') {
+        dbUser.role = 'admin';
+        await dynamodb.saveUser(dbUser);
       }
 
       // Handle teacher role request
-      if (req.body.requestedRole === 'teacher' && mongoUser.role === 'student') {
+      if (req.body.requestedRole === 'teacher' && dbUser.role === 'student') {
         if (email === 'multitouchkenya@gmail.com' || email === 'engineerfelex@gmail.com') {
-          mongoUser.role = 'teacher';
-          await mongoUser.save();
+          dbUser.role = 'teacher';
+          await dynamodb.saveUser(dbUser);
         }
       }
 
       // Standardize session role
-      const currentRole = (req.body.requestedRole && (mongoUser.role === req.body.requestedRole || mongoUser.role === 'admin'))
+      const currentRole = (req.body.requestedRole && (dbUser.role === req.body.requestedRole || dbUser.role === 'admin'))
         ? req.body.requestedRole
-        : mongoUser.role;
+        : dbUser.role;
         
       req.session.user = { 
-        id: mongoUser._id.toString(),
+        id: dbUser.email, // Standardized to email for DynamoDB
         email, 
-        name: mongoUser.name,
-        role: mongoUser.role,
+        name: dbUser.name,
+        role: dbUser.role,
         currentRole,
-        isTeacher: mongoUser.role === 'teacher' || mongoUser.role === 'admin',
-        isAdmin: mongoUser.role === 'admin',
+        isTeacher: dbUser.role === 'teacher' || dbUser.role === 'admin',
+        isAdmin: dbUser.role === 'admin',
         token: result.accessToken 
       };
       
