@@ -22,8 +22,9 @@ const app = express();
 app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
 app.set('views', [
-  path.join(__dirname, '../../frontend/src/views'),
-  path.join(__dirname, '../../frontend/src/views/pages')
+  path.join(__dirname, '../../frontend/src'),
+  path.join(__dirname, '../../frontend/src/pages'),
+  path.join(__dirname, '../../frontend/views')
 ]);
 
 app.use(cors());
