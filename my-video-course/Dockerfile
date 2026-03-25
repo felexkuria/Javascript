@@ -1,5 +1,5 @@
 # Use Ubuntu 22.04 for stable OS support (Pure Cloud Architecture)
-FROM ubuntu:22.04
+FROM --platform=linux/amd64 ubuntu:22.04
 
 # Avoid prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
