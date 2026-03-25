@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Engineering Console - Multitouch Academy</title>
-    <link rel="stylesheet" href="/css/main.css">
+    <title>Mission Control - Student Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -13,538 +13,272 @@
         theme: {
           extend: {
             colors: {
-              'mongo-green': '#00ED64',
-              'mongo-slate': '#001E2B',
-              'mongo-forest': '#00684A'
-            },
-            fontFamily: {
-              'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif']
+              'mdb-green': '#00ED64',
+              'mdb-forest': '#00684A',
+              'mdb-midnight': '#001E2B',
+              'mdb-slate': '#023430',
             }
           }
         }
       }
     </script>
+    <style>
+        :root {
+            --mdb-green: #00ED64;
+            --mdb-midnight: #001E2B;
+            --glass-bg: rgba(2, 52, 48, 0.4);
+            --glass-border: rgba(0, 237, 100, 0.1);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--mdb-midnight);
+            color: #E7EEEB;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .premium-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 12px 48px rgba(0, 30, 43, 0.2);
+        }
+
+        .hero-banner-atlas {
+            background: radial-gradient(circle at top right, rgba(0, 237, 100, 0.08) 0%, transparent 60%),
+                        linear-gradient(135deg, #001E2B 0%, #003430 100%);
+            border: 1px solid rgba(0, 237, 100, 0.1);
+            border-radius: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-banner-atlas::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('https://www.mongodb.com/ready-2022/static/background-blobs-c9d3b1b4d8d8d8d8d8d8d8d8d8d8d8d8.svg');
+            background-size: cover;
+            opacity: 0.1;
+            mix-blend-mode: overlay;
+        }
+
+        .stat-node {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-node:hover {
+            border-color: var(--mdb-green);
+            background: rgba(0, 237, 100, 0.05);
+            transform: translateY(-4px);
+        }
+
+        .course-card-premium {
+            border-radius: 36px;
+            transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .course-card-premium:hover {
+            border-color: var(--mdb-green);
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 24px 64px rgba(0, 30, 43, 0.4);
+        }
+
+        .btn-atlas-cta {
+            background: #00ED64;
+            color: #001E2B;
+            font-weight: 800;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-atlas-cta:hover {
+            box-shadow: 0 0 30px rgba(0, 237, 100, 0.25);
+            transform: scale(1.02);
+        }
+
+        .progress-bar-glow {
+            height: 100%;
+            background: linear-gradient(90deg, #00ED64, #00684A);
+            box-shadow: 0 0 12px rgba(0, 237, 100, 0.3);
+            border-radius: 99px;
+        }
+
+        .sidebar-premium {
+            border-right: 1px solid rgba(0, 237, 100, 0.08);
+            background: rgba(0, 30, 43, 0.95);
+        }
+    </style>
 </head>
-<body class="bg-[#F9FBFA] dark:bg-[#001E2B] font-sans antialiased transition-colors duration-200" style="background: var(--color-bg);">
-    <!-- Dark Mode Toggle -->
-    <button id="themeToggle" class="fixed top-6 right-6 p-3 glass rounded-xl shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 z-[100]">
-        <span id="themeIcon" class="text-xl">🌙</span>
-    </button>
-    
-    <!-- Header -->
-    <header class="bg-white/70 dark:bg-[#001E2B]/70 border-b border-gray-200 dark:border-[#133A41] transition-all duration-300 sticky top-0 z-50 backdrop-blur-2xl">
-        <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-6">
-                    <div class="w-12 h-12 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-2xl flex items-center justify-center shadow-xl border border-white/20 hover:rotate-6 transition-transform">
-                        <span class="text-[#001E2B] text-2xl font-black">M</span>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tighter leading-tight">Multitouch <span class="font-light text-gray-400 dark:text-[#9FB1AD]">Academy</span></h1>
-                        <div class="flex items-center gap-2">
-                             <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
-                             <p id="userRole" class="text-[10px] font-black uppercase tracking-[0.2em] text-[#00ED64]">Premium Engineer</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex items-center space-x-6">
-                    <div class="hidden md:flex flex-col items-end">
-                        <span id="userName" class="text-gray-900 dark:text-white font-bold text-sm tracking-tight opacity-90"></span>
-                        <span class="text-[10px] text-gray-400 dark:text-[#9FB1AD] font-medium uppercase tracking-widest">Console Session Active</span>
-                    </div>
-                    <button id="logoutBtn" class="px-6 py-2.5 bg-gray-900 dark:bg-[#023430] text-white dark:text-[#00ED64] border border-transparent dark:border-[#00ED64]/30 rounded-xl hover:bg-black dark:hover:bg-[#00ED64] dark:hover:text-black transition-all text-[10px] font-black tracking-widest shadow-lg shadow-black/5">
-                        TERMINATE
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
+<body class="dark">
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <%- include('partials/student-sidebar', { activePage: 'dashboard' }) %>
 
-    <div class="max-w-7xl mx-auto px-6 pt-12 pb-24">
-        <!-- Hero Section -->
-        <div class="relative mb-16 rounded-[2.5rem] overflow-hidden group shadow-2xl">
-            <div class="absolute inset-0 bg-[#001E2B] opacity-95"></div>
-            <div class="absolute inset-0 bg-[var(--atlas-gradient)] opacity-90"></div>
-            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none"></div>
-            <div class="relative p-12 md:p-20 flex flex-col md:flex-row items-center justify-between gap-12">
-                <div class="flex-1 text-center md:text-left">
-                    <div class="inline-flex items-center gap-2 px-4 py-2 glass rounded-full mb-8">
-                        <span class="flex h-2 w-2 rounded-full bg-[#00ED64] animate-pulse"></span>
-                        <span class="text-[10px] font-bold text-[#00ED64] uppercase tracking-widest">Infrastructure Status: Optimal</span>
-                    </div>
-                    <h2 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-none">
-                        Scale Your <span class="premium-title">Architectural Mind</span>
-                    </h2>
-                    <p class="text-lg text-gray-400 dark:text-[#9FB1AD] max-w-xl font-medium leading-relaxed mb-10">
-                        Access high-fidelity engineering labs, real-time curriculum sync, and elite governance-driven blueprints.
-                    </p>
-                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                        <button onclick="switchTab('inprogress')" class="px-8 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
-                            RESUME DEPLOYMENT
-                        </button>
-                        <button onclick="switchTab('all')" class="px-8 py-4 glass text-white font-black rounded-2xl hover:bg-white/10 transition-all border-white/5">
-                            GLOBAL REGISTRY
-                        </button>
-                    </div>
-                </div>
-                <div class="hidden lg:block w-72 h-72 relative">
-                    <div class="absolute inset-0 bg-[#00ED64] blur-[100px] opacity-20 animate-pulse"></div>
-                    <div class="relative glass rounded-[3rem] p-8 aspect-square flex items-center justify-center border-white/10 shadow-3xl">
-                        <div class="text-center">
-                             <div id="progressPercent" class="text-6xl font-black text-[#00ED64] mb-2">0%</div>
-                             <div class="text-[10px] font-black text-white uppercase tracking-[0.3em] opacity-60">Avg. Capacity</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16 px-4">
-            <div class="atlas-card glass p-8 group">
-                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Deployed Repos</p>
-                <div class="flex items-end justify-between">
-                    <h3 id="enrolledCount" class="text-4xl font-black text-gray-900 dark:text-white">0</h3>
-                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500 opacity-30 group-hover:opacity-100">📚</span>
-                </div>
-            </div>
+        <!-- Main Dashboard Console -->
+        <main class="flex-grow overflow-auto p-8 lg:p-12">
+            <% 
+                const streak = (typeof gamificationData !== 'undefined' && gamificationData.streakData) ? gamificationData.streakData.currentStreak : 0;
+                const xp = (typeof gamificationData !== 'undefined') ? gamificationData.experiencePoints : 0;
+                const rank = (typeof gamificationData !== 'undefined') ? (gamificationData.rank || 'Engineer') : 'Novice';
+            %>
             
-            <div class="atlas-card glass p-8 group">
-                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Verified Skills</p>
-                <div class="flex items-end justify-between">
-                    <h3 id="completedCount" class="text-4xl font-black text-gray-900 dark:text-white">0</h3>
-                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500 opacity-30 group-hover:opacity-100">🏆</span>
+            <!-- Global Command Header -->
+            <header class="flex justify-between items-end mb-12">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">Console Status: Online</span>
+                        <div class="h-px w-12 bg-white/10"></div>
+                    </div>
+                    <h1 class="text-6xl font-black tracking-tighter text-white">Mission <span class="text-[#00ED64]">Control</span></h1>
                 </div>
-            </div>
-            
-            <div class="atlas-card glass p-8 group">
-                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Certifications</p>
-                <div class="flex items-end justify-between">
-                    <h3 class="text-4xl font-black text-gray-900 dark:text-white">0</h3>
-                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500 opacity-30 group-hover:opacity-100">📜</span>
+                <div class="hidden md:flex gap-4">
+                    <div class="text-right">
+                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">Authorization Tier</div>
+                        <div class="text-[#00ED64] font-black text-lg tracking-tight"><%= rank.toUpperCase() %></div>
+                    </div>
                 </div>
-            </div>
+            </header>
 
-            <div class="atlas-card glass p-8 group">
-                <p class="text-[10px] font-black text-gray-500 dark:text-[#9FB1AD] uppercase tracking-widest mb-4">Global Index</p>
-                <div class="flex items-end justify-between">
-                    <h3 class="text-4xl font-black text-gray-900 dark:text-white">#12</h3>
-                    <span class="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500 opacity-30 group-hover:opacity-100">🌍</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Toolbar -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 px-4">
-            <div class="flex bg-gray-100 dark:bg-[#023430]/50 p-1.5 rounded-2xl border border-gray-200 dark:border-[#133A41] backdrop-blur-md">
-                <button onclick="switchTab('all')" id="tab-all" class="tab-btn active px-8 py-3 rounded-xl text-[10px] font-black tracking-widest transition-all">
-                    MASTER
-                </button>
-                <button onclick="switchTab('inprogress')" id="tab-inprogress" class="tab-btn px-8 py-3 rounded-xl text-[10px] font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
-                    STAGING
-                </button>
-                <button onclick="switchTab('completed')" id="tab-completed" class="tab-btn px-8 py-3 rounded-xl text-[10px] font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
-                    PRODUCTION
-                </button>
-                <button onclick="switchTab('wishlist')" id="tab-wishlist" class="tab-btn px-8 py-3 rounded-xl text-[10px] font-black tracking-widest text-gray-500 dark:text-[#9FB1AD] hover:text-gray-900 dark:hover:text-white transition-all">
-                    BACKLOG
-                </button>
-            </div>
-
-            <div class="flex items-center gap-4">
-                <div class="relative">
-                    <input type="text" placeholder="Filter stack..." class="pl-12 pr-6 py-4 glass rounded-2xl text-sm font-bold w-full md:w-64 focus:ring-2 focus:ring-[#00ED64] outline-none transition-all">
-                    <span class="absolute left-5 top-1/2 -translate-y-1/2 opacity-30">🔍</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Admin Panel -->
-        <div id="adminPanel" class="hidden mb-16 px-4 animate-slide-up">
-            <div class="bg-gradient-to-r from-[#00ED64]/10 to-transparent border border-[#00ED64]/20 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden group">
-                <div class="absolute top-0 right-0 w-64 h-64 bg-[#00ED64] blur-[120px] opacity-5 -translate-y-1/2 translate-x-1/2"></div>
-                
-                <div class="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-4">
-                            <span class="px-2 py-1 bg-[#00ED64] text-[#001E2B] text-[9px] font-black uppercase tracking-widest rounded shadow-lg shadow-[#00ED64]/20">Governance</span>
-                            <span class="text-xs font-bold text-gray-500 dark:text-[#9FB1AD]">SUPER ADMIN CONSOLE</span>
-                        </div>
-                        <h2 class="text-3xl font-black tracking-tight mb-4 dark:text-white leading-tight">Platform <span class="premium-title">Orchestration</span></h2>
-                        <p class="text-gray-500 dark:text-[#9FB1AD] font-medium leading-relaxed max-w-xl">
-                            Elite access enabled. Monitor teacher provisioning, manage curriculum lifecycle, and oversee global academy scale operations.
+            <!-- Mission Hero -->
+            <div class="hero-banner-atlas p-12 lg:p-16 mb-16 shadow-2xl">
+                <div class="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-12">
+                    <div class="max-w-xl">
+                        <h2 class="text-4xl lg:text-5xl font-black tracking-tight text-white mb-6 leading-tight">
+                            Continue your <span class="text-[#00ED64]">Expert Architecture</span> journey.
+                        </h2>
+                        <p class="text-gray-400 text-lg font-medium mb-10 leading-relaxed">
+                            Synchronization with the global engineering manifest is recommended. Current streak: <span class="text-white font-bold"><%= streak %> days</span>.
                         </p>
+                        <div class="flex gap-4">
+                            <button class="px-8 py-4 btn-atlas-cta uppercase tracking-widest text-[11px]">Resume Last Session</button>
+                            <button class="px-8 py-4 bg-white/5 border border-white/10 rounded-16 font-black uppercase tracking-widest text-[11px] hover:bg-white/10 transition-all">View Roadmap</button>
+                        </div>
                     </div>
-                    
-                    <div class="flex flex-col gap-4 w-full md:w-auto">
-                        <a href="/admin/teacher-requests" class="flex items-center justify-between gap-12 px-8 py-5 glass border-[#00ED64]/30 hover:bg-[#00ED64]/10 transition-all rounded-2xl group/link">
-                            <div>
-                                <h4 class="font-black text-sm tracking-tight dark:text-white">Teacher Requests</h4>
-                                <p class="text-[10px] font-bold text-gray-400 dark:text-[#9FB1AD] uppercase tracking-widest">Awaiting Provisioning</p>
+
+                    <!-- Rapid Stats Card -->
+                    <div class="w-full lg:w-96 premium-glass p-8 rounded-[32px] border-[#00ED64]/20">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="stat-node">
+                                <div class="text-2xl mb-2">⚡</div>
+                                <div class="text-2xl font-black text-white"><%= xp %></div>
+                                <div class="text-[9px] font-black uppercase tracking-widest text-gray-500">XP Sync</div>
                             </div>
-                            <span id="requestBadge" class="hidden px-2 py-1 bg-[#00ED64] text-[#001E2B] text-[10px] font-black rounded-md animate-bounce">0</span>
-                        </a>
-                        
-                        <form id="grantTeacherForm" class="flex gap-2">
-                            <input type="email" id="teacherEmail" placeholder="Engineer Email" class="flex-1 px-6 py-4 glass border-white/10 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[#00ED64] outline-none">
-                            <button type="submit" class="px-6 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 active:scale-95">
-                                GRANT
-                            </button>
-                        </form>
+                            <div class="stat-node">
+                                <div class="text-2xl mb-2">🔥</div>
+                                <div class="text-2xl font-black text-white"><%= streak %></div>
+                                <div class="text-[9px] font-black uppercase tracking-widest text-gray-500">Day Streak</div>
+                            </div>
+                            <div class="stat-node col-span-2">
+                                <div class="flex justify-between items-end mb-4">
+                                    <div>
+                                        <div class="text-sm font-black text-white">Next Level</div>
+                                        <div class="text-[9px] font-black uppercase tracking-widest text-[#00ED64] mt-1">Infrastructure Architect</div>
+                                    </div>
+                                    <div class="text-[10px] font-black text-white/40">74%</div>
+                                </div>
+                                <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                                    <div class="progress-bar-glow w-[74%]"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Tab Content Containers -->
-        <div id="wishlistSection" class="hidden mb-12 tab-content px-4 animate-slide-up">
-            <div id="wishlistGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Wishlist items will be loaded here -->
+            <!-- Curriculum Feed -->
+            <div class="flex items-center justify-between mb-10">
+                <h2 class="text-3xl font-black tracking-tight flex items-center gap-4">
+                    <i class="fas fa-layer-group text-[#00ED64]"></i>
+                    Provisioned Tracks
+                </h2>
+                <div class="flex gap-4">
+                    <button class="text-xs font-black uppercase tracking-widest text-[#00ED64] py-2 px-4 bg-[#00ED64]/5 rounded-xl border border-[#00ED64]/10">All Nodes</button>
+                    <button class="text-xs font-black uppercase tracking-widest text-gray-500 py-2 px-4 hover:text-white transition-all">Archived</button>
+                </div>
             </div>
-        </div>
 
-        <div id="coursesSection" class="tab-content px-4 animate-slide-up">
-            <div id="courseGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Courses will be loaded here -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-20">
+                <% if (courses && courses.length > 0) { %>
+                    <% courses.forEach(course => { %>
+                        <% 
+                            const total = course.videos ? course.videos.length : 0;
+                            const watched = course.videos ? course.videos.filter(v => v.watched).length : 0;
+                            const progress = total > 0 ? Math.round((watched / total) * 100) : 0;
+                        %>
+                        <div class="course-card-premium premium-glass p-10 flex flex-col group">
+                            <div class="flex justify-between items-start mb-10">
+                                <div class="w-16 h-16 bg-[#001E2B] rounded-2xl flex items-center justify-center text-[#00ED64] border border-[#00ED64]/10 shadow-lg group-hover:shadow-[#00ED64]/20 transition-all">
+                                    <i class="fas fa-terminal text-2xl"></i>
+                                </div>
+                                <span class="px-3 py-1 bg-blue-500/10 text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-lg border border-blue-500/20">Production</span>
+                            </div>
+
+                            <div class="mb-10">
+                                <h3 class="text-2xl font-black tracking-tight mb-3 group-hover:text-[#00ED64] transition-colors"><%= course.title || course.name %></h3>
+                                <div class="text-xs text-gray-500 font-bold flex items-center gap-2">
+                                    <i class="fas fa-user-tie opacity-40"></i>
+                                    Arch. <%= course.instructor || 'Lead Engineer' %>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto">
+                                <div class="flex justify-between items-end mb-4">
+                                    <div class="text-[10px] font-black uppercase tracking-widest text-gray-500">Sync Pipeline</div>
+                                    <div class="text-sm font-black text-white"><%= progress %>%</div>
+                                </div>
+                                <div class="w-full h-1.5 bg-black/40 rounded-full overflow-hidden mb-8">
+                                    <div class="progress-bar-glow" style="width: <%= progress %>%;"></div>
+                                </div>
+                                <a href="/course/<%= encodeURIComponent(course.name) %>" class="w-full py-4 text-center btn-atlas-cta uppercase tracking-widest text-[11px] block">
+                                    Initialize Session
+                                </a>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="col-span-full py-32 premium-glass rounded-[48px] border-dashed border-[#00ED64]/10 flex flex-col items-center justify-center text-center">
+                        <div class="w-24 h-24 bg-[#00ED64]/5 rounded-full flex items-center justify-center mb-8 border border-[#00ED64]/10 animate-pulse">
+                            <i class="fas fa-satellite text-[#00ED64] text-4xl"></i>
+                        </div>
+                        <h2 class="text-3xl font-black text-white mb-6">No Active Curricula Provisioned</h2>
+                        <p class="text-gray-400 font-medium mb-12 max-w-sm mx-auto leading-relaxed">Expand your expertise by deploying curriculum modules from the global catalog center.</p>
+                        <a href="/courses" class="btn-atlas-cta px-12 py-5 uppercase tracking-widest text-xs">Provision First Track</a>
+                    </div>
+                <% } %>
             </div>
-        </div>
+
+            <!-- Global Footer Status -->
+            <footer class="mt-20 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-[#00ED64] rounded-full"></span>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#00ED64]">API Integrated</span>
+                    </div>
+                    <div class="text-[10px] font-black uppercase tracking-widest text-gray-600 tracking-tighter">Lat: 2026.03.25 // Node: AWS-US-EAST-1</div>
+                </div>
+                <div class="text-[10px] font-black uppercase tracking-widest text-gray-600">
+                    &copy; 2026 Multitouch Academy // Engineering Lab
+                </div>
+            </footer>
+        </main>
     </div>
-    
+
     <script>
-        let allCourses = [];
-        let myEnrollments = [];
-        let wishlistItems = [];
-        let currentUser = null;
+        // Force Theme Enforcement
+        document.documentElement.classList.add('dark');
         
-        document.addEventListener('DOMContentLoaded', () => {
-            loadUser();
-            initDashboard();
-        });
-
-        async function initDashboard() {
-            await Promise.all([
-                loadCourses(),
-                loadWishlist(),
-                loadEnrollmentStats()
-            ]);
-            switchTab('all');
+        // Dynamic Title for Sections
+        const activeSections = <%= (courses && courses.length) ? courses.length : 0 %>;
+        if (activeSections > 0) {
+            console.log(`[SYS] ${activeSections} Active Curricula Syncing...`);
         }
-        
-        function loadUser() {
-            const userStr = localStorage.getItem('user');
-            const token = localStorage.getItem('accessToken');
-            
-            if (!userStr || !token) {
-                window.location.href = '/login';
-                return;
-            }
-            
-            currentUser = JSON.parse(userStr);
-            document.getElementById('userName').textContent = currentUser.name || currentUser.email;
-            
-            if (currentUser.email === 'engineerfelex@gmail.com') {
-                const adminPanel = document.getElementById('adminPanel');
-                if (adminPanel) adminPanel.classList.remove('hidden');
-                const userRole = document.getElementById('userRole');
-                if (userRole) userRole.textContent = 'Super Admin';
-                loadPendingRequests();
-            }
-        }
-        
-        async function loadCourses() {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('/api/courses', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    allCourses = data.data || [];
-                }
-            } catch (error) {
-                console.error('Error loading courses:', error);
-            }
-        }
-        
-        async function loadWishlist() {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('/api/wishlist', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    wishlistItems = data.wishlist || [];
-                    renderWishlist(wishlistItems);
-                }
-            } catch (error) {
-                console.error('Error loading wishlist:', error);
-            }
-        }
-
-        async function loadEnrollmentStats() {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('/api/enrollments/my-enrollments', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    myEnrollments = data.data || [];
-                    
-                    const enrolledCount = document.getElementById('enrolledCount');
-                    if (enrolledCount) enrolledCount.textContent = myEnrollments.length;
-                    
-                    const completed = myEnrollments.filter(e => e.status === 'completed').length;
-                    const completedCount = document.getElementById('completedCount');
-                    if (completedCount) completedCount.textContent = completed;
-                    
-                    const progress = myEnrollments.length > 0 ? Math.round((completed / myEnrollments.length) * 100) : 0;
-                    const progressPercent = document.getElementById('progressPercent');
-                    if (progressPercent) progressPercent.textContent = progress + '%';
-                }
-            } catch (error) {
-                console.error('Error loading enrollment stats:', error);
-            }
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-[#00ED64]', 'text-[#001E2B]', 'font-black', 'shadow-lg', 'shadow-[#00ED64]/10');
-                btn.classList.add('text-gray-500', 'dark:text-[#9FB1AD]', 'hover:text-gray-900', 'dark:hover:text-white');
-            });
-            
-            const activeBtn = document.getElementById(`tab-${tab}`);
-            if (activeBtn) {
-                activeBtn.classList.add('active', 'bg-[#00ED64]', 'text-[#001E2B]', 'font-black', 'shadow-lg', 'shadow-[#00ED64]/10');
-                activeBtn.classList.remove('text-gray-500', 'dark:text-[#9FB1AD]', 'hover:text-gray-900', 'dark:hover:text-white');
-            }
-
-            const wishlistSection = document.getElementById('wishlistSection');
-            const coursesSection = document.getElementById('coursesSection');
-            
-            if (tab === 'wishlist') {
-                wishlistSection.classList.remove('hidden');
-                coursesSection.classList.add('hidden');
-            } else {
-                wishlistSection.classList.add('hidden');
-                coursesSection.classList.remove('hidden');
-                filterCourses(tab);
-            }
-        }
-
-        function filterCourses(tab) {
-            let filtered = [];
-            if (tab === 'all') {
-                filtered = allCourses;
-            } else if (tab === 'inprogress') {
-                const enrolledNames = myEnrollments.filter(e => e.status !== 'completed').map(e => e.courseName);
-                filtered = allCourses.filter(c => enrolledNames.includes(c.name || c.courseName));
-            } else if (tab === 'completed') {
-                const completedNames = myEnrollments.filter(e => e.status === 'completed').map(e => e.courseName);
-                filtered = allCourses.filter(c => completedNames.includes(c.name || c.courseName));
-            }
-            renderCourses(filtered);
-        }
-
-        function renderWishlist(courses) {
-            const grid = document.getElementById('wishlistGrid');
-            if (courses.length === 0) {
-                grid.innerHTML = '<div class="col-span-full py-20 text-center glass rounded-3xl border-dashed border-white/10"><p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Your backlog is currently empty</p></div>';
-                return;
-            }
-            grid.innerHTML = courses.map(course => `
-                <div class="atlas-card glass p-8 relative flex flex-col h-full group">
-                    <button onclick="removeFromWishlist('${course.name || course.title}')" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 transition-colors z-10 p-2 glass rounded-lg">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                    <div class="w-16 h-16 bg-gradient-to-br from-[#00ED64]/20 to-[#00684A]/20 rounded-2xl flex items-center justify-center mb-8 shadow-inner border border-[#00ED64]/10 group-hover:scale-110 transition-transform duration-500">
-                        <span class="text-[#00ED64] text-3xl font-black">${(course.title || course.name || 'C').charAt(0)}</span>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="px-2 py-0.5 bg-[#00ED64]/10 text-[#00ED64] text-[9px] font-black uppercase tracking-widest rounded-md border border-[#00ED64]/20">BACKLOG</span>
-                        </div>
-                        <h3 class="font-black text-gray-900 dark:text-white mb-3 text-xl tracking-tight leading-tight">${course.title || course.name || 'Untitled Course'}</h3>
-                        <p class="text-gray-500 dark:text-[#9FB1AD] text-sm mb-8 line-clamp-3 font-medium leading-relaxed">${course.description || 'Premium blueprint awaiting deployment.'}</p>
-                    </div>
-                    <div class="pt-6 border-t border-gray-100 dark:border-[#133A41] mt-auto">
-                        <button onclick="enrollInCourse('${course.name || course._id}')" 
-                                class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0">
-                            PROVISION STACK
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderCourses(courses) {
-            const grid = document.getElementById('courseGrid');
-            if (courses.length === 0) {
-                grid.innerHTML = '<div class="col-span-full py-20 text-center glass rounded-3xl border-dashed border-white/10"><p class="text-gray-500 font-bold uppercase tracking-widest text-[10px]">No definitions found in this branch</p></div>';
-                return;
-            }
-            grid.innerHTML = courses.map(course => {
-                const enrolled = myEnrollments.find(e => e.courseName === (course.name || course.title));
-                const progress = enrolled ? enrolled.progress || 0 : 0;
-                const isCompleted = enrolled && enrolled.status === 'completed';
-                return `
-                <div class="atlas-card glass p-8 relative flex flex-col h-full group">
-                    <div class="w-16 h-16 bg-gradient-to-br from-[#00ED64]/20 to-[#00684A]/20 rounded-2xl flex items-center justify-center mb-8 shadow-inner border border-[#00ED64]/10 group-hover:scale-110 transition-transform duration-500">
-                        <span class="text-[#00ED64] text-3xl font-black">${(course.title || course.name || 'C').charAt(0)}</span>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="px-2 py-0.5 bg-[#00ED64]/10 text-[#00ED64] text-[9px] font-black uppercase tracking-widest rounded-md border border-[#00ED64]/20">v2.4.0</span>
-                            <span class="px-2 py-0.5 ${isCompleted ? 'bg-[#00ED64]/20 text-[#00ED64]' : 'bg-blue-500/10 text-blue-400'} text-[9px] font-black uppercase tracking-widest rounded-md border ${isCompleted ? 'border-[#00ED64]/30' : 'border-blue-500/20'}">${isCompleted ? 'VERIFIED' : 'STABLE'}</span>
-                        </div>
-                        <h3 class="font-black text-gray-900 dark:text-white mb-3 text-xl tracking-tight leading-tight">${course.title || course.name || 'Untitled Course'}</h3>
-                        <p class="text-gray-500 dark:text-[#9FB1AD] text-sm mb-8 line-clamp-2 font-medium leading-relaxed">${course.description || 'Deploy next-generation infrastructure with this expert-led course.'}</p>
-                        ${enrolled ? `
-                        <div class="mb-8">
-                            <div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
-                                <span class="text-gray-400">Sync Status</span>
-                                <span class="text-[#00ED64]">${progress}%</span>
-                            </div>
-                            <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                <div class="h-full bg-[#00ED64] shadow-[0_0_8px_#00ED64]" style="width: ${progress}%"></div>
-                            </div>
-                        </div>
-                        ` : ''}
-                    </div>
-                    <div class="pt-6 border-t border-gray-100 dark:border-[#133A41] mt-auto flex flex-col gap-3">
-                        ${enrolled ? `
-                            <a href="/course/${encodeURIComponent(course.name || course.title || 'unknown')}/video/" class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] text-center font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0">
-                                ${isCompleted ? 'REVIEW MODULE' : 'RESUME DEPLOYMENT'}
-                            </a>
-                        ` : `
-                            <button onclick="enrollInCourse('${course.name || course._id}')" 
-                                    class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0" 
-                                    data-course-id="${course.name || course._id}">
-                                PROVISION CLUSTER
-                            </button>
-                        `}
-                        <a href="/course/${encodeURIComponent(course.name || course.title || 'unknown')}" class="block w-full px-6 py-4 glass text-gray-700 dark:text-white text-center font-black rounded-2xl hover:bg-white/10 transition-all text-[10px] tracking-[0.2em]">
-                            ACCESS BLUEPRINT
-                        </a>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-        
-        async function enrollInCourse(courseId) {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('/api/enrollments', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ courseId })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    initDashboard();
-                } else {
-                    alert('Provisioning failed: ' + data.error);
-                }
-            } catch (error) {
-                alert('Connection error: ' + error.message);
-            }
-        }
-        
-        async function removeFromWishlist(courseId) {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('/api/wishlist/remove', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ courseId })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    loadWishlist();
-                }
-            } catch (error) {
-                console.error('Error removing from stash:', error);
-            }
-        }
-        
-        async function loadPendingRequests() {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('/api/admin/teacher-requests', {
-                    headers: { 'Authorization': `Bearer ${token}`, 'x-admin-key': 'admin123' }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    const pendingCount = data.data.filter(r => r.status === 'pending').length;
-                    const badge = document.getElementById('requestBadge');
-                    if (badge && pendingCount > 0) {
-                        badge.textContent = pendingCount;
-                        badge.classList.remove('hidden');
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading orchestration queue:', error);
-            }
-        }
-
-        function initTheme() {
-            const theme = localStorage.getItem("theme") || "light";
-            document.documentElement.classList.toggle("dark", theme === "dark");
-            const icon = document.getElementById('themeIcon');
-            if (icon) icon.textContent = theme === "dark" ? '☀️' : '🌙';
-        }
-        
-        function toggleTheme() {
-            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
-            document.documentElement.classList.toggle("dark", newTheme === "dark");
-            localStorage.setItem("theme", newTheme);
-            const icon = document.getElementById('themeIcon');
-            if (icon) icon.textContent = newTheme === "dark" ? '☀️' : '🌙';
-        }
-
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
-        
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) logoutBtn.addEventListener('click', () => {
-            localStorage.clear();
-            window.location.href = '/login';
-        });
-
-        const grantTeacherForm = document.getElementById('grantTeacherForm');
-        if (grantTeacherForm) {
-            grantTeacherForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('teacherEmail').value;
-                const token = localStorage.getItem('accessToken');
-                try {
-                    const response = await fetch('/api/admin/grant-teacher', {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        alert('Account provisioned as Engineer ✅');
-                        document.getElementById('teacherEmail').value = '';
-                    } else {
-                        alert(data.error);
-                    }
-                } catch (error) {
-                    alert('Orchestration error: ' + error.message);
-                }
-            });
-        }
-
-        initTheme();
     </script>
 </body>
 </html>

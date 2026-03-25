@@ -6,128 +6,133 @@
     <title>Sign In - Multitouch Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         darkMode: 'class',
         theme: {
           extend: {
             colors: {
-              'mongo-green': '#00ED64',
-              'mongo-dark': '#001E2B',
-              'mongo-slate': '#023430',
+              'mdb-green': '#00ED64',
+              'mdb-forest': '#00684A',
+              'mdb-midnight': '#001E2B',
+              'mdb-slate': '#023430',
             }
           }
         }
       }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; }
-        .glass {
+        body { 
+            font-family: 'Outfit', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .premium-glass {
             background: rgba(2, 52, 48, 0.4);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(0, 237, 100, 0.1);
         }
-        .premium-title {
-            background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .input-focus-green:focus {
+            border-color: #00ED64 !important;
+            box-shadow: 0 0 0 4px rgba(0, 237, 100, 0.1);
         }
-        .input-premium {
-            background: rgba(0, 30, 43, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .btn-atlas-green {
+            background: #00ED64;
+            color: #001E2B;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .input-premium:focus {
-            border-color: #00ED64;
-            box-shadow: 0 0 20px rgba(0, 237, 100, 0.1);
+        .btn-atlas-green:hover {
+            box-shadow: 0 0 25px rgba(0, 237, 100, 0.3);
+            transform: translateY(-2px);
+        }
+        .btn-atlas-green:active {
+            transform: translateY(0);
         }
     </style>
 </head>
-<body class="dark bg-[#001E2B] text-[#E7EEEB] min-h-screen flex items-center justify-center p-6 bg-[url('https://www.mongodb.com/ready-2022/static/background-blobs-c9d3b1b4d8d8d8d8d8d8d8d8d8d8d8d8.svg')] bg-cover">
-    
-    <!-- Dark Mode Toggle (Fixed for consistency) -->
-    <button id="themeToggle" class="fixed top-8 right-8 w-12 h-12 glass rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
-        <span id="themeIcon">🌙</span>
-    </button>
+<body class="dark bg-[#001E2B] text-white min-h-screen flex items-center justify-center p-4">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-[#00ED64]/5 rounded-full blur-[120px]"></div>
+        <div class="absolute top-[60%] -right-[10%] w-[50%] h-[50%] bg-[#00ED64]/5 rounded-full blur-[120px]"></div>
+    </div>
 
-    <div class="w-full max-w-md relative animate-in fade-in zoom-in duration-700">
-        <!-- Decorative Glow -->
-        <div class="absolute -top-24 -left-24 w-64 h-64 bg-[#00ED64]/10 rounded-full blur-[100px]"></div>
-        <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px]"></div>
+    <div class="w-full max-w-[480px] relative z-10">
+        <!-- Logo Area -->
+        <div class="flex flex-col items-center mb-12">
+            <div class="w-20 h-20 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-3xl flex items-center justify-center shadow-2xl shadow-[#00ED64]/20 mb-6 group cursor-pointer hover:rotate-6 transition-transform">
+                <span class="text-[#001E2B] text-4xl font-black">M</span>
+            </div>
+            <h1 class="text-4xl font-black tracking-tighter text-white mb-2">Multitouch Academy</h1>
+            <p class="text-gray-400 font-medium">Cloud Infrastructure Engineering Lab</p>
+        </div>
 
-        <div class="glass p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-            <!-- Header -->
-            <div class="text-center mb-10">
-                <div class="w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-[#00ED64]/20 rotate-3">
-                    <span class="text-[#001E2B] text-3xl font-black">M</span>
-                </div>
-                <h1 class="text-3xl font-black tracking-tighter text-white">Multitouch <span class="premium-title">Academy</span></h1>
-                <p class="text-[#9FB1AD] mt-2 font-medium">Access your expert learning architecture.</p>
+        <!-- Auth Card -->
+        <div class="premium-glass p-10 rounded-[40px] shadow-3xl">
+            <div class="mb-10">
+                <h2 class="text-2xl font-black tracking-tight text-white mb-2">Sign in to Console</h2>
+                <p class="text-gray-400 text-sm">Enter your credentials to access the deployment bay.</p>
+            </div>
+
+            <!-- Role Selector -->
+            <div class="flex p-1 bg-[#001E2B]/60 rounded-2xl border border-white/5 mb-8">
+                <button id="studentTab" class="flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B]">Student</button>
+                <button id="teacherTab" class="flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-gray-400 hover:text-white">Instructor</button>
             </div>
 
             <% if (typeof error !== 'undefined' && error) { %>
-            <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-xs font-bold text-center">
-                <i class="fas fa-exclamation-triangle mr-2"></i> <%= error %>
-            </div>
+                <div class="mb-6 px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold flex items-center gap-3">
+                    <i class="fas fa-exclamation-circle text-sm"></i> <%= error %>
+                </div>
             <% } %>
 
-            <!-- Role Selection -->
-            <div class="mb-8 p-1.5 bg-[#001E2B]/50 rounded-2xl flex gap-1 border border-white/5">
-                <button id="studentTab" class="flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg shadow-[#00ED64]/10">
-                    <i class="fas fa-user-graduate mr-2"></i> Student
-                </button>
-                <button id="teacherTab" class="flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-[#9FB1AD] hover:text-white">
-                    <i class="fas fa-chalkboard-teacher mr-2"></i> Teacher
-                </button>
-            </div>
-
             <form id="loginForm" class="space-y-6">
-                <div class="relative">
-                    <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
-                    <input type="email" id="email" name="email" placeholder="Email Address" required
-                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
-                </div>
-                
-                <div class="relative">
-                    <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
-                    <input type="password" id="password" name="password" placeholder="Password" required
-                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Identity (Email)</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-5 top-1/2 -translate-y-1/2 text-gray-400/30 text-[10px]"></i>
+                        <input type="email" id="email" required placeholder="name@company.com" 
+                               class="w-full bg-[#001E2B]/40 border border-white/10 rounded-2xl px-12 py-4 text-sm font-medium outline-none input-focus-green transition-all placeholder:text-gray-600">
+                    </div>
                 </div>
 
-                <div id="teacherNote" class="hidden p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
-                    <p class="text-[10px] font-black uppercase tracking-wider text-amber-500 text-center leading-relaxed">
-                        <i class="fas fa-info-circle mr-2 text-xs"></i> Instructor verification required for node access
+                <div>
+                    <div class="flex justify-between mb-2 ml-1">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Access Key (Password)</label>
+                        <a href="/forgot-password" class="text-[10px] font-black text-[#00ED64] uppercase tracking-widest hover:opacity-75 transition-opacity">Key Loss?</a>
+                    </div>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-5 top-1/2 -translate-y-1/2 text-gray-400/30 text-[10px]"></i>
+                        <input type="password" id="password" required placeholder="••••••••" 
+                               class="w-full bg-[#001E2B]/40 border border-white/10 rounded-2xl px-12 py-4 text-sm font-medium outline-none input-focus-green transition-all placeholder:text-gray-600">
+                    </div>
+                </div>
+
+                <div id="teacherNote" class="hidden p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl">
+                    <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-relaxed text-center">
+                        <i class="fas fa-shield-halved mr-2"></i> Security: Instructor hardware-key required
                     </p>
                 </div>
 
-                <button type="submit" id="loginBtn" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:shadow-xl hover:shadow-[#00ED64]/20 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-[0.2em] text-xs">
+                <button type="submit" id="loginBtn" class="w-full py-5 btn-atlas-green rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-lg shadow-[#00ED64]/10">
                     <span id="loginText">Initialize Access</span>
                 </button>
-
-                <div class="flex justify-between items-center px-2">
-                    <a href="/forgot-password" class="text-[10px] font-black uppercase tracking-widest text-[#00ED64] hover:opacity-70 transition-opacity">Reset Path</a>
-                    <a href="/signup" class="text-[10px] font-black uppercase tracking-widest text-[#9FB1AD] hover:text-[#00ED64] transition-all">Create Node</a>
-                </div>
             </form>
 
-            <!-- Super Admin Debug Section (Premium Style) -->
-            <div id="superAdminSection" class="mt-10 pt-8 border-t border-white/5">
-                <p class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-[0.3em] text-center mb-6 opacity-30">Security Gateway</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <button type="button" onclick="loginAsSuperAdmin()" class="py-3 px-4 glass rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/5 transition-all text-blue-400 border-blue-400/20">Auto-Credential</button>
-                    <button type="button" id="setupAdminBtn" onclick="setupSuperAdmin()" class="py-3 px-4 glass rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/5 transition-all text-purple-400 border-purple-400/20">Sync Cognito</button>
-                </div>
+            <div class="mt-10 pt-8 border-t border-white/5 text-center">
+                <p class="text-gray-400 text-sm font-medium">New to Academy? <a href="/signup" class="text-[#00ED64] font-bold hover:underline">Join Academy</a></p>
+            </div>
+
+            <!-- Developer Gate -->
+            <div class="mt-8 flex gap-3">
+                <button onclick="loginAsSuperAdmin()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-400 transition-all">Auto-Fill</button>
+                <button onclick="setupSuperAdmin()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-400 transition-all">Sync Cognito</button>
             </div>
         </div>
-
-        <p class="text-center mt-8 text-[9px] font-black text-[#9FB1AD] uppercase tracking-[0.5em] opacity-20">© 2026 Multitouch Systems</p>
     </div>
 
     <script>
         let selectedRole = 'student';
-        
-        // Role tab switching
         const studentTab = document.getElementById('studentTab');
         const teacherTab = document.getElementById('teacherTab');
         const loginText = document.getElementById('loginText');
@@ -136,13 +141,13 @@
         function updateRole(role) {
             selectedRole = role;
             if (role === 'student') {
-                studentTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg shadow-[#00ED64]/10';
-                teacherTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-[#9FB1AD] hover:text-white';
+                studentTab.className = 'flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg';
+                teacherTab.className = 'flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-gray-400 hover:text-white';
                 teacherNote.classList.add('hidden');
                 loginText.textContent = 'Initialize Student Access';
             } else {
-                teacherTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg shadow-[#00ED64]/10';
-                studentTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-[#9FB1AD] hover:text-white';
+                teacherTab.className = 'flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg';
+                studentTab.className = 'flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-gray-400 hover:text-white';
                 teacherNote.classList.remove('hidden');
                 loginText.textContent = 'Initialize Instructor Access';
             }
@@ -151,24 +156,6 @@
         studentTab.addEventListener('click', () => updateRole('student'));
         teacherTab.addEventListener('click', () => updateRole('teacher'));
 
-        // Theme management
-        function initTheme() {
-            const theme = localStorage.getItem("theme") || "dark";
-            document.documentElement.classList.toggle("dark", theme === "dark");
-            document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
-        }
-        
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            const isDark = document.documentElement.classList.contains("dark");
-            const newTheme = isDark ? "light" : "dark";
-            document.documentElement.classList.toggle("dark", newTheme === "dark");
-            localStorage.setItem("theme", newTheme);
-            document.getElementById('themeIcon').textContent = newTheme === "dark" ? '☀️' : '🌙';
-        });
-        
-        initTheme();
-
-        // Login Handler
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
@@ -177,7 +164,8 @@
             const loginTextVal = document.getElementById('loginText');
             
             loginBtn.disabled = true;
-            loginTextVal.textContent = 'VERIFYING ARCHITECTURE...';
+            loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            loginTextVal.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Verifying...';
             
             try {
                 const response = await fetch('/api/auth/signin', {
@@ -185,28 +173,24 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password, requestedRole: selectedRole })
                 });
-                
                 const data = await response.json();
                 if (data.success) {
                     localStorage.setItem('accessToken', data.accessToken);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     localStorage.setItem('selectedRole', selectedRole);
                     window.location.href = '/dashboard';
-                } else {
-                    alert(data.error);
-                }
-            } catch (error) {
-                alert('Connection failed: ' + error.message);
-            } finally {
+                } else { alert(data.error); }
+            } catch (error) { alert('Runtime error: ' + error.message); }
+            finally { 
                 loginBtn.disabled = false;
+                loginBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 loginTextVal.textContent = selectedRole === 'teacher' ? 'Initialize Instructor Access' : 'Initialize Student Access';
             }
         });
 
-        // Debug Helpers
         function loginAsSuperAdmin() {
             document.getElementById('email').value = 'engineerfelex@gmail.com';
-            document.getElementById('password').value = 'test12345';
+            document.getElementById('password').value = 'hyjnij-honrun-2cEdju';
             updateRole('teacher');
         }
 
@@ -217,10 +201,10 @@
                 const response = await fetch('/api/auth/setup-admin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: 'engineerfelex@gmail.com', password: 'test12345', adminKey })
+                    body: JSON.stringify({ email: 'engineerfelex@gmail.com', password: 'hyjnij-honrun-2cEdju', adminKey })
                 });
                 const data = await response.json();
-                alert(data.success ? 'Success: ' + data.message : 'Error: ' + data.error);
+                alert(data.success ? 'Success' : 'Error: ' + data.error);
             } catch (error) { alert('Error: ' + error.message); }
         }
     </script>

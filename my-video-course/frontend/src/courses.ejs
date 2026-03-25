@@ -115,7 +115,7 @@
         border: 1px solid rgba(0, 237, 100, 0.15);
         border-radius: 12px;
         font-size: 9px;
-        font-black;
+        font-weight: 900;
         text-transform: uppercase;
         letter-spacing: 2px;
     }
@@ -202,7 +202,7 @@
                                 <div class="flex gap-4 mt-8">
                                     <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
                                             class="btn-atlas-action flex-grow" 
-                                            data-btn-course-id="<%= course._id || course.name %>"
+                                            id="btn-enroll-<%= course._id || course.name %>"
                                             data-course-name="<%= course.name %>">
                                         Initialize Access
                                     </button>
@@ -249,7 +249,7 @@
             const token = localStorage.getItem('accessToken');
             if (!token) { window.location.href = '/login'; return; }
 
-            const button = document.querySelector(`[data-btn-course-id="${courseId}"]`);
+            const button = document.getElementById(`btn-enroll-${courseId}`);
             const originalText = button.innerText;
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Initializing...';
@@ -268,7 +268,7 @@
             } else { throw new Error(data.error); }
         } catch (err) {
             alert('PROTOCOL ERROR: ' + err.message);
-            const button = document.querySelector(`[data-btn-course-id="${courseId}"]`);
+            const button = document.getElementById(`btn-enroll-${courseId}`);
             button.disabled = false;
             button.innerText = 'RETRY INITIALIZATION';
         }
@@ -288,7 +288,7 @@
                 });
                 const data = await response.json();
                 if (data.success && data.data.enrolled) {
-                    const btn = document.querySelector(`[data-btn-course-id="${courseId}"]`);
+                    const btn = document.getElementById(`btn-enroll-${courseId}`);
                     if (btn) {
                         btn.innerText = 'RESUME CONSOLE';
                         btn.onclick = () => window.location.href = `/course/${encodeURIComponent(btn.getAttribute('data-course-name'))}`;

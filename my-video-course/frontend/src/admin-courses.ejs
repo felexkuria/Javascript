@@ -585,7 +585,8 @@
         function showTab(tabName) {
             // Update nav
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            const tabBtn = document.querySelector(`[data-tab="${CSS.escape(tabName)}"]`);
+            if (tabBtn) tabBtn.classList.add('active');
             
             // Update content
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
