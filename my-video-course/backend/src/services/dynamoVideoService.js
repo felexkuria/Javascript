@@ -87,7 +87,7 @@ class DynamoVideoService {
     return courses.map(course => {
       const personalizedVideos = course.videos.map(video => ({
         ...video,
-        watched: !!(watchedVideos[video._id] || watchedVideos[video._id?.toString()] || video.watched)
+        watched: !!(watchedVideos[video.videoId] || watchedVideos[video._id] || video.watched)
       }));
       
       // Sort videos numerically by lesson number
@@ -141,7 +141,7 @@ class DynamoVideoService {
     
     const personalizedVideos = videos.map(video => ({
       ...video,
-      watched: !!(watchedVideos[video._id] || watchedVideos[video._id?.toString()] || video.watched)
+      watched: !!(watchedVideos[video.videoId] || watchedVideos[video._id] || video.watched)
     }));
     
     // Sort videos numerically by lesson number
@@ -158,10 +158,20 @@ class DynamoVideoService {
     });
   }
 
-  // Get a specific video by ID
+  // Get a specific course by its title/name
+  async getCourseByTitle(courseName, userId = 'guest') {
+    const courses = await this.getAllCourses(userId);
+    return courses.find(c => c.name === courseName || c.title === courseName);
+  }
+
+  // Get a specific video by ID or title
   async getVideoById(courseName, videoId, userId = 'guest') {
     const videos = await this.getVideosForCourse(courseName, userId);
-    return videos.find(v => v._id && v._id.toString() === videoId);
+    return videos.find(v => 
+      (v.videoId === videoId) || 
+      (v._id && v._id.toString() === videoId) || 
+      (v.title === videoId)
+    );
   }
 
   // Update video watch status for specific user
