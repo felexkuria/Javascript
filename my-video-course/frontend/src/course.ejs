@@ -82,7 +82,7 @@
                                     <div class="h-full bg-[#00ED64] shadow-[0_0_10px_#00ED64]" style="width: <%- (totalVideos > 0 ? (watchedVideos/totalVideos)*100 : 0) %>%"></div>
                                 </div>
                             </div>
-                            <button onclick="window.location.href='/video/<%= typeof courseName !== 'undefined' ? encodeURIComponent(courseName) : (typeof course !== 'undefined' ? encodeURIComponent(course.name) : '') %>'" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
+                            <button onclick="window.location.href='/course/<%= typeof courseName !== 'undefined' ? encodeURIComponent(courseName) : (typeof course !== 'undefined' ? encodeURIComponent(course.name) : '') %>/video/'" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
                                 RESUME MODULE
                             </button>
                         <% } else { %>
