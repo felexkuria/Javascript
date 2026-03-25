@@ -77,19 +77,28 @@ class AuthController {
 
   async signin(req, res) {
     try {
-      const { email, password } = req.body;
+      const { email, password, requestedRole } = req.body;
       const result = await cognitoService.signIn(email, password);
       
-      // Personalize session based on email
+      // Personalize session based on email and requested role
       const isAdmin = email === ADMIN_EMAIL;
+      const isTeacher = isAdmin || false; // Add more teacher logic if needed
       
+      // Use requestedRole if valid, otherwise default to admin or student
+      let finalRole = isAdmin ? 'admin' : 'student';
+      if (requestedRole === 'teacher' && (isAdmin || isTeacher)) {
+        finalRole = 'teacher';
+      } else if (requestedRole === 'student') {
+        finalRole = 'student';
+      }
+
       req.session.user = {
         email: email,
         roles: isAdmin ? ['admin', 'teacher', 'student'] : ['student'],
-        currentRole: isAdmin ? 'admin' : 'student',
+        currentRole: finalRole,
         isAdmin: isAdmin,
-        isTeacher: isAdmin,
-        role: isAdmin ? 'admin' : 'student',
+        isTeacher: isTeacher,
+        role: finalRole,
         token: result.accessToken
       };
 
