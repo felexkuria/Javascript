@@ -127,6 +127,11 @@ class AdminController {
       res.render('admin-teacher-requests', { requests: [], user: req.user });
     }
   }
+
+  renderAdminPanel(req, res) {
+    if (req.user?.email !== ADMIN_EMAIL) return res.redirect('/dashboard');
+    res.render('admin', { user: req.user });
+  }
 }
 
 module.exports = new AdminController();

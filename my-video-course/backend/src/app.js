@@ -59,6 +59,7 @@ app.get('/login', (req, res) => authController.renderLogin(req, res));
 app.get('/signup', (req, res) => authController.renderSignup(req, res));
 app.get('/forgot-password', (req, res) => authController.renderForgotPassword(req, res));
 app.get('/reset-password', (req, res) => authController.renderResetPassword(req, res));
+app.get('/admin', (req, res) => authController.renderAdminLogin(req, res));
 app.post('/admin/auth', (req, res) => authController.adminAuth(req, res));
 app.get('/logout', (req, res) => authController.logout(req, res));
 
@@ -76,6 +77,7 @@ app.get('/api/next-video', sessionAuth, (req, res) => videoController.getNextVid
 app.get('/admin/super', sessionAuth, (req, res) => adminController.renderSuperDashboard(req, res));
 app.get('/admin/course-manager', sessionAuth, (req, res) => adminController.renderCourseManager(req, res));
 app.get('/admin/teacher-requests', sessionAuth, (req, res) => adminController.renderTeacherRequests(req, res));
+app.get('/admin/tools', sessionAuth, (req, res) => adminController.renderAdminPanel(req, res));
 app.post('/api/admin/users/:id/deactivate', sessionAuth, (req, res) => adminController.deactivateUser(req, res));
 app.post('/api/admin/users/:id/reactivate', sessionAuth, (req, res) => adminController.reactivateUser(req, res));
 app.delete('/api/admin/courses/:id', sessionAuth, (req, res) => adminController.deleteCourse(req, res));
