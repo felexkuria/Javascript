@@ -20,29 +20,54 @@ class VideoProcessingService {
   }
 
   async processVideo(videoFile, courseName, title) {
-    const tempDir = path.join(os.tmpdir(), `video-${Date.now()}`);
+    const tempDir = path.join(os.tmpdir(), `upload-${Date.now()}`);
     fs.mkdirSync(tempDir, { recursive: true });
 
     try {
-      // Save original video
-      const originalPath = path.join(tempDir, 'original.mp4');
+      const isPdf = videoFile.mimetype === 'application/pdf' || videoFile.originalname.toLowerCase().endsWith('.pdf');
+      const ext = isPdf ? '.pdf' : '.mp4';
+      const contentType = isPdf ? 'application/pdf' : 'video/mp4';
+
+      // Save original file
+      const originalPath = path.join(tempDir, 'original' + ext);
       fs.writeFileSync(originalPath, videoFile.buffer);
 
-      // Compress video
-      const compressedPath = await this.compressVideo(originalPath, tempDir);
-      
-      // Upload to S3
+      let s3Key = '';
+      let videoUrl = '';
+      let captionsUrl = '';
+      let aiContent = { quiz: { questions: [] }, summary: '', todoList: { tasks: [] } };
+
       const sanitize = (str) => (str || 'unnamed').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
       const safeCourse = sanitize(courseName);
       const safeTitle = sanitize(title);
-      const s3Key = `videos/${safeCourse}/${Date.now()}-${safeTitle}.mp4`;
-      const videoUrl = await this.uploadToS3(compressedPath, s3Key);
 
-      // Generate captions
-      const captionsUrl = await this.generateCaptions(videoUrl, s3Key, tempDir);
+      if (isPdf) {
+        s3Key = `resources/${safeCourse}/${Date.now()}-${safeTitle}${ext}`;
+        videoUrl = await this.uploadToS3(originalPath, s3Key, contentType);
+      } else {
+        // Compress video
+        const compressedPath = await this.compressVideo(originalPath, tempDir);
+        s3Key = `videos/${safeCourse}/${Date.now()}-${safeTitle}${ext}`;
+        videoUrl = await this.uploadToS3(compressedPath, s3Key, contentType);
 
-      // Generate AI content
-      const aiContent = await this.generateAIContent(captionsUrl, courseName, title);
+        // Generate captions
+        captionsUrl = await this.generateCaptions(videoUrl, s3Key, tempDir);
+
+        // Generate AI content
+        aiContent = await this.generateAIContent(captionsUrl, courseName, title);
+      }
+
+      // Extract metadata
+      let duration = '0:00';
+      if (isPdf) {
+        const pages = await this.getPdfPageCount(originalPath);
+        duration = `${pages} Pages`;
+      } else {
+        const seconds = await this.getVideoDuration(originalPath);
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        duration = `${mins}:${secs.toString().padStart(2, '0')}`;
+      }
 
       // Save to DynamoDB
       const videoData = {
@@ -52,6 +77,8 @@ class VideoProcessingService {
         videoUrl,
         s3Key,
         captionsUrl,
+        duration, // Store extracted duration/pages here
+        type: isPdf ? 'pdf' : 'video',
         ...aiContent,
         createdAt: new Date().toISOString()
       };
@@ -123,7 +150,57 @@ class VideoProcessingService {
     });
   }
 
-  async uploadToS3(filePath, s3Key) {
+  async getVideoDuration(inputPath) {
+    return new Promise((resolve) => {
+      const ffprobe = spawn('ffprobe', [
+        '-v', 'error',
+        '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1',
+        inputPath
+      ]);
+
+      let output = '';
+      ffprobe.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      ffprobe.on('close', (code) => {
+        if (code === 0 && output.trim()) {
+          resolve(parseFloat(output.trim()) || 0);
+        } else {
+          console.warn('ffprobe failed, using 0 duration');
+          resolve(0);
+        }
+      });
+
+      ffprobe.on('error', () => resolve(0));
+    });
+  }
+
+  async getPdfPageCount(inputPath) {
+    return new Promise((resolve) => {
+      const pdfinfo = spawn('pdfinfo', [inputPath]);
+
+      let output = '';
+      pdfinfo.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      pdfinfo.on('close', (code) => {
+        if (code === 0) {
+          const match = output.match(/Pages:\s+(\d+)/);
+          resolve(match ? parseInt(match[1]) : 0);
+        } else {
+          console.warn('pdfinfo failed, using 0 pages');
+          resolve(0);
+        }
+      });
+
+      pdfinfo.on('error', () => resolve(0));
+    });
+  }
+
+  async uploadToS3(filePath, s3Key, contentType = 'video/mp4') {
     if (!this.bucketName) {
       throw new Error('S3_BUCKET_NAME not configured');
     }
@@ -134,7 +211,7 @@ class VideoProcessingService {
       Bucket: this.bucketName,
       Key: s3Key,
       Body: fileBuffer,
-      ContentType: 'video/mp4'
+      ContentType: contentType
     });
 
     await this.s3Client.send(command);

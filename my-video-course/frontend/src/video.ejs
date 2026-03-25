@@ -27,13 +27,13 @@
         }
         
         .corner-badge {
-            background: rgba(255, 255, 255, 0.9);
+            background: var(--color-surface);
             backdrop-filter: blur(20px);
             border-radius: 12px;
-            padding: 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-            border: 0.5px solid rgba(0, 0, 0, 0.04);
-            min-width: 200px;
+            padding: 10px;
+            box-shadow: var(--shadow-md);
+            border: 0.5px solid var(--color-border);
+            min-width: 180px;
             transition: all 0.2s ease;
         }
         
@@ -151,14 +151,15 @@
         }
         
         .shortcut-row span {
-            background: #f2f2f7;
-            color: #1d1d1f;
+            background: var(--color-bg);
+            color: var(--color-text);
             padding: 2px 6px;
             border-radius: 4px;
             font-family: 'SF Mono', Monaco, monospace;
             font-weight: 500;
             min-width: 16px;
             text-align: center;
+            border: 1px solid var(--color-border);
         }
         
         .dark .shortcut-row span {
@@ -273,15 +274,15 @@
                             // Auto-expand section that contains the current video
                             const hasActive = section.lectures.some(l => l.contentId === activeVideoId);
                         %>
-                        <div class="curriculum-section" style="border-bottom: 1px solid rgba(0, 237, 100, 0.1);">
-                            <div class="section-header dark:bg-[#001E2B] dark:hover:bg-[#023430]" 
+                        <div class="curriculum-section" style="border-bottom: 1px solid var(--color-border);">
+                            <div class="section-header bg-[var(--color-surface)] dark:hover:bg-[#00ED64]/10 transition-colors <%= hasActive ? 'bg-[rgba(0,237,100,0.15)]' : '' %>" 
                                  onclick="toggleVideoSection(this)"
-                                 style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; cursor: pointer; background: <%= hasActive ? 'rgba(0,237,100,0.06)' : 'transparent' %>; transition: background 0.2s;">
+                                 style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; cursor: pointer;">
                                 <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
-                                    <span class="toggle-icon dark:text-[#00ED64]" style="font-size: 10px; flex-shrink: 0; transition: transform 0.2s; transform: <%= hasActive ? 'rotate(90deg)' : 'rotate(0deg)' %>;">▶</span>
-                                    <span class="dark:text-[#F9FBFA]" style="font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">§<%= sIndex + 1 %>: <%= section.title %></span>
+                                    <span class="dark:text-[#00ED64]" style="font-size: 10px; flex-shrink: 0; transition: transform 0.2s; transform: <%= hasActive ? 'rotate(90deg)' : 'rotate(0deg)' %>;">▶</span>
+                                    <span class="dark:text-[#F9FBFA]" style="font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">§<%= sIndex + 1 %>: <%= section.title %></span>
                                 </div>
-                                <span class="dark:text-[#9FB1AD]" style="font-size: 10px; opacity: 0.5; flex-shrink: 0; margin-left: 4px;"><%= section.lectures.length %></span>
+                                <span class="dark:text-[#9FB1AD]" style="font-size: 10px; opacity: 0.7; flex-shrink: 0; margin-left: 4px;"><%= section.lectures.length %></span>
                             </div>
                             <div class="section-lectures" style="display: <%= hasActive ? 'block' : 'none' %>;">
                                 <% section.lectures.forEach((lecture, lIndex) => { %>
@@ -293,9 +294,9 @@
                                             <%= isActive ? '▶️' : (lecture.type === 'video' ? '▷' : '📄') %>
                                         </div>
                                         <div class="lecture-info" style="flex: 1; min-width: 0;">
-                                            <div class="lecture-title" style="font-size: 12px; font-weight: <%= isActive ? '700' : '500' %>; color: <%= isActive ? '#00ED64' : 'inherit' %>; line-height: 1.4;"><%= lIndex + 1 %>. <%= lecture.title %></div>
-                                            <div class="lecture-meta" style="font-size: 11px; opacity: 0.5; margin-top: 2px;">
-                                                <span><%= Math.floor((lecture.duration || 0) / 60) %>m</span>
+                                            <div class="lecture-title" style="font-size: 11px; font-weight: <%= isActive ? '700' : '500' %>; color: <%= isActive ? '#00ED64' : 'inherit' %>; line-height: 1.4;"><%= lIndex + 1 %>. <%= lecture.title %></div>
+                                            <div class="lecture-meta" style="font-size: 10px; opacity: 0.7; margin-top: 2px;">
+                                                <span><%= lecture.duration || '0:00' %></span>
                                             </div>
                                         </div>
                                     </div>

@@ -11,7 +11,12 @@ class TeacherController {
       
       // 1. Fetch courses from DynamoDB
       const allCourses = await dynamoVideoService.getAllCourses(userId);
-      const instructorCourses = allCourses.filter(c => c.instructorId === userId || c.createdBy === userId || userId === ADMIN_EMAIL);
+      const instructorCourses = allCourses.filter(c => 
+        c.instructorId === userId || 
+        c.createdBy === userId || 
+        c.instructorEmail === userId ||
+        userId === ADMIN_EMAIL
+      );
       
       // 2. Fetch enrollments from DynamoDB (Note: DynamoDB scans or global queries needed for instructor view)
       // For now, we'll use a simplified approach since DynamoDB doesn't support easy "all enrollments for my courses" without indexes
