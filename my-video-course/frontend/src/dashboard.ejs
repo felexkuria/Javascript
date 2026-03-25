@@ -4,184 +4,207 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mission Control - Student Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'mdb-green': '#00ED64',
+              'mdb-forest': '#00684A',
+              'mdb-midnight': '#001E2B',
+              'mdb-slate': '#023430',
+            }
+          }
+        }
+      }
+    </script>
     <style>
         :root {
-            --atlas-green: #00ED64;
-            --atlas-forest: #00684A;
-            --atlas-slate: #001E2B;
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(0, 30, 43, 0.1);
-        }
-
-        .dark {
-            --glass-bg: rgba(2, 52, 48, 0.3);
-            --glass-border: rgba(0, 237, 100, 0.15);
+            --mdb-green: #00ED64;
+            --mdb-midnight: #001E2B;
+            --glass-bg: rgba(2, 52, 48, 0.4);
+            --glass-border: rgba(0, 237, 100, 0.1);
         }
 
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: #F9FBFA;
-            color: var(--atlas-slate);
-            transition: all 0.3s ease;
-        }
-
-        .dark body {
-            background-color: var(--atlas-slate);
-            color: white;
+            background-color: var(--mdb-midnight);
+            color: #E7EEEB;
+            -webkit-font-smoothing: antialiased;
         }
 
         .premium-glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass-border);
+            box-shadow: 0 12px 48px rgba(0, 30, 43, 0.2);
         }
 
-        .dashboard-layout {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            min-height: 100vh;
-        }
-
-        .hero-banner {
+        .hero-banner-atlas {
+            background: radial-gradient(circle at top right, rgba(0, 237, 100, 0.08) 0%, transparent 60%),
+                        linear-gradient(135deg, #001E2B 0%, #003430 100%);
+            border: 1px solid rgba(0, 237, 100, 0.1);
             border-radius: 40px;
-            padding: 60px;
-            margin-bottom: 40px;
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(0, 30, 43, 0.9) 0%, rgba(0, 104, 74, 0.9) 100%);
-            color: white;
-            border: 1px solid rgba(0, 237, 100, 0.2);
-            box-shadow: 0 20px 40px rgba(0, 30, 43, 0.2);
         }
 
-        .hero-banner::after {
+        .hero-banner-atlas::before {
             content: '';
             position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, var(--atlas-green) 0%, transparent 70%);
+            inset: 0;
+            background: url('https://www.mongodb.com/ready-2022/static/background-blobs-c9d3b1b4d8d8d8d8d8d8d8d8d8d8d8d8.svg');
+            background-size: cover;
             opacity: 0.1;
-            filter: blur(60px);
+            mix-blend-mode: overlay;
         }
 
-        .stat-capsule {
-            padding: 12px 24px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            gap: 16px;
+        .stat-node {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 24px;
+            transition: all 0.3s ease;
         }
 
-        .learning-card-premium {
-            border-radius: 32px;
-            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            overflow: hidden;
+        .stat-node:hover {
+            border-color: var(--mdb-green);
+            background: rgba(0, 237, 100, 0.05);
+            transform: translateY(-4px);
         }
 
-        .learning-card-premium:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 30, 43, 0.1);
-            border-color: var(--atlas-green);
+        .course-card-premium {
+            border-radius: 36px;
+            transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .btn-atlas-primary {
-            background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
-            color: var(--atlas-slate);
-            font-weight: 900;
-            padding: 12px 28px;
-            border-radius: 14px;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 11px;
+        .course-card-premium:hover {
+            border-color: var(--mdb-green);
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 24px 64px rgba(0, 30, 43, 0.4);
         }
 
-        .btn-atlas-primary:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(0, 237, 100, 0.3);
+        .btn-atlas-cta {
+            background: #00ED64;
+            color: #001E2B;
+            font-weight: 800;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .tab-premium {
-            font-weight: 900;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            padding-bottom: 12px;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
+        .btn-atlas-cta:hover {
+            box-shadow: 0 0 30px rgba(0, 237, 100, 0.25);
+            transform: scale(1.02);
         }
 
-        .tab-premium.active {
-            color: var(--atlas-green);
-            border-bottom-color: var(--atlas-green);
-        }
-
-        .p-fill-glow {
+        .progress-bar-glow {
             height: 100%;
             background: linear-gradient(90deg, #00ED64, #00684A);
-            box-shadow: 0 0 10px rgba(0, 237, 100, 0.5);
+            box-shadow: 0 0 12px rgba(0, 237, 100, 0.3);
+            border-radius: 99px;
+        }
+
+        .sidebar-premium {
+            border-right: 1px solid rgba(0, 237, 100, 0.08);
+            background: rgba(0, 30, 43, 0.95);
         }
     </style>
 </head>
 <body class="dark">
-    <div class="dashboard-layout">
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
         <%- include('partials/student-sidebar', { activePage: 'dashboard' }) %>
 
-        <main class="p-10">
+        <!-- Main Dashboard Console -->
+        <main class="flex-grow overflow-auto p-8 lg:p-12">
             <% 
                 const streak = (typeof gamificationData !== 'undefined' && gamificationData.streakData) ? gamificationData.streakData.currentStreak : 0;
                 const xp = (typeof gamificationData !== 'undefined') ? gamificationData.experiencePoints : 0;
+                const rank = (typeof gamificationData !== 'undefined') ? (gamificationData.rank || 'Engineer') : 'Novice';
             %>
-            <!-- Hero Banner -->
-            <div class="hero-banner">
-                <div class="flex flex-col lg:flex-row justify-between items-center gap-10">
-                    <div>
-                        <div class="flex items-center gap-2 mb-4">
-                            <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-[#00ED64]">Session Active</span>
-                        </div>
-                        <h1 class="text-5xl font-black tracking-tighter mb-4">Welcome Back, <span class="text-[#00ED64]"><%= user.name || user.email %></span></h1>
-                        <p class="text-white/60 text-lg font-medium">Your architectural journey continues. Critical milestones awaiting synchronization.</p>
+            
+            <!-- Global Command Header -->
+            <header class="flex justify-between items-end mb-12">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">Console Status: Online</span>
+                        <div class="h-px w-12 bg-white/10"></div>
                     </div>
-                    <div class="flex gap-6">
-                        <div class="stat-capsule">
-                            <div class="text-3xl">⚡</div>
-                            <div>
-                                <div class="text-2xl font-black text-[#00ED64]"><%= xp %></div>
-                                <div class="text-[9px] font-black uppercase tracking-widest text-white/40">XP Accumulated</div>
-                            </div>
+                    <h1 class="text-6xl font-black tracking-tighter text-white">Mission <span class="text-[#00ED64]">Control</span></h1>
+                </div>
+                <div class="hidden md:flex gap-4">
+                    <div class="text-right">
+                        <div class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">Authorization Tier</div>
+                        <div class="text-[#00ED64] font-black text-lg tracking-tight"><%= rank.toUpperCase() %></div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Mission Hero -->
+            <div class="hero-banner-atlas p-12 lg:p-16 mb-16 shadow-2xl">
+                <div class="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-12">
+                    <div class="max-w-xl">
+                        <h2 class="text-4xl lg:text-5xl font-black tracking-tight text-white mb-6 leading-tight">
+                            Continue your <span class="text-[#00ED64]">Expert Architecture</span> journey.
+                        </h2>
+                        <p class="text-gray-400 text-lg font-medium mb-10 leading-relaxed">
+                            Synchronization with the global engineering manifest is recommended. Current streak: <span class="text-white font-bold"><%= streak %> days</span>.
+                        </p>
+                        <div class="flex gap-4">
+                            <button class="px-8 py-4 btn-atlas-cta uppercase tracking-widest text-[11px]">Resume Last Session</button>
+                            <button class="px-8 py-4 bg-white/5 border border-white/10 rounded-16 font-black uppercase tracking-widest text-[11px] hover:bg-white/10 transition-all">View Roadmap</button>
                         </div>
-                        <div class="stat-capsule">
-                            <div class="text-3xl">🔥</div>
-                            <div>
-                                <div class="text-2xl font-black text-orange-500"><%= streak %></div>
-                                <div class="text-[9px] font-black uppercase tracking-widest text-white/40">Active Streak</div>
+                    </div>
+
+                    <!-- Rapid Stats Card -->
+                    <div class="w-full lg:w-96 premium-glass p-8 rounded-[32px] border-[#00ED64]/20">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="stat-node">
+                                <div class="text-2xl mb-2">⚡</div>
+                                <div class="text-2xl font-black text-white"><%= xp %></div>
+                                <div class="text-[9px] font-black uppercase tracking-widest text-gray-500">XP Sync</div>
+                            </div>
+                            <div class="stat-node">
+                                <div class="text-2xl mb-2">🔥</div>
+                                <div class="text-2xl font-black text-white"><%= streak %></div>
+                                <div class="text-[9px] font-black uppercase tracking-widest text-gray-500">Day Streak</div>
+                            </div>
+                            <div class="stat-node col-span-2">
+                                <div class="flex justify-between items-end mb-4">
+                                    <div>
+                                        <div class="text-sm font-black text-white">Next Level</div>
+                                        <div class="text-[9px] font-black uppercase tracking-widest text-[#00ED64] mt-1">Infrastructure Architect</div>
+                                    </div>
+                                    <div class="text-[10px] font-black text-white/40">74%</div>
+                                </div>
+                                <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                                    <div class="progress-bar-glow w-[74%]"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabs -->
-            <nav class="flex gap-12 mb-12 border-b border-white/5">
-                <a href="#" class="tab-premium active">Current Path</a>
-                <a href="#" class="tab-premium">In Progress</a>
-                <a href="#" class="tab-premium">Completed</a>
-                <a href="#" class="tab-premium">Wishlist</a>
-            </nav>
+            <!-- Curriculum Feed -->
+            <div class="flex items-center justify-between mb-10">
+                <h2 class="text-3xl font-black tracking-tight flex items-center gap-4">
+                    <i class="fas fa-layer-group text-[#00ED64]"></i>
+                    Provisioned Tracks
+                </h2>
+                <div class="flex gap-4">
+                    <button class="text-xs font-black uppercase tracking-widest text-[#00ED64] py-2 px-4 bg-[#00ED64]/5 rounded-xl border border-[#00ED64]/10">All Nodes</button>
+                    <button class="text-xs font-black uppercase tracking-widest text-gray-500 py-2 px-4 hover:text-white transition-all">Archived</button>
+                </div>
+            </div>
 
-            <!-- Learning Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-20">
                 <% if (courses && courses.length > 0) { %>
                     <% courses.forEach(course => { %>
                         <% 
@@ -189,92 +212,73 @@
                             const watched = course.videos ? course.videos.filter(v => v.watched).length : 0;
                             const progress = total > 0 ? Math.round((watched / total) * 100) : 0;
                         %>
-                        <div class="learning-card-premium premium-glass p-8 flex flex-col justify-between">
-                            <div>
-                                <div class="w-16 h-16 bg-[#001E2B] rounded-2xl flex items-center justify-center text-[#00ED64] mb-8 border border-white/5 shadow-inner">
+                        <div class="course-card-premium premium-glass p-10 flex flex-col group">
+                            <div class="flex justify-between items-start mb-10">
+                                <div class="w-16 h-16 bg-[#001E2B] rounded-2xl flex items-center justify-center text-[#00ED64] border border-[#00ED64]/10 shadow-lg group-hover:shadow-[#00ED64]/20 transition-all">
                                     <i class="fas fa-terminal text-2xl"></i>
                                 </div>
-                                <h3 class="text-2xl font-black tracking-tight mb-2"><%= course.title || course.name %></h3>
-                                <p class="text-gray-400 text-xs font-black uppercase tracking-widest mb-10 opacity-60">Lead Architect: <%= course.instructor || 'Engineer Felex' %></p>
+                                <span class="px-3 py-1 bg-blue-500/10 text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-lg border border-blue-500/20">Production</span>
                             </div>
 
-                            <div>
-                                <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mb-4">
-                                    <div class="p-fill-glow" style="--p: <%= progress %>%; width: var(--p);"></div>
+                            <div class="mb-10">
+                                <h3 class="text-2xl font-black tracking-tight mb-3 group-hover:text-[#00ED64] transition-colors"><%= course.title || course.name %></h3>
+                                <div class="text-xs text-gray-500 font-bold flex items-center gap-2">
+                                    <i class="fas fa-user-tie opacity-40"></i>
+                                    Arch. <%= course.instructor || 'Lead Engineer' %>
                                 </div>
-                                <div class="flex justify-between items-center mb-8">
-                                    <span class="text-[10px] font-black text-[#00ED64] uppercase tracking-widest">Progress Metrics</span>
-                                    <span class="text-[10px] font-black text-white/40 uppercase tracking-widest"><%= progress %>% Sync</span>
+                            </div>
+
+                            <div class="mt-auto">
+                                <div class="flex justify-between items-end mb-4">
+                                    <div class="text-[10px] font-black uppercase tracking-widest text-gray-500">Sync Pipeline</div>
+                                    <div class="text-sm font-black text-white"><%= progress %>%</div>
                                 </div>
-                                <a href="/course/<%= encodeURIComponent(course.name) %>" class="btn-atlas-primary w-full text-center block">
-                                    <%= progress > 0 ? 'Resume Console' : 'Initialize Section' %>
+                                <div class="w-full h-1.5 bg-black/40 rounded-full overflow-hidden mb-8">
+                                    <div class="progress-bar-glow" style="width: <%= progress %>%;"></div>
+                                </div>
+                                <a href="/course/<%= encodeURIComponent(course.name) %>" class="w-full py-4 text-center btn-atlas-cta uppercase tracking-widest text-[11px] block">
+                                    Initialize Session
                                 </a>
                             </div>
                         </div>
                     <% }); %>
                 <% } else { %>
-                    <div class="col-span-full py-24 premium-glass rounded-[3rem] border-dashed border-white/10 flex flex-col items-center justify-center text-center">
-                        <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 opacity-30">
-                            <i class="fas fa-satellite-dish text-4xl"></i>
+                    <div class="col-span-full py-32 premium-glass rounded-[48px] border-dashed border-[#00ED64]/10 flex flex-col items-center justify-center text-center">
+                        <div class="w-24 h-24 bg-[#00ED64]/5 rounded-full flex items-center justify-center mb-8 border border-[#00ED64]/10 animate-pulse">
+                            <i class="fas fa-satellite text-[#00ED64] text-4xl"></i>
                         </div>
-                        <h2 class="text-3xl font-black text-white mb-4">No Curriculum Sections Detected</h2>
-                        <p class="text-gray-400 font-medium mb-10 max-w-sm">Scale your knowledge by provisioning courses from the global manifest.</p>
-                        <a href="/courses" class="btn-atlas-primary px-10">Explore Catalog</a>
+                        <h2 class="text-3xl font-black text-white mb-6">No Active Curricula Provisioned</h2>
+                        <p class="text-gray-400 font-medium mb-12 max-w-sm mx-auto leading-relaxed">Expand your expertise by deploying curriculum modules from the global catalog center.</p>
+                        <a href="/courses" class="btn-atlas-cta px-12 py-5 uppercase tracking-widest text-xs">Provision First Track</a>
                     </div>
                 <% } %>
             </div>
 
-            <!-- Discover More Section -->
-            <div class="mt-24 mb-10">
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="px-3 py-1 bg-purple-500/10 text-purple-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-purple-500/20">Expand Infrastructure</span>
-                    <div class="h-px w-12 bg-white/10"></div>
+            <!-- Global Footer Status -->
+            <footer class="mt-20 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-[#00ED64] rounded-full"></span>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#00ED64]">API Integrated</span>
+                    </div>
+                    <div class="text-[10px] font-black uppercase tracking-widest text-gray-600 tracking-tighter">Lat: 2026.03.25 // Node: AWS-US-EAST-1</div>
                 </div>
-                <h2 class="text-4xl font-black tracking-tighter">Recommended <span class="text-purple-400">Expansions</span></h2>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                <% if (typeof allCourses !== 'undefined' && allCourses.length > 0) { %>
-                    <% 
-                        const enrolledIds = new Set(courses.map(c => (c.id || c._id)?.toString()));
-                        const discoverableCourses = allCourses.filter(c => !enrolledIds.has(c._id?.toString()));
-                    %>
-                    <% discoverableCourses.slice(0, 3).forEach(course => { %>
-                        <div class="learning-card-premium premium-glass p-8 opacity-80 hover:opacity-100 transition-opacity">
-                            <div class="flex items-center gap-6 mb-8">
-                                <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400 border border-purple-500/20">
-                                    <i class="fas fa-atom text-xl"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-black tracking-tight"><%= course.title %></h3>
-                                    <p class="text-[9px] font-black uppercase tracking-widest text-gray-500"><%= course.instructor || 'Engineer Felex' %></p>
-                                </div>
-                            </div>
-                            <a href="/course/<%= encodeURIComponent(course.name || course.title) %>" class="w-full py-4 rounded-2xl border-2 border-purple-500/20 text-purple-400 font-black text-[10px] uppercase tracking-widest text-center hover:bg-purple-500/10 transition-all block">
-                                Analyze Blueprint
-                            </a>
-                        </div>
-                    <% }); %>
-                <% } %>
-            </div>
+                <div class="text-[10px] font-black uppercase tracking-widest text-gray-600">
+                    &copy; 2026 Multitouch Academy // Engineering Lab
+                </div>
+            </footer>
         </main>
     </div>
 
     <script>
-        // UI Persistence
-        function initTheme() {
-            document.documentElement.classList.add('dark'); // Force dark for premium dashboard
+        // Force Theme Enforcement
+        document.documentElement.classList.add('dark');
+        
+        // Dynamic Title for Sections
+        const activeSections = <%= (courses && courses.length) ? courses.length : 0 %>;
+        if (activeSections > 0) {
+            console.log(`[SYS] ${activeSections} Active Curricula Syncing...`);
         }
-        initTheme();
-
-        // Responsive Tabs
-        document.querySelectorAll('.tab-premium').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.querySelectorAll('.tab-premium').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-            });
-        });
     </script>
 </body>
 </html>

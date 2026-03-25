@@ -1,83 +1,67 @@
 <!-- instructor-sidebar.ejs -->
-<aside class="w-72 bg-[#001E2B] border-r border-[#00ED64]/10 flex flex-col min-h-screen sticky top-0 self-start shadow-2xl">
-    <div class="px-8 py-10">
-        <div class="flex items-center space-x-4 group cursor-pointer">
-            <div class="w-10 h-10 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-xl flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform">
-                <span class="text-[#001E2B] text-xl font-black">M</span>
+<aside class="w-72 bg-[#001E2B] border-r border-[#00ED64]/10 flex flex-col min-h-screen sticky top-0 self-start shadow-2xl z-50">
+    <div class="px-8 py-12">
+        <div class="flex items-center gap-4 group cursor-pointer" onclick="window.location.href='/teacher/dashboard'">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-2xl flex items-center justify-center shadow-xl shadow-[#00ED64]/10 group-hover:rotate-6 transition-all duration-500">
+                <span class="text-[#001E2B] text-2xl font-black">M</span>
             </div>
-            <span class="text-xl font-black tracking-tighter text-white">Multitouch <span class="font-light text-gray-400">Academy</span></span>
+            <div class="flex flex-col">
+                <span class="text-xl font-black tracking-tighter text-white leading-none">Multitouch</span>
+                <span class="text-[10px] font-black uppercase tracking-[0.3em] text-[#00ED64] mt-1">Instructor</span>
+            </div>
         </div>
     </div>
 
-    <nav class="flex-1 px-4 space-y-2">
-        <div class="px-4 py-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">Command Center</div>
+    <nav class="flex-1 px-4 space-y-1.5 overflow-y-auto">
+        <div class="px-5 py-3 text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] mb-2">Command Center</div>
         
-        <a href="/teacher/dashboard" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20' : 'text-[#9FB1AD] hover:bg-white/5 hover:text-white border border-transparent' %>">
-            <i class="fas fa-chart-line w-5"></i> Dashboard
+        <a href="/teacher/dashboard" class="flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20 shadow-lg shadow-[#00ED64]/5' : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent' %>">
+            <i class="fas fa-chart-line w-5 group-hover:text-[#00ED64] transition-colors"></i> 
+            <span class="tracking-tight">Analytics Bay</span>
         </a>
         
-        <a href="/admin/course-manager" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20' : 'text-[#9FB1AD] hover:bg-white/5 hover:text-white border border-transparent' %>">
-            <i class="fas fa-layer-group w-5"></i> Course Manager
+        <a href="/admin/course-manager" class="flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20 shadow-lg shadow-[#00ED64]/5' : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent' %>">
+            <i class="fas fa-layer-group w-5 group-hover:text-[#00ED64] transition-colors"></i> 
+            <span class="tracking-tight">Course Manager</span>
         </a>
         
-        <a href="/teacher/upload-center" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all <%= typeof activePage !== 'undefined' && activePage === 'upload' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20' : 'text-[#9FB1AD] hover:bg-white/5 hover:text-white border border-transparent' %>">
-            <i class="fas fa-cloud-upload-alt w-5"></i> Upload Center
+        <a href="/teacher/upload-center" class="flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group <%= typeof activePage !== 'undefined' && activePage === 'upload' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20 shadow-lg shadow-[#00ED64]/5' : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent' %>">
+            <i class="fas fa-cloud-upload-alt w-5 group-hover:text-[#00ED64] transition-colors"></i> 
+            <span class="tracking-tight">Upload Center</span>
         </a>
+
+        <div class="px-5 py-3 pt-10 text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] mb-2">Governance</div>
         
-        <div class="px-4 py-2 pt-8 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">Systems</div>
-        
-        <a href="/admin/settings" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all <%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20' : 'text-[#9FB1AD] hover:bg-white/5 hover:text-white border border-transparent' %>">
-            <i class="fas fa-cog w-5"></i> Governance
+        <a href="/admin/settings" class="flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group <%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20 shadow-lg shadow-[#00ED64]/5' : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent' %>">
+            <i class="fas fa-shield-halved w-5 group-hover:text-[#00ED64] transition-colors"></i> 
+            <span class="tracking-tight">System Settings</span>
         </a>
-        
-        <a href="/dashboard" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold text-[#9FB1AD] hover:bg-white/5 hover:text-white transition-all border border-transparent">
-            <i class="fas fa-desktop w-5"></i> Dashboard (Student)
+
+        <a href="/dashboard" class="flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold text-blue-400/70 hover:bg-blue-500/10 hover:text-blue-400 transition-all group mt-4">
+            <i class="fas fa-desktop w-5 opacity-50 group-hover:opacity-100"></i> 
+            <span class="tracking-tight">Student Console</span>
         </a>
     </nav>
 
-    <div class="p-6 border-t border-white/5 mt-auto">
-        <button id="sidebarThemeToggle" class="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold text-[#9FB1AD] hover:bg-white/5 hover:text-white transition-all mb-4">
-            <i class="fas fa-moon w-5" id="sidebarThemeIcon"></i>
-            <span id="sidebarThemeText">Dark Mode</span>
-        </button>
+    <div class="p-6 border-t border-white/5 mt-auto space-y-3">
+        <div class="flex items-center justify-between px-4 py-3 bg-white/5 rounded-2xl border border-white/5 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></div>
+                <span class="text-[9px] font-black uppercase tracking-widest text-gray-500">Admin Live</span>
+            </div>
+            <span class="text-[9px] font-black text-[#00ED64]">v2.4.9</span>
+        </div>
         
-        <a href="/logout" class="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 transition-all">
-            <i class="fas fa-power-off w-5"></i> Terminal Exit
+        <a href="/logout" class="flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold text-red-400/70 hover:bg-red-500/10 hover:text-red-400 transition-all group">
+            <i class="fas fa-power-off w-5 opacity-50 group-hover:opacity-100"></i> 
+            <span class="tracking-tight">Terminal Exit</span>
         </a>
     </div>
 
+    <!-- Force Dark Mode -->
     <script>
         (function() {
-            const toggleBtn = document.getElementById('sidebarThemeToggle');
-            const icon = document.getElementById('sidebarThemeIcon');
-            const text = document.getElementById('sidebarThemeText');
-
-            function applyTheme(theme) {
-                const isDark = theme === 'dark';
-                document.documentElement.classList.toggle('dark', isDark);
-                if (icon) {
-                    icon.className = isDark ? 'fas fa-sun w-5' : 'fas fa-moon w-5';
-                }
-                if (text) {
-                    text.textContent = isDark ? 'Solar Mode' : 'Lunar Mode';
-                }
-            }
-
-            function initTheme() {
-                const savedTheme = localStorage.getItem('theme') || 'light';
-                applyTheme(savedTheme);
-            }
-
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', () => {
-                    const isCurrentlyDark = document.documentElement.classList.contains('dark');
-                    const newTheme = isCurrentlyDark ? 'light' : 'dark';
-                    localStorage.setItem('theme', newTheme);
-                    applyTheme(newTheme);
-                });
-            }
-
-            initTheme();
+            document.documentElement.classList.add('dark');
         })();
     </script>
 </aside>

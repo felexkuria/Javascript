@@ -1,220 +1,229 @@
 <%- include('partials/header', { title: 'Engineering Manifest - Course Catalog', activePage: 'courses' }) %>
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
     :root {
-        --atlas-green: #00ED64;
-        --atlas-forest: #00684A;
-        --atlas-slate: #001E2B;
-        --glass-bg: rgba(255, 255, 255, 0.7);
-        --glass-border: rgba(0, 30, 43, 0.1);
-    }
-
-    .dark {
+        --mdb-green: #00ED64;
+        --mdb-midnight: #001E2B;
         --glass-bg: rgba(2, 52, 48, 0.4);
-        --glass-border: rgba(0, 237, 100, 0.15);
+        --glass-border: rgba(0, 237, 100, 0.1);
     }
 
     body {
         font-family: 'Outfit', sans-serif;
-        background-color: #F9FBFA;
-        color: var(--atlas-slate);
+        background-color: var(--mdb-midnight);
+        color: #E7EEEB;
+        -webkit-font-smoothing: antialiased;
         transition: all 0.3s ease;
-    }
-
-    .dark body {
-        background-color: var(--atlas-slate);
-        color: white;
     }
 
     .premium-glass {
         background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         border: 1px solid var(--glass-border);
     }
 
-    .catalog-card {
-        border-radius: 32px;
-        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        position: relative;
-        overflow: hidden;
+    .catalog-card-atlas {
+        border-radius: 40px;
+        transition: all 0.5s cubic-bezier(0.2, 0, 0, 1);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.02);
     }
 
-    .catalog-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0, 30, 43, 0.1);
-        border-color: var(--atlas-green);
+    .catalog-card-atlas:hover {
+        transform: translateY(-12px) scale(1.02);
+        border-color: var(--mdb-green);
+        background: rgba(0, 237, 100, 0.03);
+        box-shadow: 0 32px 64px rgba(0, 30, 43, 0.5);
     }
 
-    .monogram-box {
-        width: 56px;
-        height: 56px;
+    .monogram-canvas {
+        width: 64px;
+        height: 64px;
         background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
-        border-radius: 16px;
+        border-radius: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 900;
-        font-size: 24px;
-        color: var(--atlas-slate);
-        box-shadow: 0 8px 20px rgba(0, 237, 100, 0.2);
+        font-size: 28px;
+        color: var(--mdb-midnight);
+        box-shadow: 0 12px 24px rgba(0, 237, 100, 0.15);
     }
 
-    .btn-atlas {
-        background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
-        color: var(--atlas-slate);
-        font-weight: 900;
-        padding: 12px 24px;
-        border-radius: 14px;
-        transition: all 0.3s;
+    .btn-atlas-action {
+        background: #00ED64;
+        color: #001E2B;
+        font-weight: 800;
+        padding: 16px 24px;
+        border-radius: 18px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
         font-size: 11px;
     }
 
-    .btn-atlas:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 25px rgba(0, 237, 100, 0.3);
+    .btn-atlas-action:hover {
+        box-shadow: 0 0 30px rgba(0, 237, 100, 0.3);
+        transform: scale(1.03);
     }
 
-    .btn-details {
+    .btn-atlas-outline {
         background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--glass-border);
-        color: inherit;
-        font-weight: 700;
-        padding: 12px 24px;
-        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        font-weight: 800;
+        padding: 16px 24px;
+        border-radius: 18px;
         transition: all 0.3s;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
         font-size: 11px;
     }
 
-    .btn-details:hover {
-        background: rgba(0, 237, 100, 0.05);
-        border-color: var(--atlas-green);
+    .btn-atlas-outline:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--mdb-green);
     }
 
-    .search-input-premium {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        padding: 14px 20px 14px 48px;
+    .search-bay {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 16px 24px 16px 56px;
         width: 100%;
-        font-weight: 600;
+        color: white;
+        font-weight: 500;
         outline: none;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
-    .search-input-premium:focus {
-        border-color: var(--atlas-green);
+    .search-bay:focus {
+        border-color: var(--mdb-green);
+        background: rgba(0, 237, 100, 0.05);
         box-shadow: 0 0 0 4px rgba(0, 237, 100, 0.1);
     }
 
-    .catalog-badge {
-        position: absolute;
-        top: 24px;
-        right: 24px;
-        padding: 4px 12px;
-        background: rgba(0, 237, 100, 0.1);
+    .tag-premium {
+        padding: 6px 14px;
+        background: rgba(0, 237, 100, 0.08);
         color: #00ED64;
-        border: 1px solid rgba(0, 237, 100, 0.2);
-        border-radius: 20px;
+        border: 1px solid rgba(0, 237, 100, 0.15);
+        border-radius: 12px;
         font-size: 9px;
-        font-weight: 900;
+        font-black;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 2px;
     }
 
-    .p-bar-track {
+    .progress-conduit {
         width: 100%;
         height: 6px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 99px;
         overflow: hidden;
-        margin-top: 16px;
     }
 
-    .p-bar-fill {
+    .progress-flow {
         height: 100%;
         background: linear-gradient(90deg, #00ED64, #00684A);
-        transition: width 1s ease;
+        box-shadow: 0 0 10px rgba(0, 237, 100, 0.4);
+        transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 </style>
 
-<div class="atlas-main-wrapper min-h-screen pt-32 pb-24 px-10">
-    <div class="max-w-7xl mx-auto">
-        <!-- Hero Header -->
-        <header class="mb-20">
-            <div class="flex items-center gap-3 mb-4">
-                <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">Academy Registry</span>
-                <div class="h-px w-12 bg-white/10"></div>
-            </div>
-            <div class="flex flex-col lg:flex-row justify-between items-end gap-10">
-                <div class="max-w-2xl">
-                    <h1 class="text-6xl font-black tracking-tighter mb-4">Engineering <span class="text-[#00ED64]">Manifest</span></h1>
-                    <p class="text-gray-400 text-xl font-medium leading-relaxed">Systematic mastery of cloud architecture, neural networks, and distributed systems. Execute your curriculum.</p>
+<div class="min-h-screen pt-32 pb-24 px-8 lg:px-12">
+    <div class="max-w-[1400px] mx-auto">
+        <!-- Dashboard Navigation Integration -->
+        <%- include('partials/student-sidebar', { activePage: 'courses' }) %>
+
+        <div class="lg:ml-72 transition-all">
+            <!-- Hero Section -->
+            <header class="mb-20">
+                <div class="flex items-center gap-4 mb-6">
+                    <span class="px-4 py-1.5 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-[0.3em] rounded-full border border-[#00ED64]/20">Core Manifest</span>
+                    <div class="h-px flex-grow bg-white/5"></div>
                 </div>
-                <div class="w-full lg:w-96 relative">
-                    <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
-                    <input type="text" id="courseSearch" class="search-input-premium" placeholder="SEARCH CORE MODULES...">
-                </div>
-            </div>
-        </header>
-
-        <!-- Courses Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" id="coursesGrid">
-            <% if (courses && courses.length > 0) { %>
-                <% courses.forEach(course => { %>
-                    <% 
-                        const title = (course.title || course.name || '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                        const initial = title.match(/[A-Z]/)?.[0] || 'A';
-                    %>
-                    <div class="catalog-card premium-glass p-10 flex flex-col justify-between">
-                        <div class="catalog-badge"><%= course.category || 'CORE' %></div>
-                        
-                        <div>
-                            <div class="monogram-box mb-8"><%= initial %></div>
-                            <h3 class="text-2xl font-black tracking-tight mb-4 line-clamp-2"><%= title %></h3>
-                            <p class="text-gray-400 text-sm font-medium leading-relaxed mb-10 line-clamp-3">
-                                <%= course.description || 'Access high-fidelity engineering labs designed for professional-grade architectural mastery.' %>
-                            </p>
-                        </div>
-
-                        <div>
-                            <div class="flex items-center gap-6 mb-10 opacity-60">
-                                <div class="flex items-center gap-2 text-[10px] font-black tracking-widest uppercase">
-                                    <i class="fas fa-layer-group text-[#00ED64]"></i>
-                                    <%= course.sections ? course.sections.length : 0 %> Sections
-                                </div>
-                                <div class="flex items-center gap-2 text-[10px] font-black tracking-widest uppercase">
-                                    <i class="fas fa-play-circle text-[#00ED64]"></i>
-                                    <%= course.videoCount || 0 %> Lessons
-                                </div>
-                            </div>
-
-                            <!-- Progress Placeholder -->
-                            <div class="enrollment-status" data-course-id="<%= course._id || course.name %>"></div>
-
-                            <div class="flex gap-4 mt-8">
-                                <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
-                                        class="btn-atlas flex-1" 
-                                        data-btn-course-id="<%= course._id || course.name %>"
-                                        data-course-name="<%= course.name %>">
-                                    Initialize
-                                </button>
-                                <a href="/course/<%= course.name %>" class="btn-details">
-                                    Specs
-                                </a>
-                            </div>
-                        </div>
+                
+                <div class="flex flex-col lg:flex-row justify-between items-end gap-12">
+                    <div class="max-w-3xl">
+                        <h1 class="text-7xl font-black tracking-tighter mb-6 text-white leading-none">Engineering <span class="text-[#00ED64]">Atlas</span></h1>
+                        <p class="text-gray-400 text-xl font-medium leading-relaxed max-w-2xl">
+                            Deploy high-fidelity curriculum modules optimized for professional-grade architectural mastery. Synchronize your development path.
+                        </p>
                     </div>
-                <% }) %>
-            <% } %>
+                    <div class="w-full lg:w-[480px] relative group">
+                        <i class="fas fa-search absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 text-sm group-focus-within:text-[#00ED64] transition-colors"></i>
+                        <input type="text" id="courseSearch" class="search-bay" placeholder="SEARCH CORE MODULES BY TITLE OR TECH...">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Grid Controller -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-12" id="coursesGrid">
+                <% if (courses && courses.length > 0) { %>
+                    <% courses.forEach(course => { %>
+                        <% 
+                            const title = (course.title || course.name || '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            const initial = title.match(/[A-Z]/)?.[0] || 'A';
+                        %>
+                        <div class="catalog-card-atlas premium-glass p-12 flex flex-col justify-between group">
+                            <div class="flex justify-between items-start mb-12">
+                                <div class="monogram-canvas group-hover:rotate-6 transition-transform"><%= initial %></div>
+                                <div class="tag-premium"><%= course.category || 'PROD' %></div>
+                            </div>
+                            
+                            <div class="mb-12">
+                                <h3 class="text-3xl font-black tracking-tight mb-4 group-hover:text-[#00ED64] transition-colors line-clamp-2"><%= title %></h3>
+                                <p class="text-gray-400 text-sm font-medium leading-relaxed mb-10 line-clamp-3 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <%= course.description || 'Access high-fidelity engineering labs designed for professional-grade architectural mastery.' %>
+                                </p>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center gap-8 mb-12 border-t border-white/5 pt-8">
+                                    <div class="flex items-center gap-3 text-[10px] font-black tracking-[0.2em] uppercase text-gray-400">
+                                        <i class="fas fa-cubes text-[#00ED64]"></i>
+                                        <%= course.sections ? course.sections.length : 0 %> Sections
+                                    </div>
+                                    <div class="flex items-center gap-3 text-[10px] font-black tracking-[0.2em] uppercase text-gray-400">
+                                        <i class="fas fa-bolt text-[#00ED64]"></i>
+                                        <%= course.videoCount || course.videos?.length || 0 %> Lessons
+                                    </div>
+                                </div>
+
+                                <!-- Dynamic Enrollment Interface -->
+                                <div class="enrollment-status-bay" data-course-id="<%= course._id || course.name %>"></div>
+
+                                <div class="flex gap-4 mt-8">
+                                    <button onclick="enrollInCourse('<%= course._id || course.name %>')" 
+                                            class="btn-atlas-action flex-grow" 
+                                            data-btn-course-id="<%= course._id || course.name %>"
+                                            data-course-name="<%= course.name %>">
+                                        Initialize Access
+                                    </button>
+                                    <a href="/course/<%= course.name %>" class="btn-atlas-outline px-8 flex items-center justify-center">
+                                        <i class="fas fa-cog"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="col-span-full py-40 premium-glass rounded-[60px] border-dashed border-white/10 flex flex-col items-center justify-center text-center">
+                        <div class="w-32 h-32 bg-[#00ED64]/5 rounded-full flex items-center justify-center mb-10 border border-[#00ED64]/10">
+                            <i class="fas fa-network-wired text-[#00ED64] text-5xl"></i>
+                        </div>
+                        <h2 class="text-4xl font-black text-white mb-6">Database Offline</h2>
+                        <p class="text-gray-400 text-lg font-medium max-w-md mx-auto mb-12">The curriculum manifest is currently empty or the synchronization pipe is obstructed.</p>
+                        <button onclick="window.location.reload()" class="btn-atlas-action px-12">Retry Connection</button>
+                    </div>
+                <% } %>
+            </div>
         </div>
     </div>
 </div>
@@ -222,10 +231,13 @@
 <%- include('partials/footer') %>
 
 <script>
-    // Search Functionality
+    // System Theme Force
+    document.documentElement.classList.add('dark');
+
+    // Live Manifest Search
     document.getElementById('courseSearch')?.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.catalog-card').forEach(card => {
+        document.querySelectorAll('.catalog-card-atlas').forEach(card => {
             const title = card.querySelector('h3').textContent.toLowerCase();
             const desc = card.querySelector('p').textContent.toLowerCase();
             card.style.display = (title.includes(term) || desc.includes(term)) ? 'flex' : 'none';
@@ -240,7 +252,7 @@
             const button = document.querySelector(`[data-btn-course-id="${courseId}"]`);
             const originalText = button.innerText;
             button.disabled = true;
-            button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+            button.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Initializing...';
 
             const response = await fetch('/api/enrollments', {
                 method: 'POST',
@@ -250,26 +262,26 @@
 
             const data = await response.json();
             if (data.success) {
-                button.innerHTML = 'SYNCHRONIZED';
+                button.innerHTML = '<i class="fas fa-check mr-2"></i> Synchronized';
                 button.classList.add('opacity-50');
-                setTimeout(() => window.location.reload(), 1000);
+                setTimeout(() => window.location.reload(), 1200);
             } else { throw new Error(data.error); }
         } catch (err) {
-            alert('ORCHESTRATION FAILED: ' + err.message);
+            alert('PROTOCOL ERROR: ' + err.message);
             const button = document.querySelector(`[data-btn-course-id="${courseId}"]`);
             button.disabled = false;
-            button.innerText = 'INITIALIZE';
+            button.innerText = 'RETRY INITIALIZATION';
         }
     }
 
-    // Sync Progress States
+    // Refresh Sync States
     document.addEventListener('DOMContentLoaded', async () => {
         const token = localStorage.getItem('accessToken');
         if (!token) return;
 
-        const containers = document.querySelectorAll('.enrollment-status');
-        for (const container of containers) {
-            const courseId = container.dataset.courseId;
+        const bincords = document.querySelectorAll('.enrollment-status-bay');
+        for (const bin of bincords) {
+            const courseId = bin.dataset.courseId;
             try {
                 const response = await fetch(`/api/enrollments/check/${encodeURIComponent(courseId)}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -282,12 +294,12 @@
                         btn.onclick = () => window.location.href = `/course/${encodeURIComponent(btn.getAttribute('data-course-name'))}`;
                     }
                     const progress = data.data.progress || 0;
-                    container.innerHTML = `
-                        <div class="p-bar-track"><div class="p-bar-fill" style="width: ${progress}%"></div></div>
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="text-[9px] font-black text-[#00ED64] uppercase tracking-widest">Synchronization State</span>
-                            <span class="text-[9px] font-black text-white/50">${progress}%</span>
+                    bin.innerHTML = `
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em]">Sync Intelligence</span>
+                            <span class="text-[9px] font-black text-white/40 tracking-widest">${progress}% COMPLETE</span>
                         </div>
+                        <div class="progress-conduit"><div class="progress-flow" style="width: ${progress}%"></div></div>
                     `;
                 }
             } catch (e) {}

@@ -323,7 +323,11 @@
                                     <div class="space-y-1">
                                         <% if (section.lectures) { %>
                                             <% section.lectures.forEach(lec => { %>
-                                                <% const isActive = video && video._id.toString() === (lec._id || lec.contentId).toString(); %>
+                                                <% 
+                                                    const lecId = lec._id || lec.contentId;
+                                                    const currentVideoId = video && (video.id || video._id);
+                                                    const isActive = (currentVideoId && lecId) ? currentVideoId.toString() === lecId.toString() : false; 
+                                                %>
                                                 <a href="/course/<%= encodeURIComponent(courseName) %>/video/<%= encodeURIComponent(lec._id || lec.contentId) %>" 
                                                    class="lecture-item <%= isActive ? 'active' : '' %>">
                                                     <div class="lecture-icon">

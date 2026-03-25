@@ -3,259 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Ingestion & Sync - Multitouch Academy</title>
-    <link rel="stylesheet" href="/css/main.css">
+    <title>Video Ingestion Hub - Multitouch Academy</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'mdb-green': '#00ED64',
+              'mdb-forest': '#00684A',
+              'mdb-midnight': '#001E2B',
+              'mdb-slate': '#023430',
+            }
+          }
+        }
+      }
+    </script>
     <style>
         :root {
-            --atlas-green: #00ED64;
-            --atlas-forest: #00684A;
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(0, 30, 43, 0.1);
-        }
-
-        .dark {
-            --glass-bg: rgba(2, 52, 48, 0.3);
-            --glass-border: rgba(0, 237, 100, 0.15);
+            --mdb-green: #00ED64;
+            --mdb-midnight: #001E2B;
+            --glass-bg: rgba(2, 52, 48, 0.4);
+            --glass-border: rgba(0, 237, 100, 0.1);
         }
 
         body {
             font-family: 'Outfit', sans-serif;
+            background-color: var(--mdb-midnight);
+            color: #E7EEEB;
             -webkit-font-smoothing: antialiased;
         }
 
         .premium-glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0, 30, 43, 0.05);
         }
 
-        /* ── Upload Zone UI ── */
-        .upload-portal {
-            border: 2px dashed var(--atlas-green);
-            border-radius: 32px;
-            padding: 60px 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .upload-portal-atlas {
+            border: 2px dashed rgba(0, 237, 100, 0.3);
+            border-radius: 40px;
+            transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
             background: rgba(0, 237, 100, 0.02);
-            position: relative;
-            overflow: hidden;
         }
 
-        .upload-portal:hover, .upload-portal.dragging {
-            background: rgba(0, 237, 100, 0.08);
-            border-style: solid;
-            transform: scale(1.01);
-            box-shadow: 0 0 40px rgba(0, 237, 100, 0.1);
+        .upload-portal-atlas:hover, .upload-portal-atlas.dragging {
+            border-color: var(--mdb-green);
+            background: rgba(0, 237, 100, 0.05);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
-        .upload-portal .icon-box {
-            width: 80px;
-            height: 80px;
-            background: rgba(0, 237, 100, 0.1);
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 24px;
-            color: var(--atlas-green);
-            font-size: 32px;
-            transition: all 0.3s;
-        }
-
-        .upload-portal:hover .icon-box {
-            transform: translateY(-5px) rotate(5deg);
-            background: var(--atlas-green);
-            color: #001E2B;
-        }
-
-        /* ── Progress & Queue ── */
-        .sync-item {
-            padding: 20px 24px;
-            border-radius: 20px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .progress-track-premium {
-            height: 6px;
-            background: rgba(0, 30, 43, 0.05);
-            border-radius: 99px;
-            overflow: hidden;
-            margin-top: 8px;
-            position: relative;
-        }
-
-        .dark .progress-track-premium { background: rgba(255, 255, 255, 0.05); }
-
-        .progress-fill-neon {
-            height: 100%;
-            background: linear-gradient(90deg, #00ED64, #00684A);
-            box-shadow: 0 0 15px rgba(0, 237, 100, 0.4);
-            border-radius: 99px;
-            transition: width 0.4s ease;
-        }
-
-        /* ── Section Selection ── */
-        .strategic-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: transparent;
-            color: var(--color-text-muted);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .strategic-pill:hover {
-            border-color: var(--atlas-green);
-            color: var(--atlas-green);
-        }
-
-        .strategic-pill.selected {
-            background: var(--atlas-green);
-            color: #001E2B;
-            border-color: var(--atlas-green);
-            box-shadow: 0 4px 12px rgba(0, 237, 100, 0.3);
-        }
-
-        .form-input-premium {
-            width: 100%;
-            padding: 14px 20px;
+        .atlas-select {
+            background: rgba(0, 30, 43, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.5);
-            color: #001E2B;
-            font-weight: 600;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .dark .form-input-premium {
-            background: rgba(0, 30, 43, 0.4);
+            padding: 16px 20px;
             color: white;
+            outline: none;
+            transition: all 0.3s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300ED64'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='C19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 20px center;
+            background-size: 16px;
         }
 
-        .form-input-premium:focus {
-            border-color: var(--atlas-green);
+        .atlas-select:focus {
+            border-color: var(--mdb-green);
             box-shadow: 0 0 0 4px rgba(0, 237, 100, 0.1);
         }
 
-        /* ── Milestones ── */
-        .milestone-marker {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 14px;
-            flex-shrink: 0;
+        .pill-atlas {
+            padding: 10px 20px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.02);
+            color: #9FB1AD;
         }
 
-        .milestone-active { background: var(--atlas-green); color: #001E2B; }
-        .milestone-inactive { background: rgba(0, 30, 43, 0.05); color: var(--color-text-muted); }
-        .dark .milestone-inactive { background: rgba(255, 255, 255, 0.05); }
+        .pill-atlas:hover {
+            border-color: var(--mdb-green);
+            color: var(--mdb-green);
+        }
+
+        .pill-atlas.selected {
+            background: var(--mdb-green);
+            color: var(--mdb-midnight);
+            border-color: var(--mdb-green);
+            box-shadow: 0 0 20px rgba(0, 237, 100, 0.3);
+        }
+
+        .progress-conduit {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .progress-flow-neon {
+            height: 100%;
+            background: linear-gradient(90deg, #00ED64, #00684A);
+            box-shadow: 0 0 15px rgba(0, 237, 100, 0.4);
+            transition: width 0.4s ease;
+        }
+
+        .btn-atlas-execute {
+            background: #00ED64;
+            color: #001E2B;
+            font-weight: 800;
+            border-radius: 18px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 11px;
+        }
+
+        .btn-atlas-execute:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(0, 237, 100, 0.3);
+            transform: scale(1.02);
+        }
+
+        .terminal-log-atlas {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #00ED64;
+            opacity: 0.7;
+        }
     </style>
 </head>
-<body class="bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
-    <div class="instructor-layout">
+<body class="dark overflow-x-hidden">
+    <div class="flex">
+        <!-- Sidebar -->
         <%- include('partials/instructor-sidebar', { activePage: 'upload' }) %>
 
-        <main class="instructor-main flex-grow p-10 overflow-auto">
-            <header class="mb-12">
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00684A] dark:text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">Ingestion Hub</span>
-                    <div class="h-px w-12 bg-gray-200 dark:bg-white/10"></div>
+        <main class="flex-grow p-10 lg:p-16">
+            <header class="flex flex-col md:flex-row justify-between items-end gap-10 mb-16">
+                <div>
+                    <div class="flex items-center gap-4 mb-4">
+                        <span class="px-4 py-1.5 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-[0.3em] rounded-full border border-[#00ED64]/20">Ingestion Hub</span>
+                        <div class="h-px w-16 bg-white/5"></div>
+                    </div>
+                    <h1 class="text-6xl font-black tracking-tighter text-white">Video <span class="text-[#00ED64]">Ingestion</span></h1>
+                    <p class="text-gray-400 text-lg font-medium mt-2">Synchronize high-fidelity curriculum assets with the cloud.</p>
                 </div>
-                <h1 class="text-5xl font-black tracking-tighter text-[#001E2B] dark:text-white mb-2">Video Ingestion</h1>
-                <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Synchronize high-definition lectures with the cloud infrastructure.</p>
             </header>
 
-            <!-- Step 1: Destination -->
-            <div class="premium-glass rounded-[40px] p-10 mb-8">
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="milestone-marker milestone-active">1</div>
-                    <h2 class="text-2xl font-black text-[#001E2B] dark:text-white tracking-tight">Destination Parameters</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <div class="lg:col-span-2 space-y-12">
+                    <!-- Config Section -->
+                    <section class="premium-glass p-12 rounded-[40px]">
+                        <div class="flex items-center gap-6 mb-12">
+                            <div class="w-12 h-12 rounded-2xl bg-[#00ED64] flex items-center justify-center text-[#001E2B] font-black shadow-lg">01</div>
+                            <h2 class="text-2xl font-black text-white tracking-tighter">Destination Parameters</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
+                            <div class="space-y-4">
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Target Curriculum</label>
+                                <select id="courseSelect" class="atlas-select w-full" onchange="onCourseChange()">
+                                    <option value="">— Select Environment —</option>
+                                    <% if (typeof courses !== 'undefined' && courses.length > 0) { %>
+                                        <% courses.forEach(c => { %>
+                                            <option value="<%= c._id %>" data-sections='<%= JSON.stringify(c.sections || []) %>'>
+                                                <%= c.title %>
+                                            </option>
+                                        <% }) %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="space-y-4">
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Lesson Designation</label>
+                                <input type="text" id="lectureTitle" class="atlas-select w-full pr-6" placeholder="Auto-detect from metadata">
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Strategic Section Mapping</label>
+                            <div id="sectionPills" class="flex flex-wrap gap-4 p-8 bg-white/2 rounded-[32px] border border-white/5 min-h-[100px] items-center">
+                                <span class="text-gray-600 font-medium text-sm italic">Awaiting curriculum selection...</span>
+                            </div>
+                            <input type="hidden" id="selectedSectionId">
+                        </div>
+                    </section>
+
+                    <!-- Upload Section -->
+                    <section class="premium-glass p-12 rounded-[40px]">
+                        <div class="flex items-center gap-6 mb-12">
+                            <div class="w-12 h-12 rounded-2xl bg-[#00ED64] flex items-center justify-center text-[#001E2B] font-black shadow-lg">02</div>
+                            <h2 class="text-2xl font-black text-white tracking-tighter">Payload Transfer</h2>
+                        </div>
+
+                        <div class="upload-portal-atlas p-20 text-center cursor-pointer mb-10" id="dropZone" onclick="document.getElementById('videoFile').click()">
+                            <input type="file" id="videoFile" accept="video/*" onchange="onFileSelected(this.files)" style="display:none">
+                            <i class="fas fa-cloud-arrow-up text-5xl text-[#00ED64] mb-6 opacity-40"></i>
+                            <h3 class="text-xl font-black text-white mb-2">Ingest Media aggregates</h3>
+                            <p class="text-gray-500 text-sm font-medium">Drop MP4/MOV assets or double-click to initiate browsing.</p>
+                        </div>
+
+                        <div id="uploadQueue" class="space-y-6"></div>
+
+                        <div class="flex justify-between items-center mt-12">
+                            <button onclick="clearQueue()" class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 hover:text-red-400 transition-colors px-4">Purge Buffer</button>
+                            <button id="uploadBtn" disabled onclick="startUpload()" class="btn-atlas-execute px-12 py-5 flex items-center gap-4 disabled:opacity-20 disabled:grayscale">
+                                <i class="fas fa-bolt"></i> Execute Ingestion
+                            </button>
+                        </div>
+                    </section>
                 </div>
 
-                <div class="grid grid-cols-2 gap-8 mb-8">
-                    <div>
-                        <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Target Curriculum</label>
-                        <select id="courseSelect" class="form-input-premium" onchange="onCourseChange()">
-                            <option value="">— Select Environment —</option>
-                            <% if (typeof courses !== 'undefined' && courses.length > 0) { %>
-                                <% courses.forEach(c => { %>
-                                    <option value="<%= c._id %>" data-sections='<%= JSON.stringify(c.sections || []) %>'>
-                                        <%= c.title %>
-                                    </option>
-                                <% }) %>
-                            <% } %>
-                        </select>
+                <!-- Status Sidebar -->
+                <aside class="space-y-12">
+                    <section class="premium-glass p-10 rounded-[40px]">
+                        <h3 class="text-xs font-black uppercase tracking-[0.3em] text-[#00ED64] mb-8 flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-[#00ED64] animate-pulse"></span> Terminal Logic
+                        </h3>
+                        <div id="activityLog" class="terminal-log-atlas space-y-3 max-h-[400px] overflow-y-auto leading-relaxed">
+                            <div class="opacity-40">[SYS] Ready for data ingestion...</div>
+                        </div>
+                    </section>
+
+                    <div class="p-8 bg-[#00ED64]/5 border border-[#00ED64]/10 rounded-[32px]">
+                        <h4 class="text-[10px] font-black text-[#00ED64] uppercase tracking-widest mb-3">Ingestion Protocol</h4>
+                        <p class="text-[11px] text-gray-500 font-medium leading-relaxed">
+                            Video assets are transcoded and synchronized with S3 infrastructure. Logic mapping occurs in real-time within the DynamoDB curriculum manifest.
+                        </p>
                     </div>
-                    <div>
-                        <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Logic Designation (Optional)</label>
-                        <input type="text" id="lectureTitle" class="form-input-premium" placeholder="Auto-detect from metadata">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Strategic Module Mapping</label>
-                    <div id="sectionPills" class="flex flex-wrap gap-3 p-6 border-2 border-dashed border-gray-100 dark:border-white/5 rounded-2xl min-h-[80px]">
-                        <span class="text-gray-400 font-medium self-center text-sm">Awaiting curriculum selection...</span>
-                    </div>
-                    <input type="hidden" id="selectedSectionId">
-                    <input type="hidden" id="selectedSectionTitle">
-                </div>
-            </div>
-
-            <!-- Step 2: Payload -->
-            <div class="premium-glass rounded-[40px] p-10 mb-8">
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="milestone-marker milestone-active">2</div>
-                    <h2 class="text-2xl font-black text-[#001E2B] dark:text-white tracking-tight">Payload Selection</h2>
-                </div>
-
-                <div class="upload-portal" id="dropZone" onclick="document.getElementById('videoFile').click()">
-                    <input type="file" id="videoFile" accept="video/*" onchange="onFileSelected(this.files)" style="display:none">
-                    <div class="icon-box">
-                        <i class="fas fa-satellite-dish"></i>
-                    </div>
-                    <h3 class="text-2xl font-black text-[#001E2B] dark:text-white mb-2">Transfer Payload</h3>
-                    <p class="text-gray-500 dark:text-gray-400 font-medium">Drop MP4/MOV aggregates here or double-click to browse.</p>
-                </div>
-
-                <!-- Sync Queue -->
-                <div id="uploadQueue" class="mt-8 space-y-4"></div>
-
-                <div class="flex justify-end gap-4 mt-10">
-                    <button class="px-8 py-4 rounded-xl font-bold text-gray-500 hover:text-red-500 transition-colors" onclick="clearQueue()">Purge Queue</button>
-                    <button id="uploadBtn" class="bg-gradient-to-br from-[#00ED64] to-[#00684A] text-[#001E2B] font-black px-10 py-4 rounded-2xl shadow-xl shadow-[#00ED64]/20 disabled:opacity-30 disabled:grayscale transition-all" onclick="startUpload()" disabled>
-                        <i class="fas fa-bolt mr-2"></i> Execute Transfer
-                    </button>
-                </div>
-            </div>
-
-            <!-- Log -->
-            <div class="premium-glass rounded-[40px] p-8 opacity-60">
-                <h3 class="text-sm font-black uppercase tracking-widest text-[#00ED64] mb-4 flex items-center gap-2">
-                    <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span> Terminal Log
-                </h3>
-                <div id="activityLog" class="font-mono text-[11px] text-gray-500 leading-relaxed overflow-y-auto max-h-[150px]">
-                    [SYS] Ready for data ingestion...
-                </div>
+                </aside>
             </div>
         </main>
     </div>
@@ -263,38 +244,33 @@
     <script>
         let selectedFiles = [];
         let selectedSectionId = null;
-        let selectedSectionTitle = null;
 
         function onCourseChange() {
             const sel = document.getElementById('courseSelect');
             const opt = sel.options[sel.selectedIndex];
             const pills = document.getElementById('sectionPills');
             selectedSectionId = null;
-            selectedSectionTitle = null;
 
             if (!opt.value) {
-                pills.innerHTML = '<span class="text-gray-400 font-medium self-center text-sm">Awaiting curriculum selection...</span>';
+                pills.innerHTML = '<span class="text-gray-600 font-medium text-sm italic">Awaiting curriculum selection...</span>';
                 return;
             }
 
             const sections = JSON.parse(opt.dataset.sections || '[]');
             if (!sections.length) {
-                pills.innerHTML = '<span class="text-red-400 font-medium self-center text-sm">Zero modules detected in target curriculum.</span>';
+                pills.innerHTML = '<span class="text-red-400 font-medium text-sm">No sections detected in this curriculum.</span>';
                 return;
             }
 
-            pills.innerHTML = sections.map((s, i) =>
-                `<button class="strategic-pill" data-id="${s._id}" data-title="${s.title}" onclick="selectSection(this)">
-                    <i class="fas fa-layer-group text-[10px] opacity-40"></i> ${s.title}
-                </button>`
+            pills.innerHTML = sections.map(s =>
+                `<button class="pill-atlas" data-id="${s._id}" onclick="selectSection(this, '${s._id}')">${s.title}</button>`
             ).join('');
         }
 
-        function selectSection(el) {
-            document.querySelectorAll('.strategic-pill').forEach(p => p.classList.remove('selected'));
+        function selectSection(el, id) {
+            document.querySelectorAll('.pill-atlas').forEach(p => p.classList.remove('selected'));
             el.classList.add('selected');
-            selectedSectionId = el.dataset.id;
-            selectedSectionTitle = el.dataset.title;
+            selectedSectionId = id;
             checkReady();
         }
 
@@ -311,19 +287,23 @@
             const id = 'f_' + Math.random().toString(36).slice(2);
             file.__queueId = id;
             const div = document.createElement('div');
-            div.className = 'sync-item premium-glass';
+            div.className = 'premium-glass p-8 rounded-[28px] border border-white/5';
             div.id = id;
             div.innerHTML = `
-                <div class="w-12 h-12 rounded-xl bg-[#00ED64]/10 flex items-center justify-center text-[#00ED64]">
-                    <i class="fas fa-file-video text-xl"></i>
-                </div>
-                <div class="flex-grow">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-sm font-bold text-[#001E2B] dark:text-white">${file.name}</span>
-                        <span class="text-[10px] font-black uppercase tracking-widest text-gray-400" id="${id}_status">Awaiting Protocol</span>
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-[#00ED64]">
+                            <i class="fas fa-file-video"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-black text-white">${file.name}</p>
+                            <p class="text-[9px] font-black text-gray-500 uppercase tracking-widest">${(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                        </div>
                     </div>
-                    <div class="progress-track-premium"><div class="progress-fill-neon" id="${id}_fill" style="width:0%"></div></div>
-                    <div class="text-[10px] font-medium text-gray-400 mt-2" id="${id}_meta">${(file.size / 1024 / 1024).toFixed(1)} MB aggregates discovered</div>
+                    <span id="${id}_status" class="text-[9px] font-black text-[#00ED64] uppercase tracking-widest opacity-40">Ready</span>
+                </div>
+                <div class="progress-conduit">
+                    <div id="${id}_fill" class="progress-flow-neon w-0"></div>
                 </div>
             `;
             document.getElementById('uploadQueue').appendChild(div);
@@ -346,19 +326,18 @@
             const lectureTitle = document.getElementById('lectureTitle').value.trim();
             const btn = document.getElementById('uploadBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-satellite fa-spin mr-3"></i> Synchronizing...';
 
             for (const file of selectedFiles) {
                 const id = file.__queueId;
-                document.getElementById(id + '_status').textContent = 'Synchronizing';
+                document.getElementById(id + '_status').textContent = 'Syncing';
+                document.getElementById(id + '_status').classList.remove('opacity-40');
                 
                 try {
-                    const title = lectureTitle || file.name.replace(/\.[^.]+$/, '');
                     const formData = new FormData();
                     formData.append('video', file);
                     formData.append('courseId', courseId);
                     formData.append('sectionId', selectedSectionId);
-                    formData.append('title', title);
+                    formData.append('title', lectureTitle || file.name.replace(/\.[^.]+$/, ''));
 
                     const xhr = new XMLHttpRequest();
                     xhr.open('POST', `/api/courses/${encodeURIComponent(courseId)}/upload-video`);
@@ -369,43 +348,40 @@
                         if (e.lengthComputable) {
                             const pct = Math.round((e.loaded / e.total) * 100);
                             document.getElementById(id + '_fill').style.width = pct + '%';
-                            document.getElementById(id + '_meta').textContent = `${(e.loaded / 1024 / 1024).toFixed(1)} / ${(e.total / 1024 / 1024).toFixed(1)} MB transferred`;
                         }
                     };
 
                     await new Promise((resolve, reject) => {
                         xhr.onload = () => {
-                            const data = JSON.parse(xhr.responseText);
                             if (xhr.status >= 200 && xhr.status < 300) {
-                                document.getElementById(id + '_status').textContent = 'Synced';
-                                document.getElementById(id + '_status').style.color = '#00ED64';
-                                log(`SUCCESS: [${file.name}] synced to strategic module.`);
+                                document.getElementById(id + '_status').textContent = 'Complete';
+                                log(`SUCCESS: [${file.name}] ingested into S3.`);
                                 resolve();
-                            } else { reject(new Error(data.message || 'Transmission break')); }
+                            } else { reject(new Error('Sync failed')); }
                         };
-                        xhr.onerror = () => reject(new Error('Infrastructure failure'));
+                        xhr.onerror = () => reject(new Error('Network break'));
                         xhr.send(formData);
                     });
                 } catch (err) {
-                    document.getElementById(id + '_status').textContent = 'Error';
+                    document.getElementById(id + '_status').textContent = 'Fail';
                     document.getElementById(id + '_status').style.color = '#ff3b30';
                     log(`ERRO: ${err.message}`);
                 }
             }
-
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-bolt mr-2"></i> Execute Transfer';
         }
 
         function log(msg) {
             const el = document.getElementById('activityLog');
-            el.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + el.innerHTML;
+            const div = document.createElement('div');
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            el.prepend(div);
         }
 
-        // Drag Drop Styling
         const dropZone = document.getElementById('dropZone');
-        ['dragenter', 'dragover'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.add('dragging'), false));
-        ['dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.remove('dragging'), false));
+        ['dragenter', 'dragover'].forEach(e => dropZone.addEventListener(e, (ev) => { ev.preventDefault(); dropZone.classList.add('dragging'); }, false));
+        ['dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, (ev) => { ev.preventDefault(); dropZone.classList.remove('dragging'); }, false));
+        dropZone.addEventListener('drop', (ev) => { onFileSelected(ev.dataTransfer.files); });
     </script>
 </body>
 </html>
