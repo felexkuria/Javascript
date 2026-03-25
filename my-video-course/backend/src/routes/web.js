@@ -17,6 +17,7 @@ router.get('/course/:courseName', (req, res) => webController.renderCourse(req, 
 router.get('/course/:courseName/video/:videoId?', (req, res) => webController.renderVideo(req, res));
 router.get('/videos/:courseName/:videoId', (req, res) => webController.renderVideo(req, res));
 router.get('/videos/:courseName', (req, res) => webController.redirectToCourse(req, res));
+router.get('/video/:courseName', (req, res) => res.redirect(`/course/${encodeURIComponent(req.params.courseName)}/video/`));
 router.get('/watch/:videoUrl', (req, res) => webController.redirectToVideo(req, res));
 
 // Static pages

@@ -415,7 +415,7 @@
                     </div>
                     <div class="pt-6 border-t border-gray-100 dark:border-[#133A41] mt-auto flex flex-col gap-3">
                         ${enrolled ? `
-                            <a href="/video/${encodeURIComponent(course.name || course.title || 'unknown')}" class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] text-center font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0">
+                            <a href="/course/${encodeURIComponent(course.name || course.title || 'unknown')}/video/" class="w-full px-6 py-4 bg-[#00ED64] text-[#001E2B] text-center font-black rounded-2xl transition-all hover:shadow-xl hover:shadow-[#00ED64]/20 hover:-translate-y-1 active:translate-y-0">
                                 ${isCompleted ? 'REVIEW MODULE' : 'RESUME DEPLOYMENT'}
                             </a>
                         ` : `

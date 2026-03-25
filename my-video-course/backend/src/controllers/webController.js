@@ -83,7 +83,7 @@ class WebController {
 
   async renderCourse(req, res) {
     try {
-      const courseName = decodeURIComponent(req.params.courseName);
+      const courseName = decodeURIComponent(req.params.courseName).trim();
       const userId = req.user?.email || 'guest';
       
       const course = await dynamoVideoService.getCourseByTitle(courseName, userId);
@@ -154,7 +154,7 @@ class WebController {
     try {
       const courseName = decodeURIComponent(req.params.courseName).trim();
 
-      const videoId = req.params.videoId || req.params.id;
+      const videoId = req.params.videoId || req.params.id || req.query.lecture;
       const userId = req.user?.email || 'guest';
       const autoplay = req.query.autoplay === 'true';
 
@@ -284,7 +284,7 @@ class WebController {
 
   async serveVideoLegacy(req, res) {
     try {
-      const courseName = decodeURIComponent(req.params.courseName);
+      const courseName = decodeURIComponent(req.params.courseName).trim();
       const id = req.params.id;
       res.redirect(`/course/${encodeURIComponent(courseName)}/video/${id}`);
     } catch (err) {
@@ -305,7 +305,7 @@ class WebController {
 
   async serveCaptions(req, res) {
     try {
-      const courseName = decodeURIComponent(req.params.courseName);
+      const courseName = decodeURIComponent(req.params.courseName).trim();
       const id = req.params.id;
       const video = await dynamoVideoService.getVideoById(courseName, id);
       if (!video || !video.captionsUrl) return res.status(404).send('No captions');
