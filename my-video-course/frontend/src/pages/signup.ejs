@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
+    <title>Create Account - Multitouch Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -12,185 +13,209 @@
           extend: {
             colors: {
               'mongo-green': '#00ED64',
-              'mongo-slate': '#001E2B',
-              'mongo-forest': '#00684A'
-            },
-            fontFamily: {
-              'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif']
+              'mongo-dark': '#001E2B',
+              'mongo-slate': '#023430',
             }
           }
         }
       }
     </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        .glass {
+            background: rgba(2, 52, 48, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 237, 100, 0.1);
+        }
+        .premium-title {
+            background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .input-premium {
+            background: rgba(0, 30, 43, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .input-premium:focus {
+            border-color: #00ED64;
+            box-shadow: 0 0 20px rgba(0, 237, 100, 0.1);
+        }
+    </style>
 </head>
-<body class="bg-apple-gray dark:bg-gray-900 font-sans antialiased transition-colors duration-200">
-    <div class="min-h-screen flex items-center justify-center px-6">
-        <!-- Dark Mode Toggle -->
-        <button id="themeToggle" class="fixed top-4 right-4 p-3 bg-white dark:bg-[#023430] rounded-full shadow-lg border border-transparent dark:border-[#00ED64]/20 hover:shadow-xl transition-all duration-200 z-10">
-            <span id="themeIcon" class="text-xl">🌙</span>
-        </button>
-        
-        <div class="w-full max-w-sm">
-            <div class="bg-white dark:bg-[#023430] rounded-2xl shadow-sm border border-gray-100 dark:border-[#133A41] p-8 transition-colors duration-200">
+<body class="dark bg-[#001E2B] text-[#E7EEEB] min-h-screen flex items-center justify-center p-6 bg-[url('https://www.mongodb.com/ready-2022/static/background-blobs-c9d3b1b4d8d8d8d8d8d8d8d8d8d8d8d8.svg')] bg-cover">
+    
+    <!-- Dark Mode Toggle -->
+    <button id="themeToggle" class="fixed top-8 right-8 w-12 h-12 glass rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+        <span id="themeIcon">🌙</span>
+    </button>
+
+    <div class="w-full max-w-md relative animate-in fade-in zoom-in duration-700">
+        <!-- Decoration -->
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-[#00ED64]/10 rounded-full blur-[100px]"></div>
+        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px]"></div>
+
+        <div class="glass p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+            <!-- Header -->
+            <div id="headerSection" class="text-center mb-10">
+                <div class="w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-[#00ED64]/20 -rotate-3">
+                    <span class="text-[#001E2B] text-3xl font-black">M</span>
+                </div>
+                <h1 class="text-3xl font-black tracking-tighter text-white">Create <span class="premium-title">Node</span></h1>
+                <p class="text-[#9FB1AD] mt-2 font-medium">Join our global learning architecture.</p>
+            </div>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+            <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-xs font-bold text-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i> <%= error %>
+            </div>
+            <% } %>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="space-y-6">
+                <div class="relative">
+                    <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
+                    <input type="text" id="name" name="name" placeholder="Full Identity" required
+                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
+                </div>
+                
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
+                    <input type="email" id="email" name="email" placeholder="Email Address" required
+                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
+                </div>
+                
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
+                    <input type="password" id="password" name="password" placeholder="Secure Password (8+ chars)" required minlength="8"
+                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
+                </div>
+
+                <button type="submit" id="signupBtn" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:shadow-xl hover:shadow-[#00ED64]/20 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-[0.2em] text-xs">
+                    Generate Access
+                </button>
+
+                <div class="text-center mt-6">
+                    <a href="/login" class="text-[10px] font-black uppercase tracking-widest text-[#9FB1AD] hover:text-[#00ED64] transition-all">
+                        Existing Node? Initialize Login
+                    </a>
+                </div>
+            </form>
+
+            <!-- Verification Section (Hidden by default) -->
+            <div id="verifyContainer" class="hidden animate-in fade-in slide-in-from-bottom-10 duration-500">
                 <div class="text-center mb-8">
-                    <div class="w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                        <span class="text-[#001E2B] text-3xl font-bold">🍃</span>
+                    <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
+                        <i class="fas fa-shield-alt text-2xl text-blue-400"></i>
                     </div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB] mb-2 tracking-tight">Multitouch <span class="font-normal text-gray-500">Academy</span></h1>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm">Join our developer learning platform</p>
+                    <h2 class="text-xl font-black text-white mb-2">Verify Identity</h2>
+                    <p class="text-[10px] font-bold text-[#9FB1AD] uppercase tracking-widest opacity-70">
+                        Code transmitted to <span id="verifyEmailDisplay" class="text-[#00ED64]"></span>
+                    </p>
                 </div>
-                
-                <% if (typeof error !== 'undefined' && error) { %>
-                <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 rounded-xl text-sm">
-                    <%= error %>
-                </div>
-                <% } %>
-                
-                <form id="signupForm" class="space-y-4">
-                    <div>
-                        <input type="text" id="name" name="name" placeholder="Full Name" required
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-gray-900 dark:text-[#E7EEEB] placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all">
+
+                <form id="verifyForm" class="space-y-6">
+                    <div class="relative">
+                        <input type="text" id="confirmationCode" placeholder="000000" required
+                               class="w-full px-4 py-6 input-premium rounded-2xl text-3xl font-black text-center tracking-[0.5em] outline-none placeholder:opacity-10">
                     </div>
                     
-                    <div>
-                        <input type="email" id="email" name="email" placeholder="Email" required
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-gray-900 dark:text-[#E7EEEB] placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all">
-                    </div>
-                    
-                    <div>
-                        <input type="password" id="password" name="password" placeholder="Password (min 8 chars)" required minlength="8"
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-gray-900 dark:text-[#E7EEEB] placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all">
-                    </div>
-                    
-                    <button type="submit" id="signupBtn" class="w-full bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] font-bold py-3 rounded-xl hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] hover:scale-[1.02] transition-all">
-                        Create Account
+                    <button type="submit" id="verifyBtn" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:shadow-xl hover:shadow-[#00ED64]/20 transition-all uppercase tracking-[0.2em] text-xs">
+                        Validate Node
                     </button>
                     
                     <div class="text-center">
-                        <a href="/login" class="text-sm text-[#00C152] hover:text-[#00ED64] hover:underline font-medium">
-                            Already have an account? Sign In
-                        </a>
-                    </div>
-                </form>
-                
-                <!-- Verification Form -->
-                <form id="verifyForm" class="space-y-4 hidden">
-                    <div class="text-center mb-4">
-                        <p class="text-gray-600 dark:text-gray-400 text-sm">
-                            We sent a verification code to <span id="verifyEmail" class="font-bold text-[#00C152]"></span>
-                        </p>
-                    </div>
-                    
-                    <div>
-                        <input type="text" id="confirmationCode" placeholder="Enter verification code" required
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-gray-900 dark:text-[#E7EEEB] placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all text-center text-lg tracking-widest font-black">
-                    </div>
-                    
-                    <button type="submit" id="verifyBtn" class="w-full bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] font-bold py-3 rounded-xl hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] transition-all">
-                        Verify Account
-                    </button>
-                    
-                    <div class="text-center">
-                        <button type="button" id="backToSignup" class="text-sm text-[#00C152] hover:text-[#00ED64] hover:underline font-medium">
-                            ← Back to registration
+                        <button type="button" id="backToSignup" class="text-[10px] font-black uppercase tracking-widest text-[#9FB1AD] hover:text-[#00ED64] transition-all">
+                            ← Back to Cluster Configuration
                         </button>
                     </div>
                 </form>
             </div>
         </div>
+        <p class="text-center mt-8 text-[9px] font-black text-[#9FB1AD] uppercase tracking-[0.5em] opacity-20">© 2026 Multitouch Systems</p>
     </div>
-    
+
     <script>
-        // Dark theme toggle
+        // Theme Management
         function initTheme() {
-            const theme = localStorage.getItem("theme") || "light";
+            const theme = localStorage.getItem("theme") || "dark";
             document.documentElement.classList.toggle("dark", theme === "dark");
             document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
         }
-        
-        function toggleTheme() {
-            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
-            document.documentElement.classList.toggle("dark", newTheme === "dark");
-            localStorage.setItem("theme", newTheme);
-            document.getElementById('themeIcon').textContent = newTheme === "dark" ? '☀️' : '🌙';
-        }
-        
         initTheme();
-        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-        
+
         let userEmail = '';
-        
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        const signupForm = document.getElementById('signupForm');
+        const verifyContainer = document.getElementById('verifyContainer');
+        const headerSection = document.getElementById('headerSection');
+        const verifyEmailDisplay = document.getElementById('verifyEmailDisplay');
+
+        // Signup Handler
+        signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+            const signupBtn = document.getElementById('signupBtn');
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const signupBtn = document.getElementById('signupBtn');
-            
+
             signupBtn.disabled = true;
-            signupBtn.textContent = 'Creating account...';
-            
+            signupBtn.textContent = 'TRANSMITTING...';
+
             try {
                 const response = await fetch('/api/auth/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, password })
                 });
-                
                 const data = await response.json();
-                
                 if (data.success) {
                     userEmail = email;
-                    document.getElementById('verifyEmail').textContent = email;
-                    document.getElementById('signupForm').classList.add('hidden');
-                    document.getElementById('verifyForm').classList.remove('hidden');
+                    verifyEmailDisplay.textContent = email;
+                    signupForm.classList.add('hidden');
+                    headerSection.classList.add('hidden');
+                    verifyContainer.classList.remove('hidden');
                 } else {
                     alert(data.error);
                 }
-            } catch (error) {
-                alert('Signup failed: ' + error.message);
-            } finally {
+            } catch (error) { alert('Transmission failed: ' + error.message); }
+            finally { 
                 signupBtn.disabled = false;
-                signupBtn.textContent = 'Create Account';
+                signupBtn.textContent = 'Generate Access';
             }
         });
-        
+
+        // Verification Handler
         document.getElementById('verifyForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const confirmationCode = document.getElementById('confirmationCode').value;
             const verifyBtn = document.getElementById('verifyBtn');
-            
+            const confirmationCode = document.getElementById('confirmationCode').value;
+
             verifyBtn.disabled = true;
-            verifyBtn.textContent = 'Verifying...';
-            
+            verifyBtn.textContent = 'VALIDATING...';
+
             try {
                 const response = await fetch('/api/auth/confirm', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: userEmail, confirmationCode })
                 });
-                
                 const data = await response.json();
-                
                 if (data.success) {
-                    alert('Account verified successfully!');
+                    alert('Success: Node Validated');
                     window.location.href = '/login';
-                } else {
-                    alert(data.error);
-                }
-            } catch (error) {
-                alert('Verification failed: ' + error.message);
-            } finally {
+                } else { alert(data.error); }
+            } catch (error) { alert('Validation error: ' + error.message); }
+            finally { 
                 verifyBtn.disabled = false;
-                verifyBtn.textContent = 'Verify Account';
+                verifyBtn.textContent = 'Validate Node';
             }
         });
-        
+
         document.getElementById('backToSignup').addEventListener('click', () => {
-            document.getElementById('verifyForm').classList.add('hidden');
-            document.getElementById('signupForm').classList.remove('hidden');
+            verifyContainer.classList.add('hidden');
+            signupForm.classList.remove('hidden');
+            headerSection.classList.remove('hidden');
         });
     </script>
 </body>

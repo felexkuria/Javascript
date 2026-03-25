@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In</title>
+    <title>Sign In - Multitouch Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -12,213 +13,173 @@
           extend: {
             colors: {
               'mongo-green': '#00ED64',
-              'mongo-slate': '#001E2B',
-              'mongo-forest': '#00684A'
-            },
-            fontFamily: {
-              'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif']
+              'mongo-dark': '#001E2B',
+              'mongo-slate': '#023430',
             }
           }
         }
       }
     </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        .glass {
+            background: rgba(2, 52, 48, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 237, 100, 0.1);
+        }
+        .premium-title {
+            background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .input-premium {
+            background: rgba(0, 30, 43, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .input-premium:focus {
+            border-color: #00ED64;
+            box-shadow: 0 0 20px rgba(0, 237, 100, 0.1);
+        }
+    </style>
 </head>
-<body class="bg-apple-gray dark:bg-gray-900 font-sans antialiased transition-colors duration-200">
-    <div class="min-h-screen flex items-center justify-center px-6">
-        <!-- Dark Mode Toggle -->
-        <button id="themeToggle" class="fixed top-4 right-4 p-3 bg-white dark:bg-[#023430] rounded-full shadow-lg border border-transparent dark:border-[#00ED64]/20 hover:shadow-xl transition-all duration-200 z-10">
-            <span id="themeIcon" class="text-xl">🌙</span>
-        </button>
-        
-        <div class="w-full max-w-sm">
-            <div class="bg-white dark:bg-[#023430] rounded-2xl shadow-sm border border-gray-100 dark:border-[#133A41] p-8 transition-colors duration-200">
-                <div class="text-center mb-8">
-                    <div class="w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                        <span class="text-[#001E2B] text-3xl font-bold">🍃</span>
-                    </div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-[#E7EEEB] mb-2 tracking-tight">Multitouch <span class="font-normal text-gray-500">Academy</span></h1>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm">Sign in to your learning account</p>
+<body class="dark bg-[#001E2B] text-[#E7EEEB] min-h-screen flex items-center justify-center p-6 bg-[url('https://www.mongodb.com/ready-2022/static/background-blobs-c9d3b1b4d8d8d8d8d8d8d8d8d8d8d8d8.svg')] bg-cover">
+    
+    <!-- Dark Mode Toggle (Fixed for consistency) -->
+    <button id="themeToggle" class="fixed top-8 right-8 w-12 h-12 glass rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+        <span id="themeIcon">🌙</span>
+    </button>
+
+    <div class="w-full max-w-md relative animate-in fade-in zoom-in duration-700">
+        <!-- Decorative Glow -->
+        <div class="absolute -top-24 -left-24 w-64 h-64 bg-[#00ED64]/10 rounded-full blur-[100px]"></div>
+        <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px]"></div>
+
+        <div class="glass p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+            <!-- Header -->
+            <div class="text-center mb-10">
+                <div class="w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-[#00ED64]/20 rotate-3">
+                    <span class="text-[#001E2B] text-3xl font-black">M</span>
+                </div>
+                <h1 class="text-3xl font-black tracking-tighter text-white">Multitouch <span class="premium-title">Academy</span></h1>
+                <p class="text-[#9FB1AD] mt-2 font-medium">Access your expert learning architecture.</p>
+            </div>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+            <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-xs font-bold text-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i> <%= error %>
+            </div>
+            <% } %>
+
+            <!-- Role Selection -->
+            <div class="mb-8 p-1.5 bg-[#001E2B]/50 rounded-2xl flex gap-1 border border-white/5">
+                <button id="studentTab" class="flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg shadow-[#00ED64]/10">
+                    <i class="fas fa-user-graduate mr-2"></i> Student
+                </button>
+                <button id="teacherTab" class="flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-[#9FB1AD] hover:text-white">
+                    <i class="fas fa-chalkboard-teacher mr-2"></i> Teacher
+                </button>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
+                    <input type="email" id="email" name="email" placeholder="Email Address" required
+                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
                 </div>
                 
-                <% if (typeof error !== 'undefined' && error) { %>
-                <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 rounded-xl text-sm">
-                    <%= error %>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-[#9FB1AD] opacity-30"></i>
+                    <input type="password" id="password" name="password" placeholder="Password" required
+                           class="w-full pl-10 pr-4 py-4 input-premium rounded-2xl text-sm font-bold outline-none">
                 </div>
-                <% } %>
-                
-                <!-- Role Selection -->
-                <div class="mb-6">
-                    <div class="flex bg-gray-100 dark:bg-[#001E2B] rounded-xl p-1 border border-transparent dark:border-[#133A41]">
-                        <button id="studentTab" class="flex-1 py-2 px-4 text-sm font-semibold rounded-lg transition-all bg-white dark:bg-[#00684A] text-[#001E2B] dark:text-white shadow-sm">
-                            🎓 Student
-                        </button>
-                        <button id="teacherTab" class="flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all text-gray-500 dark:text-gray-400">
-                            👨🏫 Teacher
-                        </button>
-                    </div>
-                </div>
-                
-                <form id="loginForm" class="space-y-4">
-                    <div>
-                        <input type="email" id="email" name="email" placeholder="Email" required
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-gray-900 dark:text-[#E7EEEB] placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all">
-                    </div>
-                    
-                    <div>
-                        <input type="password" id="password" name="password" placeholder="Password" required
-                               class="w-full px-4 py-3 bg-gray-50 dark:bg-[#001E2B] border border-gray-200 dark:border-[#133A41] text-gray-900 dark:text-[#E7EEEB] placeholder-gray-500 dark:placeholder-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00ED64] focus:border-transparent transition-all">
-                    </div>
-                    
-                    <div id="teacherNote" class="hidden p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
-                        <p class="text-sm text-amber-700 dark:text-amber-300">
-                            📋 Teacher access requires approval from admin
-                        </p>
-                    </div>
-                    
-                    <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-[#00ED64] to-[#00C152] text-[#001E2B] font-bold py-3 rounded-xl hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] hover:scale-[1.02] transition-all">
-                        <span id="loginText">Sign In as Student</span>
-                    </button>
-                    
-                    <div class="flex justify-between items-center text-sm">
-                        <a href="/forgot-password" class="text-[#00C152] hover:text-[#00ED64] hover:underline font-medium">Forgot Password?</a>
-                        <a href="/signup" class="text-[#00C152] hover:text-[#00ED64] hover:underline font-medium">Create Account</a>
-                    </div>
-                </form>
-                
-                <!-- Super Admin Helper -->
-                <div id="superAdminSection" class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl transition-all">
-                    <p class="text-xs text-blue-700 dark:text-blue-300 text-center mb-3">
-                        🔑 <strong>Super Admin:</strong> engineerfelex@gmail.com
+
+                <div id="teacherNote" class="hidden p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+                    <p class="text-[10px] font-black uppercase tracking-wider text-amber-500 text-center leading-relaxed">
+                        <i class="fas fa-info-circle mr-2 text-xs"></i> Instructor verification required for node access
                     </p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="loginAsSuperAdmin()" class="py-2 px-3 text-[10px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-sm">Fill Credentials</button>
-                        <button type="button" id="setupAdminBtn" onclick="setupSuperAdmin()" class="py-2 px-3 text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all shadow-sm">Sync Cognito 🚀</button>
-                    </div>
+                </div>
+
+                <button type="submit" id="loginBtn" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:shadow-xl hover:shadow-[#00ED64]/20 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-[0.2em] text-xs">
+                    <span id="loginText">Initialize Access</span>
+                </button>
+
+                <div class="flex justify-between items-center px-2">
+                    <a href="/forgot-password" class="text-[10px] font-black uppercase tracking-widest text-[#00ED64] hover:opacity-70 transition-opacity">Reset Path</a>
+                    <a href="/signup" class="text-[10px] font-black uppercase tracking-widest text-[#9FB1AD] hover:text-[#00ED64] transition-all">Create Node</a>
+                </div>
+            </form>
+
+            <!-- Super Admin Debug Section (Premium Style) -->
+            <div id="superAdminSection" class="mt-10 pt-8 border-t border-white/5">
+                <p class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-[0.3em] text-center mb-6 opacity-30">Security Gateway</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" onclick="loginAsSuperAdmin()" class="py-3 px-4 glass rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/5 transition-all text-blue-400 border-blue-400/20">Auto-Credential</button>
+                    <button type="button" id="setupAdminBtn" onclick="setupSuperAdmin()" class="py-3 px-4 glass rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/5 transition-all text-purple-400 border-purple-400/20">Sync Cognito</button>
                 </div>
             </div>
         </div>
+
+        <p class="text-center mt-8 text-[9px] font-black text-[#9FB1AD] uppercase tracking-[0.5em] opacity-20">© 2026 Multitouch Systems</p>
     </div>
-    
+
     <script>
-        // Dark theme toggle
+        let selectedRole = 'student';
+        
+        // Role tab switching
+        const studentTab = document.getElementById('studentTab');
+        const teacherTab = document.getElementById('teacherTab');
+        const loginText = document.getElementById('loginText');
+        const teacherNote = document.getElementById('teacherNote');
+
+        function updateRole(role) {
+            selectedRole = role;
+            if (role === 'student') {
+                studentTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg shadow-[#00ED64]/10';
+                teacherTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-[#9FB1AD] hover:text-white';
+                teacherNote.classList.add('hidden');
+                loginText.textContent = 'Initialize Student Access';
+            } else {
+                teacherTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg shadow-[#00ED64]/10';
+                studentTab.className = 'flex-1 py-3 px-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-[#9FB1AD] hover:text-white';
+                teacherNote.classList.remove('hidden');
+                loginText.textContent = 'Initialize Instructor Access';
+            }
+        }
+
+        studentTab.addEventListener('click', () => updateRole('student'));
+        teacherTab.addEventListener('click', () => updateRole('teacher'));
+
+        // Theme management
         function initTheme() {
-            const theme = localStorage.getItem("theme") || "light";
+            const theme = localStorage.getItem("theme") || "dark";
             document.documentElement.classList.toggle("dark", theme === "dark");
             document.getElementById('themeIcon').textContent = theme === "dark" ? '☀️' : '🌙';
         }
         
-        function toggleTheme() {
-            const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const isDark = document.documentElement.classList.contains("dark");
+            const newTheme = isDark ? "light" : "dark";
             document.documentElement.classList.toggle("dark", newTheme === "dark");
             localStorage.setItem("theme", newTheme);
             document.getElementById('themeIcon').textContent = newTheme === "dark" ? '☀️' : '🌙';
-        }
+        });
         
         initTheme();
-        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-        
-        // Check for existing login on page load
-        function checkExistingLogin() {
-            // Prevent infinite loops
-            if (window.location.pathname === '/login' && !sessionStorage.getItem('loginCheck')) {
-                sessionStorage.setItem('loginCheck', 'true');
-                
-                const accessToken = localStorage.getItem('accessToken');
-                const user = localStorage.getItem('user');
-                
-                if (accessToken && user) {
-                    console.log('Found existing login, redirecting...');
-                    window.location.href = '/dashboard';
-                }
-            }
-        }
-        
-        // Only check on login page
-        if (window.location.pathname === '/login') {
-            checkExistingLogin();
-        }
-        
-        let selectedRole = 'student';
-        
-        // Role tab switching
-        document.getElementById('studentTab').addEventListener('click', () => {
-            selectedRole = 'student';
-            console.log('Selected role:', selectedRole);
-            document.getElementById('studentTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all bg-white dark:bg-gray-600 text-apple-blue shadow-sm';
-            document.getElementById('teacherTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all text-gray-500 dark:text-gray-400';
-            document.getElementById('teacherNote').classList.add('hidden');
-            document.getElementById('loginText').textContent = 'Sign In as Student';
-        });
-        
-        document.getElementById('teacherTab').addEventListener('click', () => {
-            selectedRole = 'teacher';
-            console.log('Selected role:', selectedRole);
-            document.getElementById('teacherTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all bg-white dark:bg-gray-600 text-apple-blue shadow-sm';
-            document.getElementById('studentTab').className = 'flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all text-gray-500 dark:text-gray-400';
-            document.getElementById('teacherNote').classList.remove('hidden');
-            document.getElementById('loginText').textContent = 'Sign In as Teacher';
-        });
-        
-        // Super admin login function
-        function loginAsSuperAdmin() {
-            document.getElementById('email').value = 'engineerfelex@gmail.com';
-            document.getElementById('password').value = 'test12345';
-            document.getElementById('password').focus();
-            // Switch to teacher tab
-            document.getElementById('teacherTab').click();
-        }
 
-        // Setup Admin via Cognito
-        async function setupSuperAdmin() {
-            const setupBtn = document.getElementById('setupAdminBtn');
-            const originalText = setupBtn.textContent;
-            
-            const adminKey = prompt("Enter ADMIN_KEY from your .env file to confirm setup (default: admin123):");
-            if (!adminKey) return;
-            
-            setupBtn.disabled = true;
-            setupBtn.textContent = 'Syncing...';
-            
-            try {
-                const response = await fetch('/api/auth/setup-admin', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        email: 'engineerfelex@gmail.com', 
-                        password: 'test12345',
-                        adminKey: adminKey 
-                    })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    alert('✅ ' + data.message);
-                    loginAsSuperAdmin();
-                } else {
-                    alert('❌ ' + data.error);
-                }
-            } catch (error) {
-                alert('❌ Error: ' + error.message);
-            } finally {
-                setupBtn.disabled = false;
-                setupBtn.textContent = originalText;
-            }
-        }
-        
+        // Login Handler
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const loginBtn = document.getElementById('loginBtn');
+            const loginTextVal = document.getElementById('loginText');
             
-            const loginText = document.getElementById('loginText');
             loginBtn.disabled = true;
-            if (loginText) loginText.textContent = 'Signing in...';
+            loginTextVal.textContent = 'VERIFYING ARCHITECTURE...';
             
             try {
-                console.log('Login attempt:', { email, requestedRole: selectedRole });
-                
                 const response = await fetch('/api/auth/signin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -226,35 +187,42 @@
                 });
                 
                 const data = await response.json();
-                console.log('Login response:', data);
-                
                 if (data.success) {
                     localStorage.setItem('accessToken', data.accessToken);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     localStorage.setItem('selectedRole', selectedRole);
-                    
-                    // Show success message based on role
-                    if (selectedRole === 'teacher' && data.user.isTeacher) {
-                        console.log('Redirecting to teacher dashboard');
-                    } else if (selectedRole === 'teacher' && !data.user.isTeacher) {
-                        alert('Teacher access requested. Admin approval required.');
-                    } else {
-                        console.log('Redirecting to student dashboard');
-                    }
-                    
-                    // Always redirect to dashboard - backend will handle role-based rendering
                     window.location.href = '/dashboard';
                 } else {
                     alert(data.error);
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                alert('Login failed: ' + error.message);
+                alert('Connection failed: ' + error.message);
             } finally {
                 loginBtn.disabled = false;
-                document.getElementById('loginText').textContent = selectedRole === 'teacher' ? 'Sign In as Teacher' : 'Sign In as Student';
+                loginTextVal.textContent = selectedRole === 'teacher' ? 'Initialize Instructor Access' : 'Initialize Student Access';
             }
         });
+
+        // Debug Helpers
+        function loginAsSuperAdmin() {
+            document.getElementById('email').value = 'engineerfelex@gmail.com';
+            document.getElementById('password').value = 'test12345';
+            updateRole('teacher');
+        }
+
+        async function setupSuperAdmin() {
+            const adminKey = prompt("Enter ADMIN_KEY:");
+            if (!adminKey) return;
+            try {
+                const response = await fetch('/api/auth/setup-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'engineerfelex@gmail.com', password: 'test12345', adminKey })
+                });
+                const data = await response.json();
+                alert(data.success ? 'Success: ' + data.message : 'Error: ' + data.error);
+            } catch (error) { alert('Error: ' + error.message); }
+        }
     </script>
 </body>
 </html>
