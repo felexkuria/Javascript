@@ -288,6 +288,7 @@ class DynamoDBService {
         const videos = await this.getVideosForCourse(courseItem.courseName, userId);
         
         courses.push({
+          _id: courseItem.courseName, // For frontend compatibility
           name: courseItem.courseName,
           title: courseItem.title,
           description: courseItem.description,
@@ -311,6 +312,7 @@ class DynamoDBService {
         if (!courses.find(c => c.name === courseName)) {
           const videos = await this.getVideosForCourse(courseName, userId);
           courses.push({
+            _id: courseName,
             name: courseName,
             videos: videos || [],
             offlineMode: false

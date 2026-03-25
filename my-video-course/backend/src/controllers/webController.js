@@ -210,6 +210,29 @@ class WebController {
       res.status(500).render('error', { message: 'Error loading video' });
     }
   }
+  
+  async renderCourses(req, res) {
+    try {
+      const user = req.user || req.session?.user;
+      const userId = user?.email || 'guest';
+      const courses = await dynamoVideoService.getAllCourses(userId);
+      
+      const normalizedCourses = courses.map(c => ({
+        ...c,
+        videoCount: c.videos?.length || 0,
+        sections: [...new Set((c.videos || []).map(v => v.section || v.sectionTitle || 'Content'))]
+      }));
+
+      res.render('courses', { 
+        user, 
+        courses: normalizedCourses,
+        activePage: 'courses'
+      });
+    } catch (err) {
+      console.error('Error rendering courses:', err);
+      res.status(500).render('error', { message: 'Failed to load courses catalog' });
+    }
+  }
 
   async renderCertificates(req, res) {
     try {
