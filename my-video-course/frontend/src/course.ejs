@@ -21,6 +21,13 @@
         }
       }
     </script>
+    <% 
+        const displayTitle = (typeof course !== 'undefined' && course.title) ? course.title : (typeof courseName !== 'undefined' ? courseName : 'Untitled Course');
+        const displayDesc = (typeof course !== 'undefined' && course.description) ? course.description : 'Master high-performance engineering with our professional-grade curriculum components.';
+        const instructorName = (typeof course !== 'undefined' && course.instructor) ? course.instructor : 'Engineer Felex';
+        const progressPercent = totalVideos > 0 ? Math.round((watchedVideos/totalVideos)*100) : 0;
+        const encodedCourseName = typeof courseName !== 'undefined' ? encodeURIComponent(courseName) : (typeof course !== 'undefined' ? encodeURIComponent(course.name) : '');
+    %>
 </head>
 <body class="bg-[#F9FBFA] dark:bg-[#001E2B] font-sans antialiased transition-colors duration-200" style="background: var(--color-bg);">
     <!-- Dark Mode Toggle -->
@@ -54,15 +61,15 @@
                         <span class="text-[10px] font-bold text-[#00ED64] uppercase tracking-widest">Premium Learning Track</span>
                     </div>
                     <h1 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-none">
-                        <%= (typeof course !== 'undefined' && course.title) ? course.title : (typeof courseName !== 'undefined' ? courseName : 'Untitled Course') %>
+                        <%= displayTitle %>
                     </h1>
                     <p class="text-xl text-gray-400 dark:text-[#9FB1AD] max-w-2xl font-medium leading-relaxed mb-10">
-                        <%= (typeof course !== 'undefined' && course.description) ? course.description : 'Master high-performance engineering with our professional-grade curriculum components.' %>
+                        <%= displayDesc %>
                     </p>
                     <div class="flex items-center gap-6 text-sm font-bold text-white/60">
                         <div class="flex items-center gap-2">
                              <span class="opacity-50">Instructor:</span>
-                             <span class="text-[#00ED64]"><%= (typeof course !== 'undefined' && course.instructor) ? course.instructor : 'Engineer Felex' %></span>
+                             <span class="text-[#00ED64]"><%= instructorName %></span>
                         </div>
                         <div class="flex items-center gap-2">
                              <span class="opacity-50">Modules:</span>
@@ -77,12 +84,12 @@
                         <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
                             <div class="mb-6">
                                 <div class="text-[10px] font-black text-[#00ED64] uppercase tracking-widest mb-2">Learning Velocity</div>
-                                <div class="text-4xl font-black text-white mb-4"><%- (totalVideos > 0 ? Math.round((watchedVideos/totalVideos)*100) : 0) %>%</div>
+                                <div class="text-4xl font-black text-white mb-4"><%= progressPercent %>%</div>
                                 <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#00ED64] shadow-[0_0_10px_#00ED64]" style="width: <%- (totalVideos > 0 ? (watchedVideos/totalVideos)*100 : 0) %>%"></div>
+                                    <div class="h-full bg-[#00ED64]" style="--p: <%= progressPercent %>%; width: var(--p); box-shadow: 0 0 10px #00ED64;"></div>
                                 </div>
                             </div>
-                            <button onclick="window.location.href='/course/<%= typeof courseName !== 'undefined' ? encodeURIComponent(courseName) : (typeof course !== 'undefined' ? encodeURIComponent(course.name) : '') %>/video/'" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
+                            <button onclick="window.location.href='/course/<%= encodedCourseName %>/video/'" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
                                 RESUME MODULE
                             </button>
                         <% } else { %>
@@ -220,7 +227,7 @@
         }
 
         async function enroll() {
-            const courseName = '<%= typeof courseName !== 'undefined' ? courseName : (typeof course !== 'undefined' ? course.name : '') %>';
+            const courseName = '<%= encodedCourseName %>';
             const btn = document.getElementById('enrollBtn');
             try {
                 const token = localStorage.getItem('accessToken');
@@ -257,7 +264,7 @@
         }
 
         async function addToWishlist() {
-            const courseName = '<%= typeof courseName !== 'undefined' ? courseName : (typeof course !== 'undefined' ? course.name : '') %>';
+            const courseName = '<%= encodedCourseName %>';
             const btn = document.getElementById('wishlistBtn');
             try {
                 const token = localStorage.getItem('accessToken');

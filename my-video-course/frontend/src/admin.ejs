@@ -3,607 +3,340 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Multitouch Academy</title>
+    <title>Mission Control - Platform Governance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        :root {
+            --atlas-green: #00ED64;
+            --atlas-forest: #00684A;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 30, 43, 0.1);
+        }
+
+        .dark {
+            --glass-bg: rgba(2, 52, 48, 0.3);
+            --glass-border: rgba(0, 237, 100, 0.15);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
-            line-height: 1.47059;
-            font-weight: 400;
-            letter-spacing: -0.022em;
-        }
-        
-        .dark body {
-            background: #000;
-            color: #f5f5f7;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        
-        .admin-header {
-            text-align: center;
-            margin-bottom: 48px;
-        }
-        
-        .admin-title {
-            font-size: 48px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #1d1d1f;
-        }
-        
-        .dark .admin-title {
-            color: #f5f5f7;
-        }
-        
-        .admin-subtitle {
-            font-size: 21px;
-            color: #86868b;
-        }
-        
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 32px;
-        }
-        
-        .tool-card {
-            background: white;
-            border-radius: 20px;
-            padding: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            font-family: 'Outfit', sans-serif;
+            background-color: #F9FBFA;
+            color: #001E2B;
             transition: all 0.3s ease;
         }
-        
-        .dark .tool-card {
-            background: #1d1d1f;
-            box-shadow: 0 4px 20px rgba(255,255,255,0.05);
+
+        .dark body {
+            background-color: #001E2B;
+            color: white;
         }
-        
-        .tool-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+
+        .premium-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
         }
-        
-        .dark .tool-card:hover {
-            box-shadow: 0 8px 40px rgba(255,255,255,0.08);
+
+        .tool-card-premium {
+            border-radius: 32px;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
         }
-        
-        .tool-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
+
+        .tool-card-premium:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 30, 43, 0.1);
+            border-color: var(--atlas-green);
         }
-        
-        .tool-icon {
-            font-size: 32px;
-        }
-        
-        .tool-title {
-            font-size: 24px;
+
+        .input-premium {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.5);
             font-weight: 600;
-            color: #1d1d1f;
-        }
-        
-        .dark .tool-title {
-            color: #f5f5f7;
-        }
-        
-        .tool-form {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        
-        .form-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #f2f2f7;
-            border-radius: 10px;
-            font-size: 14px;
-            background: #f9f9f9;
-            color: #1d1d1f;
-            transition: all 0.2s ease;
-        }
-        
-        .dark .form-input {
-            background: #2c2c2e;
-            border-color: #424245;
-            color: #f5f5f7;
-        }
-        
-        .form-input:focus {
             outline: none;
-            border-color: #007aff;
-            background: white;
+            transition: all 0.2s;
         }
-        
-        .dark .form-input:focus {
-            background: #1d1d1f;
-        }
-        
-        .form-select {
-            flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #f2f2f7;
-            border-radius: 10px;
-            font-size: 14px;
-            background: #f9f9f9;
-            color: #1d1d1f;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .dark .form-select {
-            background: #2c2c2e;
-            border-color: #424245;
-            color: #f5f5f7;
-        }
-        
-        .form-select:focus {
-            outline: none;
-            border-color: #007aff;
-            background: white;
-        }
-        
-        .dark .form-select:focus {
-            background: #1d1d1f;
-        }
-        
-        .file-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 2px dashed #d2d2d7;
-            border-radius: 10px;
-            font-size: 14px;
-            background: #f9f9f9;
-            color: #1d1d1f;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .dark .file-input {
-            background: #2c2c2e;
-            border-color: #424245;
-            color: #f5f5f7;
-        }
-        
-        .file-input:hover {
-            border-color: #007aff;
-            background: white;
-        }
-        
-        .dark .file-input:hover {
-            background: #1d1d1f;
-        }
-        
-        .action-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-        
-        .btn-red {
-            background: #ff3b30;
+
+        .dark .input-premium {
+            background: rgba(0, 30, 43, 0.4);
             color: white;
         }
-        
-        .btn-red:hover {
-            background: #d70015;
-            transform: translateY(-1px);
+
+        .input-premium:focus {
+            border-color: var(--atlas-green);
+            box-shadow: 0 0 0 4px rgba(0, 237, 100, 0.1);
         }
-        
-        .btn-purple {
-            background: #af52de;
-            color: white;
+
+        .btn-atlas {
+            background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+            color: #001E2B;
+            font-weight: 900;
+            padding: 14px 32px;
+            border-radius: 16px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 12px;
         }
-        
-        .btn-purple:hover {
-            background: #9542c4;
-            transform: translateY(-1px);
+
+        .btn-atlas:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 237, 100, 0.3);
         }
-        
-        .btn-orange {
-            background: #ff9500;
-            color: white;
+
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        
-        .btn-orange:hover {
-            background: #e6850e;
-            transform: translateY(-1px);
-        }
-        
-        .btn-blue {
-            background: #007aff;
-            color: white;
-        }
-        
-        .btn-blue:hover {
-            background: #0056b3;
-            transform: translateY(-1px);
-        }
-        
-        .btn-green {
-            background: #30d158;
-            color: white;
-        }
-        
-        .btn-green:hover {
-            background: #28cd4f;
-            transform: translateY(-1px);
-        }
-        
-        .action-btn:disabled {
-            background: #86868b;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .status-message {
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            margin-top: 16px;
-            transition: all 0.2s ease;
-        }
-        
-        .status-message.hidden {
-            display: none;
-        }
-        
-        .status-message.info {
-            background: rgba(0, 122, 255, 0.1);
-            color: #007aff;
-            border: 1px solid rgba(0, 122, 255, 0.2);
-        }
-        
-        .status-message.success {
-            background: rgba(48, 209, 88, 0.1);
-            color: #30d158;
-            border: 1px solid rgba(48, 209, 88, 0.2);
-        }
-        
-        .status-message.error {
-            background: rgba(255, 59, 48, 0.1);
-            color: #ff3b30;
-            border: 1px solid rgba(255, 59, 48, 0.2);
-        }
-        
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 44px;
-            height: 44px;
-            border: none;
-            border-radius: 22px;
-            background: white;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.2s ease;
-            z-index: 1000;
-        }
-        
-        .dark .theme-toggle {
-            background: #1d1d1f;
-            box-shadow: 0 4px 20px rgba(255,255,255,0.1);
-        }
-        
-        .theme-toggle:hover {
-            transform: scale(1.1);
-        }
-        
-        @media (max-width: 768px) {
-            .tools-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .tool-form {
-                flex-direction: column;
-            }
-            
-            .admin-title {
-                font-size: 32px;
-            }
-        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
-<body>
-    <button class="theme-toggle" id="themeToggle">🌙</button>
-    
-    <div class="container">
-        <div class="admin-header">
-            <h1 class="admin-title">Admin Panel</h1>
-            <p class="admin-subtitle">Manage your video course platform</p>
+<body class="dark">
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 px-10 py-6 flex justify-between items-center premium-glass border-b border-white/5">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-[#00ED64] rounded-xl flex items-center justify-center text-[#001E2B] shadow-lg shadow-[#00ED64]/20">
+                <i class="fas fa-tower-broadcast"></i>
+            </div>
+            <span class="text-xl font-black tracking-tighter uppercase">Mission Control</span>
         </div>
-        
-        <div class="tools-grid">
-            <!-- YouTube Playlist Import -->
-            <div class="tool-card">
-                <div class="tool-header">
-                    <div class="tool-icon">📺</div>
-                    <h2 class="tool-title">Import YouTube Playlist</h2>
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
+                <span class="text-[10px] font-black uppercase tracking-widest opacity-60">System Synchronized</span>
+            </div>
+            <button id="themeToggle" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all">🌙</button>
+        </div>
+    </nav>
+
+    <main class="pt-32 pb-20 px-10">
+        <div class="max-w-7xl mx-auto">
+            <!-- Hero -->
+            <div class="mb-16">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">Infrastructure Orchestration</span>
+                    <div class="h-px w-12 bg-white/10"></div>
                 </div>
-                <div class="tool-form">
-                    <input type="text" id="playlistId" placeholder="YouTube Playlist ID" class="form-input">
-                    <input type="text" id="courseName" placeholder="Course Name" class="form-input">
-                    <button id="importPlaylist" class="action-btn btn-red">Import</button>
-                </div>
-                <div id="importStatus" class="status-message hidden"></div>
+                <h1 class="text-6xl font-black tracking-tighter mb-4">Platform <span class="text-[#00ED64]">Governance</span></h1>
+                <p class="text-gray-400 text-xl font-medium max-w-2xl leading-relaxed">Execute critical infrastructure migrations, ingest multi-source assets, and synthesize pedagogical resources.</p>
             </div>
 
-            <!-- Practice Exam Generator -->
-            <div class="tool-card">
-                <div class="tool-header">
-                    <div class="tool-icon">📝</div>
-                    <h2 class="tool-title">Generate Practice Exam</h2>
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- YouTube Ingest -->
+                <div class="tool-card-premium premium-glass p-10 flex flex-col justify-between">
+                    <div>
+                        <div class="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 mb-8 border border-red-500/20">
+                            <i class="fab fa-youtube text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-black tracking-tight mb-4 text-white">Stream Ingestion</h2>
+                        <p class="text-gray-400 text-sm font-medium mb-8 leading-relaxed">Provision entire YouTube manifests into the platform hierarchy. Orchestrate metadata synchronization at scale.</p>
+                        
+                        <div class="space-y-4 mb-8">
+                            <input type="text" id="playlistId" placeholder="Manifest ID (Playlist)" class="input-premium">
+                            <input type="text" id="courseName" placeholder="Resource Destination (Course)" class="input-premium">
+                        </div>
+                    </div>
+                    <button id="importPlaylist" class="btn-atlas w-full">Synchronize Manifest</button>
+                    <div id="importStatus" class="mt-4 hidden p-4 rounded-xl text-xs font-bold bg-white/5 border border-white/10"></div>
                 </div>
-                <div class="tool-form">
-                    <select id="examCourse" class="form-select">
-                        <option value="">Select Course</option>
-                    </select>
-                    <button id="generateExam" class="action-btn btn-purple">Generate 65 Questions</button>
-                </div>
-                <div id="examStatus" class="status-message hidden"></div>
-            </div>
 
-            <!-- Large Video Transcription -->
-            <div class="tool-card">
-                <div class="tool-header">
-                    <div class="tool-icon">🎬</div>
-                    <h2 class="tool-title">AWS Transcribe (Large Videos)</h2>
+                <!-- Exam Synthesis -->
+                <div class="tool-card-premium premium-glass p-10 flex flex-col justify-between">
+                    <div>
+                        <div class="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-400 mb-8 border border-purple-500/20">
+                            <i class="fas fa-brain text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-black tracking-tight mb-4 text-white">Curriculum Synthesis</h2>
+                        <p class="text-gray-400 text-sm font-medium mb-8 leading-relaxed">Synthesize high-fidelity practice assessments using generative neural networks. 65 questions per iteration.</p>
+                        
+                        <div class="space-y-4 mb-8">
+                            <select id="examCourse" class="input-premium">
+                                <option value="">Select Resource Node</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="generateExam" class="btn-atlas w-full bg-none !bg-purple-600 !text-white hover:!bg-purple-500">Synthesize 65 Units</button>
+                    <div id="examStatus" class="mt-4 hidden p-4 rounded-xl text-xs font-bold bg-white/5 border border-white/10"></div>
                 </div>
-                <div class="tool-form">
-                    <input type="file" id="largeVideo" accept="video/*" class="file-input">
-                    <button id="transcribeVideo" class="action-btn btn-orange">Transcribe</button>
-                </div>
-                <div id="transcribeStatus" class="status-message hidden"></div>
-            </div>
 
-            <!-- DynamoDB Migration -->
-            <div class="tool-card">
-                <div class="tool-header">
-                    <div class="tool-icon">🗄️</div>
-                    <h2 class="tool-title">DynamoDB Migration</h2>
+                <!-- AWS Transcribe -->
+                <div class="tool-card-premium premium-glass p-10 flex flex-col justify-between">
+                    <div>
+                        <div class="w-14 h-14 bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-400 mb-8 border border-orange-500/20">
+                            <i class="fas fa-closed-captioning text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-black tracking-tight mb-4 text-white">Neural Transcription</h2>
+                        <p class="text-gray-400 text-sm font-medium mb-8 leading-relaxed">Execute AWS Transcribe protocols for high-bandwidth video assets. Precision linguistic capture.</p>
+                        
+                        <div class="space-y-4 mb-8">
+                            <div class="relative group cursor-pointer">
+                                <input type="file" id="largeVideo" accept="video/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                <div class="px-6 py-4 rounded-2xl border-2 border-dashed border-white/10 group-hover:border-[#00ED64] transition-all text-center">
+                                    <span id="fileNameDisplay" class="text-xs font-black text-gray-500 uppercase tracking-widest">Load Source Asset</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="transcribeVideo" class="btn-atlas w-full bg-none !bg-orange-600 !text-white hover:!bg-orange-500">Initiate Capture</button>
+                    <div id="transcribeStatus" class="mt-4 hidden p-4 rounded-xl text-xs font-bold bg-white/5 border border-white/10"></div>
                 </div>
-                <div class="tool-form">
-                    <button id="migrateToDynamo" class="action-btn btn-blue">Migrate to DynamoDB</button>
-                    <button id="syncDynamo" class="action-btn btn-green">Sync Data</button>
+
+                <!-- DynamoDB Migration -->
+                <div class="tool-card-premium premium-glass p-10 lg:col-span-3">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-12">
+                        <div class="max-w-xl">
+                            <div class="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400 mb-8 border border-blue-500/20">
+                                <i class="fas fa-database text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-black tracking-tight mb-4 text-white">Data Architecture Migration</h2>
+                            <p class="text-gray-400 text-sm font-medium leading-relaxed">Transition legacy course manifests into high-availability DynamoDB clusters. Execute atomic synchronization protocols across global availability zones.</p>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-4 flex-shrink-0">
+                            <button id="migrateToDynamo" class="btn-atlas !bg-blue-600 !text-white hover:!bg-blue-500 px-10 py-5">Initiate Migration</button>
+                            <button id="syncDynamo" class="px-10 py-5 rounded-2xl border-2 border-[#00ED64] text-[#00ED64] font-black text-xs tracking-widest hover:bg-[#00ED64] hover:text-[#001E2B] transition-all">DATA SYNC</button>
+                        </div>
+                    </div>
+                    <div id="migrationStatus" class="mt-8 hidden p-6 rounded-2xl text-xs font-black mono text-[#00ED64] bg-[#001E2B] border border-white/5"></div>
                 </div>
-                <div id="migrationStatus" class="status-message hidden"></div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        // Theme management
-        function initTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.classList.toggle('dark', theme === 'dark');
-            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
-        }
-        
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const newTheme = isDark ? 'light' : 'dark';
-            document.documentElement.classList.toggle('dark', newTheme === 'dark');
-            localStorage.setItem('theme', newTheme);
-            document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
-        }
-        
-        initTheme();
-        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        // UI Logic
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            themeToggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+        });
+
+        document.getElementById('largeVideo').addEventListener('change', (e) => {
+            const fileName = e.target.files[0]?.name || 'Load Source Asset';
+            document.getElementById('fileNameDisplay').textContent = fileName;
+        });
 
         function showStatus(elementId, message, type) {
             const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.className = `status-message ${type}`;
+            element.textContent = `> ${message.toUpperCase()}`;
+            element.classList.remove('hidden');
+            element.style.color = type === 'success' ? '#00ED64' : (type === 'error' ? '#ff3b30' : '#E7EEEB');
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load courses for exam generation
+        // Functional Integration
+        document.addEventListener('DOMContentLoaded', () => {
             fetch('/api/videos/localStorage')
-                .then(response => response.json())
+                .then(r => r.json())
                 .then(data => {
                     const select = document.getElementById('examCourse');
                     Object.keys(data).forEach(course => {
-                        const option = document.createElement('option');
-                        option.value = course;
-                        option.textContent = course;
-                        select.appendChild(option);
+                        const opt = document.createElement('option');
+                        opt.value = course;
+                        opt.textContent = course.toUpperCase();
+                        select.appendChild(opt);
                     });
                 });
 
-            // YouTube playlist import
             document.getElementById('importPlaylist').addEventListener('click', async function() {
                 const playlistId = document.getElementById('playlistId').value.trim();
                 const courseName = document.getElementById('courseName').value.trim();
+                if (!playlistId || !courseName) return showStatus('importStatus', 'Incomplete parameters', 'error');
                 
-                if (!playlistId || !courseName) {
-                    showStatus('importStatus', 'Please enter both playlist ID and course name', 'error');
-                    return;
-                }
-                
-                this.disabled = true;
-                this.textContent = 'Importing...';
-                showStatus('importStatus', 'Importing YouTube playlist...', 'info');
+                this.classList.add('opacity-50', 'cursor-not-allowed');
+                showStatus('importStatus', 'Executing manifest ingest...', 'info');
                 
                 try {
-                    const response = await fetch('/api/youtube/playlist', {
+                    const r = await fetch('/api/youtube/playlist', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ playlistId, courseName })
                     });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        showStatus('importStatus', `Successfully imported ${data.videos.length} videos from "${data.playlist.title}"`, 'success');
-                    } else {
-                        throw new Error(data.error || 'Import failed');
-                    }
-                } catch (error) {
-                    showStatus('importStatus', `Import failed: ${error.message}`, 'error');
-                } finally {
-                    this.disabled = false;
-                    this.textContent = 'Import';
-                }
+                    const d = await r.json();
+                    if (d.success) showStatus('importStatus', `Success: ${d.videos.length} units ingested`, 'success');
+                    else throw new Error(d.error);
+                } catch (e) { showStatus('importStatus', `Failure: ${e.message}`, 'error'); }
+                finally { this.classList.remove('opacity-50', 'cursor-not-allowed'); }
             });
 
-            // Practice exam generation
             document.getElementById('generateExam').addEventListener('click', async function() {
                 const courseName = document.getElementById('examCourse').value;
+                if (!courseName) return showStatus('examStatus', 'Target not specified', 'error');
                 
-                if (!courseName) {
-                    showStatus('examStatus', 'Please select a course', 'error');
-                    return;
-                }
-                
-                this.disabled = true;
-                this.textContent = 'Generating...';
-                showStatus('examStatus', 'Generating 65 ExamTopics-style questions...', 'info');
+                this.classList.add('opacity-50', 'cursor-not-allowed');
+                showStatus('examStatus', 'Initiating neural synthesis...', 'info');
                 
                 try {
-                    const response = await fetch('/api/practice-exam/generate', {
+                    const r = await fetch('/api/practice-exam/generate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ courseName })
                     });
-                    
-                    const data = await response.json();
-                    if (data.questions) {
-                        showStatus('examStatus', `Generated ${data.totalQuestions} practice questions for ${courseName}`, 'success');
-                        
-                        // Download questions as JSON
-                        const blob = new Blob([JSON.stringify(data.questions, null, 2)], { type: 'application/json' });
+                    const d = await r.json();
+                    if (d.questions) {
+                        showStatus('examStatus', `Manifest generated: ${d.totalQuestions} items`, 'success');
+                        const blob = new Blob([JSON.stringify(d.questions, null, 2)], { type: 'application/json' });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = `${courseName}-practice-exam.json`;
+                        a.download = `${courseName}-assessment.json`;
                         a.click();
-                        URL.revokeObjectURL(url);
-                    } else {
-                        throw new Error(data.error || 'Generation failed');
-                    }
-                } catch (error) {
-                    showStatus('examStatus', `Generation failed: ${error.message}`, 'error');
-                } finally {
-                    this.disabled = false;
-                    this.textContent = 'Generate 65 Questions';
-                }
+                    } else throw new Error(d.error);
+                } catch (e) { showStatus('examStatus', `Failure: ${e.message}`, 'error'); }
+                finally { this.classList.remove('opacity-50', 'cursor-not-allowed'); }
             });
 
-            // Large video transcription
             document.getElementById('transcribeVideo').addEventListener('click', async function() {
-                const fileInput = document.getElementById('largeVideo');
+                const file = document.getElementById('largeVideo').files[0];
+                if (!file) return showStatus('transcribeStatus', 'Source asset missing', 'error');
                 
-                if (!fileInput.files[0]) {
-                    showStatus('transcribeStatus', 'Please select a video file', 'error');
-                    return;
-                }
-                
-                const file = fileInput.files[0];
-                const fileSizeMB = file.size / (1024 * 1024);
-                
-                if (fileSizeMB < 100) {
-                    showStatus('transcribeStatus', 'File is small enough for local processing. Use regular SRT generation instead.', 'error');
-                    return;
-                }
-                
-                this.disabled = true;
-                this.textContent = 'Transcribing...';
-                showStatus('transcribeStatus', `Uploading ${fileSizeMB.toFixed(1)}MB video to AWS Transcribe...`, 'info');
+                this.classList.add('opacity-50', 'cursor-not-allowed');
+                showStatus('transcribeStatus', 'Orchestrating AWS Transcribe...', 'info');
                 
                 try {
-                    const formData = new FormData();
-                    formData.append('video', file);
-                    formData.append('videoTitle', file.name.replace(/\.[^/.]+$/, ''));
-                    
-                    const response = await fetch('/api/transcribe/large-video', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        showStatus('transcribeStatus', `Transcription completed! SRT file saved to: ${data.srtPath}`, 'success');
-                    } else {
-                        throw new Error(data.error || 'Transcription failed');
-                    }
-                } catch (error) {
-                    showStatus('transcribeStatus', `Transcription failed: ${error.message}`, 'error');
-                } finally {
-                    this.disabled = false;
-                    this.textContent = 'Transcribe';
-                }
+                    const fd = new FormData();
+                    fd.append('video', file);
+                    fd.append('videoTitle', file.name.replace(/\.[^/.]+$/, ''));
+                    const r = await fetch('/api/transcribe/large-video', { method: 'POST', body: fd });
+                    const d = await r.json();
+                    if (d.success) showStatus('transcribeStatus', 'Transcription manifest saved', 'success');
+                    else throw new Error(d.error);
+                } catch (e) { showStatus('transcribeStatus', `Protocols failed: ${e.message}`, 'error'); }
+                finally { this.classList.remove('opacity-50', 'cursor-not-allowed'); }
             });
 
-            // DynamoDB migration
             document.getElementById('migrateToDynamo').addEventListener('click', async function() {
-                this.disabled = true;
-                this.textContent = 'Migrating...';
-                showStatus('migrationStatus', 'Starting DynamoDB migration...', 'info');
-                
+                this.classList.add('opacity-50', 'cursor-not-allowed');
+                showStatus('migrationStatus', 'Cluster migration initiated...', 'info');
                 try {
-                    const response = await fetch('/api/migrate/dynamodb', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        showStatus('migrationStatus', 'Migration completed successfully!', 'success');
-                    } else {
-                        throw new Error(data.error || 'Migration failed');
-                    }
-                } catch (error) {
-                    showStatus('migrationStatus', `Migration failed: ${error.message}`, 'error');
-                } finally {
-                    this.disabled = false;
-                    this.textContent = 'Migrate to DynamoDB';
-                }
+                    const r = await fetch('/api/migrate/dynamodb', { method: 'POST' });
+                    const d = await r.json();
+                    if (d.success) showStatus('migrationStatus', 'Migration complete. Cluster synchronized.', 'success');
+                    else throw new Error(d.error);
+                } catch (e) { showStatus('migrationStatus', `Critical failure: ${e.message}`, 'error'); }
+                finally { this.classList.remove('opacity-50', 'cursor-not-allowed'); }
             });
 
             document.getElementById('syncDynamo').addEventListener('click', async function() {
-                this.disabled = true;
-                this.textContent = 'Syncing...';
-                showStatus('migrationStatus', 'Syncing data with DynamoDB...', 'info');
-                
+                this.classList.add('opacity-50', 'cursor-not-allowed');
+                showStatus('migrationStatus', 'Atomic data sync starting...', 'info');
                 try {
-                    const response = await fetch('/api/sync/dynamodb', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        showStatus('migrationStatus', 'Data sync completed successfully!', 'success');
-                    } else {
-                        throw new Error(data.error || 'Sync failed');
-                    }
-                } catch (error) {
-                    showStatus('migrationStatus', `Sync failed: ${error.message}`, 'error');
-                } finally {
-                    this.disabled = false;
-                    this.textContent = 'Sync Data';
-                }
+                    const r = await fetch('/api/sync/dynamodb', { method: 'POST' });
+                    const d = await r.json();
+                    if (d.success) showStatus('migrationStatus', 'Manifests synchronized with global cluster.', 'success');
+                    else throw new Error(d.error);
+                } catch (e) { showStatus('migrationStatus', `Sync interrupted: ${e.message}`, 'error'); }
+                finally { this.classList.remove('opacity-50', 'cursor-not-allowed'); }
             });
         });
     </script>

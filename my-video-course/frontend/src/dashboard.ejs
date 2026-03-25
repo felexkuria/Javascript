@@ -3,153 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - Multitouch Academy</title>
-    <link rel="stylesheet" href="/css/main.css">
+    <title>Mission Control - Student Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .instructor-layout {
+        :root {
+            --atlas-green: #00ED64;
+            --atlas-forest: #00684A;
+            --atlas-slate: #001E2B;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 30, 43, 0.1);
+        }
+
+        .dark {
+            --glass-bg: rgba(2, 52, 48, 0.3);
+            --glass-border: rgba(0, 237, 100, 0.15);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #F9FBFA;
+            color: var(--atlas-slate);
+            transition: all 0.3s ease;
+        }
+
+        .dark body {
+            background-color: var(--atlas-slate);
+            color: white;
+        }
+
+        .premium-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .dashboard-layout {
             display: grid;
             grid-template-columns: 280px 1fr;
             min-height: 100vh;
-            background: var(--color-bg);
         }
 
-        .instructor-main {
-            padding: var(--space-8);
-            background: var(--color-bg);
-            overflow-y: auto;
-        }
-
-        .dashboard-hero {
-            background: var(--mdb-midnight);
-            color: #fff;
-            padding: var(--space-10);
-            border-radius: var(--radius-2xl);
-            margin-bottom: var(--space-8);
+        .hero-banner {
+            border-radius: 40px;
+            padding: 60px;
+            margin-bottom: 40px;
             position: relative;
             overflow: hidden;
+            background: linear-gradient(135deg, rgba(0, 30, 43, 0.9) 0%, rgba(0, 104, 74, 0.9) 100%);
+            color: white;
             border: 1px solid rgba(0, 237, 100, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 30, 43, 0.2);
         }
 
-        .dashboard-hero::before {
+        .hero-banner::after {
             content: '';
             position: absolute;
             top: -50%;
             right: -10%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, var(--mdb-green) 0%, transparent 70%);
-            opacity: 0.15;
-            filter: blur(40px);
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--atlas-green) 0%, transparent 70%);
+            opacity: 0.1;
+            filter: blur(60px);
         }
 
-        .stat-badge {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(8px);
-            padding: 8px 16px;
-            border-radius: 980px;
+        .stat-capsule {
+            padding: 12px 24px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
-            gap: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            gap: 16px;
         }
 
-        .learning-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-        }
-
-        .learning-card {
-            background: var(--color-surface);
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--color-border);
+        .learning-card-premium {
+            border-radius: 32px;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
             overflow: hidden;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
         }
 
-        .learning-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--mdb-green);
-            box-shadow: var(--shadow-lg);
+        .learning-card-premium:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 30, 43, 0.1);
+            border-color: var(--atlas-green);
         }
 
-        .card-thumbnail {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: var(--mdb-midnight);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            position: relative;
+        .btn-atlas-primary {
+            background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+            color: var(--atlas-slate);
+            font-weight: 900;
+            padding: 12px 28px;
+            border-radius: 14px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 11px;
         }
 
-        .card-progress-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 4px;
-            background: var(--mdb-green);
-            transition: width 0.3s ease;
+        .btn-atlas-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 237, 100, 0.3);
         }
 
-        .section-tab {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--color-text-muted);
-            text-decoration: none;
-            padding-bottom: 8px;
+        .tab-premium {
+            font-weight: 900;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding-bottom: 12px;
             border-bottom: 3px solid transparent;
-            transition: all 0.2s;
+            transition: all 0.3s;
         }
 
-        .section-tab.active {
-            color: var(--mdb-green);
-            border-bottom-color: var(--mdb-green);
+        .tab-premium.active {
+            color: var(--atlas-green);
+            border-bottom-color: var(--atlas-green);
+        }
+
+        .p-fill-glow {
+            height: 100%;
+            background: linear-gradient(90deg, #00ED64, #00684A);
+            box-shadow: 0 0 10px rgba(0, 237, 100, 0.5);
         }
     </style>
 </head>
-<body class="bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
-    <div class="instructor-layout">
+<body class="dark">
+    <div class="dashboard-layout">
         <%- include('partials/student-sidebar', { activePage: 'dashboard' }) %>
 
-        <main class="instructor-main">
-            <div class="dashboard-hero">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+        <main class="p-10">
+            <% 
+                const streak = (typeof gamificationData !== 'undefined' && gamificationData.streakData) ? gamificationData.streakData.currentStreak : 0;
+                const xp = (typeof gamificationData !== 'undefined') ? gamificationData.experiencePoints : 0;
+            %>
+            <!-- Hero Banner -->
+            <div class="hero-banner">
+                <div class="flex flex-col lg:flex-row justify-between items-center gap-10">
                     <div>
-                        <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em;">Welcome Back, <%= user.name || user.email %>!</h1>
-                        <p style="opacity: 0.7; font-size: 16px;">Pick up right where you left off in your engineering journey.</p>
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-[#00ED64]">Session Active</span>
+                        </div>
+                        <h1 class="text-5xl font-black tracking-tighter mb-4">Welcome Back, <span class="text-[#00ED64]"><%= user.name || user.email %></span></h1>
+                        <p class="text-white/60 text-lg font-medium">Your architectural journey continues. Critical milestones awaiting synchronization.</p>
                     </div>
-                    <div style="display: flex; gap: 16px;">
-                        <div class="stat-badge">
-                            <span style="font-size: 20px;">⚡</span>
+                    <div class="flex gap-6">
+                        <div class="stat-capsule">
+                            <div class="text-3xl">⚡</div>
                             <div>
-                                <div style="font-size: 18px; font-weight: 800; color: var(--mdb-green);"><%= (gamificationData && gamificationData.experiencePoints) || 0 %></div>
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; opacity: 0.6;">XP Points</div>
+                                <div class="text-2xl font-black text-[#00ED64]"><%= xp %></div>
+                                <div class="text-[9px] font-black uppercase tracking-widest text-white/40">XP Accumulated</div>
                             </div>
                         </div>
-                        <div class="stat-badge">
-                            <span style="font-size: 20px;">🔥</span>
+                        <div class="stat-capsule">
+                            <div class="text-3xl">🔥</div>
                             <div>
-                                <div style="font-size: 18px; font-weight: 800; color: #ff3b30;"><%= (gamificationData && gamificationData.streakData && gamificationData.streakData.currentStreak) || 0 %></div>
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; opacity: 0.6;">Day Streak</div>
+                                <div class="text-2xl font-black text-orange-500"><%= streak %></div>
+                                <div class="text-[9px] font-black uppercase tracking-widest text-white/40">Active Streak</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <nav style="display: flex; gap: 32px; margin-bottom: 32px; border-bottom: 1px solid var(--color-border);">
-                <a href="#" class="section-tab active">My Courses</a>
-                <a href="#" class="section-tab">In Progress</a>
-                <a href="#" class="section-tab">Completed</a>
-                <a href="#" class="section-tab">Wishlist</a>
+            <!-- Tabs -->
+            <nav class="flex gap-12 mb-12 border-b border-white/5">
+                <a href="#" class="tab-premium active">Current Path</a>
+                <a href="#" class="tab-premium">In Progress</a>
+                <a href="#" class="tab-premium">Completed</a>
+                <a href="#" class="tab-premium">Wishlist</a>
             </nav>
 
-            <div class="learning-grid">
+            <!-- Learning Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 <% if (courses && courses.length > 0) { %>
                     <% courses.forEach(course => { %>
                         <% 
@@ -157,79 +189,92 @@
                             const watched = course.videos ? course.videos.filter(v => v.watched).length : 0;
                             const progress = total > 0 ? Math.round((watched / total) * 100) : 0;
                         %>
-                        <div class="learning-card">
-                            <div class="card-thumbnail">
-                                🎞️
-                                <div class="card-progress-overlay" style="width: <%= progress %>%;"></div>
-                            </div>
-                            <div style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
-                                <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;"><%= course.title || course.name %></h3>
-                                <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 24px;">Instructor: <%= course.instructor || 'Engineer Felex' %></p>
-                                
-                                <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
-                                    <div style="font-size: 12px; font-weight: 700; color: var(--mdb-green);"><%= progress %>% Complete</div>
-                                    <a href="/course/<%= encodeURIComponent(course.name) %>" class="btn btn-primary" style="font-size: 12px; padding: 6px 16px; border-radius: 8px;">
-                                        <%= progress > 0 ? 'Continue' : 'Start' %>
-                                    </a>
+                        <div class="learning-card-premium premium-glass p-8 flex flex-col justify-between">
+                            <div>
+                                <div class="w-16 h-16 bg-[#001E2B] rounded-2xl flex items-center justify-center text-[#00ED64] mb-8 border border-white/5 shadow-inner">
+                                    <i class="fas fa-terminal text-2xl"></i>
                                 </div>
+                                <h3 class="text-2xl font-black tracking-tight mb-2"><%= course.title || course.name %></h3>
+                                <p class="text-gray-400 text-xs font-black uppercase tracking-widest mb-10 opacity-60">Lead Architect: <%= course.instructor || 'Engineer Felex' %></p>
+                            </div>
+
+                            <div>
+                                <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mb-4">
+                                    <div class="p-fill-glow" style="--p: <%= progress %>%; width: var(--p);"></div>
+                                </div>
+                                <div class="flex justify-between items-center mb-8">
+                                    <span class="text-[10px] font-black text-[#00ED64] uppercase tracking-widest">Progress Metrics</span>
+                                    <span class="text-[10px] font-black text-white/40 uppercase tracking-widest"><%= progress %>% Sync</span>
+                                </div>
+                                <a href="/course/<%= encodeURIComponent(course.name) %>" class="btn-atlas-primary w-full text-center block">
+                                    <%= progress > 0 ? 'Resume Console' : 'Initialize Section' %>
+                                </a>
                             </div>
                         </div>
                     <% }); %>
                 <% } else { %>
-                    <div style="grid-column: 1/-1; text-align: center; padding: 80px 0; background: var(--color-surface); border: 2px dashed var(--color-border); border-radius: 24px;">
-                        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Start your learning journey</h2>
-                        <p style="color: var(--color-text-muted); margin-bottom: 32px;">You haven't enrolled in any courses yet.</p>
-                        <a href="/courses" class="btn btn-primary" style="padding: 12px 32px;">Explore Courses</a>
+                    <div class="col-span-full py-24 premium-glass rounded-[3rem] border-dashed border-white/10 flex flex-col items-center justify-center text-center">
+                        <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 opacity-30">
+                            <i class="fas fa-satellite-dish text-4xl"></i>
+                        </div>
+                        <h2 class="text-3xl font-black text-white mb-4">No Curriculum Sections Detected</h2>
+                        <p class="text-gray-400 font-medium mb-10 max-w-sm">Scale your knowledge by provisioning courses from the global manifest.</p>
+                        <a href="/courses" class="btn-atlas-primary px-10">Explore Catalog</a>
                     </div>
                 <% } %>
             </div>
 
-            <div style="margin-top: 48px; margin-bottom: 24px;">
-                <h2 style="font-size: 24px; font-weight: 800; letter-spacing: -0.01em;">Discover More</h2>
-                <p style="color: var(--color-text-muted);">Explore our library of engineering courses.</p>
+            <!-- Discover More Section -->
+            <div class="mt-24 mb-10">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="px-3 py-1 bg-purple-500/10 text-purple-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-purple-500/20">Expand Infrastructure</span>
+                    <div class="h-px w-12 bg-white/10"></div>
+                </div>
+                <h2 class="text-4xl font-black tracking-tighter">Recommended <span class="text-purple-400">Expansions</span></h2>
             </div>
 
-            <div class="learning-grid">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 <% if (typeof allCourses !== 'undefined' && allCourses.length > 0) { %>
                     <% 
                         const enrolledIds = new Set(courses.map(c => (c.id || c._id)?.toString()));
                         const discoverableCourses = allCourses.filter(c => !enrolledIds.has(c._id?.toString()));
                     %>
-                    <% if (discoverableCourses.length > 0) { %>
-                        <% discoverableCourses.forEach(course => { %>
-                            <div class="learning-card">
-                                <div class="card-thumbnail" style="background: linear-gradient(135deg, #023430 0%, #001E2B 100%);">
-                                    🎓
+                    <% discoverableCourses.slice(0, 3).forEach(course => { %>
+                        <div class="learning-card-premium premium-glass p-8 opacity-80 hover:opacity-100 transition-opacity">
+                            <div class="flex items-center gap-6 mb-8">
+                                <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400 border border-purple-500/20">
+                                    <i class="fas fa-atom text-xl"></i>
                                 </div>
-                                <div style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
-                                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;"><%= course.title %></h3>
-                                    <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 24px;"><%= course.instructor || 'Engineer Felex' %></p>
-                                    
-                                    <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
-                                        <div style="font-size: 12px; font-weight: 700; color: var(--mdb-green);">Available</div>
-                                        <a href="/course/<%= encodeURIComponent(course.title) %>" class="btn btn-secondary" style="font-size: 12px; padding: 6px 16px; border-radius: 8px;">
-                                            Learn More
-                                        </a>
-                                    </div>
+                                <div>
+                                    <h3 class="text-lg font-black tracking-tight"><%= course.title %></h3>
+                                    <p class="text-[9px] font-black uppercase tracking-widest text-gray-500"><%= course.instructor || 'Engineer Felex' %></p>
                                 </div>
                             </div>
-                        <% }); %>
-                    <% } else { %>
-                        <p class="text-muted">You have enrolled in all available courses! ✨</p>
-                    <% } %>
-                <% } else { %>
-                    <p class="text-muted">No other courses available at the moment.</p>
+                            <a href="/course/<%= encodeURIComponent(course.name || course.title) %>" class="w-full py-4 rounded-2xl border-2 border-purple-500/20 text-purple-400 font-black text-[10px] uppercase tracking-widest text-center hover:bg-purple-500/10 transition-all block">
+                                Analyze Blueprint
+                            </a>
+                        </div>
+                    <% }); %>
                 <% } %>
             </div>
         </main>
     </div>
 
     <script>
+        // UI Persistence
         function initTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.classList.toggle('dark', theme === 'dark');
+            document.documentElement.classList.add('dark'); // Force dark for premium dashboard
         }
         initTheme();
+
+        // Responsive Tabs
+        document.querySelectorAll('.tab-premium').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.tab-premium').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
     </script>
 </body>
 </html>

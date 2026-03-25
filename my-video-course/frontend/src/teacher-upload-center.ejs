@@ -3,115 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Center - Multitouch Academy</title>
+    <title>Video Ingestion & Sync - Multitouch Academy</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        .upload-zone {
-            border: 2px dashed var(--mdb-green);
-            border-radius: 16px;
-            padding: 48px 24px;
+        :root {
+            --atlas-green: #00ED64;
+            --atlas-forest: #00684A;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 30, 43, 0.1);
+        }
+
+        .dark {
+            --glass-bg: rgba(2, 52, 48, 0.3);
+            --glass-border: rgba(0, 237, 100, 0.15);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .premium-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 30, 43, 0.05);
+        }
+
+        /* ── Upload Zone UI ── */
+        .upload-portal {
+            border: 2px dashed var(--atlas-green);
+            border-radius: 32px;
+            padding: 60px 40px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             background: rgba(0, 237, 100, 0.02);
+            position: relative;
+            overflow: hidden;
         }
-        .upload-zone:hover, .upload-zone.dragging {
-            background: rgba(0, 237, 100, 0.06);
-            border-style: solid;
-        }
-        .upload-zone input[type="file"] { display: none; }
 
-        .progress-item {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
+        .upload-portal:hover, .upload-portal.dragging {
+            background: rgba(0, 237, 100, 0.08);
+            border-style: solid;
+            transform: scale(1.01);
+            box-shadow: 0 0 40px rgba(0, 237, 100, 0.1);
+        }
+
+        .upload-portal .icon-box {
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 237, 100, 0.1);
+            border-radius: 24px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: var(--atlas-green);
+            font-size: 32px;
+            transition: all 0.3s;
         }
-        .progress-bar-wrap {
-            flex: 1;
+
+        .upload-portal:hover .icon-box {
+            transform: translateY(-5px) rotate(5deg);
+            background: var(--atlas-green);
+            color: #001E2B;
         }
-        .progress-track {
+
+        /* ── Progress & Queue ── */
+        .sync-item {
+            padding: 20px 24px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .progress-track-premium {
             height: 6px;
-            background: var(--color-border);
+            background: rgba(0, 30, 43, 0.05);
             border-radius: 99px;
             overflow: hidden;
-            margin-top: 6px;
+            margin-top: 8px;
+            position: relative;
         }
-        .progress-fill {
-            height: 100%;
-            background: var(--mdb-green);
-            border-radius: 99px;
-            transition: width 0.3s;
-        }
-        .form-select {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid var(--color-border);
-            background: var(--color-surface);
-            color: var(--color-text);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .form-select:focus { border-color: var(--mdb-green); }
-        .form-label {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--color-text-muted);
-            margin-bottom: 6px;
-            display: block;
-        }
-        .badge-success { background: rgba(0,237,100,0.12); color: var(--mdb-green); padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-        .badge-error   { background: rgba(193,42,42,0.1); color: #C12A2A;        padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-        .badge-pending { background: rgba(92,107,116,0.15); color: var(--color-text-muted); padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
 
-        .section-pill {
+        .dark .progress-track-premium { background: rgba(255, 255, 255, 0.05); }
+
+        .progress-fill-neon {
+            height: 100%;
+            background: linear-gradient(90deg, #00ED64, #00684A);
+            box-shadow: 0 0 15px rgba(0, 237, 100, 0.4);
+            border-radius: 99px;
+            transition: width 0.4s ease;
+        }
+
+        /* ── Section Selection ── */
+        .strategic-pill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(0,237,100,0.08);
-            color: var(--mdb-green);
-            border: 1px solid rgba(0,237,100,0.2);
-            border-radius: 8px;
-            padding: 5px 12px;
-            font-size: 12px;
-            font-weight: 600;
+            gap: 8px;
+            background: transparent;
+            color: var(--color-text-muted);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.15s;
+            transition: all 0.2s;
         }
-        .section-pill:hover, .section-pill.selected {
-            background: var(--mdb-green);
-            color: var(--mdb-midnight);
+
+        .strategic-pill:hover {
+            border-color: var(--atlas-green);
+            color: var(--atlas-green);
         }
+
+        .strategic-pill.selected {
+            background: var(--atlas-green);
+            color: #001E2B;
+            border-color: var(--atlas-green);
+            box-shadow: 0 4px 12px rgba(0, 237, 100, 0.3);
+        }
+
+        .form-input-premium {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.5);
+            color: #001E2B;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .dark .form-input-premium {
+            background: rgba(0, 30, 43, 0.4);
+            color: white;
+        }
+
+        .form-input-premium:focus {
+            border-color: var(--atlas-green);
+            box-shadow: 0 0 0 4px rgba(0, 237, 100, 0.1);
+        }
+
+        /* ── Milestones ── */
+        .milestone-marker {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .milestone-active { background: var(--atlas-green); color: #001E2B; }
+        .milestone-inactive { background: rgba(0, 30, 43, 0.05); color: var(--color-text-muted); }
+        .dark .milestone-inactive { background: rgba(255, 255, 255, 0.05); }
     </style>
 </head>
-<body>
+<body class="bg-[#F9FBFA] dark:bg-[#001E2B] transition-colors duration-200">
     <div class="instructor-layout">
         <%- include('partials/instructor-sidebar', { activePage: 'upload' }) %>
 
-        <main class="instructor-main">
-            <header style="margin-bottom: 40px;">
-                <h1 style="font-size: 32px; font-weight: 800; letter-spacing: -0.03em;">Video Upload Center</h1>
-                <p style="color: var(--color-text-muted); font-size: 15px; margin-top: 6px;">Upload lectures directly to S3 and assign them to a course section.</p>
+        <main class="instructor-main flex-grow p-10 overflow-auto">
+            <header class="mb-12">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00684A] dark:text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">Ingestion Hub</span>
+                    <div class="h-px w-12 bg-gray-200 dark:bg-white/10"></div>
+                </div>
+                <h1 class="text-5xl font-black tracking-tighter text-[#001E2B] dark:text-white mb-2">Video Ingestion</h1>
+                <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Synchronize high-definition lectures with the cloud infrastructure.</p>
             </header>
 
-            <!-- ── Step 1: Select Course & Section ─────────────────── -->
-            <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 20px; padding: 32px; margin-bottom: 28px;">
-                <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;"><span style="color: var(--mdb-green);">Step 1</span> — Choose Course & Section</h2>
+            <!-- Step 1: Destination -->
+            <div class="premium-glass rounded-[40px] p-10 mb-8">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="milestone-marker milestone-active">1</div>
+                    <h2 class="text-2xl font-black text-[#001E2B] dark:text-white tracking-tight">Destination Parameters</h2>
+                </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                <div class="grid grid-cols-2 gap-8 mb-8">
                     <div>
-                        <label class="form-label">Course</label>
-                        <select id="courseSelect" class="form-select" onchange="onCourseChange()">
-                            <option value="">— Select a course —</option>
+                        <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Target Curriculum</label>
+                        <select id="courseSelect" class="form-input-premium" onchange="onCourseChange()">
+                            <option value="">— Select Environment —</option>
                             <% if (typeof courses !== 'undefined' && courses.length > 0) { %>
                                 <% courses.forEach(c => { %>
                                     <option value="<%= c._id %>" data-sections='<%= JSON.stringify(c.sections || []) %>'>
@@ -122,108 +206,97 @@
                         </select>
                     </div>
                     <div>
-                        <label class="form-label">Lecture Title (optional override)</label>
-                        <input type="text" id="lectureTitle" class="form-select" placeholder="Auto-derived from file name">
+                        <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Logic Designation (Optional)</label>
+                        <input type="text" id="lectureTitle" class="form-input-premium" placeholder="Auto-detect from metadata">
                     </div>
                 </div>
 
                 <div>
-                    <label class="form-label">Section</label>
-                    <div id="sectionPills" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 36px;">
-                        <span style="color: var(--color-text-muted); font-size: 13px; align-self: center;">Select a course first…</span>
+                    <label class="block text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Strategic Module Mapping</label>
+                    <div id="sectionPills" class="flex flex-wrap gap-3 p-6 border-2 border-dashed border-gray-100 dark:border-white/5 rounded-2xl min-h-[80px]">
+                        <span class="text-gray-400 font-medium self-center text-sm">Awaiting curriculum selection...</span>
                     </div>
                     <input type="hidden" id="selectedSectionId">
                     <input type="hidden" id="selectedSectionTitle">
                 </div>
             </div>
 
-            <!-- ── Step 2: Drop / Pick File ────────────────────────── -->
-            <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 20px; padding: 32px; margin-bottom: 28px;">
-                <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;"><span style="color: var(--mdb-green);">Step 2</span> — Upload Video</h2>
-
-                <div class="upload-zone" id="dropZone" onclick="document.getElementById('videoFile').click()">
-                    <input type="file" id="videoFile" accept="video/*" onchange="onFileSelected(this.files)">
-                    <i class="fas fa-cloud-upload-alt" style="font-size: 40px; color: var(--mdb-green); margin-bottom: 16px;"></i>
-                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Drop video here or click to browse</h3>
-                    <p style="color: var(--color-text-muted); font-size: 13px;">Supports .mp4, .mov, .webm — any size</p>
+            <!-- Step 2: Payload -->
+            <div class="premium-glass rounded-[40px] p-10 mb-8">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="milestone-marker milestone-active">2</div>
+                    <h2 class="text-2xl font-black text-[#001E2B] dark:text-white tracking-tight">Payload Selection</h2>
                 </div>
 
-                <!-- Upload queue -->
-                <div id="uploadQueue" style="margin-top: 24px;"></div>
+                <div class="upload-portal" id="dropZone" onclick="document.getElementById('videoFile').click()">
+                    <input type="file" id="videoFile" accept="video/*" onchange="onFileSelected(this.files)" style="display:none">
+                    <div class="icon-box">
+                        <i class="fas fa-satellite-dish"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-[#001E2B] dark:text-white mb-2">Transfer Payload</h3>
+                    <p class="text-gray-500 dark:text-gray-400 font-medium">Drop MP4/MOV aggregates here or double-click to browse.</p>
+                </div>
 
-                <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 12px;">
-                    <button class="btn btn-secondary" onclick="clearQueue()">Clear</button>
-                    <button id="uploadBtn" class="btn btn-primary" onclick="startUpload()" disabled style="min-width: 160px;">
-                        <i class="fas fa-rocket"></i> Upload to S3
+                <!-- Sync Queue -->
+                <div id="uploadQueue" class="mt-8 space-y-4"></div>
+
+                <div class="flex justify-end gap-4 mt-10">
+                    <button class="px-8 py-4 rounded-xl font-bold text-gray-500 hover:text-red-500 transition-colors" onclick="clearQueue()">Purge Queue</button>
+                    <button id="uploadBtn" class="bg-gradient-to-br from-[#00ED64] to-[#00684A] text-[#001E2B] font-black px-10 py-4 rounded-2xl shadow-xl shadow-[#00ED64]/20 disabled:opacity-30 disabled:grayscale transition-all" onclick="startUpload()" disabled>
+                        <i class="fas fa-bolt mr-2"></i> Execute Transfer
                     </button>
                 </div>
             </div>
 
-            <!-- ── Activity Log ─────────────────────── -->
-            <div style="background: var(--color-surface); border: 1px dashed var(--color-border); border-radius: 20px; padding: 32px;">
-                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Activity Log</h3>
-                <div id="activityLog" style="font-family: monospace; font-size: 12px; color: var(--color-text-muted); min-height: 60px;">
-                    Waiting for uploads…
+            <!-- Log -->
+            <div class="premium-glass rounded-[40px] p-8 opacity-60">
+                <h3 class="text-sm font-black uppercase tracking-widest text-[#00ED64] mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span> Terminal Log
+                </h3>
+                <div id="activityLog" class="font-mono text-[11px] text-gray-500 leading-relaxed overflow-y-auto max-h-[150px]">
+                    [SYS] Ready for data ingestion...
                 </div>
             </div>
         </main>
     </div>
 
     <script>
-        function initTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.classList.toggle('dark', theme === 'dark');
-        }
-        initTheme();
-
-        // ── State ──────────────────────────────────────────────────
         let selectedFiles = [];
         let selectedSectionId = null;
         let selectedSectionTitle = null;
 
-        // ── Course → Section pills ─────────────────────────────────
         function onCourseChange() {
             const sel = document.getElementById('courseSelect');
             const opt = sel.options[sel.selectedIndex];
             const pills = document.getElementById('sectionPills');
-            document.getElementById('selectedSectionId').value = '';
-            document.getElementById('selectedSectionTitle').value = '';
             selectedSectionId = null;
             selectedSectionTitle = null;
 
             if (!opt.value) {
-                pills.innerHTML = '<span style="color:var(--color-text-muted);font-size:13px;">Select a course first…</span>';
+                pills.innerHTML = '<span class="text-gray-400 font-medium self-center text-sm">Awaiting curriculum selection...</span>';
                 return;
             }
 
             const sections = JSON.parse(opt.dataset.sections || '[]');
             if (!sections.length) {
-                pills.innerHTML = '<span style="color:var(--color-text-muted);font-size:13px;">No sections yet — add them in the Course Editor.</span>';
+                pills.innerHTML = '<span class="text-red-400 font-medium self-center text-sm">Zero modules detected in target curriculum.</span>';
                 return;
             }
 
             pills.innerHTML = sections.map((s, i) =>
-                `<span class="section-pill" data-id="${s._id}" data-title="${s.title}" onclick="selectSection(this)">
-                    <i class="fas fa-layer-group"></i> §${i+1}: ${s.title}
-                </span>`
+                `<button class="strategic-pill" data-id="${s._id}" data-title="${s.title}" onclick="selectSection(this)">
+                    <i class="fas fa-layer-group text-[10px] opacity-40"></i> ${s.title}
+                </button>`
             ).join('');
         }
 
         function selectSection(el) {
-            document.querySelectorAll('.section-pill').forEach(p => p.classList.remove('selected'));
+            document.querySelectorAll('.strategic-pill').forEach(p => p.classList.remove('selected'));
             el.classList.add('selected');
             selectedSectionId = el.dataset.id;
             selectedSectionTitle = el.dataset.title;
-            document.getElementById('selectedSectionId').value = selectedSectionId;
-            document.getElementById('selectedSectionTitle').value = selectedSectionTitle;
-            checkReadyToUpload();
+            checkReady();
         }
-
-        // ── File handling ──────────────────────────────────────────
-        const dropZone = document.getElementById('dropZone');
-        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragging'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
-        dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragging'); onFileSelected(e.dataTransfer.files); });
 
         function onFileSelected(files) {
             for (const f of files) {
@@ -231,24 +304,26 @@
                 selectedFiles.push(f);
                 renderQueueItem(f);
             }
-            checkReadyToUpload();
+            checkReady();
         }
 
         function renderQueueItem(file) {
-            const id = 'file_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+            const id = 'f_' + Math.random().toString(36).slice(2);
             file.__queueId = id;
             const div = document.createElement('div');
-            div.className = 'progress-item';
+            div.className = 'sync-item premium-glass';
             div.id = id;
             div.innerHTML = `
-                <i class="fas fa-film" style="color:var(--mdb-green);font-size:20px;"></i>
-                <div class="progress-bar-wrap">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:13px;font-weight:600;">${file.name}</span>
-                        <span class="badge-pending" id="${id}_badge">Queued</span>
+                <div class="w-12 h-12 rounded-xl bg-[#00ED64]/10 flex items-center justify-center text-[#00ED64]">
+                    <i class="fas fa-file-video text-xl"></i>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm font-bold text-[#001E2B] dark:text-white">${file.name}</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-gray-400" id="${id}_status">Awaiting Protocol</span>
                     </div>
-                    <div class="progress-track"><div class="progress-fill" id="${id}_fill" style="width:0%"></div></div>
-                    <div style="font-size:11px;color:var(--color-text-muted);margin-top:4px;" id="${id}_meta">${(file.size / 1024 / 1024).toFixed(1)} MB</div>
+                    <div class="progress-track-premium"><div class="progress-fill-neon" id="${id}_fill" style="width:0%"></div></div>
+                    <div class="text-[10px] font-medium text-gray-400 mt-2" id="${id}_meta">${(file.size / 1024 / 1024).toFixed(1)} MB aggregates discovered</div>
                 </div>
             `;
             document.getElementById('uploadQueue').appendChild(div);
@@ -258,29 +333,25 @@
             selectedFiles = [];
             document.getElementById('uploadQueue').innerHTML = '';
             document.getElementById('videoFile').value = '';
-            checkReadyToUpload();
+            checkReady();
         }
 
-        function checkReadyToUpload() {
+        function checkReady() {
             const ready = selectedFiles.length > 0 && selectedSectionId && document.getElementById('courseSelect').value;
             document.getElementById('uploadBtn').disabled = !ready;
         }
 
-        // ── Upload ─────────────────────────────────────────────────
         async function startUpload() {
             const courseId = document.getElementById('courseSelect').value;
             const lectureTitle = document.getElementById('lectureTitle').value.trim();
             const btn = document.getElementById('uploadBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading…';
-
-            log(`Starting upload of ${selectedFiles.length} file(s) to section: ${selectedSectionTitle}`);
+            btn.innerHTML = '<i class="fas fa-satellite fa-spin mr-3"></i> Synchronizing...';
 
             for (const file of selectedFiles) {
                 const id = file.__queueId;
-                setBadge(id, 'pending', 'Uploading…');
-                setFill(id, 5);
-
+                document.getElementById(id + '_status').textContent = 'Synchronizing';
+                
                 try {
                     const title = lectureTitle || file.name.replace(/\.[^.]+$/, '');
                     const formData = new FormData();
@@ -289,71 +360,52 @@
                     formData.append('sectionId', selectedSectionId);
                     formData.append('title', title);
 
-                    // Simulate chunked progress (XHR gives real progress)
                     const xhr = new XMLHttpRequest();
                     xhr.open('POST', `/api/courses/${encodeURIComponent(courseId)}/upload-video`);
-
-                    // Set auth headers
                     const token = localStorage.getItem('accessToken');
                     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
                     xhr.upload.onprogress = e => {
                         if (e.lengthComputable) {
                             const pct = Math.round((e.loaded / e.total) * 100);
-                            setFill(id, pct);
-                            document.getElementById(id + '_meta').textContent = `${(e.loaded / 1024 / 1024).toFixed(1)} / ${(e.total / 1024 / 1024).toFixed(1)} MB`;
+                            document.getElementById(id + '_fill').style.width = pct + '%';
+                            document.getElementById(id + '_meta').textContent = `${(e.loaded / 1024 / 1024).toFixed(1)} / ${(e.total / 1024 / 1024).toFixed(1)} MB transferred`;
                         }
                     };
 
                     await new Promise((resolve, reject) => {
                         xhr.onload = () => {
-                            try {
-                                const data = JSON.parse(xhr.responseText);
-                                if (xhr.status >= 200 && xhr.status < 300 && data.success !== false) {
-                                    setFill(id, 100);
-                                    setBadge(id, 'success', 'Done ✓');
-                                    log(`✅ ${file.name} → uploaded. S3 key: ${data.data?.s3Key || data.s3Key || 'saved'}`);
-
-                                    // If server returns updated course, patch the section
-                                    if (data.sectionId || selectedSectionId) {
-                                        log(`📌 Linked to section: ${selectedSectionTitle}`);
-                                    }
-                                    resolve();
-                                } else {
-                                    throw new Error(data.message || data.error || 'Upload failed');
-                                }
-                            } catch (e) { reject(e); }
+                            const data = JSON.parse(xhr.responseText);
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                document.getElementById(id + '_status').textContent = 'Synced';
+                                document.getElementById(id + '_status').style.color = '#00ED64';
+                                log(`SUCCESS: [${file.name}] synced to strategic module.`);
+                                resolve();
+                            } else { reject(new Error(data.message || 'Transmission break')); }
                         };
-                        xhr.onerror = () => reject(new Error('Network error'));
+                        xhr.onerror = () => reject(new Error('Infrastructure failure'));
                         xhr.send(formData);
                     });
                 } catch (err) {
-                    setBadge(id, 'error', 'Failed ✗');
-                    setFill(id, 0);
-                    log(`❌ ${file.name}: ${err.message}`);
+                    document.getElementById(id + '_status').textContent = 'Error';
+                    document.getElementById(id + '_status').style.color = '#ff3b30';
+                    log(`ERRO: ${err.message}`);
                 }
             }
 
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-rocket"></i> Upload to S3';
-        }
-
-        function setBadge(id, type, text) {
-            const el = document.getElementById(id + '_badge');
-            if (!el) return;
-            el.className = type === 'success' ? 'badge-success' : type === 'error' ? 'badge-error' : 'badge-pending';
-            el.textContent = text;
-        }
-        function setFill(id, pct) {
-            const el = document.getElementById(id + '_fill');
-            if (el) el.style.width = pct + '%';
+            btn.innerHTML = '<i class="fas fa-bolt mr-2"></i> Execute Transfer';
         }
 
         function log(msg) {
             const el = document.getElementById('activityLog');
-            const ts = new Date().toLocaleTimeString();
-            el.innerHTML = `[${ts}] ${msg}<br>` + el.innerHTML;
+            el.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + el.innerHTML;
         }
+
+        // Drag Drop Styling
+        const dropZone = document.getElementById('dropZone');
+        ['dragenter', 'dragover'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.add('dragging'), false));
+        ['dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.remove('dragging'), false));
     </script>
 </body>
 </html>
