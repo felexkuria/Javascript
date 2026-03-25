@@ -1,6 +1,6 @@
-const dynamoVideoService = require('../services/dynamoVideoService');
 const dynamodb = require('../utils/dynamodb');
 const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
+const courseService = require('../services/courseService');
 
 const ADMIN_EMAIL = 'engineerfelex@gmail.com';
 
@@ -101,8 +101,12 @@ class AdminController {
 
   async deleteCourse(req, res) {
     if (req.user?.email !== ADMIN_EMAIL) return res.status(403).json({ success: false });
-    await dynamodb.deleteCourse(req.params.id);
-    res.json({ success: true, message: 'Course deleted' });
+    try {
+      await courseService.deleteCourseData(req.params.id);
+      res.json({ success: true, message: 'Course deleted' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
 
   async renderCourseManager(req, res) {

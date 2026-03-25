@@ -147,8 +147,8 @@ class CourseService {
 
       // 3. Delete from DynamoDB
       try {
-        await dynamoVideoService.deleteCourse(title);
-        console.log(`🗑️ Deleted course "${title}" from DynamoDB`);
+        await dynamoVideoService.deleteCourse(decodedTitle);
+        console.log(`🗑️ Deleted course "${decodedTitle}" from DynamoDB`);
       } catch (dynamoErr) {
         console.error('⚠️ DynamoDB cleanup failed during course deletion:', dynamoErr.message);
       }

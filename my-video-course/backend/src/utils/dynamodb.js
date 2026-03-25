@@ -628,6 +628,28 @@ class DynamoDBService {
     }
   }
 
+  async deleteVideosForCourse(courseName) {
+    if (!this.isConnected) return false;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const videos = await this.getVideosForCourse(courseName);
+      if (!videos || videos.length === 0) return true;
+
+      const { DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+      for (const video of videos) {
+        const id = video.videoId || video._id;
+        await this.docClient.send(new DeleteCommand({
+          TableName: `video-course-app-videos-${environment}`,
+          Key: { courseName: courseName, videoId: id }
+        }));
+      }
+      return true;
+    } catch (error) {
+      console.error('Error deleting videos for course:', error);
+      return false;
+    }
+  }
+
   async deleteVideo(courseName, videoId) {
     if (!this.isConnected) return false;
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
