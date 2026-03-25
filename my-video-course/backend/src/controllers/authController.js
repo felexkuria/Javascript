@@ -18,6 +18,10 @@ class AuthController {
     res.render('pages/reset-password', { error: null });
   }
 
+  renderAdminLogin(req, res) {
+    res.render('admin-login', { error: null });
+  }
+
   async adminAuth(req, res) {
     const { email, password } = req.body;
     
