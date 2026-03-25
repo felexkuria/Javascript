@@ -4,7 +4,7 @@ const dynamodb = require('../utils/dynamodb');
 const path = require('path');
 const fs = require('fs');
 
-const CourseService = {
+class CourseService {
   async getAllCourses() {
     try {
       const userId = 'engineerfelex@gmail.com'; // Default for sync/listing
@@ -30,7 +30,7 @@ const CourseService = {
       console.error('Error getting all courses from DynamoDB:', error);
       return [];
     }
-  },
+  }
 
   async getCourseById(id, userId) {
     try {
@@ -41,7 +41,7 @@ const CourseService = {
       console.error('Error getting course by ID from DynamoDB:', error);
       return null;
     }
-  },
+  }
 
   async syncS3VideosToDynamoDB() {
     try {
@@ -90,7 +90,7 @@ const CourseService = {
     } catch (error) {
       console.warn('Sync failed:', error.message);
     }
-  },
+  }
 
   generateDescription(courseName) {
     const decodedCourseName = decodeURIComponent(courseName);
@@ -104,7 +104,7 @@ const CourseService = {
     } else {
       return `Learn ${decodedCourseName} through comprehensive lessons and practical exercises with hands-on projects.`;
     }
-  },
+  }
 
   async deleteCourseData(title) {
     try {
