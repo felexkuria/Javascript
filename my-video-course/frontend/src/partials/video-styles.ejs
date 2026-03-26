@@ -31,8 +31,25 @@ body {
 .learning-canvas { 
     overflow-y: auto; 
     padding: 3rem; 
-    background: radial-gradient(circle at 80% 20%, rgba(0, 237, 100, 0.04), transparent 50%); 
+    background: 
+        radial-gradient(circle at 80% 20%, rgba(0, 237, 100, 0.08), transparent 50%),
+        radial-gradient(circle at 20% 80%, rgba(0, 237, 100, 0.03), transparent 50%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 30m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E");
 } 
+
+.atlas-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.atlas-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(0, 237, 100, 0.3);
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5), 0 0 30px rgba(0, 237, 100, 0.05);
+    transform: translateY(-8px);
+}
 
 .side-lab { 
     border-left: 1px solid rgba(255, 255, 255, 0.08); 
@@ -78,31 +95,42 @@ body {
 } 
 
 .lab-tab-btn { 
-    padding: 0.85rem 1.25rem; 
-    border-radius: 14px; 
-    font-size: 11px; 
+    padding: 1rem 1.5rem; 
+    border-radius: 12px; 
+    font-size: 10px; 
     font-weight: 800; 
     text-transform: uppercase; 
-    letter-spacing: 0.12em; 
+    letter-spacing: 0.15em; 
     color: #9FB1AD; 
-    transition: all 0.4s ease; 
-    background: rgba(255, 255, 255, 0.02); 
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+    background: rgba(255, 255, 255, 0.03); 
     border: 1px solid rgba(255, 255, 255, 0.05); 
+    display: flex;
+    align-items: center;
+    gap: 12px;
 } 
+
+.lab-tab-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(4px);
+}
 
 .lab-tab-btn.active { 
     background: var(--atlas-green); 
     color: var(--atlas-midnight); 
     border-color: var(--atlas-green); 
-    box-shadow: 0 10px 30px rgba(0, 237, 100, 0.15); 
+    box-shadow: 0 15px 40px rgba(0, 237, 100, 0.2); 
+    transform: scale(1.02);
 } 
 
 .premium-meta-bay { 
-    margin-top: 4rem; 
-    padding: 3rem; 
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%); 
+    margin-top: 5rem; 
+    padding: 4rem; 
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%); 
     border-radius: 40px; 
-    border: 1px solid rgba(255, 255, 255, 0.05); 
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 40px 120px rgba(0,0,0,0.4);
 } 
 
 .technical-label { 
@@ -116,11 +144,39 @@ body {
 
 /* Achievement Popup Atlas Style */ 
 #achievement-popup { 
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 1.5rem 2.5rem;
     background: #001E2B; 
     border: 1px solid var(--atlas-green); 
     box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0, 237, 100, 0.1); 
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    z-index: 1000;
+    transform: translateX(120%);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 0;
+    pointer-events: none;
 } 
 
+#achievement-popup.show {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Ensure floating chatbot doesn't overlap sidebar on desktop */
+@media (min-width: 1201px) {
+    .floating-chatbot {
+        right: calc(var(--sidebar-width) + 40px) !important;
+    }
+    .chatbot-trigger {
+        right: calc(var(--sidebar-width) + 40px) !important;
+    }
+}
 /* Syntax Highlighting IDE Theme Integration */
 pre {
     background: #0d1117 !important;
@@ -173,4 +229,120 @@ pre:hover .copy-btn {
         border-top: 1px solid rgba(255,255,255,0.05); 
     } 
 }
-</style>
+
+/* AI Advisor Dynamic Aesthetics */
+.velocity-pulse {
+    width: 6px;
+    height: 6px;
+    background: var(--atlas-green);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--atlas-green);
+    animation: velocity-blink 1s infinite ease-in-out;
+}
+
+@keyframes velocity-blink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.8); }
+}
+
+.animate-message-in {
+    animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.scroll-premium::-webkit-scrollbar { width: 4px; }
+.scroll-premium::-webkit-scrollbar-thumb { background: rgba(0, 237, 100, 0.1); border-radius: 10px; }
+
+/* Senior Floating Assistant Enhancements */
+#floating-chatbot {
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    position: fixed !important;
+    bottom: 120px !important;
+    right: 480px !important;
+    top: auto !important; /* Force off-screen reset */
+    z-index: 1000 !important;
+}
+
+#floating-chatbot.hidden {
+    opacity: 0 !important;
+    transform: translateY(40px) scale(0.95) !important;
+    pointer-events: none !important;
+    display: none !important;
+}
+
+#floating-trigger {
+    position: fixed !important;
+    bottom: 40px !important;
+    right: 480px !important;
+    z-index: 1001 !important;
+}
+
+.lab-pane {
+    display: none !important;
+    height: 100%;
+}
+
+.lab-pane.active {
+    display: flex !important;
+    flex-direction: column;
+}
+
+.velocity-pulse {
+    width: 6px;
+    height: 6px;
+    background: #00ED64;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00ED64;
+    animation: velocityPulse 1.5s infinite;
+}
+
+@keyframes velocityPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Cinematic PDF Rendering */
+.pdf-viewer-premium iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+}
+
+/* Cinematic Glow States */
+.lecture-node.active-glow {
+    box-shadow: 0 0 40px rgba(0, 237, 100, 0.1);
+    background: rgba(0, 237, 100, 0.15) !important;
+}
+
+.breadcrumb-atlas {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+}
+
+.breadcrumb-node {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #9FB1AD;
+    opacity: 0.5;
+    transition: all 0.3s;
+}
+
+.breadcrumb-node.active {
+    color: var(--atlas-green);
+    opacity: 1;
+}
+
+.breadcrumb-sep {
+    color: rgba(255,255,255,0.1);
+    font-size: 8px;
+}

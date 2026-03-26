@@ -154,7 +154,7 @@ class WebController {
     try {
       const courseName = decodeURIComponent(req.params.courseName).trim();
 
-      const videoId = req.params.videoId || req.params.id || req.query.lecture;
+      const videoId = (req.params.videoId === 'undefined' || !req.params.videoId) ? null : req.params.videoId;
       const userId = req.user?.email || 'guest';
       const autoplay = req.query.autoplay === 'true';
 
@@ -164,7 +164,11 @@ class WebController {
       }
 
       const videos = course.videos || [];
-      const video = videos.find(v => (v.videoId === videoId) || (v._id === videoId) || (v.title === videoId)) || videos[0];
+      const video = videos.find(v => 
+        (v.videoId && v.videoId === videoId) || 
+        (v._id && v._id.toString() === videoId) || 
+        (v.title === videoId)
+      ) || videos[0];
 
       if (!video) {
         return res.status(404).render('error', { message: 'Video not found' });

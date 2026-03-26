@@ -89,7 +89,10 @@
                                     <div class="h-full bg-[#00ED64]" style="--p: <%= progressPercent %>%; width: var(--p); box-shadow: 0 0 10px #00ED64;"></div>
                                 </div>
                             </div>
-                            <button onclick="window.location.href='/course/<%= encodedCourseName %>/video/'" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
+                            <% 
+                                const firstVideoId = (course.videos && course.videos.length > 0) ? (course.videos[0].videoId || course.videos[0]._id) : '';
+                            %>
+                            <button onclick="window.location.href='/course/<%= encodedCourseName %>/video/<%= firstVideoId %>'" class="w-full py-4 bg-[#00ED64] text-[#001E2B] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#00ED64]/20">
                                 RESUME MODULE
                             </button>
                         <% } else { %>
@@ -161,7 +164,7 @@
                                                         </div>
                                                     </div>
                                                     <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
-                                                        <a href="/course/<%= encodedCourseName %>/video/<%= lecture.id %>" class="text-[10px] font-black text-[#00ED64] opacity-0 group-hover/item:opacity-100 uppercase tracking-widest">Access Lesson</a>
+                                                        <a href="/course/<%= encodedCourseName %>/video/<%= lecture.id || lecture.videoId || lecture._id %>" class="text-[10px] font-black text-[#00ED64] opacity-0 group-hover/item:opacity-100 uppercase tracking-widest">Access Lesson</a>
                                                     <% } %>
                                                 </div>
                                             <% }) %>

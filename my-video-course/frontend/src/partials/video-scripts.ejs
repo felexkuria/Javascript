@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const keyHint = document.getElementById('keyHint');
     
     let courseName = '<%= courseName %>';
-    let videoId = '<%= video ? video._id : "" %>';
+    let videoId = '<%= video ? (video.videoId || video._id || "") : "" %>';
     let chatHistory = [];
     const chatKey = `chat_${courseName}_${videoId}`;
     
@@ -96,30 +96,36 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const baseCourse = courseName;
     
-    if (prevButton) {
-        prevButton.addEventListener('click', async () => {
-            try {
-                const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${baseCourse}&direction=prev`);
-                if (response.ok) {
-                    const prevVideo = await response.json();
-                    window.location.href = `/videos/${baseCourse}/${prevVideo._id}`;
-                }
-            } catch (error) {
-                console.error('Error getting previous video:', error);
-            }
-        });
-    }
-    
     if (nextButton) {
         nextButton.addEventListener('click', async () => {
             try {
-                const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${baseCourse}&direction=next`);
+                const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${encodeURIComponent(courseName)}&direction=next`);
                 if (response.ok) {
                     const nextVideo = await response.json();
-                    window.location.href = `/videos/${baseCourse}/${nextVideo._id}?autoplay=true`;
+                    const targetId = nextVideo.videoId || nextVideo._id;
+                    if (targetId) {
+                        window.location.href = `/course/${encodeURIComponent(courseName)}/video/${encodeURIComponent(targetId)}?autoplay=true`;
+                    }
                 }
             } catch (error) {
                 console.error('Error getting next video:', error);
+            }
+        });
+    }
+
+    if (prevButton) {
+        prevButton.addEventListener('click', async () => {
+            try {
+                const response = await fetch(`/api/next-video?currentVideoId=${videoId}&courseName=${encodeURIComponent(courseName)}&direction=prev`);
+                if (response.ok) {
+                    const prevVideo = await response.json();
+                    const targetId = prevVideo.videoId || prevVideo._id;
+                    if (targetId) {
+                        window.location.href = `/course/${encodeURIComponent(courseName)}/video/${encodeURIComponent(targetId)}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error getting previous video:', error);
             }
         });
     }
@@ -192,104 +198,150 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    window.showFloatingChatbot = function() {
-        const chatbot = document.getElementById('floating-chatbot');
-        if (chatbot) chatbot.style.display = 'flex';
-    };
-    
+    // --- Toggle Logic hardening ---
     window.toggleFloatingChatbot = function() {
         const chatbot = document.getElementById('floating-chatbot');
         if (chatbot) {
-            chatbot.style.display = chatbot.style.display === 'flex' ? 'none' : 'flex';
+            chatbot.classList.toggle('hidden');
+            console.log('Nova AI Widget Toggled:', !chatbot.classList.contains('hidden'));
         }
     };
 
+    // Ensure DOM level binding for senior designer stability
+    document.addEventListener('DOMContentLoaded', () => {
+        const trigger = document.getElementById('floating-trigger');
+        if (trigger) {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.toggleFloatingChatbot();
+            });
+        }
+    });
+
+    window.switchLabTab = function(tabId) {
+        // Enforce strict !important isolation
+        document.querySelectorAll('.lab-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('tab-' + tabId)?.classList.add('active');
+        
+        document.querySelectorAll('.lab-pane').forEach(pane => pane.classList.remove('active'));
+        document.getElementById('content-' + tabId)?.classList.add('active');
+        
+        if (tabId === 'advisor') {
+            setTimeout(() => {
+                const messages = document.getElementById('floating-chat-messages');
+                if (messages) messages.scrollTop = messages.scrollHeight;
+                document.getElementById('floating-chat-input')?.focus();
+            }, 100);
+        }
+    };
+
+
     // --- Aesthetic AI Chat Logic (Aesthetic Magic Integrated) ---
     window.sendFloatingChatMessage = async function() {
-        const input = document.getElementById('floating-chat-input');
-        const messages = document.getElementById('floating-chat-messages');
-        const message = input.value.trim();
+        const inputSidebar = document.getElementById('floating-chat-input');
+        const inputWidget = document.getElementById('floating-chat-input-widget');
+        const message = (inputSidebar?.value || inputWidget?.value || '').trim();
         
         if (!message) return;
         
-        // Add user message
-        const userTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        const userDiv = document.createElement('div');
-        userDiv.className = 'flex flex-col items-end animate-message-in mb-6';
-        userDiv.innerHTML = `
-            <div class="max-w-[90%] bg-[#00ED64] text-[#001E2B] p-4 rounded-2xl rounded-tr-none text-[13px] font-bold shadow-lg shadow-[#00ED64]/10">
-                ${message}
-            </div>
-            <div class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-widest mt-2 px-1">YOU • ${userTime}</div>
-        `;
-        messages.appendChild(userDiv);
-        
-        input.value = '';
-        messages.scrollTop = messages.scrollHeight;
+        const processMsg = async (targetInput, targetMessagesId) => {
+            const messages = document.getElementById(targetMessagesId);
+            if (!messages) return;
+            
+            const userTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const userDiv = document.createElement('div');
+            userDiv.className = 'flex flex-col items-end animate-message-in mb-6';
+            userDiv.innerHTML = `
+                <div class="max-w-[90%] bg-[#00ED64] text-[#001E2B] p-4 rounded-2xl rounded-tr-none text-[13px] font-bold">
+                    ${message}
+                </div>
+            `;
+            messages.appendChild(userDiv);
+            messages.scrollTop = messages.scrollHeight;
+        };
+
+        await processMsg(inputSidebar, 'floating-chat-messages');
+        await processMsg(inputWidget, 'floating-chat-messages-widget');
+
+        if (inputSidebar) inputSidebar.value = '';
+        if (inputWidget) inputWidget.value = '';
         
         const thinkingId = 'thinking-' + Date.now();
-        const thinkingDiv = document.createElement('div');
-        thinkingDiv.id = thinkingId;
-        thinkingDiv.className = 'flex flex-col items-start animate-message-in mb-6';
-        thinkingDiv.innerHTML = `
-            <div class="bg-white/5 border border-white/10 text-[#00ED64] p-3 rounded-2xl rounded-tl-none text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
-                <div class="velocity-pulse"></div>
-                Nova Lite Thinking...
-            </div>
-        `;
-        messages.appendChild(thinkingDiv);
-        messages.scrollTop = messages.scrollHeight;
+        const addThinking = (targetMessagesId) => {
+            const messages = document.getElementById(targetMessagesId);
+            if (!messages) return;
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.id = thinkingId + '-' + targetMessagesId;
+            thinkingDiv.className = 'flex flex-col items-start animate-message-in mb-6';
+            thinkingDiv.innerHTML = `
+                <div class="bg-white/5 text-[#00ED64] p-3 rounded-2xl rounded-tl-none text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
+                    <div class="velocity-pulse"></div> Thinking...
+                </div>
+            `;
+            messages.appendChild(thinkingDiv);
+            messages.scrollTop = messages.scrollHeight;
+        };
+
+        addThinking('floating-chat-messages');
+        addThinking('floating-chat-messages-widget');
         
         try {
-            const courseTitle = '<%= courseName %>';
-            const videoTitle = '<%= video ? video.title : "" %>';
             const response = await fetch('/api/ai/chatbot', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message, context: { courseTitle, videoTitle } })
+                body: JSON.stringify({ message, context: { courseTitle: '<%= courseName %>', videoTitle: '<%= video ? video.title : "" %>' } })
             });
             
             const data = await response.json();
-            document.getElementById(thinkingId)?.remove();
+            document.getElementById(thinkingId + '-floating-chat-messages')?.remove();
+            document.getElementById(thinkingId + '-floating-chat-messages-widget')?.remove();
             
             if (data.response) {
-                const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const botDiv = document.createElement('div');
-                botDiv.className = 'flex flex-col items-start animate-message-in mb-6 group';
-                
-                // Aesthetic Transformation: Marked + Highlight.js
-                const htmlContent = window.marked ? marked.parse(data.response) : data.response.replace(/\n/g, '<br>');
-
-                botDiv.innerHTML = `
-                    <div class="relative max-w-[95%] bg-white/[0.03] border border-white/10 text-[#E7EEEB] p-5 rounded-2xl rounded-tl-none text-[13px] font-medium leading-[1.6] shadow-2xl overflow-x-auto">
-                        ${htmlContent}
-                    </div>
-                    <div class="flex items-center gap-3 mt-3">
-                        <div class="w-4 h-4 rounded-full bg-gradient-to-br from-[#00ED64] to-[#00684A] flex items-center justify-center">
-                            <i class="fas fa-bolt text-[8px] text-[#001E2B]"></i>
+                const addBotMsg = (targetMessagesId) => {
+                    const messages = document.getElementById(targetMessagesId);
+                    if (!messages) return;
+                    
+                    const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const botDiv = document.createElement('div');
+                    botDiv.className = 'flex flex-col items-start animate-message-in mb-6 group';
+                    
+                    const htmlContent = window.marked ? marked.parse(data.response) : data.response.replace(/\n text/g, '<br>');
+                    
+                    botDiv.innerHTML = `
+                        <div class="relative max-w-[95%] bg-white/[0.03] border border-white/10 text-[#E7EEEB] p-5 rounded-2xl rounded-tl-none text-[13px] font-medium leading-[1.6] shadow-2xl overflow-x-auto">
+                            ${htmlContent}
                         </div>
-                        <div class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em]">Amazon Nova Lite • ${botTime}</div>
-                    </div>
-                `;
-                messages.appendChild(botDiv);
-                
-                // Aesthetic Highlighting & IDE Features
-                if (window.hljs) {
-                    botDiv.querySelectorAll('pre code').forEach((block) => {
-                        hljs.highlightElement(block);
-                        block.parentElement.classList.add('relative', 'group');
-                        const copyBtn = document.createElement('button');
-                        copyBtn.className = 'copy-btn';
-                        copyBtn.innerHTML = '<i class="far fa-copy"></i>';
-                        block.parentElement.appendChild(copyBtn);
-                        copyBtn.onclick = () => {
-                            navigator.clipboard.writeText(block.innerText);
-                            copyBtn.innerHTML = '<i class="fas fa-check text-green-400"></i>';
-                            setTimeout(() => copyBtn.innerHTML = '<i class="far fa-copy"></i>', 2000);
-                        };
-                    });
-                }
-                messages.scrollTop = messages.scrollHeight;
+                        <div class="flex items-center gap-3 mt-3">
+                            <div class="w-4 h-4 rounded-full bg-gradient-to-br from-[#00ED64] to-[#00684A] flex items-center justify-center">
+                                <i class="fas fa-bolt text-[8px] text-[#001E2B]"></i>
+                            </div>
+                            <div class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em] opacity-70">Nova AI • ${botTime}</div>
+                        </div>
+                    `;
+                    
+                    messages.appendChild(botDiv);
+                    
+                    if (window.hljs) {
+                        botDiv.querySelectorAll('pre code').forEach((block) => {
+                            hljs.highlightElement(block);
+                            block.parentElement.classList.add('relative', 'group');
+                            const copyBtn = document.createElement('button');
+                            copyBtn.className = 'absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/50 text-[10px] transition-all';
+                            copyBtn.innerHTML = '<i class="far fa-copy"></i>';
+                            block.parentElement.appendChild(copyBtn);
+                            copyBtn.onclick = () => {
+                                navigator.clipboard.writeText(block.innerText);
+                                copyBtn.innerHTML = '<i class="fas fa-check text-green-400"></i>';
+                                setTimeout(() => copyBtn.innerHTML = '<i class="far fa-copy"></i>', 2000);
+                            };
+                        });
+                    }
+                    messages.scrollTop = messages.scrollHeight;
+                };
+
+                addBotMsg('floating-chat-messages');
+                addBotMsg('floating-chat-messages-widget');
             }
         } catch (error) {
             console.error('Chat error:', error);
