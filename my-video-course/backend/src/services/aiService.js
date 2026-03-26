@@ -1,9 +1,10 @@
-let BedrockRuntimeClient, InvokeModelCommand, GoogleGenerativeAI;
+let BedrockRuntimeClient, InvokeModelCommand, ConverseCommand, GoogleGenerativeAI;
 
 try {
   const bedrock = require('@aws-sdk/client-bedrock-runtime');
   BedrockRuntimeClient = bedrock.BedrockRuntimeClient;
   InvokeModelCommand = bedrock.InvokeModelCommand;
+  ConverseCommand = bedrock.ConverseCommand;
 } catch (error) {
   console.warn('AWS Bedrock not available:', error.message);
 }
@@ -40,7 +41,7 @@ class AIService {
       }
     }
   }
-   async generateWithNovaPro(prompt, systemPrompt = "You are a helpful assistant.") {
+   async generateWithNova(prompt, systemPrompt = "You are a helpful assistant.") {
     // 1. Check for custom Proxy Endpoint first (Premium High-Fidelity Flow)
     if (process.env.NOVA_ENDPOINT && process.env.NOVA_API_KEY && process.env.NOVA_API_KEY.includes('bedrock-api-key')) {
       try {
@@ -56,7 +57,7 @@ class AIService {
               { role: 'system', content: systemPrompt },
               { role: 'user', content: prompt }
             ],
-            model: 'nova-pro-v1',
+            model: 'nova-lite-v1', // Updated to Lite
             temperature: 0.7,
             max_tokens: 4096
           })
@@ -72,44 +73,37 @@ class AIService {
       }
     }
 
-    // 2. Standard Bedrock SDK Flow
+    // 2. Optimized Bedrock SDK Flow (Using Converse API)
     try {
-      if (!this.client || !InvokeModelCommand) {
-        throw new Error("AWS Bedrock client not initialized.");
+      if (!this.client || !ConverseCommand) {
+        throw new Error("AWS Bedrock Converse client not initialized.");
       }
 
-      const command = new InvokeModelCommand({
-        modelId: "amazon.nova-pro-v1:0",
-        contentType: "application/json",
-        accept: "application/json",
-        body: JSON.stringify({
-          inferenceConfig: {
-            max_new_tokens: 4096,
-            temperature: 0.7,
-            top_p: 0.9,
-          },
-          messages: [
-            {
-              role: "user",
-              content: [{ text: `${systemPrompt}\n\n${prompt}` }]
-            }
-          ]
-        })
+      const command = new ConverseCommand({
+        modelId: "amazon.nova-lite-v1:0", // Matches approved quota
+        system: [{ text: systemPrompt }],
+        messages: [
+          {
+            role: "user",
+            content: [{ text: prompt }]
+          }
+        ],
+        inferenceConfig: {
+          maxTokens: 4096,
+          temperature: 0.7,
+          topP: 0.9,
+        }
       });
 
       const response = await this.client.send(command);
-      const resBody = JSON.parse(new TextDecoder().decode(response.body));
-      
-      let finalContent = "";
-      if (resBody.output && resBody.output.message && resBody.output.message.content) {
-        finalContent = resBody.output.message.content[0].text;
-      } else {
-        finalContent = resBody.content?.[0]?.text || "No response content from Nova Pro";
-      }
-
-      return finalContent;
+      return response.output.message.content[0].text;
     } catch (error) {
-      console.error("❌ Bedrock Nova Pro Error:", error.message);
+      console.error("❌ Bedrock Nova Error:", error.message);
+      
+      if (error.name === 'ThrottlingException' || error.message.includes('Too many tokens')) {
+        console.log('🔄 Throttled on Bedrock, switching to Gemini fallback...');
+      }
+      
       // Final fallback to Gemini
       return await this.fallbackToGemini(prompt, { systemPrompt });
     }
@@ -117,7 +111,7 @@ class AIService {
 
   async generateCourseDescription(courseName, videos) {
     const prompt = `Generate a compelling course description for "${courseName}" with ${videos.length} videos. Include learning objectives, target audience, and key skills covered. Keep it under 200 words.`;
-    return await this.generateWithNovaPro(prompt, "You are an expert curriculum designer.");
+    return await this.generateWithNova(prompt, "You are an expert curriculum designer.");
   }
 
   async generateTodoFromVideo(videoTitle, transcript = '') {
@@ -143,10 +137,10 @@ class AIService {
   }
 
   async generateQuizFromVideo(videoTitle, transcript = '') {
-    const systemPrompt = "You are an expert instructor. Create 4-5 technical quiz questions. Return JSON array with {question, options, correct, explanation}.";
+    const systemPrompt = "You are an expert instructor. Create 4-5 technical quiz questions. Return ONLY a valid JSON array of objects with {question, options, correct, explanation}. Response format: JSON";
     const prompt = `Video: "${videoTitle}"\nTranscript: ${transcript.slice(0, 3000)}`;
     
-    const response = await this.generateWithNovaPro(prompt, systemPrompt);
+    const response = await this.generateWithNova(prompt, systemPrompt);
     try {
       return JSON.parse(response);
     } catch {
@@ -163,7 +157,7 @@ class AIService {
     try {
       return await this.generateDavidMalanResponse(message, context);
     } catch (error) {
-      console.warn("Nova Pro chat failed, falling back to static:", error.message);
+      console.warn("Nova chat failed, falling back to static:", error.message);
       return this.staticMalanResponse(message, context);
     }
   }
@@ -177,7 +171,7 @@ class AIService {
     Question from student: "${question}"
     ${context?.transcript ? `Based on the current video lesson: ${context.transcript.slice(0, 1000)}` : ''}`;
     
-    return await this.generateWithNovaPro(prompt, "You are David J. Malan of CS50.");
+    return await this.generateWithNova(prompt, "You are David J. Malan of CS50.");
   }
   
   staticMalanResponse(question, context) {
@@ -188,7 +182,7 @@ class AIService {
     const prompt = `Analyze this video and provide: 1) Summary (50 words), 2) Key topics (5 bullet points), 3) Difficulty level. Video: "${videoTitle}"`;
     
     const context = { videoTitle, transcript: transcript.slice(0, 2000) };
-    const response = await this.generateWithNovaPro(prompt, context);
+    const response = await this.generateWithNova(prompt, context);
     
     return {
       summary: response.split('Summary:')[1]?.split('Key topics:')[0]?.trim() || 'Video content analysis',
@@ -201,7 +195,7 @@ class AIService {
     const prompt = `Improve these video captions for "${videoTitle}". Fix grammar, add punctuation, and make them more readable while keeping timestamps intact.`;
     
     const context = { videoTitle, srtLength: srtContent.length };
-    const response = await this.generateWithNovaPro(prompt + '\n\nSRT Content:\n' + srtContent.slice(0, 3000), context);
+    const response = await this.generateWithNova(prompt + '\n\nSRT Content:\n' + srtContent.slice(0, 3000), context);
     
     return response || srtContent; // Return improved SRT or original if AI fails
   }
@@ -216,34 +210,35 @@ class AIService {
     const prompt = `Create a concise summary (100 words) of this video transcript: "${videoTitle}"`;
     
     const context = { videoTitle, transcriptLength: textOnly.length };
-    const result = await this.generateWithNovaPro(prompt + '\n\nTranscript:\n' + textOnly.slice(0, 4000), context);
+    const result = await this.generateWithNova(prompt + '\n\nTranscript:\n' + textOnly.slice(0, 4000), context);
     const summary = typeof result === 'string' ? result : `Summary for ${videoTitle}: This video covers key concepts and practical examples.`;
     return summary;
   }
 
   async generateTodos(content, type = 'video', title = '') {
     const systemPrompt = `You are an expert educational architect. Extract 3-5 actionable learning tasks from the provided ${type} content.
-    Return ONLY a JSON array of objects with the following schema:
+    Return ONLY a valid JSON array of objects with the following schema:
     [
       { "text": "Actionable task string", "category": "Setup/Practice/Theory", "priority": "high/medium/low", "estimatedTime": "approx time" }
-    ]`;
+    ]
+    Response format: JSON`;
     
     const prompt = `Content Title: ${title}\n\nContent Content:\n${content}`;
     
     try {
-      return await this.generateWithNovaPro(prompt, systemPrompt);
+      return await this.generateWithNova(prompt, systemPrompt);
     } catch (error) {
-      console.warn("Nova Pro todo extraction failed, falling back to Gemini:", error.message);
+      console.warn("Nova todo extraction failed, falling back to Gemini:", error.message);
       return await this.fallbackToGemini(prompt, { systemPrompt });
     }
   }
 
   async getAIModelStatus() {
     return {
-      activeModel: "Amazon Nova Pro",
+      activeModel: "Amazon Nova Lite",
       provider: "AWS Bedrock",
       isConfigured: !!(process.env.AWS_REGION && (process.env.AWS_ACCESS_KEY_ID || process.env.IAM_ROLE_ACTIVE)),
-      region: process.env.AWS_REGION || 'unset'
+      region: process.env.AWS_REGION || 'us-east-1'
     };
   }
 
