@@ -41,12 +41,41 @@ class AIService {
     }
   }
    async generateWithNovaPro(prompt, systemPrompt = "You are a helpful assistant.") {
+    // 1. Check for custom Proxy Endpoint first (Premium High-Fidelity Flow)
+    if (process.env.NOVA_ENDPOINT && process.env.NOVA_API_KEY && process.env.NOVA_API_KEY.includes('bedrock-api-key')) {
+      try {
+        console.log('🚀 Using Premium Nova Proxy Endpoint for high-fidelity generation...');
+        const response = await fetch(process.env.NOVA_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.NOVA_API_KEY}`
+          },
+          body: JSON.stringify({
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: prompt }
+            ],
+            model: 'nova-pro-v1',
+            temperature: 0.7,
+            max_tokens: 4096
+          })
+        });
+
+        const data = await response.json();
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+          return data.choices[0].message.content;
+        }
+        console.warn('⚠️ Proxy response invalid or empty, falling back to Bedrock SDK...');
+      } catch (proxyError) {
+        console.error('❌ Nova Proxy Error:', proxyError.message);
+      }
+    }
+
+    // 2. Standard Bedrock SDK Flow
     try {
       if (!this.client || !InvokeModelCommand) {
         throw new Error("AWS Bedrock client not initialized.");
-      }
-      if (!process.env.AWS_REGION) {
-        throw new Error("AWS_REGION not configured for Bedrock");
       }
 
       const command = new InvokeModelCommand({
@@ -55,18 +84,14 @@ class AIService {
         accept: "application/json",
         body: JSON.stringify({
           inferenceConfig: {
-            max_new_tokens: 2000,
+            max_new_tokens: 4096,
             temperature: 0.7,
             top_p: 0.9,
           },
           messages: [
             {
               role: "user",
-              content: [
-                {
-                  text: `${systemPrompt}\n\n${prompt}`
-                }
-              ]
+              content: [{ text: `${systemPrompt}\n\n${prompt}` }]
             }
           ]
         })
@@ -84,7 +109,8 @@ class AIService {
 
       return finalContent;
     } catch (error) {
-      console.error("Bedrock Nova Pro Error:", error.message);
+      console.error("❌ Bedrock Nova Pro Error:", error.message);
+      // Final fallback to Gemini
       return await this.fallbackToGemini(prompt, { systemPrompt });
     }
   }
