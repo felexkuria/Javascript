@@ -120,10 +120,33 @@ class CourseService {
       // 2. Delete from S3 (Curriculum files, Videos, and Resources)
       const { S3Client, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
       const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
-      
       const bucketName = process.env.S3_BUCKET_NAME;
+
       if (bucketName) {
-        // List of prefixes to clean up
+        // A. Target specific keys found in DynamoDB
+        const videos = course.videos || [];
+        const keysToDelete = videos
+          .map(v => v.s3Key || v.key)
+          .filter(k => !!k)
+          .map(k => ({ Key: k }));
+
+        if (keysToDelete.length > 0) {
+          try {
+            // Delete in batches of 1000 (S3 limit)
+            for (let i = 0; i < keysToDelete.length; i += 1000) {
+              const batch = keysToDelete.slice(i, i + 1000);
+              await s3Client.send(new DeleteObjectsCommand({
+                Bucket: bucketName,
+                Delete: { Objects: batch }
+              }));
+            }
+            console.log(`🗑️ Deleted ${keysToDelete.length} specific objects from S3`);
+          } catch (batchErr) {
+            console.warn('⚠️ Batch S3 deletion failed:', batchErr.message);
+          }
+        }
+
+        // B. Fallback: Prefix-based wipe for any missed artifacts
         const prefixes = [
           `courses/${slug}/`,
           `videos/${decodedTitle}/`,
@@ -146,10 +169,10 @@ class CourseService {
                 }
               };
               await s3Client.send(new DeleteObjectsCommand(deleteParams));
-              console.log(`🗑️ Deleted ${listResponse.Contents.length} objects from S3 prefix: ${prefix}`);
+              console.log(`🗑️ Prefix Sweep: Deleted ${listResponse.Contents.length} objects from ${prefix}`);
             }
           } catch (s3Err) {
-            console.error(`⚠️ S3 cleanup failed for prefix ${prefix}:`, s3Err.message);
+            console.error(`⚠️ S3 prefix cleanup failed for ${prefix}:`, s3Err.message);
           }
         }
       }

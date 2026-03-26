@@ -140,16 +140,28 @@
                                                 <div class="p-6 hover:bg-white/5 transition-colors flex items-center gap-4 group/item">
                                                     <div class="text-xs font-black text-gray-500 opacity-30">0<%= sIndex + 1 %>.<%= lIndex + 1 %></div>
                                                     <div class="w-2 h-2 rounded-full bg-[#00ED64]/30 group-hover/item:bg-[#00ED64]"></div>
-                                                    <div class="flex-1">
+                                                    <div class="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
                                                         <span class="text-sm font-bold text-gray-700 dark:text-[#9FB1AD] group-hover/item:text-white transition-colors">
                                                             <%= lecture.title %>
                                                         </span>
-                                                        <% if (lecture.type === 'pdf') { %>
-                                                            <span class="ml-2 py-0.5 px-1.5 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest rounded border border-blue-500/20">DOCUMENT</span>
-                                                        <% } %>
+                                                        <div class="flex items-center gap-2">
+                                                            <% if (lecture.type === 'pdf') { %>
+                                                                <span class="py-0.5 px-1.5 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest rounded border border-blue-500/20">DOCUMENT</span>
+                                                                <% if (lecture.pages) { %>
+                                                                    <span class="text-[9px] font-bold text-gray-500"><i class="far fa-file-alt mr-1"></i><%= lecture.pages %> Pages</span>
+                                                                <% } %>
+                                                            <% } else { %>
+                                                                <% if (lecture.duration) { %>
+                                                                    <span class="text-[9px] font-bold text-gray-500"><i class="far fa-clock mr-1"></i><%= lecture.duration %></span>
+                                                                <% } %>
+                                                            <% } %>
+                                                            <% if (lecture.fileSize) { %>
+                                                                <span class="text-[9px] font-bold text-gray-500/50">• <%= lecture.fileSize %></span>
+                                                            <% } %>
+                                                        </div>
                                                     </div>
                                                     <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
-                                                        <a href="/video/<%= typeof courseName !== 'undefined' ? encodeURIComponent(courseName) : encodeURIComponent(course.name) %>?lecture=<%= lecture.id %>" class="text-[10px] font-black text-[#00ED64] opacity-0 group-hover/item:opacity-100 uppercase tracking-widest">Access Lesson</a>
+                                                        <a href="/course/<%= encodedCourseName %>/video/<%= lecture.id %>" class="text-[10px] font-black text-[#00ED64] opacity-0 group-hover/item:opacity-100 uppercase tracking-widest">Access Lesson</a>
                                                     <% } %>
                                                 </div>
                                             <% }) %>

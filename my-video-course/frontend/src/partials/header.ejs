@@ -201,12 +201,17 @@
 </head>
 <body class="<%= typeof theme !== 'undefined' ? theme : '' %>" style="font-family: 'Euclid Circular A', 'Inter', system-ui, sans-serif;">
     <nav class="mdb-nav">
-        <a href="/dashboard" class="nav-brand">
-            <div class="nav-logo-mark">
-                <span class="nav-leaf">🍃</span>
-            </div>
-            <span class="nav-brand-name">Multitouch<span>Academy</span></span>
-        </a>
+        <div class="flex items-center">
+            <button class="lg:hidden mr-4 text-white p-2 hover:bg-white/5 rounded-lg transition-colors" onclick="if(window.toggleSidebar) toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="/dashboard" class="nav-brand">
+                <div class="nav-logo-mark">
+                    <span class="nav-leaf">🍃</span>
+                </div>
+                <span class="nav-brand-name">Multitouch<span>Academy</span></span>
+            </a>
+        </div>
 
         <ul class="nav-links">
             <li><a href="/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
@@ -221,6 +226,7 @@
                 <span id="themeIcon">☀️</span>
             </button>
             
+
             <div class="profile-trigger" onclick="window.location.href='/profile'">
                 <div class="nav-avatar" id="navAvatar">U</div>
                 <span class="profile-name" id="navName">User</span>
