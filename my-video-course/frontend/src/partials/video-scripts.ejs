@@ -51,7 +51,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event listeners
-    if (markWatchedButton) markWatchedButton.addEventListener('click', markVideoAsWatched);
+    const markBtn = document.getElementById('markWatchedButton');
+    if (markBtn) {
+        markBtn.addEventListener('click', async () => {
+            const isDone = markBtn.innerText.includes('DONE') || markBtn.innerText.includes('COMPLETE');
+            try {
+                const response = await fetch('/api/mark-watched', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ videoId: '<%= video ? video._id : "" %>', courseName: '<%= courseName %>' })
+                });
+                
+                if (response.ok) {
+                    markBtn.innerHTML = '<i class="fas fa-check-double"></i> COMPLETED';
+                    markBtn.classList.add('opacity-50');
+                    if (window.showAtlasHint) window.showAtlasHint('MODULE SYNCED');
+                }
+            } catch (err) {
+                console.error('Mark watched error:', err);
+            }
+        });
+    }
     if (quizButton) quizButton.addEventListener('click', startVideoQuiz);
     
     // SRT Generation
@@ -228,32 +248,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.sendFloatingChatMessage = async function() {
         const input = document.getElementById('floating-chat-input');
-        const messages = document.getElementById('floating-chat-messages');
-        
-        if (!input || !messages) return;
-        
-        const message = input.value.trim();
-        if (!message) return;
-        
-        // Add user message
-        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        messages.innerHTML += `
-            <div class="flex flex-col items-end animate-message-in mb-6">
-                <div class="max-w-[85%] bg-[#00ED64] text-[#001E2B] p-4 rounded-2xl rounded-tr-none text-sm font-bold shadow-lg shadow-[#00ED64]/10">
-                    ${message}
-                </div>
-                <div class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-widest mt-2">You • ${time}</div>
+    const messages = document.getElementById('floating-chat-messages');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message
+    const userTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    messages.innerHTML += `
+        <div class="flex flex-col items-end animate-message-in">
+            <div class="max-w-[90%] bg-[#00ED64] text-[#001E2B] p-4 rounded-2xl rounded-tr-none text-[13px] font-bold shadow-lg shadow-[#00ED64]/10">
+                ${message}
             </div>
-        `;
-        
-        input.value = '';
-        messages.scrollTop = messages.scrollHeight;
+            <div class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-widest mt-2 px-1">YOU • ${userTime}</div>
+        </div>
+    `;
+    
+    input.value = '';
+    messages.scrollTop = messages.scrollHeight;
         
         try {
             // Typing indicator
             const thinkingId = 'thinking-' + Date.now();
             messages.innerHTML += `
-                <div id="${thinkingId}" class="flex flex-col items-start animate-message-in mb-6">
+                <div id="${thinkingId}" class="flex flex-col items-start animate-message-in">
                     <div class="bg-white/5 border border-white/10 text-[#00ED64] p-3 rounded-2xl rounded-tl-none text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                         <i class="fas fa-circle-notch fa-spin"></i> Nova Pro Thinking...
                     </div>
@@ -279,9 +297,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.response) {
                 messages.innerHTML += `
-                    <div class="flex flex-col items-start animate-message-in mb-6 group">
-                        <div class="relative max-w-[85%] bg-[#001E2B]/60 backdrop-blur-xl border border-white/10 text-[#E7EEEB] p-5 rounded-2xl rounded-tl-none text-sm font-medium leading-[1.6] shadow-2xl">
-                            <div class="absolute -left-2 top-0 text-white/5 text-4xl font-serif">"</div>
+                    <div class="flex flex-col items-start animate-message-in group">
+                        <div class="relative max-w-[90%] bg-white/[0.03] border border-white/10 text-[#E7EEEB] p-5 rounded-2xl rounded-tl-none text-[13px] font-medium leading-[1.6] shadow-2xl">
                             ${data.response.replace(/\n/g, '<br>')}
                         </div>
                         <div class="flex items-center gap-3 mt-3">
