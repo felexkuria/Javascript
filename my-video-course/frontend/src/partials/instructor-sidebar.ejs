@@ -1,5 +1,6 @@
 <!-- instructor-sidebar.ejs -->
-<aside class="w-72 bg-[#001E2B] border-r border-[#00ED64]/10 flex flex-col min-h-screen sticky top-0 self-start shadow-2xl z-50">
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[45] hidden lg:hidden" onclick="toggleSidebar()"></div>
+<aside id="main-sidebar" class="fixed lg:sticky top-0 left-0 w-72 bg-[#001E2B] border-r border-[#00ED64]/10 flex flex-col h-screen lg:min-h-screen shadow-2xl z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
     <div class="px-8 py-12">
         <div class="flex items-center gap-4 group cursor-pointer" onclick="window.location.href='/teacher/dashboard'">
             <div class="w-12 h-12 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-2xl flex items-center justify-center shadow-xl shadow-[#00ED64]/10 group-hover:rotate-6 transition-all duration-500">
@@ -58,10 +59,22 @@
         </a>
     </div>
 
-    <!-- Force Dark Mode -->
+    <!-- Sidebar Toggle Script -->
     <script>
-        (function() {
-            document.documentElement.classList.add('dark');
-        })();
+        function toggleSidebar() {
+            const sidebar = document.getElementById('main-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+            
+            if (isHidden) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
     </script>
 </aside>

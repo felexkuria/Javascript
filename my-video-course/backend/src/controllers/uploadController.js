@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const dynamoVideoService = require('../services/dynamoVideoService');
 const thumbnailGenerator = require('../services/thumbnailGenerator');
+const metadataService = require('../utils/metadataService');
 
 /**
  * Sanitize a filename into a safe S3 key segment.
@@ -121,6 +122,33 @@ class UploadController {
         videoUrl = path.join(courseId || 'general', fileName).replace(/\\/g, '/');
       }
 
+      // ── Metadata Extraction ───────────────────────────
+      let duration = 0;
+      let pages = 0;
+      
+      const isVideo = file.mimetype.startsWith('video/');
+      const isPdf = file.mimetype === 'application/pdf';
+
+      try {
+        if (file.path && fs.existsSync(file.path)) {
+          // Local file
+          if (isVideo) duration = await metadataService.getVideoDuration(file.path).catch(() => 0);
+          if (isPdf) pages = await metadataService.getPdfPageCount(file.path).catch(() => 0);
+        } else if (file.location) {
+          // S3 file - Only attempt if URL is likely accessible
+          if (isVideo) {
+            // Use a timeout to prevent long-hanging ffprobe on S3
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout')), 5000));
+            duration = await Promise.race([
+              metadataService.getVideoDuration(file.location),
+              timeout
+            ]).catch(() => 0);
+          }
+        }
+      } catch (metaErr) {
+        console.warn('⚠️ Metadata extraction failed (non-blocking):', metaErr.message);
+      }
+
       // ── Link into DynamoDB ─────────────────────────────
       const courseName = courseId || 'general';
       const videoData = {
@@ -131,10 +159,12 @@ class UploadController {
         url: videoUrl,
         videoUrl: videoUrl, // Legacy compat
         s3Key: s3Key,
-        type: type,
+        type: isPdf ? 'pdf' : (type || 'video'),
         section: sectionName,
         sectionId: sectionId, // CRITICAL: Pass sectionId for nesting
-        duration: 0,
+        duration: isVideo ? metadataService.formatDuration(duration) : null,
+        pages: isPdf ? pages : null,
+        fileSize: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
         watched: false,
         createdAt: new Date().toISOString()
       };
