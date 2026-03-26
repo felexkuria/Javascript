@@ -301,8 +301,30 @@
                             <p class="text-sm font-black text-white">Engineer Felex</p>
                         </div>
                     </div>
-                    <div class="prose prose-invert max-w-none text-[#9FB1AD] text-sm font-medium leading-relaxed">
+                    <div class="prose prose-invert max-w-none text-[#9FB1AD] text-sm font-medium leading-relaxed mb-10">
                         <%= video ? video.description : 'Welcome to this module. In this lecture, we explore core engineering principles and architecture patterns defined by the Multitouch Academy standard.' %>
+                    </div>
+
+                    <!-- AI Learning Lab (New) -->
+                    <div class="mt-12 pt-12 border-t border-white/5">
+                        <div class="flex items-center justify-between mb-8">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-[#00ED64]/10 flex items-center justify-center text-[#00ED64] border border-[#00ED64]/20">
+                                    <i class="fas fa-microchip text-xs"></i>
+                                </div>
+                                <h3 class="text-xl font-black tracking-tight">Learning <span class="premium-title">Lab</span></h3>
+                            </div>
+                            <button id="refreshTodos" class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-widest hover:text-[#00ED64] transition-colors">
+                                <i class="fas fa-sync-alt mr-2"></i> Sync AI Insights
+                            </button>
+                        </div>
+
+                        <div id="ai-todo-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Populated by AI Extractor -->
+                            <div class="atlas-card glass p-6 opacity-40 italic text-[10px] text-center py-12">
+                                Analyzing lesson content for actionable takeaways...
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -409,5 +431,48 @@
             };
         });
     </script>
-</body>
+    <!-- AI Floating Chatbot -->
+    <div id="chatbot-trigger" onclick="showFloatingChatbot()" class="fixed bottom-8 right-8 w-16 h-16 bg-[#00ED64] rounded-2xl flex items-center justify-center shadow-3xl cursor-pointer hover:scale-110 active:scale-95 transition-all z-[200]">
+        <i class="fas fa-comment-alt text-[#001E2B] text-xl"></i>
+        <div class="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+            <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
+        </div>
+    </div>
+
+    <div id="floating-chatbot" class="fixed bottom-8 right-8 w-[400px] h-[600px] bg-[#001E2B] rounded-[2.5rem] border border-white/10 shadow-4xl flex flex-col overflow-hidden hidden z-[200]">
+        <div class="p-6 border-b border-white/5 flex items-center justify-between bg-gradient-to-r from-white/5 to-transparent">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl bg-[#00ED64] flex items-center justify-center text-[#001E2B] shadow-lg shadow-[#00ED64]/20">
+                    <i class="fas fa-brain text-sm"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black text-white">Nova Pro AI</h4>
+                    <p class="text-[8px] font-black text-[#00ED64] uppercase tracking-widest">Active • Technical Advisor</p>
+                </div>
+            </div>
+            <button onclick="toggleFloatingChatbot()" class="text-[#9FB1AD] hover:text-white transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div id="floating-chat-messages" class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div class="chat-message bot">
+                <div class="message-content">
+                    Hello! I'm your AI advisor for <span class="text-[#00ED64]"><%= courseName %></span>. I'm aware of the current lesson: <span class="italic">"<%= video ? video.title : 'Lecture Module' %>"</span>. How can I assist your engineering session?
+                </div>
+                <div class="message-meta">Nova Pro • Now</div>
+            </div>
+        </div>
+
+        <div class="p-6 bg-white/5">
+            <div class="relative">
+                <input type="text" id="floating-chat-input" placeholder="Query the engineering council..." 
+                       class="w-full bg-[#001E2B] border border-white/10 rounded-2xl py-4 px-6 text-sm font-bold text-white placeholder-[#9FB1AD]/30 focus:border-[#00ED64]/50 focus:outline-none transition-all">
+                <button onclick="sendFloatingChatMessage()" class="absolute right-3 top-2 w-10 h-10 bg-[#00ED64] text-[#001E2B] rounded-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </div>
+            <p class="text-[8px] text-[#9FB1AD] text-center mt-4 font-black uppercase tracking-widest opacity-30">Encrypted via Multitouch Security Protocols</p>
+        </div>
+    </div>
 </html>

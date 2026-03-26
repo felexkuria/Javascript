@@ -238,9 +238,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add user message
         const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         messages.innerHTML += `
-            <div class="chat-message user animate-message-in">
-                <div class="message-content">${message}</div>
-                <div class="message-meta">You • ${time}</div>
+            <div class="flex flex-col items-end animate-message-in mb-6">
+                <div class="max-w-[85%] bg-[#00ED64] text-[#001E2B] p-4 rounded-2xl rounded-tr-none text-sm font-bold shadow-lg shadow-[#00ED64]/10">
+                    ${message}
+                </div>
+                <div class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-widest mt-2">You • ${time}</div>
             </div>
         `;
         
@@ -248,45 +250,61 @@ document.addEventListener('DOMContentLoaded', function() {
         messages.scrollTop = messages.scrollHeight;
         
         try {
-            const response = await fetch('/api/ai/chat', {
+            // Typing indicator
+            const thinkingId = 'thinking-' + Date.now();
+            messages.innerHTML += `
+                <div id="${thinkingId}" class="flex flex-col items-start animate-message-in mb-6">
+                    <div class="bg-white/5 border border-white/10 text-[#00ED64] p-3 rounded-2xl rounded-tl-none text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                        <i class="fas fa-circle-notch fa-spin"></i> Nova Pro Thinking...
+                    </div>
+                </div>
+            `;
+            messages.scrollTop = messages.scrollHeight;
+
+            const response = await fetch('/api/ai/chatbot', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     message, 
-                    aiModel: 'nova-pro',
-                    teachingStyle: 'david-malan',
-                    context: {
-                        videoTitle: '<%= video ? video.title : "" %>',
-                        courseName: courseName,
-                        videoId: videoId
-                    }
+                    courseName: courseName,
+                    videoTitle: '<%= video ? video.title : "" %>'
                 })
             });
             
+            const thinkingEl = document.getElementById(thinkingId);
+            if (thinkingEl) thinkingEl.remove();
+
             const data = await response.json();
             const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
-            if (data.success) {
+            if (data.response) {
                 messages.innerHTML += `
-                    <div class="chat-message bot animate-message-in">
-                        <div class="message-content">${data.response}</div>
-                        <div class="message-meta">Nova Pro • ${botTime}</div>
+                    <div class="flex flex-col items-start animate-message-in mb-6 group">
+                        <div class="relative max-w-[85%] bg-[#001E2B]/60 backdrop-blur-xl border border-white/10 text-[#E7EEEB] p-5 rounded-2xl rounded-tl-none text-sm font-medium leading-[1.6] shadow-2xl">
+                            <div class="absolute -left-2 top-0 text-white/5 text-4xl font-serif">"</div>
+                            ${data.response.replace(/\n/g, '<br>')}
+                        </div>
+                        <div class="flex items-center gap-3 mt-3">
+                            <div class="w-4 h-4 rounded-full bg-gradient-to-br from-[#00ED64] to-[#00684A] flex items-center justify-center">
+                                <i class="fas fa-bolt text-[8px] text-[#001E2B]"></i>
+                            </div>
+                            <div class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em]">${data.aiModel || 'Amazon Nova Pro'} • ${botTime}</div>
+                        </div>
                     </div>
                 `;
             } else {
-                messages.innerHTML += `
-                    <div class="chat-message bot animate-message-in">
-                        <div class="message-content">Sorry, I couldn't process that. Try asking about the video content.</div>
-                        <div class="message-meta">System • ${botTime}</div>
-                    </div>
-                `;
+                throw new Error('No response');
             }
         } catch (error) {
-            const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            console.error('Chat error:', error);
+            const thinkingEl = document.getElementById(thinkingId);
+            if (thinkingEl) thinkingEl.remove();
+
             messages.innerHTML += `
-                <div class="chat-message bot animate-message-in">
-                    <div class="message-content">I'm having trouble connecting. Please try again.</div>
-                    <div class="message-meta">System • ${botTime}</div>
+                <div class="flex flex-col items-start animate-message-in mb-6">
+                    <div class="max-w-[85%] bg-red-500/5 border border-red-500/20 text-red-400 p-4 rounded-2xl rounded-tl-none text-[11px] font-bold flex items-center gap-3">
+                        <i class="fas fa-triangle-exclamation"></i> Protocol Error: AI Engine Synchronization Failed.
+                    </div>
                 </div>
             `;
         }
@@ -294,12 +312,110 @@ document.addEventListener('DOMContentLoaded', function() {
         messages.scrollTop = messages.scrollHeight;
     };
 
-    // Enter key support for chat
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && document.getElementById('floating-chat-input') === document.activeElement) {
-            sendFloatingChatMessage();
+    // --- AI Learning Lab (To-Dos) Logic ---
+    async function loadAITodos() {
+        const container = document.getElementById('ai-todo-container');
+        if (!container) return;
+        
+        try {
+            const videoTitle = '<%= video ? video.title : "" %>';
+            const response = await fetch(`/api/ai/video/todos/${encodeURIComponent(courseName)}/${encodeURIComponent(videoTitle)}`);
+            const data = await response.json();
+            
+            // Get user progress
+            const progResponse = await fetch(`/api/ai/video/todos/progress/${encodeURIComponent(courseName)}/${encodeURIComponent(videoTitle)}`);
+            const progData = await progResponse.json();
+            const progress = progData.progress || {};
+
+            if (data.todos && data.todos.length > 0) {
+                container.innerHTML = data.todos.map((group, gIdx) => `
+                    <div class="col-span-2 mb-4">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-1 h-4 bg-[#00ED64] rounded-full"></div>
+                            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-[#00ED64]">${group.category}</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${group.items.map((todo, idx) => {
+                                const todoId = `${gIdx}_${idx}`;
+                                const isCompleted = progress[todoId] && progress[todoId].completed;
+                                return `
+                                    <div onclick="toggleTodo('${todoId}', ${!isCompleted})" 
+                                         class="atlas-card glass p-5 flex items-start gap-4 cursor-pointer hover:bg-white/5 transition-all group ${isCompleted ? 'opacity-50' : ''}">
+                                        <div class="w-5 h-5 mt-0.5 rounded-lg border-2 ${isCompleted ? 'bg-[#00ED64] border-[#00ED64]' : 'border-white/10 group-hover:border-[#00ED64]/50'} flex items-center justify-center transition-all shrink-0">
+                                            ${isCompleted ? '<i class="fas fa-check text-[#001E2B] text-[8px]"></i>' : ''}
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-[11px] font-bold ${isCompleted ? 'line-through text-[#9FB1AD]' : 'text-white'} leading-relaxed">${todo.text || todo}</p>
+                                            <div class="flex gap-3 mt-2">
+                                                <span class="text-[8px] font-black uppercase text-gray-500 tracking-widest">${todo.priority || 'NORMAL'}</span>
+                                                <span class="text-[8px] font-black uppercase text-gray-500 tracking-widest">${todo.estimatedTime || '10m'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `
+                    <div class="col-span-2 atlas-card glass p-6 opacity-40 italic text-[10px] text-center py-12">
+                        No specific action items identified for this module yet. Click "Sync AI Insights" to generate.
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading AI todos:', error);
         }
-    });
+    }
+
+    window.toggleTodo = async function(todoId, completed) {
+        try {
+            const videoTitle = '<%= video ? video.title : "" %>';
+            await fetch('/api/ai/video/todos/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    courseName,
+                    videoTitle,
+                    todoId,
+                    completed
+                })
+            });
+            loadAITodos(); // Reload
+        } catch (err) {
+            console.error('Todo update failed:', err);
+        }
+    };
+
+    if (document.getElementById('refreshTodos')) {
+        document.getElementById('refreshTodos').addEventListener('click', async function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i> Analyzing...';
+            btn.disabled = true;
+            
+            try {
+                const videoTitle = '<%= video ? video.title : "" %>';
+                await fetch('/api/ai/video/todos/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ courseName, videoTitle })
+                });
+                await loadAITodos();
+            } catch (err) {
+                console.error('AI Refresh failed:', err);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+    }
+
+    // Initialize animations & data
+    setTimeout(() => {
+        loadAITodos();
+    }, 500);
 
     // Achievement popup function
     window.showAchievement = function(icon, title, name, points) {
@@ -332,56 +448,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Theme management
     function initTheme() {
-        const theme = localStorage.getItem('theme') || 'light';
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-        document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
-    }
-    
-    function toggleTheme() {
-        const isDark = document.documentElement.classList.contains('dark');
-        const newTheme = isDark ? 'light' : 'dark';
-        document.documentElement.classList.toggle('dark', newTheme === 'dark');
-        localStorage.setItem('theme', newTheme);
-        document.getElementById('themeToggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        const theme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.classList.toggle('dark', true); // Video page always dark for cinematic feel
     }
     
     initTheme();
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
-    // Load cached todos
-    async function loadCachedTodos() {
-        try {
-            const response = await fetch(`/api/todos/${encodeURIComponent('<%= video ? video.title : "" %>')}`);
-            const data = await response.json();
-            
-            if (data.success && data.todos.length > 0) {
-                const todoContainer = document.querySelector('.todo-list');
-                if (todoContainer) {
-                    todoContainer.innerHTML = data.todos.map(todo => `
-                        <div class="todo-item ${todo.completed ? 'completed' : ''}">
-                            <span class="todo-checkbox ${todo.completed ? 'checked' : ''}">✓</span>
-                            <span class="todo-text">${todo.task}</span>
-                            ${todo.completed ? `<span class="todo-date">${new Date(todo.completedAt).toLocaleDateString()}</span>` : ''}
-                            <span class="todo-source">From SRT analysis</span>
-                        </div>
-                    `).join('');
-                }
-            }
-        } catch (error) {
-            console.error('Error loading cached todos:', error);
-        }
-    }
-
-    // Initialize animations
-    setTimeout(() => {
-        const progressBars = document.querySelectorAll('.progress-fill-animated');
-        progressBars.forEach(bar => {
-            const width = bar.getAttribute('data-width');
-            if (width) {
-                bar.style.width = width + '%';
-            }
-        });
-        loadCachedTodos();
-    }, 500);
 });
 </script>

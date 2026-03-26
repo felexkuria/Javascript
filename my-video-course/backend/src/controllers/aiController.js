@@ -207,11 +207,11 @@ class AIController {
           aiModel: 'Amazon Nova Pro'
         });
       } catch (aiError) {
-        console.warn('AI service failed:', aiError.message);
+        console.warn('Nova Pro service failed:', aiError.message);
         const offlineResponse = this.getOfflineResponse(message, courseName, videoTitle);
         res.json({ 
           response: offlineResponse,
-          aiModel: 'Offline Assistant'
+          aiModel: 'Nova Pro Fallback'
         });
       }
     } catch (error) {
