@@ -16,9 +16,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatKey = `chat_${courseName}_${videoId}`;
     
     function showKeyHint(text) {
-        keyHint.textContent = text;
-        keyHint.classList.add('visible');
-        setTimeout(() => keyHint.classList.remove('visible'), 1000);
+        if (window.showAtlasHint) {
+            window.showAtlasHint(text);
+        } else if (keyHint) {
+            keyHint.textContent = text;
+            keyHint.classList.add('visible');
+            setTimeout(() => keyHint.classList.remove('visible'), 1000);
+        }
     }
 
     function markVideoAsWatched() {
@@ -29,10 +33,10 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            const badge = document.querySelector('.status-badge');
-            if (badge) {
-                badge.className = 'status-badge status-watched';
-                badge.innerHTML = '✓ Watched';
+            const markBtn = document.getElementById('markWatchedButton');
+            if (markBtn) {
+                markBtn.innerHTML = '<i class="fas fa-check-double text-[#00ED64]"></i> COMPLETED';
+                markBtn.classList.add('opacity-50');
             }
             
             if (window.gamificationSystem) {
@@ -53,24 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listeners
     const markBtn = document.getElementById('markWatchedButton');
     if (markBtn) {
-        markBtn.addEventListener('click', async () => {
-            const isDone = markBtn.innerText.includes('DONE') || markBtn.innerText.includes('COMPLETE');
-            try {
-                const response = await fetch('/api/mark-watched', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ videoId: '<%= video ? video._id : "" %>', courseName: '<%= courseName %>' })
-                });
-                
-                if (response.ok) {
-                    markBtn.innerHTML = '<i class="fas fa-check-double"></i> COMPLETED';
-                    markBtn.classList.add('opacity-50');
-                    if (window.showAtlasHint) window.showAtlasHint('MODULE SYNCED');
-                }
-            } catch (err) {
-                console.error('Mark watched error:', err);
-            }
-        });
+        markBtn.addEventListener('click', markVideoAsWatched);
     }
     if (quizButton) quizButton.addEventListener('click', startVideoQuiz);
     
@@ -107,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Use full course name for navigation
     const baseCourse = courseName;
     
     if (prevButton) {
@@ -117,8 +103,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok) {
                     const prevVideo = await response.json();
                     window.location.href = `/videos/${baseCourse}/${prevVideo._id}`;
-                } else {
-                    console.error('Previous video not found');
                 }
             } catch (error) {
                 console.error('Error getting previous video:', error);
@@ -133,8 +117,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok) {
                     const nextVideo = await response.json();
                     window.location.href = `/videos/${baseCourse}/${nextVideo._id}?autoplay=true`;
-                } else {
-                    console.error('Next video not found');
                 }
             } catch (error) {
                 console.error('Error getting next video:', error);
@@ -144,11 +126,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
-        const videoPlayer = document.getElementById('videoPlayer');
         if (!videoPlayer || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
 
         const key = e.key.toLowerCase();
-        
         switch(key) {
             case 'f':
                 e.preventDefault();
@@ -162,10 +142,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
             case 'j':
                 e.preventDefault();
-                if (videoPlayer.currentTime) {
-                    videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
-                    showKeyHint('⏪ -10s');
-                }
+                videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
+                showKeyHint('⏪ -10s');
                 break;
             case 'k':
             case ' ':
@@ -180,23 +158,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
             case 'l':
                 e.preventDefault();
-                if (videoPlayer.duration) {
-                    videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 10);
-                    showKeyHint('⏩ +10s');
-                }
+                videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 10);
+                showKeyHint('⏩ +10s');
                 break;
         }
     });
 
-    // Video event listeners
     if (videoPlayer) {
         videoPlayer.addEventListener('ended', markVideoAsWatched);
-        
         let watchedMarked = false;
         videoPlayer.addEventListener('timeupdate', function() {
             if (!videoPlayer.duration) return;
             const watchPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
-            
             if (watchPercent >= 90 && !watchedMarked) {
                 markVideoAsWatched();
                 watchedMarked = true;
@@ -204,12 +177,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Global functions for components
     window.startVideoQuiz = async function() {
         try {
             const response = await fetch(`/api/quizzes/${videoId}`);
             const data = await response.json();
-            
             if (data.success && data.quiz) {
                 window.quizSystem.startQuiz('video-specific', data.quiz);
             } else {
@@ -223,111 +194,112 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.showFloatingChatbot = function() {
         const chatbot = document.getElementById('floating-chatbot');
-        const trigger = document.getElementById('chatbot-trigger');
-        
-        if (chatbot && trigger) {
-            chatbot.style.display = 'flex';
-            trigger.style.display = 'none';
-            
-            setTimeout(() => {
-                const input = document.getElementById('floating-chat-input');
-                if (input) input.focus();
-            }, 300);
-        }
+        if (chatbot) chatbot.style.display = 'flex';
     };
     
     window.toggleFloatingChatbot = function() {
         const chatbot = document.getElementById('floating-chatbot');
-        const trigger = document.getElementById('chatbot-trigger');
-        
-        if (chatbot && trigger) {
-            chatbot.style.display = 'none';
-            trigger.style.display = 'flex';
+        if (chatbot) {
+            chatbot.style.display = chatbot.style.display === 'flex' ? 'none' : 'flex';
         }
     };
 
+    // --- Aesthetic AI Chat Logic (Aesthetic Magic Integrated) ---
     window.sendFloatingChatMessage = async function() {
         const input = document.getElementById('floating-chat-input');
-    const messages = document.getElementById('floating-chat-messages');
-    const message = input.value.trim();
-    
-    if (!message) return;
-    
-    // Add user message
-    const userTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    messages.innerHTML += `
-        <div class="flex flex-col items-end animate-message-in">
+        const messages = document.getElementById('floating-chat-messages');
+        const message = input.value.trim();
+        
+        if (!message) return;
+        
+        // Add user message
+        const userTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const userDiv = document.createElement('div');
+        userDiv.className = 'flex flex-col items-end animate-message-in mb-6';
+        userDiv.innerHTML = `
             <div class="max-w-[90%] bg-[#00ED64] text-[#001E2B] p-4 rounded-2xl rounded-tr-none text-[13px] font-bold shadow-lg shadow-[#00ED64]/10">
                 ${message}
             </div>
             <div class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-widest mt-2 px-1">YOU • ${userTime}</div>
-        </div>
-    `;
-    
-    input.value = '';
-    messages.scrollTop = messages.scrollHeight;
+        `;
+        messages.appendChild(userDiv);
+        
+        input.value = '';
+        messages.scrollTop = messages.scrollHeight;
+        
+        const thinkingId = 'thinking-' + Date.now();
+        const thinkingDiv = document.createElement('div');
+        thinkingDiv.id = thinkingId;
+        thinkingDiv.className = 'flex flex-col items-start animate-message-in mb-6';
+        thinkingDiv.innerHTML = `
+            <div class="bg-white/5 border border-white/10 text-[#00ED64] p-3 rounded-2xl rounded-tl-none text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
+                <div class="velocity-pulse"></div>
+                Nova Lite Thinking...
+            </div>
+        `;
+        messages.appendChild(thinkingDiv);
+        messages.scrollTop = messages.scrollHeight;
         
         try {
-            // Typing indicator - Atlas Pulse style
-            const thinkingId = 'thinking-' + Date.now();
-            messages.innerHTML += `
-                <div id="${thinkingId}" class="flex flex-col items-start animate-message-in">
-                    <div class="bg-white/5 border border-white/10 text-[#00ED64] p-3 rounded-2xl rounded-tl-none text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
-                        <div class="velocity-pulse"></div>
-                        Nova Pro Thinking...
-                    </div>
-                </div>
-            `;
-            messages.scrollTop = messages.scrollHeight;
-
+            const courseTitle = '<%= courseName %>';
+            const videoTitle = '<%= video ? video.title : "" %>';
             const response = await fetch('/api/ai/chatbot', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    message, 
-                    courseName: courseName,
-                    videoTitle: '<%= video ? video.title : "" %>'
-                })
+                body: JSON.stringify({ message, context: { courseTitle, videoTitle } })
             });
             
-            const thinkingEl = document.getElementById(thinkingId);
-            if (thinkingEl) thinkingEl.remove();
-
             const data = await response.json();
-            const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById(thinkingId)?.remove();
             
             if (data.response) {
-                messages.innerHTML += `
-                    <div class="flex flex-col items-start animate-message-in group">
-                        <div class="relative max-w-[90%] bg-white/[0.03] border border-white/10 text-[#E7EEEB] p-5 rounded-2xl rounded-tl-none text-[13px] font-medium leading-[1.6] shadow-2xl">
-                            ${data.response.replace(/\n/g, '<br>')}
+                const botTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const botDiv = document.createElement('div');
+                botDiv.className = 'flex flex-col items-start animate-message-in mb-6 group';
+                
+                // Aesthetic Transformation: Marked + Highlight.js
+                const htmlContent = window.marked ? marked.parse(data.response) : data.response.replace(/\n/g, '<br>');
+
+                botDiv.innerHTML = `
+                    <div class="relative max-w-[95%] bg-white/[0.03] border border-white/10 text-[#E7EEEB] p-5 rounded-2xl rounded-tl-none text-[13px] font-medium leading-[1.6] shadow-2xl overflow-x-auto">
+                        ${htmlContent}
+                    </div>
+                    <div class="flex items-center gap-3 mt-3">
+                        <div class="w-4 h-4 rounded-full bg-gradient-to-br from-[#00ED64] to-[#00684A] flex items-center justify-center">
+                            <i class="fas fa-bolt text-[8px] text-[#001E2B]"></i>
                         </div>
-                        <div class="flex items-center gap-3 mt-3">
-                            <div class="w-4 h-4 rounded-full bg-gradient-to-br from-[#00ED64] to-[#00684A] flex items-center justify-center">
-                                <i class="fas fa-bolt text-[8px] text-[#001E2B]"></i>
-                            </div>
-                            <div class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em]">${data.aiModel || 'Amazon Nova Pro'} • ${botTime}</div>
-                        </div>
+                        <div class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em]">Amazon Nova Lite • ${botTime}</div>
                     </div>
                 `;
-            } else {
-                throw new Error('No response');
+                messages.appendChild(botDiv);
+                
+                // Aesthetic Highlighting & IDE Features
+                if (window.hljs) {
+                    botDiv.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                        block.parentElement.classList.add('relative', 'group');
+                        const copyBtn = document.createElement('button');
+                        copyBtn.className = 'copy-btn';
+                        copyBtn.innerHTML = '<i class="far fa-copy"></i>';
+                        block.parentElement.appendChild(copyBtn);
+                        copyBtn.onclick = () => {
+                            navigator.clipboard.writeText(block.innerText);
+                            copyBtn.innerHTML = '<i class="fas fa-check text-green-400"></i>';
+                            setTimeout(() => copyBtn.innerHTML = '<i class="far fa-copy"></i>', 2000);
+                        };
+                    });
+                }
+                messages.scrollTop = messages.scrollHeight;
             }
         } catch (error) {
             console.error('Chat error:', error);
-            const thinkingEl = document.getElementById(thinkingId);
-            if (thinkingEl) thinkingEl.remove();
-
+            document.getElementById(thinkingId)?.remove();
             messages.innerHTML += `
-                <div class="flex flex-col items-start animate-message-in mb-6">
-                    <div class="max-w-[85%] bg-red-500/5 border border-red-500/20 text-red-400 p-4 rounded-2xl rounded-tl-none text-[11px] font-bold flex items-center gap-3">
-                        <i class="fas fa-triangle-exclamation"></i> Protocol Error: AI Engine Synchronization Failed.
-                    </div>
+                <div class="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs font-bold mt-4">
+                     Protocol Error: Engine Unresponsive.
                 </div>
             `;
         }
-        
-        messages.scrollTop = messages.scrollHeight;
     };
 
     // --- AI Learning Lab (To-Dos) Logic ---
@@ -340,7 +312,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(`/api/ai/video/todos/${encodeURIComponent(courseName)}/${encodeURIComponent(videoTitle)}`);
             const data = await response.json();
             
-            // Get user progress
             const progResponse = await fetch(`/api/ai/video/todos/progress/${encodeURIComponent(courseName)}/${encodeURIComponent(videoTitle)}`);
             const progData = await progResponse.json();
             const progress = progData.progress || {};
@@ -364,10 +335,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </div>
                                         <div class="flex-1">
                                             <p class="text-[11px] font-bold ${isCompleted ? 'line-through text-[#9FB1AD]' : 'text-white'} leading-relaxed">${todo.text || todo}</p>
-                                            <div class="flex gap-3 mt-2">
-                                                <span class="text-[8px] font-black uppercase text-gray-500 tracking-widest">${todo.priority || 'NORMAL'}</span>
-                                                <span class="text-[8px] font-black uppercase text-gray-500 tracking-widest">${todo.estimatedTime || '10m'}</span>
-                                            </div>
                                         </div>
                                     </div>
                                 `;
@@ -375,16 +342,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 `).join('');
-            } else {
-                container.innerHTML = `
-                    <div class="col-span-2 atlas-card glass p-6 opacity-40 italic text-[10px] text-center py-12">
-                        No specific action items identified for this module yet. Click "Sync AI Insights" to generate.
-                    </div>
-                `;
             }
-        } catch (error) {
-            console.error('Error loading AI todos:', error);
-        }
+        } catch (error) { console.error('Todo load error:', error); }
     }
 
     window.toggleTodo = async function(todoId, completed) {
@@ -393,17 +352,10 @@ document.addEventListener('DOMContentLoaded', function() {
             await fetch('/api/ai/video/todos/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    courseName,
-                    videoTitle,
-                    todoId,
-                    completed
-                })
+                body: JSON.stringify({ courseName, videoTitle, todoId, completed })
             });
-            loadAITodos(); // Reload
-        } catch (err) {
-            console.error('Todo update failed:', err);
-        }
+            loadAITodos();
+        } catch (err) { console.error('Todo update failed:', err); }
     };
 
     if (document.getElementById('refreshTodos')) {
@@ -412,7 +364,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i> Analyzing...';
             btn.disabled = true;
-            
             try {
                 const videoTitle = '<%= video ? video.title : "" %>';
                 await fetch('/api/ai/video/todos/generate', {
@@ -421,55 +372,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify({ courseName, videoTitle })
                 });
                 await loadAITodos();
-            } catch (err) {
-                console.error('AI Refresh failed:', err);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+            } catch (err) { console.error('AI Refresh failed:', err); }
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
         });
     }
 
-    // Initialize animations & data
-    setTimeout(() => {
-        loadAITodos();
-    }, 500);
+    setTimeout(() => { loadAITodos(); }, 500);
 
-    // Achievement popup function
+    // Achievement popup 
     window.showAchievement = function(icon, title, name, points) {
         const popup = document.getElementById('achievement-popup');
         const iconEl = document.getElementById('achievement-icon');
         const titleEl = document.getElementById('achievement-title');
         const nameEl = document.getElementById('achievement-name');
         const pointsEl = document.getElementById('achievement-points');
-        
         if (popup && iconEl && titleEl && nameEl && pointsEl) {
-            iconEl.textContent = icon;
-            titleEl.textContent = title;
-            nameEl.textContent = name;
-            pointsEl.textContent = points;
-            
+            iconEl.textContent = icon; titleEl.textContent = title; nameEl.textContent = name; pointsEl.textContent = points;
             popup.classList.add('show');
-            
-            // Auto hide after 4 seconds
-            setTimeout(() => {
-                popup.classList.remove('show');
-            }, 4000);
+            setTimeout(() => { popup.classList.remove('show'); }, 4000);
         }
     };
     
-    // Listen for gamification events
-    document.addEventListener('achievementUnlocked', function(event) {
-        const { icon, title, name, points } = event.detail;
+    document.addEventListener('achievementUnlocked', (e) => {
+        const { icon, title, name, points } = e.detail;
         showAchievement(icon || '🏆', title || 'Achievement Unlocked!', name, points);
     });
 
-    // Theme management
-    function initTheme() {
-        const theme = localStorage.getItem('theme') || 'dark';
-        document.documentElement.classList.toggle('dark', true); // Video page always dark for cinematic feel
-    }
-    
-    initTheme();
+    // Final Theme Sync
+    document.documentElement.classList.add('dark');
 });
 </script>

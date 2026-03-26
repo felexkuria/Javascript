@@ -100,10 +100,14 @@
         let history = JSON.parse(localStorage.getItem("chatbot_history") || "[]");
 
         function addMessage(c, user = false, save = true) {
-            // Premium Markdown-lite parsing
-            c = c.replace(/\*\*(.*?)\*\*/g, "<span class='font-black text-[#00ED64]'>$1</span>")
-                 .replace(/`(.*?)`/g, "<span class='font-mono bg-black/40 px-2 py-0.5 rounded border border-white/5 text-[#00ED64]'>$1</span>")
-                 .replace(/\n/g, "<br>");
+            // Premium Markdown & Syntax Highlighting
+            if (window.marked && window.hljs) {
+                c = marked.parse(c);
+            } else {
+                c = c.replace(/\*\*(.*?)\*\*/g, "<span class='font-black text-[#00ED64]'>$1</span>")
+                     .replace(/`(.*?)`/g, "<span class='font-mono bg-black/40 px-2 py-0.5 rounded border border-white/5 text-[#00ED64]'>$1</span>")
+                     .replace(/\n/g, "<br>");
+            }
 
             const div = document.createElement("div");
             div.className = `chat-message ${user ? "user" : "bot"}`;
@@ -113,13 +117,31 @@
                 <div class="flex items-center gap-3 mb-1">
                      <span class="technical-label">AI Assistant</span>
                 </div>` : ''}
-                <div class="message-bubble">
+                <div class="message-bubble overflow-x-auto">
                     ${c}
                 </div>
                 <span class="message-meta mt-1">${user ? 'Student' : 'Nova Lite'} • ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
             `;
 
             container.appendChild(div);
+            
+            // Trigger highlighting for the new block
+            if (window.hljs) {
+                div.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                    // Add Copy Button
+                    const copyBtn = document.createElement('button');
+                    copyBtn.innerHTML = '<i class="far fa-copy"></i>';
+                    copyBtn.className = 'absolute top-2 right-2 text-[#9FB1AD] hover:text-white transition-colors p-2 text-xs opacity-0 group-hover:opacity-100';
+                    block.parentElement.classList.add('group', 'relative');
+                    block.parentElement.appendChild(copyBtn);
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(block.innerText);
+                        copyBtn.innerHTML = '<i class="fas fa-check text-green-400"></i>';
+                        setTimeout(() => copyBtn.innerHTML = '<i class="far fa-copy"></i>', 2000);
+                    };
+                });
+            }
             container.scrollTop = container.scrollHeight;
             if (save) {
                 history.push({ c, user });
