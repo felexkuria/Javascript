@@ -268,12 +268,13 @@ document.addEventListener('DOMContentLoaded', function() {
     messages.scrollTop = messages.scrollHeight;
         
         try {
-            // Typing indicator
+            // Typing indicator - Atlas Pulse style
             const thinkingId = 'thinking-' + Date.now();
             messages.innerHTML += `
                 <div id="${thinkingId}" class="flex flex-col items-start animate-message-in">
-                    <div class="bg-white/5 border border-white/10 text-[#00ED64] p-3 rounded-2xl rounded-tl-none text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                        <i class="fas fa-circle-notch fa-spin"></i> Nova Pro Thinking...
+                    <div class="bg-white/5 border border-white/10 text-[#00ED64] p-3 rounded-2xl rounded-tl-none text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
+                        <div class="velocity-pulse"></div>
+                        Nova Pro Thinking...
                     </div>
                 </div>
             `;
