@@ -4,165 +4,73 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script src="https://cdn.tailwindcss.com"></script>
 
-<style>
-    :root {
-        --mdb-green: #00ED64;
-        --mdb-midnight: #001E2B;
-        --glass-bg: rgba(2, 52, 48, 0.4);
-        --glass-border: rgba(0, 237, 100, 0.1);
-    }
-
-    body {
-        font-family: 'Outfit', sans-serif;
-        background-color: var(--mdb-midnight);
-        color: #E7EEEB;
-        -webkit-font-smoothing: antialiased;
-    }
-
-    .premium-glass {
-        background: var(--glass-bg);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid var(--glass-border);
-    }
-
-    .chat-terminal {
-        height: calc(100vh - 420px);
-        min-height: 540px;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(0, 237, 100, 0.1) transparent;
-    }
-
-    .chat-terminal::-webkit-scrollbar { width: 4px; }
-    .chat-terminal::-webkit-scrollbar-thumb { background: rgba(0, 237, 100, 0.1); border-radius: 10px; }
-
-    .message-node {
-        animation: atlasFadeUp 0.5s cubic-bezier(0.2, 0, 0, 1) forwards;
-        opacity: 0;
-        transform: translateY(12px);
-    }
-
-    @keyframes atlasFadeUp {
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .ai-bubble {
-        background: rgba(0, 237, 100, 0.03);
-        border-left: 3px solid var(--mdb-green);
-        border-radius: 6px 32px 32px 32px;
-        position: relative;
-    }
-
-    .user-bubble {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 32px 32px 6px 32px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    }
-
-    .input-atlas {
-        background: rgba(0, 30, 43, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        padding: 18px 24px;
-        color: white;
-        outline: none;
-        transition: all 0.3s;
-        font-weight: 500;
-    }
-
-    .input-atlas:focus {
-        border-color: var(--mdb-green);
-        background: rgba(0, 30, 43, 0.8);
-        box-shadow: 0 0 0 4px rgba(0, 237, 100, 0.1);
-    }
-
-    .btn-atlas-execute {
-        background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
-        color: #001E2B;
-        font-weight: 900;
-        border-radius: 20px;
-        transition: all 0.3s;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        font-size: 11px;
-    }
-
-    .btn-atlas-execute:hover {
-        box-shadow: 0 0 30px rgba(0, 237, 100, 0.3);
-        transform: scale(1.02);
-    }
-
-    .code-snippet {
-        font-family: 'Fira Code', 'JetBrains Mono', monospace;
-        background: #001E2B;
-        color: #00ED64;
-        padding: 2px 6px;
-        border-radius: 6px;
-        font-size: 0.9em;
-    }
-</style>
-
-<div class="flex min-h-screen pt-32 pb-24 px-8 lg:px-12">
+<div class="flex min-h-screen pt-32 pb-24 px-8 lg:px-12 bg-[#001E2B] learning-canvas">
     <!-- Student Sidebar Integration -->
     <%- include('partials/student-sidebar', { activePage: 'chatbot' }) %>
 
     <main class="lg:ml-72 flex-grow">
-        <div class="max-w-5xl mx-auto">
+        <div class="max-w-6xl mx-auto">
             <header class="mb-12">
                 <div class="flex items-center gap-4 mb-4">
-                    <span class="px-4 py-1.5 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-[0.3em] rounded-full border border-[#00ED64]/20">Neural Interface</span>
-                    <div class="h-px w-16 bg-white/5"></div>
+                    <span class="atlas-badge">Neural Interface v2.0</span>
+                    <div class="h-px w-24 bg-white/5"></div>
+                    <span class="technical-label">Nova Lite Active</span>
                 </div>
-                <h1 class="text-6xl font-black tracking-tighter text-white">Neural <span class="text-[#00ED64]">Support</span> Hub</h1>
-                <p class="text-gray-400 text-lg font-medium mt-2">Quantum linguistic synthesis of architectural concepts.</p>
+                <h1 class="text-7xl font-black tracking-tighter text-white">Neural <span class="text-[#00ED64]">Support</span> Hub</h1>
+                <p class="text-[#9FB1AD] text-xl font-medium mt-4">High-fidelity linguistic synthesis of architectural concepts for the Levi Academy.</p>
             </header>
 
-            <div class="premium-glass rounded-[48px] overflow-hidden shadow-4xl flex flex-col">
+            <div class="atlas-card glass rounded-[48px] overflow-hidden flex flex-col shadow-2xl">
                 <!-- Chat Window -->
-                <div id="chatContainer" class="chat-terminal overflow-y-auto p-12 space-y-10 scroll-smooth">
-                    <!-- Initial State -->
-                    <div class="message-node flex items-start gap-8">
-                        <div class="w-14 h-14 bg-[#00ED64] rounded-2xl flex items-center justify-center text-[#001E2B] shadow-xl shadow-[#00ED64]/20">
-                            <i class="fas fa-brain text-2xl"></i>
+                <div id="chatContainer" class="h-[600px] overflow-y-auto p-12 space-y-8 scroll-premium">
+                    <!-- Initial Welcome State -->
+                    <div class="chat-message bot">
+                        <div class="flex items-center gap-4 mb-2">
+                            <div class="w-10 h-10 bg-[#00ED64] rounded-xl flex items-center justify-center text-[#001E2B]">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <span class="technical-label">Core Initialized</span>
                         </div>
-                        <div class="ai-bubble p-10 premium-glass max-w-3xl">
-                            <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-[#00ED64] mb-4">Core Initialized</h3>
-                            <p class="text-gray-300 font-medium leading-relaxed mb-10">
-                                Greetings, Engineer. I am your integrated AI architecture assistant. My neural buffer is synced with the Academy's curriculum manifest. How may I assist your technical ascent today?
-                            </p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <button onclick="fillInput('Explain the fundamentals of MongoDB Sharding')" class="text-left p-6 premium-glass rounded-2xl border border-white/5 hover:border-[#00ED64] transition-all group">
-                                    <span class="block text-[9px] font-black text-[#00ED64]/60 uppercase tracking-widest mb-2">Inquiry Node A</span>
-                                    <span class="text-xs font-bold text-white group-hover:text-white transition-colors">"Explain MongoDB Sharding Architecture"</span>
-                                </button>
-                                <button onclick="fillInput('How do I handle authentication with Amazon Cognito?')" class="text-left p-6 premium-glass rounded-2xl border border-white/5 hover:border-[#00ED64] transition-all group">
-                                    <span class="block text-[9px] font-black text-[#00ED64]/60 uppercase tracking-widest mb-2">Inquiry Node B</span>
-                                    <span class="text-xs font-bold text-white group-hover:text-white transition-colors">"Handle Global Auth with Amazon Cognito"</span>
-                                </button>
+                        <div class="message-bubble">
+                            Greetings, Engineer. I am your integrated AI architecture assistant, modeled after the pedagogies of David J. Malan. My neural buffer is synced with the Academy's curriculum manifest.
+                            <br><br>
+                            How may I assist your technical ascent today?
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                            <div onclick="fillInput('Explain MongoDB Sharding like David J. Malan')" class="inquiry-node">
+                                <span class="node-label">Inquiry Node A</span>
+                                <span class="node-text">"Explain MongoDB Sharding Architecture"</span>
+                            </div>
+                            <div onclick="fillInput('How do I handle authentication with Amazon Cognito?')" class="inquiry-node">
+                                <span class="node-label">Inquiry Node B</span>
+                                <span class="node-text">"Handle Global Auth with Amazon Cognito"</span>
+                            </div>
+                            <div onclick="fillInput('Show me my learning todos')" class="inquiry-node">
+                                <span class="node-label">Task Command</span>
+                                <span class="node-text">"Synchronize my project to-do list"</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Control Console -->
-                <div class="p-10 bg-[#001E2B]/40 border-t border-white/5">
+                <!-- Input Console -->
+                <div class="p-10 bg-[#000000]/20 border-t border-white/5">
                     <div class="flex gap-6 items-center">
                         <div class="flex-grow">
                             <input type="text" id="messageInput" placeholder="Synthesize your technical query..." 
-                                   class="input-atlas w-full">
+                                   class="w-full bg-[#001E2B]/60 border border-white/10 rounded-2xl px-8 py-5 text-white outline-none focus:border-[#00ED64] transition-all font-medium">
                         </div>
-                        <button id="sendButton" class="btn-atlas-execute px-10 py-5 flex items-center gap-3">
+                        <button id="sendButton" class="bg-[#00ED64] text-[#001E2B] px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-[11px] flex items-center gap-3 hover:scale-105 transition-all shadow-lg shadow-[#00ED64]/10">
                             <span>Execute</span>
                             <i class="fas fa-bolt"></i>
                         </button>
                     </div>
                     <div class="mt-8 flex justify-between items-center px-2">
                         <div class="flex items-center gap-3">
-                            <span class="w-2 h-2 bg-[#00ED64] rounded-full animate-pulse"></span>
-                            <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Neural Continuity: Active</span>
+                            <div class="velocity-pulse"></div>
+                            <span class="technical-label">Neural Continuity: Stable</span>
                         </div>
-                        <button onclick="clearHistory()" class="text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-red-400 transition-colors">
+                        <button onclick="clearHistory()" class="technical-label hover:text-red-400 transition-colors cursor-pointer">
                             Purge Neural Buffer
                         </button>
                     </div>
@@ -192,19 +100,23 @@
         let history = JSON.parse(localStorage.getItem("chatbot_history") || "[]");
 
         function addMessage(c, user = false, save = true) {
+            // Premium Markdown-lite parsing
             c = c.replace(/\*\*(.*?)\*\*/g, "<span class='font-black text-[#00ED64]'>$1</span>")
-                 .replace(/`(.*?)`/g, "<span class='code-snippet'>$1</span>");
+                 .replace(/`(.*?)`/g, "<span class='font-mono bg-black/40 px-2 py-0.5 rounded border border-white/5 text-[#00ED64]'>$1</span>")
+                 .replace(/\n/g, "<br>");
 
             const div = document.createElement("div");
-            div.className = `message-node flex items-start gap-8 ${user ? "flex-row-reverse" : ""}`;
+            div.className = `chat-message ${user ? "user" : "bot"}`;
 
             div.innerHTML = `
-                <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xl ${user ? "bg-[#001E2B] text-[#00ED64] border border-[#00ED64]/30" : "bg-[#00ED64] text-[#001E2B]"}">
-                    <i class="fas ${user ? "fa-user-astronaut" : "fa-brain"} text-2xl"></i>
-                </div>
-                <div class="${user ? "user-bubble" : "ai-bubble premium-glass"} p-8 max-w-3xl font-medium leading-relaxed">
+                ${!user ? `
+                <div class="flex items-center gap-3 mb-1">
+                     <span class="technical-label">AI Assistant</span>
+                </div>` : ''}
+                <div class="message-bubble">
                     ${c}
                 </div>
+                <span class="message-meta mt-1">${user ? 'Student' : 'Nova Lite'} • ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
             `;
 
             container.appendChild(div);
@@ -225,22 +137,22 @@
             addMessage(m, true); input.value = ""; btn.disabled = true;
 
             const tDiv = document.createElement("div");
-            tDiv.id = "typing"; tDiv.className = "message-node flex items-start gap-8";
-            tDiv.innerHTML = `<div class='ai-bubble p-8 premium-glass text-[10px] font-black uppercase text-[#00ED64] tracking-widest animate-pulse'>Synthesizing...</div>`;
+            tDiv.id = "typing"; tDiv.className = "chat-message bot";
+            tDiv.innerHTML = `<div class="message-bubble animate-pulse technical-label">Synthesizing Response...</div>`;
             container.appendChild(tDiv); container.scrollTop = container.scrollHeight;
 
             try {
-                const r = await fetch("/api/chatbot", {
+                const r = await fetch("/api/ai/chatbot", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ message: m })
                 });
                 const d = await r.json();
                 document.getElementById("typing").remove();
-                if (d.response) addMessage(d.response.replace(/\n/g, "<br>"));
+                if (d.response) addMessage(d.response);
             } catch (e) {
                 document.getElementById("typing").remove();
-                addMessage("COMMUNICATION ERROR: Neural pipe obstructed.");
+                addMessage("COMMUNICATION ERROR: Neural pipe obstructed. Please verify AWS connectivity.");
             }
             btn.disabled = false;
         }
