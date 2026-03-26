@@ -239,7 +239,7 @@
         }
 
         async function enroll() {
-            const courseName = '<%= encodedCourseName %>';
+            const courseId = '<%= encodedCourseName %>';
             const btn = document.getElementById('enrollBtn');
             try {
                 const token = localStorage.getItem('accessToken');
@@ -253,7 +253,7 @@
                 const response = await fetch('/api/enrollments', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ courseName })
+                    body: JSON.stringify({ courseId })
                 });
                 const data = await response.json();
                 if (data.success) {
@@ -276,16 +276,16 @@
         }
 
         async function addToWishlist() {
-            const courseName = '<%= encodedCourseName %>';
+            const courseId = '<%= encodedCourseName %>';
             const btn = document.getElementById('wishlistBtn');
             try {
                 const token = localStorage.getItem('accessToken');
                 if (!token) { window.location.href = '/login'; return; }
                 
-                const response = await fetch('/api/wishlist', {
+                const response = await fetch('/api/wishlist/add', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ courseName })
+                    body: JSON.stringify({ courseId })
                 });
                 const data = await response.json();
                 if (data.success) {
@@ -304,7 +304,7 @@
                 }
             } catch (error) {
                 console.error('Stack update error:', error);
-                alert('Stack update error: ' + error.message + (error.stack ? '\n' + error.stack.split('\n')[0] : ''));
+                alert('Stack update error: ' + error.message);
             }
         }
 

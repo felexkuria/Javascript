@@ -40,95 +40,62 @@ class AIService {
       }
     }
   }
-
-  async generateWithNovaPro(prompt, context = {}) {
-    const cacheKey = `nova_${Buffer.from(prompt).toString('base64').slice(0, 20)}`;
-    
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey);
-    }
-
-    if (!this.client || !InvokeModelCommand) {
-      return await this.fallbackToGemini(prompt, context);
-    }
-
+   async generateWithNovaPro(prompt, systemPrompt = "You are a helpful assistant.") {
     try {
-      const payload = {
-        messages: [{
-          role: 'user',
-          content: [{
-            text: `Context: ${JSON.stringify(context)}\n\nPrompt: ${prompt}`
-          }]
-        }],
-        inferenceConfig: {
-          maxTokens: 2000,
-          temperature: 0.7
-        }
-      };
+      if (!this.client || !InvokeModelCommand) {
+        throw new Error("AWS Bedrock client not initialized.");
+      }
+      if (!process.env.AWS_REGION) {
+        throw new Error("AWS_REGION not configured for Bedrock");
+      }
 
       const command = new InvokeModelCommand({
-        modelId: 'amazon.nova-pro-v1:0',
-        body: JSON.stringify(payload),
-        contentType: 'application/json'
+        modelId: "amazon.nova-pro-v1:0",
+        contentType: "application/json",
+        accept: "application/json",
+        body: JSON.stringify({
+          inferenceConfig: {
+            max_new_tokens: 2000,
+            temperature: 0.7,
+            top_p: 0.9,
+          },
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  text: `${systemPrompt}\n\n${prompt}`
+                }
+              ]
+            }
+          ]
+        })
       });
 
       const response = await this.client.send(command);
-      const result = JSON.parse(new TextDecoder().decode(response.body));
+      const resBody = JSON.parse(new TextDecoder().decode(response.body));
       
-      const content = result.output?.message?.content?.[0]?.text || result.content?.[0]?.text || result.output?.message || result.message || 'Response not available';
-      
-      // Ensure we return a clean string
-      let finalContent = typeof content === 'string' ? content : String(content);
-      
-      // Clean up any object references that might have leaked through
-      if (finalContent.includes('[object Object]')) {
-        finalContent = 'I apologize, but I encountered an issue processing that request. Could you please rephrase your question?';
+      let finalContent = "";
+      if (resBody.output && resBody.output.message && resBody.output.message.content) {
+        finalContent = resBody.output.message.content[0].text;
+      } else {
+        finalContent = resBody.content?.[0]?.text || "No response content from Nova Pro";
       }
-      
-      this.cache.set(cacheKey, finalContent);
+
       return finalContent;
     } catch (error) {
-      console.error('Nova Pro error:', error.message);
-      return await this.fallbackToGemini(prompt, context);
+      console.error("Bedrock Nova Pro Error:", error.message);
+      return await this.fallbackToGemini(prompt, { systemPrompt });
     }
   }
 
   async generateCourseDescription(courseName, videos) {
     const prompt = `Generate a compelling course description for "${courseName}" with ${videos.length} videos. Include learning objectives, target audience, and key skills covered. Keep it under 200 words.`;
-    
-    const context = {
-      courseName,
-      videoCount: videos.length,
-      sampleTitles: videos.slice(0, 5).map(v => v.title)
-    };
-
-    return await this.generateWithNovaPro(prompt, context);
+    return await this.generateWithNovaPro(prompt, "You are an expert curriculum designer.");
   }
 
   async generateTodoFromVideo(videoTitle, transcript = '') {
-    const prompt = `Based on this DevOps/Cloud video "${videoTitle}" and transcript, create 4-5 specific, actionable learning tasks. Focus on practical skills, hands-on practice, and real-world application. Format as JSON array with {task, priority, estimated_time}. Make tasks specific to the content, not generic.`;
-    
-    const context = { videoTitle, transcript: transcript.slice(0, 2000) };
-    const response = await this.generateWithNovaPro(prompt, context);
-    
-    try {
-      const parsed = JSON.parse(response);
-      return Array.isArray(parsed) ? parsed : [
-        { task: `Set up lab environment for ${videoTitle.replace(/lesson\d+/i, '').trim()}`, priority: 'high', estimated_time: '45 min' },
-        { task: 'Follow along with hands-on examples', priority: 'high', estimated_time: '60 min' },
-        { task: 'Document key commands and configurations', priority: 'medium', estimated_time: '20 min' },
-        { task: 'Practice troubleshooting common issues', priority: 'medium', estimated_time: '30 min' },
-        { task: 'Create personal reference notes', priority: 'low', estimated_time: '15 min' }
-      ];
-    } catch {
-      return [
-        { task: `Set up lab environment for ${videoTitle.replace(/lesson\d+/i, '').trim()}`, priority: 'high', estimated_time: '45 min' },
-        { task: 'Follow along with hands-on examples', priority: 'high', estimated_time: '60 min' },
-        { task: 'Document key commands and configurations', priority: 'medium', estimated_time: '20 min' },
-        { task: 'Practice troubleshooting common issues', priority: 'medium', estimated_time: '30 min' },
-        { task: 'Create personal reference notes', priority: 'low', estimated_time: '15 min' }
-      ];
-    }
+    return await this.generateTodos(transcript, 'video', videoTitle);
   }
 
   async generateTodoFromSRT(srtContent, videoTitle) {
@@ -137,12 +104,7 @@ class AIService {
       .filter(line => !line.match(/^\d+$/) && !line.match(/\d{2}:\d{2}:\d{2}/) && line.trim())
       .join(' ');
     
-    const result = await this.generateTodoFromVideo(videoTitle, textOnly);
-    return Array.isArray(result) ? result : [
-      { task: `Watch and understand: ${videoTitle}`, priority: 'high', estimated_time: '30 min' },
-      { task: 'Take notes on key concepts', priority: 'medium', estimated_time: '15 min' },
-      { task: 'Practice examples shown', priority: 'high', estimated_time: '45 min' }
-    ];
+    return await this.generateTodoFromVideo(videoTitle, textOnly);
   }
 
   async generateQuizFromSRT(srtContent, videoTitle) {
@@ -151,65 +113,49 @@ class AIService {
       .filter(line => !line.match(/^\d+$/) && !line.match(/\d{2}:\d{2}:\d{2}/) && line.trim())
       .join(' ');
     
-    const result = await this.generateQuizFromVideo(videoTitle, textOnly);
-    return Array.isArray(result) ? result : [{
-      question: `What is the main topic of ${videoTitle}?`,
-      options: ['Basic concepts', 'Advanced techniques', 'Practical examples', 'All of the above'],
-      correct: 3,
-      explanation: 'This video covers comprehensive content including concepts, techniques, and examples.'
-    }];
+    return await this.generateQuizFromVideo(videoTitle, textOnly);
   }
 
   async generateQuizFromVideo(videoTitle, transcript = '') {
-    const prompt = `Based on this DevOps/Cloud video "${videoTitle}" and transcript, create 4-5 technical quiz questions. Focus on practical knowledge, commands, concepts, and troubleshooting. Return JSON array with {question, options, correct, explanation}. Make questions specific to the content.`;
+    const systemPrompt = "You are an expert instructor. Create 4-5 technical quiz questions. Return JSON array with {question, options, correct, explanation}.";
+    const prompt = `Video: "${videoTitle}"\nTranscript: ${transcript.slice(0, 3000)}`;
     
-    const context = { videoTitle, transcript: transcript.slice(0, 3000) };
-    const response = await this.generateWithNovaPro(prompt, context);
-    
+    const response = await this.generateWithNovaPro(prompt, systemPrompt);
     try {
-      const parsed = JSON.parse(response);
-      return Array.isArray(parsed) ? parsed : [{
-        question: `What is the main concept covered in "${videoTitle}"?`,
-        options: ['Configuration management', 'Container orchestration', 'Infrastructure automation', 'All of the above'],
-        correct: 3,
-        explanation: 'This video covers comprehensive DevOps/Cloud concepts and practical implementations.'
-      }];
+      return JSON.parse(response);
     } catch {
       return [{
         question: `What is the main concept covered in "${videoTitle}"?`,
-        options: ['Configuration management', 'Container orchestration', 'Infrastructure automation', 'All of the above'],
+        options: ['Concepts', 'Techniques', 'Examples', 'All of the above'],
         correct: 3,
-        explanation: 'This video covers comprehensive DevOps/Cloud concepts and practical implementations.'
+        explanation: 'This video covers comprehensive concepts and practical implementations.'
       }];
+    }
+  }
+
+  async generateChatResponse(message, context = {}) {
+    try {
+      return await this.generateDavidMalanResponse(message, context);
+    } catch (error) {
+      console.warn("Nova Pro chat failed, falling back to static:", error.message);
+      return this.staticMalanResponse(message, context);
     }
   }
 
   async generateDavidMalanResponse(question, context) {
     const prompt = `You are David J. Malan, the legendary professor of CS50 at Harvard. 
     Your style is high-energy, exceptionally encouraging, and remarkably clear. 
-    Use analogies to explain complex topics (e.g., comparing memory to lockers, or loops to a recipe). 
-    Occasionally use your signature phrases like "This is CS50", "Let's take a look", and "If you will".
+    Use analogies to explain complex topics.
     Focus on helping the student find the answer themselves rather than just giving it.
     
     Question from student: "${question}"
     ${context?.transcript ? `Based on the current video lesson: ${context.transcript.slice(0, 1000)}` : ''}`;
     
-    const malanContext = {
-      ...context,
-      style: 'David J. Malan teaching style',
-      tone: 'encouraging and clear'
-    };
-
-    try {
-      return await this.generateWithNovaPro(prompt, malanContext);
-    } catch (error) {
-      console.error('David Malan response error:', error);
-      return this.staticMalanResponse(question, context);
-    }
+    return await this.generateWithNovaPro(prompt, "You are David J. Malan of CS50.");
   }
   
   staticMalanResponse(question, context) {
-    return `That's a great question! Let me break this down for you step by step. Think of it like building with LEGO blocks - each concept connects to create something bigger. ${context?.transcript ? 'Based on the video content, ' : ''}the key thing to remember is that learning happens one step at a time. What specifically would you like me to clarify?`;
+    return `That's a great question! Let me break this down for you step by step. Think of it like building with LEGO blocks - each concept connects to create something bigger. the key thing to remember is that learning happens one step at a time. What specifically would you like me to clarify?`;
   }
 
   async analyzeVideoContent(videoTitle, transcript = '') {
@@ -249,20 +195,44 @@ class AIService {
     return summary;
   }
 
+  async generateTodos(content, type = 'video', title = '') {
+    const systemPrompt = `You are an expert educational architect. Extract 3-5 actionable learning tasks from the provided ${type} content.
+    Return ONLY a JSON array of objects with the following schema:
+    [
+      { "text": "Actionable task string", "category": "Setup/Practice/Theory", "priority": "high/medium/low", "estimatedTime": "approx time" }
+    ]`;
+    
+    const prompt = `Content Title: ${title}\n\nContent Content:\n${content}`;
+    
+    try {
+      return await this.generateWithNovaPro(prompt, systemPrompt);
+    } catch (error) {
+      console.warn("Nova Pro todo extraction failed, falling back to Gemini:", error.message);
+      return await this.fallbackToGemini(prompt, { systemPrompt });
+    }
+  }
+
+  async getAIModelStatus() {
+    return {
+      activeModel: "Amazon Nova Pro",
+      provider: "AWS Bedrock",
+      isConfigured: !!(process.env.AWS_REGION && (process.env.AWS_ACCESS_KEY_ID || process.env.IAM_ROLE_ACTIVE)),
+      region: process.env.AWS_REGION || 'unset'
+    };
+  }
+
   async fallbackToGemini(prompt, context) {
     if (!this.genAI) {
       return this.staticFallback(prompt, context);
     }
 
     try {
-      // Try gemini-1.5-flash-latest first as it's the most stable for v1beta
       const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
-      const fullPrompt = `Context: ${JSON.stringify(context)}\n\nPrompt: ${prompt}`;
+      const fullPrompt = `${context.systemPrompt || ''}\n\nPrompt: ${prompt}`;
       
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
-      const text = response.text();
-      return typeof text === 'string' ? text : String(text);
+      return response.text();
     } catch (error) {
       console.error('Gemini fallback failed:', error);
       return this.staticFallback(prompt, context);
@@ -270,13 +240,10 @@ class AIService {
   }
 
   staticFallback(prompt, context) {
-    if (prompt.includes('course description')) {
-      return `This comprehensive course covers essential topics in ${context.courseName || 'the subject'}. Perfect for learners looking to master key concepts through hands-on practice and real-world examples.`;
-    }
     if (prompt.includes('David J. Malan')) {
-      return 'That\'s a great question! Let me break this down for you step by step. Think of it like...';
+      return 'That\'s a great question! Let me break this down for you step by step...';
     }
-    return 'I\'m here to help you learn! Could you rephrase your question?';
+    return 'I\'m here to help you learn! Cloud engineering is about building robust systems.';
   }
 }
 

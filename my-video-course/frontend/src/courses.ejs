@@ -28,43 +28,43 @@
     }
 
     .catalog-card-atlas {
-        border-radius: 40px;
-        transition: all 0.5s cubic-bezier(0.2, 0, 0, 1);
+        border-radius: 24px;
+        transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
         border: 1px solid rgba(255, 255, 255, 0.05);
         background: rgba(255, 255, 255, 0.02);
+        height: 100%;
     }
 
     .catalog-card-atlas:hover {
-        transform: translateY(-12px) scale(1.02);
+        transform: translateY(-8px);
         border-color: var(--mdb-green);
         background: rgba(0, 237, 100, 0.03);
-        box-shadow: 0 32px 64px rgba(0, 30, 43, 0.5);
+        box-shadow: 0 20px 40px rgba(0, 30, 43, 0.4);
     }
 
     .monogram-canvas {
-        width: 64px;
-        height: 64px;
+        width: 44px;
+        height: 44px;
         background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
-        border-radius: 20px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 900;
-        font-size: 28px;
+        font-size: 18px;
         color: var(--mdb-midnight);
-        box-shadow: 0 12px 24px rgba(0, 237, 100, 0.15);
     }
 
     .btn-atlas-action {
         background: #00ED64;
         color: #001E2B;
         font-weight: 800;
-        padding: 16px 24px;
-        border-radius: 18px;
+        padding: 12px 20px;
+        border-radius: 14px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-        font-size: 11px;
+        letter-spacing: 1px;
+        font-size: 10px;
     }
 
     .btn-atlas-action:hover {
@@ -77,12 +77,12 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
         color: white;
         font-weight: 800;
-        padding: 16px 24px;
-        border-radius: 18px;
+        padding: 12px 20px;
+        border-radius: 14px;
         transition: all 0.3s;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-        font-size: 11px;
+        letter-spacing: 1px;
+        font-size: 10px;
     }
 
     .btn-atlas-outline:hover {
@@ -164,35 +164,35 @@
             </header>
 
             <!-- Grid Controller -->
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-12" id="coursesGrid">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6" id="coursesGrid">
                 <% if (courses && courses.length > 0) { %>
                     <% courses.forEach(course => { %>
                         <% 
                             const title = (course.title || course.name || '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                             const initial = title.match(/[A-Z]/)?.[0] || 'A';
                         %>
-                        <div class="catalog-card-atlas premium-glass p-12 flex flex-col justify-between group">
-                            <div class="flex justify-between items-start mb-12">
+                        <div class="catalog-card-atlas premium-glass p-6 flex flex-col group">
+                            <div class="flex justify-between items-start mb-6">
                                 <div class="monogram-canvas group-hover:rotate-6 transition-transform"><%= initial %></div>
                                 <div class="tag-premium"><%= course.category || 'PROD' %></div>
                             </div>
                             
-                            <div class="mb-12">
-                                <h3 class="text-3xl font-black tracking-tight mb-4 group-hover:text-[#00ED64] transition-colors line-clamp-2"><%= title %></h3>
-                                <p class="text-gray-400 text-sm font-medium leading-relaxed mb-10 line-clamp-3 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <div class="mb-6 flex-grow">
+                                <h3 class="text-lg font-black tracking-tight mb-3 group-hover:text-[#00ED64] transition-colors line-clamp-2"><%= title %></h3>
+                                <p class="text-gray-400 text-[13px] font-medium leading-relaxed mb-6 line-clamp-3 opacity-80 group-hover:opacity-100 transition-opacity">
                                     <%= course.description || 'Access high-fidelity engineering labs designed for professional-grade architectural mastery.' %>
                                 </p>
                             </div>
 
-                            <div>
-                                <div class="flex items-center gap-8 mb-12 border-t border-white/5 pt-8">
-                                    <div class="flex items-center gap-3 text-[10px] font-black tracking-[0.2em] uppercase text-gray-400">
-                                        <i class="fas fa-cubes text-[#00ED64]"></i>
-                                        <%= course.sections ? course.sections.length : 0 %> Sections
+                            <div class="mt-auto">
+                                <div class="flex items-center gap-4 mb-6 border-t border-white/5 pt-6">
+                                    <div class="flex items-center gap-2 text-[9px] font-black tracking-widest uppercase text-gray-500">
+                                        <i class="fas fa-cubes text-[#00ED64]/60"></i>
+                                        <%= course.sections ? course.sections.length : 0 %> Sec
                                     </div>
-                                    <div class="flex items-center gap-3 text-[10px] font-black tracking-[0.2em] uppercase text-gray-400">
-                                        <i class="fas fa-bolt text-[#00ED64]"></i>
-                                        <%= course.videoCount || course.videos?.length || 0 %> Lessons
+                                    <div class="flex items-center gap-2 text-[9px] font-black tracking-widest uppercase text-gray-500">
+                                        <i class="fas fa-bolt text-[#00ED64]/60"></i>
+                                        <%= course.videoCount || course.videos?.length || 0 %> Les
                                     </div>
                                 </div>
 

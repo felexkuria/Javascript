@@ -547,13 +547,32 @@ class DynamoVideoService {
     }
   }
 
-  // Get watch dates for a specific user
+  // Get watch dates and activity counts for a specific user
   async getWatchDates(userId) {
     const userGamification = await this.getUserGamificationData(userId);
     const watchDates = userGamification?.streakData?.streakDates || [];
+    const achievements = userGamification?.achievements || [];
     
-    // Return in format expected by profile.ejs
-    return watchDates.map(date => ({ date, count: 1 }));
+    const activityMap = {};
+    
+    // Add video watch dates
+    watchDates.forEach(date => {
+      activityMap[date] = (activityMap[date] || 0) + 1;
+    });
+    
+    // Add achievement dates
+    achievements.forEach(ach => {
+      if (ach.earnedAt || ach.unlockedAt) {
+        const date = (ach.earnedAt || ach.unlockedAt).split('T')[0];
+        activityMap[date] = (activityMap[date] || 0) + 1;
+      }
+    });
+    
+    // Convert to array format for frontend compat
+    return Object.keys(activityMap).map(date => ({
+      date,
+      count: activityMap[date]
+    }));
   }
 
   // Health check

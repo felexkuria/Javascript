@@ -102,14 +102,36 @@
             color: #00ED64;
         }
 
+        .heatmap-container {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: 12px;
+            grid-template-rows: repeat(7, 12px);
+            gap: 3px;
+        }
+
+        .heatmap-node {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.3s;
+        }
+
+        .heatmap-node.level-0 { background: rgba(255, 255, 255, 0.03); }
+        .heatmap-node.level-1 { background: rgba(0, 237, 100, 0.2); }
+        .heatmap-node.level-2 { background: rgba(0, 237, 100, 0.4); }
+        .heatmap-node.level-3 { background: rgba(0, 237, 100, 0.7); }
+        .heatmap-node.level-4 { background: #00ED64; box-shadow: 0 0 10px rgba(0, 237, 100, 0.3); }
+
         .calendar-node {
             aspect-ratio: 1;
-            border-radius: 12px;
+            border-radius: 8px;
             background: rgba(255, 255, 255, 0.02);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 900;
             color: #4B5563;
         }
@@ -118,7 +140,6 @@
             background: rgba(0, 237, 100, 0.15);
             color: #00ED64;
             border: 1px solid rgba(0, 237, 100, 0.2);
-            box-shadow: 0 0 15px rgba(0, 237, 100, 0.1);
         }
     </style>
 </head>
@@ -211,7 +232,12 @@
                                 <button id="next-month" class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:text-[#00ED64] transition-colors"><i class="fas fa-chevron-right text-[10px]"></i></button>
                             </div>
                         </div>
-                        <div class="grid grid-cols-7 gap-3" id="streak-calendar">
+                        <div class="calendar-node-container overflow-x-auto pb-4">
+                            <div class="heatmap-container" id="streak-heatmap">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-2 mt-8" id="streak-calendar">
                             <!-- Populated by JS -->
                         </div>
                         <div class="mt-10 pt-10 border-t border-white/5">
@@ -287,10 +313,14 @@
             }
 
             function populateStreakCalendar() {
+                const heatmap = document.getElementById('streak-heatmap');
                 const calendar = document.getElementById('streak-calendar');
                 const monthLabel = document.getElementById('calendar-month');
-                if (!calendar || !monthLabel) return;
+                if (!calendar || !monthLabel || !heatmap) return;
+
                 monthLabel.textContent = currentCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                
+                // --- 1. Populate Monthly Calendar ---
                 const firstDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
                 const startDate = new Date(firstDay.getTime() - (firstDay.getDay() * 24 * 60 * 60 * 1000));
                 calendar.innerHTML = '';
@@ -298,7 +328,8 @@
                 for (let i = 0; i < 35; i++) {
                     const date = new Date(startDate.getTime() + (i * 24 * 60 * 60 * 1000));
                     const dateString = date.toISOString().split('T')[0];
-                    const hasActivity = watchDatesData.some(w => w.date === dateString);
+                    const activity = watchDatesData.find(w => w.date === dateString);
+                    const hasActivity = !!activity;
                     const isCurrentMonth = date.getMonth() === currentCalendarDate.getMonth();
                     
                     const dayElement = document.createElement('div');
@@ -306,10 +337,70 @@
                     dayElement.textContent = date.getDate();
                     calendar.appendChild(dayElement);
                 }
+
+                // --- 2. Populate Yearly Heatmap ---
+                heatmap.innerHTML = '';
+                const today = new Date();
+                const yearStart = new Date(today.getFullYear(), 0, 1);
+                const yearStartDate = new Date(yearStart.getTime() - (yearStart.getDay() * 24 * 60 * 60 * 1000));
+
+                for (let i = 0; i < 371; i++) { // 53 weeks * 7 days
+                    const date = new Date(yearStartDate.getTime() + (i * 24 * 60 * 60 * 1000));
+                    const dateString = date.toISOString().split('T')[0];
+                    const activity = watchDatesData.find(w => w.date === dateString);
+                    const count = activity ? activity.count : 0;
+                    
+                    let level = 0;
+                    if (count > 0) level = 1;
+                    if (count > 2) level = 2;
+                    if (count > 5) level = 3;
+                    if (count > 10) level = 4;
+
+                    const heatNode = document.createElement('div');
+                    heatNode.className = `heatmap-node level-${level}`;
+                    heatNode.title = `${dateString}: ${count} Activities`;
+                    heatmap.appendChild(heatNode);
+                }
             }
 
+            // --- LocalStorage Caching for Performance ---
+            function loadFromCache() {
+                const cache = localStorage.getItem('profile_stats_cache');
+                if (cache) {
+                    const data = JSON.parse(cache);
+                    applyStatsToUI(data);
+                }
+            }
+
+            function applyStatsToUI(progress) {
+                document.getElementById('videos-watched').textContent = progress.videosWatched || 0;
+                document.getElementById('courses-completed').textContent = progress.coursesCompleted || 0;
+                document.getElementById('achievements-earned').textContent = progress.achievements || 0;
+                document.getElementById('longest-streak').textContent = progress.longestStreak || 0;
+                document.getElementById('user-level').textContent = progress.level || 1;
+                
+                const xpForNextLevel = (progress.level || 1) * 100;
+                const currentXP = progress.points || 0; // fallback to points
+                const progressPercent = Math.min((currentXP / xpForNextLevel) * 100, 100);
+                
+                document.getElementById('level-progress').style.width = `${progressPercent}%`;
+                document.getElementById('current-xp').textContent = `${currentXP} XP ARCHIVED`;
+                document.getElementById('next-level-xp').textContent = `${Math.max(0, xpForNextLevel - currentXP)} XP TO ASCENSION`;
+            }
+
+            loadFromCache();
+
             loadWatchDates().then(() => {
-                if (window.gamificationSystem) window.gamificationSystem.syncWithLocalStorageVideos().then(updateProfileDisplay);
+                if (window.gamificationSystem) {
+                    window.gamificationSystem.syncWithLocalStorageVideos().then(() => {
+                        window.gamificationSystem.getProgressSummary().then(progress => {
+                            localStorage.setItem('profile_stats_cache', JSON.stringify(progress));
+                            applyStatsToUI(progress);
+                            populateAchievements();
+                            populateStreakCalendar();
+                        });
+                    });
+                }
                 else tryUpdateProfile();
             });
 

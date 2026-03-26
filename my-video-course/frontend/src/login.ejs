@@ -51,82 +51,118 @@
         }
     </style>
 </head>
-<body class="dark bg-[#001E2B] text-white min-h-screen flex items-center justify-center p-4">
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-[#00ED64]/5 rounded-full blur-[120px]"></div>
-        <div class="absolute top-[60%] -right-[10%] w-[50%] h-[50%] bg-[#00ED64]/5 rounded-full blur-[120px]"></div>
+<body class="dark bg-[#001E2B] text-white min-h-screen flex items-center justify-center p-4 overflow-hidden">
+    <!-- Animated Background Architecture -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <!-- Technical Grid Overlay -->
+        <div class="absolute inset-0 opacity-[0.03]" 
+             style="background-image: linear-gradient(#00ED64 1px, transparent 1px), linear-gradient(90deg, #00ED64 1px, transparent 1px); background-size: 40px 40px;"></div>
+        
+        <!-- Radical Glows -->
+        <div class="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-[#00ED64]/10 rounded-full blur-[160px] animate-pulse"></div>
+        <div class="absolute top-[50%] -right-[10%] w-[50%] h-[50%] bg-[#00ED64]/5 rounded-full blur-[140px]"></div>
+        
+        <!-- Floating Nodes (Aesthetic) -->
+        <div class="absolute top-20 right-[20%] w-2 h-2 bg-[#00ED64]/20 rounded-full blur-sm"></div>
+        <div class="absolute bottom-40 left-[15%] w-3 h-3 bg-[#00ED64]/10 rounded-full blur-md"></div>
     </div>
 
-    <div class="w-full max-w-[480px] relative z-10">
-        <!-- Logo Area -->
-        <div class="flex flex-col items-center mb-12">
-            <div class="w-20 h-20 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-3xl flex items-center justify-center shadow-2xl shadow-[#00ED64]/20 mb-6 group cursor-pointer hover:rotate-6 transition-transform">
-                <span class="text-[#001E2B] text-4xl font-black">M</span>
+    <div class="w-full max-w-[520px] relative z-10 animate-in fade-in zoom-in-95 duration-700">
+        <!-- System Status Header -->
+        <div class="flex justify-between items-center mb-8 px-2">
+            <div class="flex items-center gap-3">
+                <div class="flex gap-1">
+                    <div class="w-1.5 h-1.5 rounded-full bg-[#00ED64] animate-pulse"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-[#00ED64]/40"></div>
+                </div>
+                <span class="text-[9px] font-black uppercase tracking-[0.3em] text-[#00ED64]/60">System Online</span>
             </div>
-            <h1 class="text-4xl font-black tracking-tighter text-white mb-2">Multitouch Academy</h1>
-            <p class="text-gray-400 font-medium">Cloud Infrastructure Engineering Lab</p>
+            <div class="px-3 py-1 bg-white/5 border border-white/10 rounded-full backdrop-blur-md">
+                <span class="text-[9px] font-black uppercase tracking-widest text-gray-500">Node v2026.4.1</span>
+            </div>
         </div>
 
-        <!-- Auth Card -->
-        <div class="premium-glass p-6 md:p-10 rounded-[30px] md:rounded-[40px] shadow-3xl">
-            <div class="mb-10">
-                <h2 class="text-2xl font-black tracking-tight text-white mb-2">Sign in to Console</h2>
-                <p class="text-gray-400 text-sm">Enter your credentials to access the deployment bay.</p>
+        <!-- Logo Area -->
+        <div class="flex flex-col items-center mb-10">
+            <div class="relative group cursor-pointer">
+                <div class="absolute inset-0 bg-[#00ED64] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <div class="relative w-24 h-24 bg-gradient-to-br from-[#00ED64] to-[#00684A] rounded-[2rem] flex items-center justify-center shadow-2xl shadow-[#00ED64]/20 group-hover:scale-105 transition-transform duration-500">
+                    <span class="text-[#001E2B] text-5xl font-black italic tracking-tighter">M</span>
+                </div>
             </div>
+            <h1 class="text-5xl font-black tracking-tighter text-white mt-8 mb-2">Multitouch<span class="text-[#00ED64]">_</span></h1>
+            <p class="text-[#9FB1AD] font-medium tracking-widest uppercase text-[10px]">Cloud Infrastructure Engineering Lab</p>
+        </div>
 
-            <!-- Role Selector -->
-            <div class="flex p-1 bg-[#001E2B]/60 rounded-2xl border border-white/5 mb-8">
-                <button id="studentTab" class="flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#00ED64] text-[#001E2B]">Student</button>
-                <button id="teacherTab" class="flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all text-gray-400 hover:text-white">Instructor</button>
-            </div>
-
-            <% if (typeof error !== 'undefined' && error) { %>
-                <div class="mb-6 px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold flex items-center gap-3">
-                    <i class="fas fa-exclamation-circle text-sm"></i> <%= error %>
+        <!-- Main Auth Container -->
+        <div class="relative">
+            <!-- Decorative Border Accent -->
+            <div class="absolute -inset-[1px] bg-gradient-to-b from-[#00ED64]/20 to-transparent rounded-[40px] opacity-50"></div>
+            
+            <div class="relative bg-[#001E2B]/80 backdrop-blur-3xl p-8 md:p-12 rounded-[40px] shadow-2xl border border-white/5">
+                <div class="mb-10 text-center md:text-left">
+                    <h2 class="text-3xl font-black tracking-tight text-white mb-3">Initialize Session</h2>
+                    <p class="text-[#9FB1AD] text-sm font-medium leading-relaxed">Enter your secure credentials to bypass the architecture gateway.</p>
                 </div>
-            <% } %>
 
-            <form id="loginForm" class="space-y-6">
-                <div>
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Identity (Email)</label>
-                    <div class="relative">
-                        <i class="fas fa-user absolute left-5 top-1/2 -translate-y-1/2 text-gray-400/30 text-[10px]"></i>
-                        <input type="email" id="email" required placeholder="name@company.com" 
-                               class="w-full bg-[#001E2B]/40 border border-white/10 rounded-2xl px-12 py-4 text-sm font-medium outline-none input-focus-green transition-all placeholder:text-gray-600">
+                <!-- Role Intelligence Switch -->
+                <div class="flex p-1.5 bg-[#001E2B]/60 rounded-2xl border border-white/5 mb-10 group">
+                    <button id="studentTab" class="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all bg-[#00ED64] text-[#001E2B] shadow-lg shadow-[#00ED64]/10">Student</button>
+                    <button id="teacherTab" class="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all text-gray-500 hover:text-white">Instructor</button>
+                </div>
+
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="mb-8 p-4 bg-red-500/5 border border-red-500/20 text-red-400 rounded-2xl text-[11px] font-bold flex items-center gap-4 animate-in slide-in-from-top-2">
+                        <div class="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
+                            <i class="fas fa-bolt text-xs"></i>
+                        </div>
+                        <%= error %>
                     </div>
-                </div>
+                <% } %>
 
-                <div>
-                    <div class="flex justify-between mb-2 ml-1">
-                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Access Key (Password)</label>
-                        <a href="/forgot-password" class="text-[10px] font-black text-[#00ED64] uppercase tracking-widest hover:opacity-75 transition-opacity">Key Loss?</a>
+                <form id="loginForm" class="space-y-8">
+                    <div class="group">
+                        <label class="block text-[9px] font-black text-[#9FB1AD] uppercase tracking-[0.3em] mb-3 ml-1 group-focus-within:text-[#00ED64] transition-colors">Identity Interface (Email)</label>
+                        <div class="relative">
+                            <i class="fas fa-terminal absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] group-focus-within:text-[#00ED64] transition-colors"></i>
+                            <input type="email" id="email" required placeholder="name@infrastructure.io" 
+                                   class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-5 text-sm font-bold text-white outline-none focus:border-[#00ED64]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700">
+                        </div>
                     </div>
-                    <div class="relative">
-                        <i class="fas fa-lock absolute left-5 top-1/2 -translate-y-1/2 text-gray-400/30 text-[10px]"></i>
-                        <input type="password" id="password" required placeholder="••••••••" 
-                               class="w-full bg-[#001E2B]/40 border border-white/10 rounded-2xl px-12 py-4 text-sm font-medium outline-none input-focus-green transition-all placeholder:text-gray-600">
+
+                    <div class="group">
+                        <div class="flex justify-between mb-3 ml-1">
+                            <label class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-[0.3em] group-focus-within:text-[#00ED64] transition-colors">Access Logic (Key)</label>
+                            <a href="/forgot-password" class="text-[9px] font-black text-[#00ED64] uppercase tracking-widest hover:brightness-125 transition-all">Recover Key_</a>
+                        </div>
+                        <div class="relative">
+                            <i class="fas fa-shield-halved absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] group-focus-within:text-[#00ED64] transition-colors"></i>
+                            <input type="password" id="password" required placeholder="••••••••" 
+                                   class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-5 text-sm font-bold text-white outline-none focus:border-[#00ED64]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700">
+                        </div>
                     </div>
+
+                    <div id="teacherNote" class="hidden p-5 bg-amber-500/5 border border-amber-500/10 rounded-2xl animate-in fade-in zoom-in-95">
+                        <p class="text-[9px] font-black text-amber-500 uppercase tracking-[0.2em] leading-relaxed text-center italic">
+                            <i class="fas fa-biohazard mr-2 text-[11px]"></i> Root Authorization Level Required
+                        </p>
+                    </div>
+
+                    <button type="submit" id="loginBtn" class="group relative w-full py-6 bg-[#00ED64] text-[#001E2B] rounded-2xl font-black uppercase tracking-[0.3em] text-[11px] transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden shadow-xl shadow-[#00ED64]/20">
+                        <div class="absolute inset-x-0 top-0 h-[1px] bg-white/40"></div>
+                        <span id="loginText">Initialize Access</span>
+                    </button>
+                </form>
+
+                <div class="mt-12 pt-8 border-t border-white/5 text-center">
+                    <p class="text-[#9FB1AD] text-xs font-bold uppercase tracking-widest">New Architect? <a href="/signup" class="text-[#00ED64] ml-2 hover:brightness-125 transition-all">Join Registry_</a></p>
                 </div>
 
-                <div id="teacherNote" class="hidden p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl">
-                    <p class="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-relaxed text-center">
-                        <i class="fas fa-shield-halved mr-2"></i> Security: Instructor hardware-key required
-                    </p>
+                <!-- Debug Gate -->
+                <div class="mt-10 flex gap-4 opacity-30 hover:opacity-100 transition-opacity">
+                    <button onclick="loginAsSuperAdmin()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[8px] font-black uppercase tracking-[0.3em] text-[#9FB1AD] transition-all">Ghost Access</button>
+                    <button onclick="setupSuperAdmin()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[8px] font-black uppercase tracking-[0.3em] text-[#9FB1AD] transition-all">Sync Kernel</button>
                 </div>
-
-                <button type="submit" id="loginBtn" class="w-full py-5 btn-atlas-green rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-lg shadow-[#00ED64]/10">
-                    <span id="loginText">Initialize Access</span>
-                </button>
-            </form>
-
-            <div class="mt-10 pt-8 border-t border-white/5 text-center">
-                <p class="text-gray-400 text-sm font-medium">New to Academy? <a href="/signup" class="text-[#00ED64] font-bold hover:underline">Join Academy</a></p>
-            </div>
-
-            <!-- Developer Gate -->
-            <div class="mt-8 flex gap-3">
-                <button onclick="loginAsSuperAdmin()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-400 transition-all">Auto-Fill</button>
-                <button onclick="setupSuperAdmin()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-400 transition-all">Sync Cognito</button>
             </div>
         </div>
     </div>

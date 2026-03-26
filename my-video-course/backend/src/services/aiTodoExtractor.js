@@ -81,35 +81,10 @@ class AITodoExtractor {
   // Extract todos from SRT file
   async extractFromSRT(videoTitle, courseName) {
     try {
-      const videoDir = path.join(__dirname, '..', 'public', 'videos');
-      let srtPath = null;
+      const publicDir = path.join(__dirname, '..', '..', 'frontend', 'public', 'videos');
+      const srtPath = path.join(publicDir, courseName, `${videoTitle}.srt`);
 
-      // Find SRT file across all course directories
-      const courseFolders = fs.readdirSync(videoDir).filter(folder => 
-        fs.statSync(path.join(videoDir, folder)).isDirectory()
-      );
-
-      for (const courseFolder of courseFolders) {
-        const findSrt = (dir) => {
-          if (!fs.existsSync(dir)) return null;
-          const files = fs.readdirSync(dir);
-          for (const file of files) {
-            const filePath = path.join(dir, file);
-            if (fs.statSync(filePath).isDirectory()) {
-              const result = findSrt(filePath);
-              if (result) return result;
-            } else if (file === `${videoTitle}.srt`) {
-              return filePath;
-            }
-          }
-          return null;
-        };
-
-        srtPath = findSrt(path.join(videoDir, courseFolder));
-        if (srtPath) break;
-      }
-
-      if (srtPath && fs.existsSync(srtPath)) {
+      if (fs.existsSync(srtPath)) {
         const srtContent = fs.readFileSync(srtPath, 'utf8');
         const srtText = this.parseSRTToText(srtContent);
         return await this.extractTodosFromSRT(srtText, videoTitle);
