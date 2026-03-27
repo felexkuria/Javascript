@@ -103,16 +103,16 @@ jobs:
         run: |
           # Fetch the ALB DNS name dynamically
           ALB_URL=$(aws elbv2 describe-load-balancers --query "LoadBalancers[0].DNSName" --output text)
-          echo "Checking health of ALB: http://$ALB_URL/health"
+          echo "🚥 Pulsing Health Check: https://$ALB_URL/health"
           
           # Retry loop to allow for instance refresh spin-up
           for i in {1..20}; do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://$ALB_URL/health || echo "failure")
+            HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" https://$ALB_URL/health || echo "500")
             if [ "$HTTP_CODE" == "200" ]; then
-              echo "✅ Health check passed!"
+              echo "✅ Health Check PASSED (Code: 200). Cluster is STABLE."
               exit 0
             fi
-            echo "⌛ Waiting for healthy response (attempt $i, status: $HTTP_CODE)..."
+            echo "⌛ Waiting for Healthy Node (Current Code: $HTTP_CODE)... Attempt $i/20"
             sleep 30
           done
           
