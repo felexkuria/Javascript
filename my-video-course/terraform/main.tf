@@ -30,6 +30,33 @@ provider "aws" {
   region = var.aws_region
 }
 
+# Locals for Dynamic Environment Settings (Day 11: Conditionals)
+locals {
+  env_config = {
+    prod = {
+      instance_type = "t3.micro" # Free-tier eligible in many modern AWS accounts
+      min_size      = 2
+      max_size      = 5
+      desired_cap   = 2
+    }
+    staging = {
+      instance_type = "t3.micro"
+      min_size      = 1
+      max_size      = 2
+      desired_cap   = 1
+    }
+    dev = {
+      instance_type = "t3.micro"
+      min_size      = 1
+      max_size      = 1
+      desired_cap   = 1
+    }
+  }
+
+  # Fallback to dev if environment not found
+  current_config = lookup(local.env_config, var.environment, local.env_config["dev"])
+}
+
 # Data sources
 data "aws_caller_identity" "current" {}
 
@@ -107,15 +134,15 @@ module "compute" {
   create_ecr_repo           = var.create_ecr_repo
   create_asg                = var.create_asg
   ami_id                    = data.aws_ami.amazon_linux.id
-  instance_type             = var.instance_type
+  instance_type             = local.current_config.instance_type
   key_pair_name             = var.key_pair_name
   security_group_ids        = [module.security.ec2_security_group_id]
   iam_instance_profile_name = module.security.ec2_instance_profile_name
   subnet_ids                = module.networking.public_subnet_ids
   target_group_arns         = [module.loadbalancing.target_group_arn]
-  min_size                  = var.min_size
-  max_size                  = var.max_size
-  desired_capacity          = var.desired_capacity
+  min_size                  = local.current_config.min_size
+  max_size                  = local.current_config.max_size
+  desired_capacity          = local.current_config.desired_cap
   user_data_base64 = base64encode(templatefile("${path.module}/user_data.sh", {
     aws_region           = var.aws_region
     s3_bucket_name       = module.storage.s3_bucket_name
@@ -127,6 +154,7 @@ module "compute" {
 
     session_secret       = var.session_secret
     admin_key            = var.admin_key
+    mongodb_uri          = var.mongodb_uri
   }))
 }
 

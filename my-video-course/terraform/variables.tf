@@ -214,3 +214,10 @@ variable "admin_key" {
   sensitive   = true
   default     = "admin123"
 }
+
+variable "mongodb_uri" {
+  description = "MongoDB connection string"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

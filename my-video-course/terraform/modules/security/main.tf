@@ -1,9 +1,13 @@
 # Security Groups
 resource "aws_security_group" "alb_new" {
   count       = var.create_security_groups ? 1 : 0
-  name        = "${var.app_name}-alb-sg-modular"
+  name_prefix = "${var.app_name}-alb-sg-"
   description = "Security group for ALB"
   vpc_id      = var.vpc_id
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   ingress {
     protocol    = "tcp"
@@ -29,9 +33,13 @@ resource "aws_security_group" "alb_new" {
 
 resource "aws_security_group" "ec2_new" {
   count       = var.create_security_groups ? 1 : 0
-  name        = "${var.app_name}-ecs-sg-modular"
+  name_prefix = "${var.app_name}-ecs-sg-"
   description = "Security group for EC2/ECS tasks"
   vpc_id      = var.vpc_id
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   ingress {
     protocol        = "tcp"

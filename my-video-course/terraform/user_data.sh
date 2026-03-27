@@ -33,6 +33,7 @@ COGNITO_CLIENT_ID=${cognito_client_id}
 
 SESSION_SECRET=${session_secret}
 ADMIN_KEY=${admin_key}
+MONGODB_URI=${mongodb_uri}
 EOF
 
 # Login to ECR

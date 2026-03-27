@@ -27,65 +27,57 @@ resource "aws_s3_bucket_cors_configuration" "main" {
   }
 }
 
-# DynamoDB Tables
-resource "aws_dynamodb_table" "videos" {
-  count        = var.create_dynamodb_tables ? 1 : 0
-  name         = "${var.app_name}-videos-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "courseName"
-  range_key    = "videoId"
-
-  attribute {
-    name = "courseName"
-    type = "S"
+# Locals for Dynamic Resources
+locals {
+  dynamodb_tables = {
+    videos = {
+      hash_key  = "courseName"
+      range_key = "videoId"
+      attributes = [
+        { name = "courseName", type = "S" },
+        { name = "videoId", type = "S" }
+      ]
+    }
+    gamification = {
+      hash_key  = "userId"
+      range_key = null
+      attributes = [
+        { name = "userId", type = "S" }
+      ]
+    }
+    users = {
+      hash_key  = "email"
+      range_key = null
+      attributes = [
+        { name = "email", type = "S" }
+      ]
+    }
   }
+}
 
-  attribute {
-    name = "videoId"
-    type = "S"
+# DynamoDB Tables (Modular with for_each)
+resource "aws_dynamodb_table" "main" {
+  for_each     = var.create_dynamodb_tables ? local.dynamodb_tables : {}
+  name         = "${var.app_name}-${each.key}-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = each.value.hash_key
+  range_key    = each.value.range_key
+
+  dynamic "attribute" {
+    for_each = each.value.attributes
+    content {
+      name = attribute.value.name
+      type = attribute.value.type
+    }
   }
 
   tags = {
-    Name        = "${var.app_name}-videos"
+    Name        = "${var.app_name}-${each.key}"
     Environment = var.environment
   }
 }
 
-resource "aws_dynamodb_table" "gamification" {
-  count        = var.create_dynamodb_tables ? 1 : 0
-  name         = "${var.app_name}-gamification-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "userId"
-
-  attribute {
-    name = "userId"
-    type = "S"
-  }
-
-  tags = {
-    Name        = "${var.app_name}-gamification"
-    Environment = var.environment
-  }
-}
-
-resource "aws_dynamodb_table" "users" {
-  count        = var.create_dynamodb_tables ? 1 : 0
-  name         = "${var.app_name}-users-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "email"
-
-  attribute {
-    name = "email"
-    type = "S"
-  }
-
-  tags = {
-    Name        = "${var.app_name}-users"
-    Environment = var.environment
-  }
-}
-
-# DynamoDB IAM Policy
+# DynamoDB IAM Policy (Dynamic with for loop)
 resource "aws_iam_policy" "dynamodb_policy" {
   count       = var.create_dynamodb_policy ? 1 : 0
   name        = "${var.app_name}-dynamodb-policy-modular"
@@ -105,13 +97,9 @@ resource "aws_iam_policy" "dynamodb_policy" {
           "dynamodb:Scan"
         ]
         Resource = var.create_dynamodb_tables ? [
-          aws_dynamodb_table.videos[0].arn,
-          aws_dynamodb_table.gamification[0].arn,
-          aws_dynamodb_table.users[0].arn
+          for table in aws_dynamodb_table.main : table.arn
         ] : [
-          "arn:aws:dynamodb:*:*:table/${var.app_name}-videos-${var.environment}",
-          "arn:aws:dynamodb:*:*:table/${var.app_name}-gamification-${var.environment}",
-          "arn:aws:dynamodb:*:*:table/${var.app_name}-users-${var.environment}"
+          "arn:aws:dynamodb:*:*:table/${var.app_name}-*-${var.environment}"
         ]
       }
     ]
@@ -122,4 +110,20 @@ resource "aws_iam_role_policy_attachment" "ec2_dynamodb" {
   count      = (var.ec2_role_name != null && (var.create_dynamodb_policy || var.existing_policy_arn != null)) ? 1 : 0
   role       = var.ec2_role_name
   policy_arn = var.create_dynamodb_policy ? aws_iam_policy.dynamodb_policy[0].arn : var.existing_policy_arn
+}
+
+# Refactoring: Preservation of data (moved blocks)
+moved {
+  from = aws_dynamodb_table.videos[0]
+  to   = aws_dynamodb_table.main["videos"]
+}
+
+moved {
+  from = aws_dynamodb_table.gamification[0]
+  to   = aws_dynamodb_table.main["gamification"]
+}
+
+moved {
+  from = aws_dynamodb_table.users[0]
+  to   = aws_dynamodb_table.main["users"]
 }
