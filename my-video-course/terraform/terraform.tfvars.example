@@ -37,3 +37,4 @@ nova_api_key = "ABSKQmVkceS00Z2ZnLWF0LTcTA0MzpqQZYMHJ0R04yRHZXNVhGSlFUaktyOTVNeT
 create_cognito_role = false
 create_ec2_role = false
 create_ecr_repo = false
+mongodb_uri = "mongodb+srv://..."

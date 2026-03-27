@@ -43,6 +43,10 @@ resource "aws_launch_template" "app" {
       Name = "${var.app_name}-volume"
     }
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Auto Scaling Group
@@ -76,6 +80,12 @@ resource "aws_autoscaling_group" "app" {
       min_healthy_percentage = 60
     }
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  wait_for_capacity_timeout = "10m"
 }
 
 # Auto Scaling Policies

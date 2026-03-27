@@ -3,5 +3,5 @@ output "vpc_id" {
 }
 
 output "public_subnet_ids" {
-  value = var.create_vpc ? [aws_subnet.public_1[0].id, aws_subnet.public_2[0].id] : []
+  value = var.create_vpc ? aws_subnet.public[*].id : []
 }
