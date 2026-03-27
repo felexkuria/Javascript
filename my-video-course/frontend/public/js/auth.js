@@ -1,14 +1,14 @@
 // Add token to all requests and check login status
 document.addEventListener('DOMContentLoaded', function() {
     // Get token from localStorage or cookie for faster loading
-    let token = localStorage.getItem('cognitoToken');
+    let token = localStorage.getItem('accessToken') || localStorage.getItem('cognitoToken');
     if (!token) {
         // Try to get from cookie
         const cookies = document.cookie.split(';');
-        const cognitoCookie = cookies.find(c => c.trim().startsWith('cognitoToken='));
-        if (cognitoCookie) {
-            token = cognitoCookie.split('=')[1];
-            localStorage.setItem('cognitoToken', token); // Store for faster access
+        const accessCookie = cookies.find(c => c.trim().startsWith('accessToken='));
+        if (accessCookie) {
+            token = accessCookie.split('=')[1];
+            localStorage.setItem('accessToken', token); // Store for faster access
         }
     }
     
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Auto-redirect from dashboard if not logged in
     if (!token && (window.location.pathname === '/dashboard' || window.location.pathname === '/')) {
-        window.location.href = '/api/auth/login';
+        window.location.href = '/login';
     }
     
     // Logout functionality

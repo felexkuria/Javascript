@@ -23,7 +23,7 @@ module.exports = function(req, res, next) {
   }
   
   // Redirect to login for web routes
-  if (req.path.startsWith('/admin') || req.path.startsWith('/dashboard')) {
+  if (req.path.startsWith('/admin') || req.path.startsWith('/dashboard') || req.path === '/') {
     return res.redirect('/login');
   }
   
