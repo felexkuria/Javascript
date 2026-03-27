@@ -175,7 +175,7 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('accessToken', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     localStorage.setItem('selectedRole', selectedRole);
                     window.location.href = '/dashboard';
