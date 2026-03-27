@@ -217,8 +217,8 @@
                                         const isActive = video && (video.videoId === lecId || video._id === lecId || video.id === lecId);
                                     %>
                                         <a href="/course/<%= encodeURIComponent(courseName) %>/video/<%= encodeURIComponent(lecId) %>" 
-                                           class="lecture-node flex items-center gap-4 p-4 rounded-xl transition-all duration-300 border border-transparent <%= isActive ? 'bg-[#00ED64]/10 border-[#00ED64]/30 active-glow' : 'hover:bg-white/5 active:scale-[0.98]' %>">
-                                            <div class="w-8 h-8 rounded-lg <%= isActive ? 'bg-[#00ED64] text-[#001E2B]' : 'bg-white/5 text-[#9FB1AD]' %> flex items-center justify-center shrink-0 shadow-lg">
+                                           class="lecture-node flex items-center gap-4 p-4 rounded-xl transition-all duration-300 border border-transparent <%= isActive ? 'bg-[#00ED64]/10 border-[#00ED64]/30 active-glow shadow-lg shadow-[#00ED64]/5 ring-1 ring-[#00ED64]/20' : 'hover:bg-white/5 active:scale-[0.98]' %>">
+                                            <div class="w-8 h-8 rounded-lg <%= isActive ? 'bg-[#00ED64] text-[#001E2B] shadow-[0_0_15px_rgba(0,237,100,0.4)]' : 'bg-white/5 text-[#9FB1AD]' %> flex items-center justify-center shrink-0 shadow-lg">
                                                 <i class="fas <%= lec.type === 'pdf' ? 'fa-file-pdf' : (isActive ? 'fa-play' : 'fa-lock-open') %> text-[10px]"></i>
                                             </div>
                                             <div class="flex-1 min-w-0">
