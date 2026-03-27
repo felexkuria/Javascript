@@ -55,7 +55,7 @@ app.use(session({
   proxy: true, 
   name: 'multitouch.sid',
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production' && !process.env.LOCAL_DEV,
     httpOnly: true,
     sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 

@@ -17,7 +17,7 @@ class AuthHelper {
     localStorage.removeItem('idToken');
     localStorage.removeItem('cognitoToken');
     localStorage.removeItem('userId');
-    window.location.href = '/api/auth/login';
+    window.location.href = '/login';
   }
 
   // ✅ Make authenticated API requests with Bearer token
@@ -81,7 +81,7 @@ class AuthHelper {
 }
 
 // ✅ Auto-redirect to login if not authenticated on protected pages
-if (window.location.pathname !== '/api/auth/login' && !AuthHelper.isAuthenticated()) {
+if (window.location.pathname !== '/login' && window.location.pathname !== '/signup' && !AuthHelper.isAuthenticated()) {
   AuthHelper.logout();
 }
 
