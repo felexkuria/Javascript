@@ -1,21 +1,21 @@
 const { S3Client } = require('@aws-sdk/client-s3');
 const srtQuizGenerator = require('./srtQuizGenerator');
 
+const { withRetry } = require('../utils/retry');
+
 class VideoUploadProcessor {
   constructor() {
     this.s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
     // Transcribe service would need to be imported separately
   }
 
-  // Process video immediately after upload
+  // Process video immediately after upload (Task 1.1: Fault-Tolerant)
   async processUploadedVideo(bucketName, videoKey, videoTitle, courseName) {
-    console.log(`Processing uploaded video: ${videoTitle}`);
+    console.log(`📡 Starting Fault-Tolerant processing for: ${videoTitle}`);
     
     try {
-      // Start all processing in parallel
-      const videoUrl = `s3://${bucketName}/${videoKey}`;
-      
       // 1. Start transcription job
+      const videoUrl = `s3://${bucketName}/${videoKey}`;
       const transcriptionPromise = this.startTranscription(videoUrl, videoTitle);
       
       // 2. Get video metadata
@@ -25,12 +25,12 @@ class VideoUploadProcessor {
       const transcriptionResult = await transcriptionPromise;
       
       if (transcriptionResult.success) {
-        // Generate quiz and summary in parallel
+        // --- RELIABILITY FIX (Data Engineer): Added Backoff to AI ---
         const srtEntries = srtQuizGenerator.parseSRT({ content: transcriptionResult.srtContent });
         
         const [quiz, summary] = await Promise.all([
-          srtQuizGenerator.generateAIQuestions(srtEntries, videoTitle, metadata.duration),
-          srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoTitle)
+          withRetry(() => srtQuizGenerator.generateAIQuestions(srtEntries, videoTitle, metadata.duration)),
+          withRetry(() => srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoTitle))
         ]);
         
         // Update video record with processing status
@@ -87,11 +87,12 @@ class VideoUploadProcessor {
         vttUri ? this.downloadFile(vttUri) : null
       ]);
       
-      // Store in S3
+      // Store in S3 (Task 2.2: S3 Prefix Architecture)
       if (srtContent) {
         await this.s3.putObject({
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: `captions/${videoTitle}.srt`,
+          // --- ARCHITECTURE FIX: Prefix-based organization ---
+          Key: `processed-content/captions/${videoTitle}.srt`,
           Body: srtContent,
           ContentType: 'text/plain'
         }).promise();
@@ -100,7 +101,7 @@ class VideoUploadProcessor {
       if (vttContent) {
         await this.s3.putObject({
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: `captions/${videoTitle}.vtt`,
+          Key: `processed-content/captions/${videoTitle}.vtt`,
           Body: vttContent,
           ContentType: 'text/vtt'
         }).promise();

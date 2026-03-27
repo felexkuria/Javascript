@@ -7,6 +7,7 @@ router.get('/', sessionAuth, videoController.getAllVideos);
 router.get('/course/:courseName', sessionAuth, videoController.getVideosByCourse);
 router.get('/course/:courseName/count', sessionAuth, videoController.getVideoCount);
 router.get('/watch-dates', sessionAuth, videoController.getWatchDates);
+router.get('/status/:videoId', sessionAuth, videoController.getVideoStatus);
 router.get('/:courseName/:videoId', sessionAuth, videoController.getVideo);
 router.post('/:courseName/:videoId/watch', sessionAuth, videoController.markWatched);
 router.post('/sync', sessionAuth, videoController.syncVideos);

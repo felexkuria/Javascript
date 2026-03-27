@@ -3,8 +3,8 @@ set -e
 
 yum update -y
 
-# Install Docker
-yum install -y docker unzip
+# Install Docker, AWS CLI, and jq for secret parsing
+yum install -y docker unzip jq
 systemctl start docker
 systemctl enable docker
 usermod -a -G docker ec2-user
@@ -20,27 +20,24 @@ done
 mkdir -p /opt/video-course-app
 cd /opt/video-course-app
 
-# Create environment file
-cat > .env << EOF
+# Pull environment variables from AWS Secrets Manager (Day 11/12 Security improvement)
+echo "📥 Fetching application secrets from Secrets Manager..."
+aws secretsmanager get-secret-value --region ${aws_region} --secret-id video-course-app-secrets --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > .env
+
+# Inject Terraform managed variables that are NOT secrets
+cat >> .env << EOF
 NODE_ENV=production
 PORT=3000
 AWS_REGION=${aws_region}
 S3_BUCKET_NAME=${s3_bucket_name}
-GEMINI_API_KEY=${gemini_api_key}
-NOVA_API_KEY=${nova_api_key}
-COGNITO_USER_POOL_ID=${cognito_user_pool_id}
-COGNITO_CLIENT_ID=${cognito_client_id}
-
-SESSION_SECRET=${session_secret}
-ADMIN_KEY=${admin_key}
-MONGODB_URI=${mongodb_uri}
+IMAGE_TAG=${image_tag}
 EOF
 
 # Login to ECR
 aws ecr get-login-password --region ${aws_region} | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.${aws_region}.amazonaws.com
 
 # Pull the latest image
-docker pull ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
+docker pull ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:${image_tag}
 
 # Run the unified container
 docker run -d \
@@ -48,4 +45,4 @@ docker run -d \
   -p 3000:3000 \
   --env-file .env \
   --restart unless-stopped \
-  ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:latest
+  ${account_id}.dkr.ecr.${aws_region}.amazonaws.com/video-course-app:${image_tag}

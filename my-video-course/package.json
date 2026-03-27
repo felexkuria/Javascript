@@ -7,7 +7,7 @@
     "start": "node backend/src/server.js",
     "dev": "NODE_ENV=development node backend/src/server.js",
     "install-backend": "cd backend && npm install",
-    "test": "node backend/scripts/tests/test-dashboard-mongodb.js",
+    "test": "node backend/scripts/tests/ci-test.js",
     "test-migration": "node backend/scripts/tests/test-migration.js",
     "test-comparison": "node test-comparison.js",
     "test-original": "PORT=3001 node app.js & sleep 3 && node backend/scripts/tests/test-api-mock.js",

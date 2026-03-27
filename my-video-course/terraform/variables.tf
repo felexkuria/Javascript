@@ -221,3 +221,21 @@ variable "mongodb_uri" {
   sensitive   = true
   default     = ""
 }
+
+variable "container_image_tag" {
+  description = "The Docker image tag to deploy (e.g. latest or a git sha)"
+  type        = string
+  default     = "latest"
+}
+
+variable "create_app_secrets" {
+  description = "Whether to create the AWS Secrets Manager secret (false if it already exists)"
+  type        = bool
+  default     = true
+}
+
+variable "app_secrets_id" {
+  description = "The name of the secret in AWS Secrets Manager"
+  type        = string
+  default     = "video-course-app-secrets"
+}

@@ -162,3 +162,41 @@ resource "aws_cloudwatch_metric_alarm" "cpu_low" {
     AutoScalingGroupName = var.asg_name
   }
 }
+
+# Day 12/Ultimate Roadmap: Observability Dashboard
+resource "aws_cloudwatch_dashboard" "main" {
+  dashboard_name = "${var.app_name}-ops-dashboard"
+
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", aws_lb.app[0].arn_suffix]
+          ]
+          period = 300
+          stat   = "Sum"
+          region = "us-east-1"
+          title  = "Total Requests"
+        }
+      },
+      {
+        type   = "metric"
+        width  = 12
+        height = 6
+        properties = {
+          metrics = [
+            ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", aws_lb.app[0].arn_suffix]
+          ]
+          period = 300
+          stat   = "Average"
+          region = "us-east-1"
+          title  = "Avg Target Response Time (ms)"
+        }
+      }
+    ]
+  })
+}

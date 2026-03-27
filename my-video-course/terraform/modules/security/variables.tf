@@ -36,3 +36,9 @@ variable "create_cognito_role" {
   type    = bool
   default = true
 }
+variable "create_app_secrets" {
+  type = bool
+}
+variable "app_secrets_id" {
+  type = string
+}

@@ -316,3 +316,37 @@ exports.markVideoWatchedEnhanced = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// --- NEW (Google UI/UX Designer): Video Processing Status ---
+exports.getVideoStatus = async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const dynamodb = require('../utils/dynamodb');
+    
+    // Use the GSI optimized global lookup
+    const video = await dynamodb.getVideoGlobally(videoId);
+    
+    if (!video) {
+      return res.status(404).json({ success: false, error: 'Video not found in ingestion pipeline' });
+    }
+
+    // Map DynamoDB state to simplified UI progress
+    const status = {
+      videoId: video.videoId,
+      title: video.title,
+      currentStep: video.processingError ? 'ERROR' : (video.processedAt ? 'COMPLETED' : 'PROCESSING'),
+      progress: video.processedAt ? 100 : (video.captionsReady ? 66 : 33),
+      details: {
+        captions: !!video.captionsReady,
+        quiz: !!video.quizReady,
+        summary: !!video.summaryReady,
+        error: video.processingError || null
+      }
+    };
+
+    res.json({ success: true, status });
+  } catch (err) {
+    console.error('Error fetching video status:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
