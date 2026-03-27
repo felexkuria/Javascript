@@ -452,6 +452,54 @@ document.addEventListener('DOMContentLoaded', function() {
         showAchievement(icon || '🏆', title || 'Achievement Unlocked!', name, points);
     });
 
+    // --- Notes Logic (High Performance Persistence) ---
+    const notesKey = `notes_${courseName}_${videoId}`;
+    const notesArea = document.getElementById('studentNotes');
+    const saveBtn = document.getElementById('saveNotesBtn');
+    const saveFeedback = document.getElementById('saveFeedback');
+
+    window.saveStudentNotes = function() {
+        if (!notesArea) return;
+        
+        const originalText = document.getElementById('saveText').innerText;
+        document.getElementById('saveText').innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Persisting...';
+        saveBtn.disabled = true;
+
+        try {
+            localStorage.setItem(notesKey, notesArea.value);
+            
+            setTimeout(() => {
+                document.getElementById('saveText').innerText = 'PERSIST NOTES';
+                saveBtn.disabled = false;
+                saveFeedback.classList.remove('hidden');
+                setTimeout(() => saveFeedback.classList.add('hidden'), 3000);
+            }, 800);
+        } catch (e) {
+            console.error('Persistence failure:', e);
+            document.getElementById('saveText').innerText = 'RETRY SAVE';
+            saveBtn.disabled = false;
+        }
+    };
+
+    window.loadStudentNotes = function() {
+        if (!notesArea) return;
+        const saved = localStorage.getItem(notesKey);
+        if (saved) notesArea.value = saved;
+    };
+
+    // Auto-load on boot
+    loadStudentNotes();
+
+    // Enhance Tab Switch to trigger load
+    const originalSwitch = window.switchLabTab;
+    window.switchLabTab = function(tabId) {
+        originalSwitch(tabId);
+        if (tabId === 'notes') {
+            loadStudentNotes();
+            notesArea?.focus();
+        }
+    };
+
     // Final Theme Sync
     document.documentElement.classList.add('dark');
 });
