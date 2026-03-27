@@ -605,18 +605,13 @@ class DynamoVideoService {
     return status;
   }
 
-  // Update course videos (Save many)
+  // Update course videos (Save many) - Stage 4 Optimized
   async updateCourseVideos(courseName, videos, userId) {
     if (!this.isDynamoAvailable()) return false;
     try {
-      console.log(`📡 Syncing ${videos.length} videos to Dynamo for course: ${courseName}`);
-      for (const video of videos) {
-        await dynamodb.saveVideo({
-          ...video,
-          courseName: courseName
-        });
-      }
-      return true;
+      const logger = require('../utils/logger');
+      logger.info(`🚀 Optimized Batch Sync: ${videos.length} videos for course: ${courseName}`);
+      return await dynamodb.batchSaveVideos(courseName, videos);
     } catch (error) {
        console.error('❌ Failed to update course videos in Dynamo:', error.message);
        return false;
