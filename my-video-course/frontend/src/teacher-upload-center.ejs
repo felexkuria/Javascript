@@ -322,50 +322,94 @@
         }
 
         async function startUpload() {
-            const courseId = document.getElementById('courseSelect').value;
+            const sel = document.getElementById('courseSelect');
+            const courseName = sel.options[sel.selectedIndex].text.trim(); // Use the actual course name
             const lectureTitle = document.getElementById('lectureTitle').value.trim();
             const btn = document.getElementById('uploadBtn');
             btn.disabled = true;
 
             for (const file of selectedFiles) {
                 const id = file.__queueId;
-                document.getElementById(id + '_status').textContent = 'Syncing';
-                document.getElementById(id + '_status').classList.remove('opacity-40');
+                const statusEl = document.getElementById(id + '_status');
+                const fillEl = document.getElementById(id + '_fill');
+                
+                statusEl.textContent = 'Requesting Slot';
+                statusEl.classList.remove('opacity-40');
                 
                 try {
-                    const formData = new FormData();
-                    formData.append('video', file);
-                    formData.append('courseId', courseId);
-                    formData.append('sectionId', selectedSectionId);
-                    formData.append('title', lectureTitle || file.name.replace(/\.[^.]+$/, ''));
-
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', `/api/courses/${encodeURIComponent(courseId)}/upload-video`);
-                    const token = localStorage.getItem('accessToken');
-                    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-
-                    xhr.upload.onprogress = e => {
-                        if (e.lengthComputable) {
-                            const pct = Math.round((e.loaded / e.total) * 100);
-                            document.getElementById(id + '_fill').style.width = pct + '%';
-                        }
-                    };
-
-                    await new Promise((resolve, reject) => {
-                        xhr.onload = () => {
-                            if (xhr.status >= 200 && xhr.status < 300) {
-                                document.getElementById(id + '_status').textContent = 'Complete';
-                                log(`SUCCESS: [${file.name}] ingested into S3.`);
-                                resolve();
-                            } else { reject(new Error('Sync failed')); }
-                        };
-                        xhr.onerror = () => reject(new Error('Network break'));
-                        xhr.send(formData);
+                    // Step 1: Request Presigned URL
+                    log(`REQUEST: Slot for [${file.name}]...`);
+                    const signRes = await fetch('/api/upload/request-presigned-url', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        },
+                        body: JSON.stringify({
+                            courseName,
+                            videoTitle: lectureTitle || file.name.replace(/\.[^.]+$/, ''),
+                            contentType: file.type || 'video/mp4'
+                        })
                     });
+                    
+                    const { url, key, success, error: signError } = await signRes.json();
+                    if (!success) throw new Error(signError || 'Sign failed');
+
+                    // Step 2: Direct S3 Upload
+                    statusEl.textContent = 'Streaming to S3';
+                    log(`STREAM: Initializing direct pipe to S3 segment...`);
+                    
+                    await new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('PUT', url);
+                        xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+                        
+                        xhr.upload.onprogress = e => {
+                            if (e.lengthComputable) {
+                                const pct = Math.round((e.loaded / e.total) * 100);
+                                fillEl.style.width = pct + '%';
+                            }
+                        };
+                        
+                        xhr.onload = () => {
+                            if (xhr.status === 200) resolve();
+                            else reject(new Error('S3 Stream error: ' + xhr.status));
+                        };
+                        xhr.onerror = () => reject(new Error('Network break during S3 sync'));
+                        xhr.send(file);
+                    });
+
+                    // Step 3: Complete & Register
+                    statusEl.textContent = 'Finalizing';
+                    log(`COMMIT: Registering ingestion in DynamoDB...`);
+                    
+                    const completeRes = await fetch('/api/upload/complete', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        },
+                        body: JSON.stringify({
+                            courseName,
+                            videoTitle: lectureTitle || file.name.replace(/\.[^.]+$/, ''),
+                            description: '',
+                            s3Key: key,
+                            sectionId: selectedSectionId
+                        })
+                    });
+                    
+                    const compData = await completeRes.json();
+                    if (!compData.success) throw new Error(compData.error || 'Commit failed');
+
+                    statusEl.textContent = 'Ready';
+                    statusEl.classList.add('opacity-40');
+                    log(`SUCCESS: [${file.name}] ingested & processing started.`);
+                    
                 } catch (err) {
-                    document.getElementById(id + '_status').textContent = 'Fail';
-                    document.getElementById(id + '_status').style.color = '#ff3b30';
-                    log(`ERRO: ${err.message}`);
+                    statusEl.textContent = 'Block';
+                    statusEl.style.color = '#ff3b30';
+                    log(`FAIL: ${err.message}`);
+                    console.error('Upload flow error:', err);
                 }
             }
             btn.disabled = false;

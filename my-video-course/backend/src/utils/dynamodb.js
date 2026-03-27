@@ -163,24 +163,53 @@ class DynamoDBService {
         BillingMode: 'PAY_PER_REQUEST'
       });
 
-      // Create Certificates table
+      // Create Dead Letter Queue (DLQ) table
       await this.createTable({
-        TableName: `video-course-app-certificates-${environment}`,
+        TableName: `video-course-app-dlq-${environment}`,
         KeySchema: [
-          { AttributeName: 'userId', KeyType: 'HASH' },
-          { AttributeName: 'certificateId', KeyType: 'RANGE' }
+          { AttributeName: 'correlationId', KeyType: 'HASH' },
+          { AttributeName: 'timestamp', KeyType: 'RANGE' }
         ],
         AttributeDefinitions: [
-          { AttributeName: 'userId', AttributeType: 'S' },
-          { AttributeName: 'certificateId', AttributeType: 'S' }
+          { AttributeName: 'correlationId', AttributeType: 'S' },
+          { AttributeName: 'timestamp', AttributeType: 'S' }
         ],
         BillingMode: 'PAY_PER_REQUEST'
       });
 
-      console.log('✅ All DynamoDB tables created successfully');
+      console.log('✅ All DynamoDB tables created successfully (including DLQ)');
       return true;
     } catch (error) {
       console.error('❌ Error creating DynamoDB tables:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * 🏮 Dead Letter Queue (DLQ) Handler
+   * Moves failed tasks to a dedicated table for SRE manual inspection.
+   */
+  async moveToDLQ(item, error) {
+    if (!this.isConnected) return false;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    
+    try {
+      const params = {
+        TableName: `video-course-app-dlq-${environment}`,
+        Item: {
+          correlationId: item.videoId || item.jobName || 'unknown',
+          timestamp: new Date().toISOString(),
+          originalPayload: this.sanitize(item),
+          error: error.message || error,
+          stack: error.stack,
+          status: 'FAILED_FINAL'
+        }
+      };
+      await this.docClient.send(new PutCommand(params));
+      console.error(`🏮 DLQ: Task moved to dead-letter queue: ${params.Item.correlationId}`);
+      return true;
+    } catch (dlqError) {
+      console.error('❌ CRITICAL: Failed to even move task to DLQ:', dlqError.message);
       return false;
     }
   }
