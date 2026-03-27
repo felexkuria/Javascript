@@ -12,48 +12,27 @@ class VideoUploadProcessor {
   }
 
   /**
-   * 🛰️ Google-Grade Event-Driven Entry Point
-   * Submits the job and returns immediately.
+   * 🏗️ Event-Driven Ingestion Path
+   * Submits the job and returns immediately. 
+   * Post-processing is handled by AWS Lambda + EventBridge.
    */
   async processUploadedVideo(bucketName, videoKey, videoTitle, courseName) {
-    logger.info(`📡 Ingestion Triggered: ${videoTitle}`, { bucketName, videoKey, courseName });
+    logger.info(`📡 Ingestion Started (Event-Driven): ${videoTitle}`, { videoKey, courseName });
     
     try {
       const videoUrl = `s3://${bucketName}/${videoKey}`;
       
-      // 1. Submit Job (Non-blocking)
+      // Submit Job to AWS Transcribe
       const { jobName } = await this.submitTranscriptionJob(videoUrl, videoTitle);
       
-      // 2. Simulate Event-Driven Trigger (Temporary for monolithic dev)
-      this.simulateEventTrigger(jobName, videoTitle, courseName);
+      // Note: No polling here. The 'onTranscribeComplete' Lambda will 
+      // automatically trigger when AWS finishes the job.
       
       return { success: true, jobName };
     } catch (error) {
       logger.error(`❌ Ingestion Trigger Failed: ${videoTitle}`, error, { courseName });
       return { success: false, error: error.message };
     }
-  }
-
-  /**
-   * 🔄 Event Simulator (Removes Polling from Main Loop)
-   */
-  async simulateEventTrigger(jobName, videoTitle, courseName, attempt = 0) {
-    if (attempt > 30) {
-      logger.warn(`🏮 DLQ Triggered: Job ${jobName} timed out after 30 attempts`, { videoTitle, courseName });
-      await dynamoService.moveToDLQ({ jobName, videoTitle, courseName }, 'Timeout: Transcription took > 5 mins');
-      return;
-    }
-
-    setTimeout(async () => {
-      try {
-        const result = await this.handleJobCompletion(jobName, videoTitle, courseName);
-        if (!result.success && result.status === 'IN_PROGRESS') {
-          this.simulateEventTrigger(jobName, videoTitle, courseName, attempt + 1);
-        }
-      } catch (err) {
-        logger.error('Event Simulator Error', err, { jobName, videoTitle });
-      }
-    }, 10000);
   }
 
   // Phase 3: Decoupled Ingestion
@@ -70,13 +49,13 @@ class VideoUploadProcessor {
     });
 
     await this.transcribe.send(command);
-    console.log(`📡 Event-Driven Ingestion: Submitted job ${jobName}`);
+    logger.info(`📡 Transcription Job Submitted: ${jobName}`, { jobName, videoUrl });
     return { success: true, jobName };
   }
 
   // 🛰️ Completion Handler (Step 2 - Triggered by Event/SQS)
   async handleJobCompletion(jobName, videoTitle, courseName) {
-    console.log(`🛰️ Event-Driven Processing: Telemetry received for ${jobName}`);
+    logger.info(`🛰️ Processing Telemetry Received: ${jobName}`, { jobName, videoTitle, courseName });
     
     const command = new GetTranscriptionJobCommand({ TranscriptionJobName: jobName });
     const response = await this.transcribe.send(command);
@@ -110,7 +89,7 @@ class VideoUploadProcessor {
         processedAt: new Date()
       });
 
-      console.log(`✅ Event-Driven Completion Success: ${videoTitle}`);
+      logger.info(`✅ Processing Success: ${videoTitle}`, { jobName, videoTitle, courseName });
       return { success: true };
     }
     return { success: false, status: job.TranscriptionJobStatus };
@@ -155,10 +134,10 @@ class VideoUploadProcessor {
       
       if (video) {
         await dynamoVideoService.updateVideo(courseName, video._id, updates);
-        console.log(`✅ Updated video record in DynamoDB: ${videoTitle}`);
+        logger.info(`✅ Record Updated: ${videoTitle}`, { videoTitle, courseName, updates });
       }
     } catch (error) {
-      console.warn('Failed to update video record in DynamoDB:', error);
+      logger.warn('Failed to update video record in DynamoDB', { error: error.message, videoTitle, courseName });
     }
   }
 }

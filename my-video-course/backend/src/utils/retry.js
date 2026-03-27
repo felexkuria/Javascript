@@ -31,7 +31,14 @@ async function withRetry(fn, options = {}) {
       const jitter = Math.random() * 200; // 0-200ms random offset
       const totalDelay = delay + jitter;
 
-      console.warn(`⚠️  Retry attempt ${attempt + 1}/${maxRetries} after ${Math.round(totalDelay)}ms (Jitter: ${Math.round(jitter)}ms) Error: ${error.message}`);
+      const logger = require('./logger');
+      logger.warn(`🔁 Retry attempt ${attempt + 1}/${maxRetries}`, {
+        attempt: attempt + 1,
+        maxRetries,
+        delayMs: Math.round(totalDelay),
+        error: error.message,
+        code: error.code || error.name
+      });
       
       await new Promise(resolve => setTimeout(resolve, totalDelay));
       delay *= factor;

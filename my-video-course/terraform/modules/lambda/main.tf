@@ -254,6 +254,48 @@ resource "aws_lambda_function" "add_video_to_db" {
   }
 }
 
+# [NEW] Node.js Lambda for Transcribe Completion (Phase 9)
+resource "aws_lambda_function" "on_transcribe_complete" {
+  function_name    = "${var.app_name}-on-transcribe-complete"
+  role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
+  handler          = "onTranscribeComplete.handler"
+  runtime          = "nodejs18.x"
+  filename         = "${path.module}/on_transcribe_complete.zip" # Packaged by CD or manual zip
+  
+  environment {
+    variables = {
+      DYNAMODB_TABLE = var.dynamodb_table_name
+      S3_BUCKET_NAME = var.s3_bucket_name
+    }
+  }
+}
+
+# [NEW] EventBridge Rule for Transcribe (Phase 9)
+resource "aws_cloudwatch_event_rule" "transcribe_state_change" {
+  name        = "${var.app_name}-transcribe-state-change"
+  description = "Triggered when AWS Transcribe job finishes"
+  event_pattern = jsonencode({
+    source      = ["aws.transcribe"]
+    detail-type = ["Transcribe Job State Change"]
+    detail = {
+      TranscriptionJobStatus = ["COMPLETED", "FAILED"]
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "trigger_lambda" {
+  rule      = aws_cloudwatch_event_rule.transcribe_state_change.name
+  target_id = "SendToLambda"
+  arn       = aws_lambda_function.on_transcribe_complete.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.on_transcribe_complete.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.transcribe_state_change.arn
+}
+
 # SNS Subscriptions
 resource "aws_sns_topic_subscription" "start_transcribe" {
   count     = length(aws_lambda_function.start_transcribe)

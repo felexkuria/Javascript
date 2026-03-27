@@ -1,4 +1,5 @@
-const cognitoService = require('../services/cognitoService');
+const authService = require('../services/authService');
+const logger = require('../utils/logger');
 const ADMIN_EMAIL = 'engineerfelex@gmail.com';
 
 class AuthController {
@@ -24,22 +25,19 @@ class AuthController {
 
   async adminAuth(req, res) {
     const { email, password } = req.body;
-    
     if (email !== ADMIN_EMAIL) {
       return res.status(403).json({ success: false, error: 'Admin access only' });
     }
     
     try {
-      const result = await cognitoService.signIn(email, password);
+      const user = await authService.login(email, password);
       
       req.session.user = {
-        email: ADMIN_EMAIL,
-        roles: ['admin', 'teacher', 'student'],
-        currentRole: 'admin',
+        ...user,
         isAdmin: true,
         isTeacher: true,
-        role: 'admin',
-        token: result.accessToken
+        currentRole: 'admin',
+        role: 'admin'
       };
       
       req.session.save((err) => {
@@ -51,7 +49,7 @@ class AuthController {
         });
       });
     } catch (error) {
-      console.error('Admin Auth Error:', error);
+      logger.error('Admin Auth Error', error);
       res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
   }
@@ -59,21 +57,10 @@ class AuthController {
   async signup(req, res) {
     try {
       const { email, password, name } = req.body;
-      const result = await cognitoService.signUp(email, password, name);
-      res.json({ success: true, data: result });
+      const user = await authService.signup(email, password, name);
+      res.json({ success: true, user });
     } catch (error) {
-      console.error('Signup error:', error);
-      res.status(400).json({ success: false, error: error.message });
-    }
-  }
-
-  async confirm(req, res) {
-    try {
-      const { email, code } = req.body;
-      const result = await cognitoService.confirmSignUp(email, code);
-      res.json({ success: true, data: result });
-    } catch (error) {
-      console.error('Confirm error:', error);
+      logger.error('Signup error', error);
       res.status(400).json({ success: false, error: error.message });
     }
   }
@@ -81,80 +68,63 @@ class AuthController {
   async signin(req, res) {
     try {
       const { email, password, requestedRole } = req.body;
-      const result = await cognitoService.signIn(email, password);
+      const user = await authService.login(email, password);
       
       // Personalize session based on email and requested role
       const isAdmin = email === ADMIN_EMAIL;
-      const isTeacher = isAdmin || false; // Add more teacher logic if needed
+      const isTeacher = user.role === 'teacher' || isAdmin;
       
-      // Use requestedRole if valid, otherwise default to admin or student
-      let finalRole = isAdmin ? 'admin' : 'student';
-      if (requestedRole === 'teacher' && (isAdmin || isTeacher)) {
+      let finalRole = isAdmin ? 'admin' : (user.role || 'student');
+      if (requestedRole === 'teacher' && isTeacher) {
         finalRole = 'teacher';
       } else if (requestedRole === 'student') {
         finalRole = 'student';
       }
 
       req.session.user = {
-        email: email,
-        roles: isAdmin ? ['admin', 'teacher', 'student'] : ['student'],
+        ...user,
         currentRole: finalRole,
-        isAdmin: isAdmin,
-        isTeacher: isTeacher,
-        role: finalRole,
-        token: result.accessToken
+        isAdmin,
+        isTeacher,
+        role: finalRole
       };
 
       req.session.save((err) => {
         if (err) {
-          console.error('Session save error:', err);
+          logger.error('Session save error', err);
           return res.status(500).json({ success: false, error: 'Session commit failure' });
         }
         res.json({ 
           success: true, 
-          token: result.accessToken,
           user: req.session.user
         });
       });
     } catch (error) {
-      console.error('Signin error:', error);
+      logger.error('Signin error', error);
       res.status(401).json({ success: false, error: error.message });
     }
   }
 
   async forgotPassword(req, res) {
+    // Keep legacy Cognito for reset logic unless also migrated to DynamoDB SES
+    const cognitoService = require('../services/cognitoService');
     try {
       const { email } = req.body;
       const result = await cognitoService.forgotPassword(email);
       res.json({ success: true, data: result });
     } catch (error) {
-      console.error('Forgot password error:', error);
       res.status(400).json({ success: false, error: error.message });
     }
   }
 
   async confirmForgotPassword(req, res) {
+    const cognitoService = require('../services/cognitoService');
     try {
       const { email, code, newPassword } = req.body;
       const result = await cognitoService.confirmForgotPassword(email, code, newPassword);
       res.json({ success: true, data: result });
     } catch (error) {
-      console.error('Confirm forgot password error:', error);
       res.status(400).json({ success: false, error: error.message });
-    }
-  }
-
-  async setupAdmin(req, res) {
-    try {
-      const { email, password, adminKey } = req.body;
-      if (adminKey !== process.env.ADMIN_KEY) {
-        return res.status(403).json({ success: false, error: 'Invalid admin key' });
-      }
-      const result = await cognitoService.adminCreateUser(email, password);
-      res.json({ success: true, message: 'Admin user created', data: result });
-    } catch (error) {
-      console.error('Setup admin error:', error);
-      res.status(500).json({ success: false, error: error.message });
     }
   }
 
