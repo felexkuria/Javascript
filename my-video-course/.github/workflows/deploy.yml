@@ -84,6 +84,21 @@ jobs:
           terraform init
           terraform validate
           terraform apply -auto-approve
+      - name: 🔄 Intelligent Rolling Update
+        run: |
+          ASG_NAME="video-course-app-asg"
+          echo "🔄 Checking for active deployments on $ASG_NAME..."
+          
+          # Check if a refresh is currently running
+          IN_PROGRESS=$(aws autoscaling describe-instance-refreshes --auto-scaling-group-name $ASG_NAME --query "InstanceRefreshes[?Status=='InProgress'].InstanceRefreshId" --output text)
+          
+          if [ -n "$IN_PROGRESS" ]; then
+            echo "⚠️  Deployment already in progress ($IN_PROGRESS). Skipping manual trigger to avoid conflict."
+          else
+            echo "🚀 No active deployment. Triggering new rolling refresh..."
+            aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME --preferences "MinHealthyPercentage=50,InstanceWarmup=300"
+          fi
+
       - name: 🏥 Post-Deployment Health Check
         run: |
           # Fetch the ALB DNS name dynamically
