@@ -42,10 +42,13 @@ class AuthController {
         token: result.accessToken
       };
       
-      res.json({ 
-        success: true, 
-        message: 'Admin authenticated',
-        redirect: '/admin/course-manager'
+      req.session.save((err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Session commit failure' });
+        res.json({ 
+          success: true, 
+          message: 'Admin authenticated',
+          redirect: '/admin/course-manager'
+        });
       });
     } catch (error) {
       console.error('Admin Auth Error:', error);
@@ -102,10 +105,16 @@ class AuthController {
         token: result.accessToken
       };
 
-      res.json({ 
-        success: true, 
-        token: result.accessToken,
-        user: req.session.user
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ success: false, error: 'Session commit failure' });
+        }
+        res.json({ 
+          success: true, 
+          token: result.accessToken,
+          user: req.session.user
+        });
       });
     } catch (error) {
       console.error('Signin error:', error);
