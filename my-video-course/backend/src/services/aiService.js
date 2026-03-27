@@ -155,9 +155,13 @@ class AIService {
 
   async generateChatResponse(message, context = {}) {
     try {
-      return await this.generateDavidMalanResponse(message, context);
+      // High-performance chat prioritized on Gemini 1.5 Flash for low latency
+      if (this.genAI) {
+        return await this.generateDavidMalanResponse(message, context);
+      }
+      return await this.generateWithNova(message, "You are a helpful assistant.");
     } catch (error) {
-      console.warn("Nova chat failed, falling back to static:", error.message);
+      console.warn("AI chat failed, falling back to static:", error.message);
       return this.staticMalanResponse(message, context);
     }
   }
@@ -171,7 +175,7 @@ class AIService {
     Question from student: "${question}"
     ${context?.transcript ? `Based on the current video lesson: ${context.transcript.slice(0, 1000)}` : ''}`;
     
-    return await this.generateWithNova(prompt, "You are David J. Malan of CS50.");
+    return await this.fallbackToGemini(prompt, { systemPrompt: "You are David J. Malan of CS50." });
   }
   
   staticMalanResponse(question, context) {
