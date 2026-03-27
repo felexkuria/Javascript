@@ -120,71 +120,72 @@
                     </div>
 
                     <div class="space-y-4">
-                        <% if (typeof course !== 'undefined' && course.sections && course.sections.length > 0) { %>
-                            <% course.sections.forEach((section, sIndex) => { %>
-                                <div class="atlas-card glass group">
-                                    <div class="p-6 flex items-center justify-between cursor-pointer" onclick="toggleSection('<%= sIndex %>')">
+                        <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
+                            <% sections.forEach((section, sIndex) => { %>
+                                <div class="atlas-card glass group overflow-hidden">
+                                    <div class="p-6 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onclick="toggleSection('<%= sIndex %>')">
                                         <div class="flex items-center gap-4">
-                                            <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center font-bold text-[#00ED64]">
-                                                0<%= sIndex + 1 %>
+                                            <div class="w-10 h-10 rounded-lg bg-[#00ED64]/10 flex items-center justify-center font-bold text-[#00ED64]">
+                                                <%= sIndex + 1 %>
                                             </div>
                                             <div>
-                                                <h3 class="font-bold text-gray-900 dark:text-white"><%= section.title %></h3>
-                                                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest"><%= section.lectures ? section.lectures.length : 0 %> Components</p>
+                                                <h3 class="font-bold text-gray-900 dark:text-white group-hover:text-[#00ED64] transition-colors"><%= section.title %></h3>
+                                                <div class="flex items-center gap-3 mt-1">
+                                                    <p class="text-[9px] text-[#9FB1AD] uppercase font-black tracking-widest"><%= section.lectures ? section.lectures.length : 0 %> Nodes</p>
+                                                    <span class="w-1 h-1 rounded-full bg-white/10"></span>
+                                                    <p class="text-[9px] font-black text-[#00ED64]/60 uppercase tracking-widest"><%= section.progress || 0 %>% Complete</p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div id="icon-<%= sIndex %>" class="text-gray-400 transition-transform duration-300">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        <div id="icon-<%= sIndex %>" class="text-gray-500 transition-transform duration-500">
+                                            <i class="fas fa-chevron-down"></i>
                                         </div>
                                     </div>
-                                    <div id="section-<%= sIndex %>" class="hidden border-t border-white/5">
+                                    <!-- Section Progress Bar -->
+                                    <div class="h-[1px] w-full bg-white/5 relative">
+                                        <div class="absolute inset-y-0 left-0 bg-[#00ED64]/40" style="width: <%= section.progress || 0 %>%"></div>
+                                    </div>
+
+                                    <div id="section-<%= sIndex %>" class="hidden border-t border-white/5 bg-black/10">
                                         <% if (section.lectures && section.lectures.length > 0) { %>
                                             <% section.lectures.forEach((lecture, lIndex) => { %>
-                                                <div class="p-6 hover:bg-white/5 transition-colors flex items-center gap-4 group/item">
-                                                    <div class="text-xs font-black text-gray-500 opacity-30">0<%= sIndex + 1 %>.<%= lIndex + 1 %></div>
-                                                    <div class="w-2 h-2 rounded-full bg-[#00ED64]/30 group-hover/item:bg-[#00ED64]"></div>
-                                                    <div class="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
-                                                        <span class="text-sm font-bold text-gray-700 dark:text-[#9FB1AD] group-hover/item:text-white transition-colors">
-                                                            <%= lecture.title %>
-                                                        </span>
-                                                        <div class="flex items-center gap-2">
-                                                            <% if (lecture.type === 'pdf') { %>
-                                                                <span class="py-0.5 px-1.5 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase tracking-widest rounded border border-blue-500/20">DOCUMENT</span>
-                                                                <% if (lecture.pages) { %>
-                                                                    <span class="text-[9px] font-bold text-gray-500"><i class="far fa-file-alt mr-1"></i><%= lecture.pages %> Pages</span>
-                                                                <% } %>
-                                                            <% } else { %>
-                                                                <% if (lecture.duration) { %>
-                                                                    <span class="text-[9px] font-bold text-gray-500"><i class="far fa-clock mr-1"></i><%= lecture.duration %></span>
-                                                                <% } %>
-                                                            <% } %>
-                                                            <% if (lecture.fileSize) { %>
-                                                                <span class="text-[9px] font-bold text-gray-500/50">• <%= lecture.fileSize %></span>
-                                                            <% } %>
+                                                <% const isActive = false; // Not a player page %>
+                                                <div class="p-6 hover:bg-white/5 transition-colors flex items-center justify-between group/item border-b border-white/5 last:border-0">
+                                                    <div class="flex items-center gap-6">
+                                                        <div class="text-[10px] font-black <%= lecture.watched ? 'text-[#00ED64]' : 'text-gray-500 opacity-20' %>">
+                                                            <%= sIndex + 1 %>.<%= lIndex + 1 %>
+                                                        </div>
+                                                        <div class="w-8 h-8 rounded-lg <%= lecture.watched ? 'bg-[#00ED64]/10 text-[#00ED64]' : 'bg-white/5 text-gray-500' %> flex items-center justify-center">
+                                                            <i class="fas <%= lecture.type === 'pdf' ? 'fa-file-pdf' : 'fa-play' %> text-[10px]"></i>
+                                                        </div>
+                                                        <div>
+                                                            <span class="text-sm font-bold <%= lecture.watched ? 'text-white/60' : 'text-white' %> group-hover/item:text-[#00ED64] transition-colors">
+                                                                <%= lecture.title %>
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                    <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
-                                                        <a href="/course/<%= encodedCourseName %>/video/<%= lecture.id || lecture.videoId || lecture._id %>" class="text-[10px] font-black text-[#00ED64] opacity-0 group-hover/item:opacity-100 uppercase tracking-widest">Access Lesson</a>
-                                                    <% } %>
+                                                    <div class="flex items-center gap-6">
+                                                        <% if (lecture.watched) { %>
+                                                            <div class="text-[#00ED64] text-[10px] font-black tracking-widest">COMPLETED</div>
+                                                        <% } %>
+                                                        <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
+                                                            <a href="/course/<%= encodedCourseName %>/video/<%= lecture.id || lecture.videoId || lecture._id || lecture.contentId %>" 
+                                                               class="btn-atlas btn-atlas-primary text-[9px] py-1.5 px-4 opacity-0 group-hover/item:opacity-100 transform translate-x-4 group-hover/item:translate-x-0 transition-all">
+                                                                LAUNCH
+                                                            </a>
+                                                        <% } %>
+                                                    </div>
                                                 </div>
                                             <% }) %>
                                         <% } %>
                                     </div>
                                 </div>
                             <% }) %>
-                        <% } else if (typeof course !== 'undefined' && course.videos) { %>
-                            <!-- Flat version if no sections (legacy support) -->
-                            <% (course.videos || []).forEach((video, vIndex) => { %>
-                                <div class="atlas-card glass p-6 flex items-center justify-between group">
-                                    <div class="flex items-center gap-6">
-                                        <div class="text-xs font-black text-gray-500 opacity-30">0<%= vIndex + 1 %></div>
-                                        <h3 class="font-bold text-gray-900 dark:text-white"><%= video.title %></h3>
-                                    </div>
-                                    <% if (typeof isEnrolled !== 'undefined' && isEnrolled) { %>
-                                        <a href="/video/<%= typeof courseName !== 'undefined' ? encodeURIComponent(courseName) : encodeURIComponent(course.name) %>?v=<%= vIndex %>" class="text-[10px] font-black text-[#00ED64] opacity-0 group-hover:opacity-100 transition-all uppercase tracking-widest">Execute</a>
-                                    <% } %>
-                                </div>
-                            <% }) %>
+                        <% } else { %>
+                            <div class="py-20 text-center glass rounded-3xl opacity-50">
+                                <i class="fas fa-microchip animate-pulse mb-4 text-2xl text-[#00ED64]"></i>
+                                <p class="text-xs font-black uppercase tracking-widest">No Curriculum Nodes Deployed</p>
+                            </div>
                         <% } %>
                     </div>
                 </section>

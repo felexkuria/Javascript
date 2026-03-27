@@ -15,6 +15,8 @@ try {
   console.warn('Google Generative AI not available:', error.message);
 }
 
+const promptManager = require('./promptManager');
+
 class AIService {
   constructor() {
     this.client = null;
@@ -137,10 +139,8 @@ class AIService {
   }
 
   async generateQuizFromVideo(videoTitle, transcript = '') {
-    const systemPrompt = "You are an expert instructor. Create 4-5 technical quiz questions. Return ONLY a valid JSON array of objects with {question, options, correct, explanation}. Response format: JSON";
-    const prompt = `Video: "${videoTitle}"\nTranscript: ${transcript.slice(0, 3000)}`;
-    
-    const response = await this.generateWithNova(prompt, systemPrompt);
+    const { system, user } = promptManager.getPrompt('technical_quiz', { title: videoTitle, transcript: transcript.slice(0, 3000) });
+    const response = await this.generateWithNova(user, system);
     try {
       return JSON.parse(response);
     } catch {
@@ -166,16 +166,44 @@ class AIService {
     }
   }
 
+  async analyzeVisualContent(title, previews = []) {
+    if (!previews || previews.length === 0) return "No visual data available.";
+    
+    const { system, user } = promptManager.getPrompt('visual_reasoning', { title });
+    
+    // In Phase 1: We use Gemini 1.1 Flash for visual summaries to keep it fast
+    try {
+      if (!this.genAI) return "Vision AI not configured.";
+      
+      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+      
+      // Prepare image parts (for now just the first 3 frames for key insights)
+      const imageParts = await Promise.all(previews.slice(0, 3).map(async (url) => {
+        const response = await fetch(url);
+        const buffer = await response.arrayBuffer();
+        return {
+          inlineData: {
+            data: Buffer.from(buffer).toString("base64"),
+            mimeType: "image/jpeg"
+          }
+        };
+      }));
+
+      const result = await model.generateContent([user, ...imageParts]);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+       console.error("Multimodal analysis failed:", error.message);
+       return "Visual analysis timed out.";
+    }
+  }
+
   async generateDavidMalanResponse(question, context) {
-    const prompt = `You are David J. Malan, the legendary professor of CS50 at Harvard. 
-    Your style is high-energy, exceptionally encouraging, and remarkably clear. 
-    Use analogies to explain complex topics.
-    Focus on helping the student find the answer themselves rather than just giving it.
-    
-    Question from student: "${question}"
-    ${context?.transcript ? `Based on the current video lesson: ${context.transcript.slice(0, 1000)}` : ''}`;
-    
-    return await this.fallbackToGemini(prompt, { systemPrompt: "You are David J. Malan of CS50." });
+    const { system, user } = promptManager.getPrompt('david_malan', { 
+      question, 
+      context: context?.transcript ? context.transcript.slice(0, 1000) : '' 
+    });
+    return await this.fallbackToGemini(user, { systemPrompt: system });
   }
   
   staticMalanResponse(question, context) {

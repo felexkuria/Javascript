@@ -79,37 +79,96 @@ class DynamoVideoService {
     return [];
   }
 
+  // Calculate per-section progress percentages
+  getSectionProgress(lectures) {
+    if (!lectures || lectures.length === 0) return 0;
+    const watched = lectures.filter(v => v.watched).length;
+    return Math.round((watched / lectures.length) * 100);
+  }
+
+  // SOTA Smart Curriculum Engine
+  async getStructuredCurriculum(course, userId) {
+    if (!course) return [];
+    
+    // 1. Fetch user-specific progress to ensure watched states are up to date
+    const userGamification = await this.getUserGamificationData(userId);
+    const watchedVideos = userGamification?.userStats?.videosWatched || {};
+    
+    // 2. Normalize videos with watched state
+    const allVideos = (course.videos || []).map(v => ({
+      ...v,
+      watched: !!(watchedVideos[v.videoId] || watchedVideos[v._id] || v.watched),
+      id: v.videoId || v._id
+    }));
+
+    // 3. User explicit sections if they exist in the model
+    if (course.sections && course.sections.length > 0) {
+      return course.sections.map(s => ({
+        ...s,
+        lectures: s.lectures.map(l => {
+          const matchingVideo = allVideos.find(v => (v.id || v._id || '').toString() === (l.videoId || l._id || l.id || '').toString());
+          return { ...l, ...matchingVideo, watched: matchingVideo?.watched || false };
+        }),
+        progress: this.getSectionProgress(s.lectures)
+      }));
+    }
+
+    // 4. Smart Regex Grouping (Fallback)
+    const sections = [];
+    const sectionMap = {};
+    
+    allVideos.forEach(v => {
+      // Logic: Detect "Module X", "Chapter Y", "1.1", "2.3" patterns
+      let sName = v.section || v.sectionTitle;
+      
+      if (!sName) {
+        const moduleMatch = v.title?.match(/(?:module|chapter|unit|section)\s*(\d+)/i);
+        const dotMatch = v.title?.match(/^(\d+)\.\d+/);
+        
+        if (moduleMatch) sName = `Module ${moduleMatch[1]}`;
+        else if (dotMatch) sName = `Phase ${dotMatch[1]}`;
+        else sName = 'Core Curriculum';
+      }
+
+      if (!sectionMap[sName]) {
+        sectionMap[sName] = { title: sName, lectures: [] };
+        sections.push(sectionMap[sName]);
+      }
+      sectionMap[sName].lectures.push(v);
+    });
+
+    // 5. Enhance sections with progress
+    return sections.map(s => ({
+      ...s,
+      progress: this.getSectionProgress(s.lectures)
+    }));
+  }
+
   // Personalize courses with user-specific data and proper sorting
   async personalizeCoursesForUser(courses, userId) {
     const userGamification = await this.getUserGamificationData(userId);
     const watchedVideos = userGamification?.userStats?.videosWatched || {};
     
     return courses.map(course => {
-      const personalizedVideos = course.videos.map(video => ({
+      const personalizedVideos = (course.videos || []).map(video => ({
         ...video,
         watched: !!(watchedVideos[video.videoId] || watchedVideos[video._id] || video.watched)
       }));
       
       // Sort videos numerically by lesson number
       const sortedVideos = personalizedVideos.sort((a, b) => {
-        const aMatch = a.title?.match(/lesson(\d+)/i) || a._id?.match(/lesson(\d+)/i);
-        const bMatch = b.title?.match(/lesson(\d+)/i) || b._id?.match(/lesson(\d+)/i);
+        const aMatch = (a.title || '').match(/lesson(\d+)/i) || (a._id || '').match(/lesson(\d+)/i);
+        const bMatch = (b.title || '').match(/lesson(\d+)/i) || (b._id || '').match(/lesson(\d+)/i);
         
         if (aMatch && bMatch) {
           return parseInt(aMatch[1], 10) - parseInt(bMatch[1], 10);
         }
-        
-        // Fallback to alphabetical sorting
-        return (a.title || a._id || '').localeCompare(b.title || b._id || '');
+        return 0;
       });
-      
-      return {
-        ...course,
-        videos: sortedVideos
-      };
+
+      return { ...course, videos: sortedVideos };
     });
   }
-
   // Get videos for a specific course with user personalization
   async getVideosForCourse(courseName, userId) {
     // Always try DynamoDB first
