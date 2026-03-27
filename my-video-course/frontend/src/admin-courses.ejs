@@ -855,14 +855,22 @@
             });
         }
         
-        function handleFileUpload(files) {
+        async function calculateSHA256(file) {
+            const buffer = await file.arrayBuffer();
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function handleFileUpload(files) {
             const progressContainer = document.getElementById('uploadProgress');
             const uploadList = document.getElementById('uploadList');
-            
             progressContainer.classList.remove('hidden');
             
-            files.forEach(file => {
+            for (const file of files) {
                 const uploadItem = document.createElement('div');
+                const id = 'up_' + Math.random().toString(36).slice(2);
+                uploadItem.id = id;
                 uploadItem.className = 'flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg';
                 uploadItem.innerHTML = `
                     <div class="flex items-center space-x-3">
@@ -874,35 +882,78 @@
                     </div>
                     <div class="w-32">
                         <div class="upload-progress">
-                            <div class="upload-progress-bar" style="width: 0%"></div>
+                            <div id="${id}_bar" class="upload-progress-bar" style="width: 0%"></div>
                         </div>
-                        <div class="text-xs text-center mt-1">0%</div>
+                        <div id="${id}_text" class="text-xs text-center mt-1">Hash Verification...</div>
                     </div>
                 `;
-                
                 uploadList.appendChild(uploadItem);
                 
-                // Simulate upload progress
-                simulateUpload(uploadItem, file);
-            });
-        }
-        
-        function simulateUpload(uploadItem, file) {
-            const progressBar = uploadItem.querySelector('.upload-progress-bar');
-            const progressText = uploadItem.querySelector('.text-xs');
-            let progress = 0;
-            
-            const interval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(interval);
-                    showToast(`${file.name} uploaded successfully! 📁`, 'success');
+                try {
+                    // Step 0: Checksum
+                    const checksum = await calculateSHA256(file);
+                    document.getElementById(`${id}_text`).textContent = 'Requesting Slot...';
+
+                    // Step 1: Request Presigned URL
+                    const signRes = await fetch('/api/upload/request-presigned-url', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        },
+                        body: JSON.stringify({
+                            courseName: 'General_Assets', // Default for direct file manager
+                            videoTitle: file.name,
+                            contentType: file.type || 'application/octet-stream'
+                        })
+                    });
+                    
+                    const { url, key, success, error: signError } = await signRes.json();
+                    if (!success) throw new Error(signError || 'Sign failed');
+
+                    // Step 2: S3 Stream
+                    document.getElementById(`${id}_text`).textContent = 'Streaming...';
+                    await new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('PUT', url);
+                        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+                        
+                        xhr.upload.onprogress = e => {
+                            if (e.lengthComputable) {
+                                const pct = Math.round((e.loaded / e.total) * 100);
+                                document.getElementById(`${id}_bar`).style.width = pct + '%';
+                                document.getElementById(`${id}_text`).textContent = pct + '%';
+                            }
+                        };
+                        
+                        xhr.onload = () => xhr.status === 200 ? resolve() : reject(new Error('S3 error: ' + xhr.status));
+                        xhr.onerror = () => reject(new Error('Network break'));
+                        xhr.send(file);
+                    });
+
+                    // Step 3: Complete
+                    await fetch('/api/upload/complete', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        },
+                        body: JSON.stringify({
+                            courseName: 'General_Assets',
+                            videoTitle: file.name,
+                            s3Key: key,
+                            checksum // Pass the SHA-256 for audit logging
+                        })
+                    });
+
+                    document.getElementById(`${id}_text`).textContent = 'Success';
+                    showToast(`${file.name} ingested successfully!`, 'success');
+                } catch (err) {
+                    document.getElementById(`${id}_text`).textContent = 'Fail';
+                    document.getElementById(`${id}_text`).style.color = '#ef4444';
+                    showToast(`Fail: ${file.name} - ${err.message}`, 'error');
                 }
-                
-                progressBar.style.width = `${progress}%`;
-                progressText.textContent = `${Math.round(progress)}%`;
-            }, 200);
+            }
         }
         
         function getFileIcon(type) {

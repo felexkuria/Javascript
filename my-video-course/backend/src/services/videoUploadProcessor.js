@@ -1,119 +1,119 @@
-const { S3Client } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
+const { TranscribeClient, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
 const srtQuizGenerator = require('./srtQuizGenerator');
-
 const { withRetry } = require('../utils/retry');
+const logger = require('../utils/logger');
+const dynamoService = require('../utils/dynamodb');
 
 class VideoUploadProcessor {
   constructor() {
     this.s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
-    // Transcribe service would need to be imported separately
+    this.transcribe = new TranscribeClient({ region: process.env.AWS_REGION || 'us-east-1' });
   }
 
-  // Process video immediately after upload (Task 1.1: Fault-Tolerant)
+  /**
+   * 🛰️ Google-Grade Event-Driven Entry Point
+   * Submits the job and returns immediately.
+   */
   async processUploadedVideo(bucketName, videoKey, videoTitle, courseName) {
-    console.log(`📡 Starting Fault-Tolerant processing for: ${videoTitle}`);
+    logger.info(`📡 Ingestion Triggered: ${videoTitle}`, { bucketName, videoKey, courseName });
     
     try {
-      // 1. Start transcription job
       const videoUrl = `s3://${bucketName}/${videoKey}`;
-      const transcriptionPromise = this.startTranscription(videoUrl, videoTitle);
       
-      // 2. Get video metadata
-      const metadata = await this.getVideoMetadata(bucketName, videoKey);
+      // 1. Submit Job (Non-blocking)
+      const { jobName } = await this.submitTranscriptionJob(videoUrl, videoTitle);
       
-      // 3. Wait for transcription and generate AI content
-      const transcriptionResult = await transcriptionPromise;
+      // 2. Simulate Event-Driven Trigger (Temporary for monolithic dev)
+      this.simulateEventTrigger(jobName, videoTitle, courseName);
       
-      if (transcriptionResult.success) {
-        // --- RELIABILITY FIX (Data Engineer): Added Backoff to AI ---
-        const srtEntries = srtQuizGenerator.parseSRT({ content: transcriptionResult.srtContent });
-        
-        const [quiz, summary] = await Promise.all([
-          withRetry(() => srtQuizGenerator.generateAIQuestions(srtEntries, videoTitle, metadata.duration)),
-          withRetry(() => srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoTitle))
-        ]);
-        
-        // Update video record with processing status
-        await this.updateVideoRecord(videoTitle, courseName, {
-          captionsReady: true,
-          quizReady: true,
-          summaryReady: true,
-          duration: metadata.duration,
-          processedAt: new Date()
-        });
-        
-        console.log(`✅ Video processing complete: ${videoTitle}`);
-        return { success: true, quiz, summary };
-      }
-      
-      throw new Error('Transcription failed');
+      return { success: true, jobName };
     } catch (error) {
-      console.error(`❌ Video processing failed: ${videoTitle}`, error);
-      await this.updateVideoRecord(videoTitle, courseName, {
-        processingError: error.message,
-        processedAt: new Date()
-      });
+      logger.error(`❌ Ingestion Trigger Failed: ${videoTitle}`, error, { courseName });
       return { success: false, error: error.message };
     }
   }
 
-  // Start AWS Transcribe job
-  async startTranscription(videoUrl, videoTitle) {
-    const jobName = `upload-${videoTitle.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`;
+  /**
+   * 🔄 Event Simulator (Removes Polling from Main Loop)
+   */
+  async simulateEventTrigger(jobName, videoTitle, courseName, attempt = 0) {
+    if (attempt > 30) {
+      logger.warn(`🏮 DLQ Triggered: Job ${jobName} timed out after 30 attempts`, { videoTitle, courseName });
+      await dynamoService.moveToDLQ({ jobName, videoTitle, courseName }, 'Timeout: Transcription took > 5 mins');
+      return;
+    }
+
+    setTimeout(async () => {
+      try {
+        const result = await this.handleJobCompletion(jobName, videoTitle, courseName);
+        if (!result.success && result.status === 'IN_PROGRESS') {
+          this.simulateEventTrigger(jobName, videoTitle, courseName, attempt + 1);
+        }
+      } catch (err) {
+        logger.error('Event Simulator Error', err, { jobName, videoTitle });
+      }
+    }, 10000);
+  }
+
+  // Phase 3: Decoupled Ingestion
+  // 🛰️ Submit job to AWS (Step 1)
+  async submitTranscriptionJob(videoUrl, videoTitle) {
+    const jobName = `transcribe-${videoTitle.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`;
     
-    await this.transcribe.startTranscriptionJob({
+    const command = new StartTranscriptionJobCommand({
       TranscriptionJobName: jobName,
       Media: { MediaFileUri: videoUrl },
       MediaFormat: 'mp4',
       LanguageCode: 'en-US',
-      Subtitles: { Formats: ['srt', 'vtt'] }
-    }).promise();
+      Subtitles: { Formats: ['srt'] }
+    });
+
+    await this.transcribe.send(command);
+    console.log(`📡 Event-Driven Ingestion: Submitted job ${jobName}`);
+    return { success: true, jobName };
+  }
+
+  // 🛰️ Completion Handler (Step 2 - Triggered by Event/SQS)
+  async handleJobCompletion(jobName, videoTitle, courseName) {
+    console.log(`🛰️ Event-Driven Processing: Telemetry received for ${jobName}`);
     
-    // Poll for completion
-    let job;
-    do {
-      await new Promise(resolve => setTimeout(resolve, 10000)); // 10s intervals
-      job = await this.transcribe.getTranscriptionJob({ TranscriptionJobName: jobName }).promise();
-    } while (job.TranscriptionJob.TranscriptionJobStatus === 'IN_PROGRESS');
-    
-    if (job.TranscriptionJob.TranscriptionJobStatus === 'COMPLETED') {
-      const subtitleUris = job.TranscriptionJob.Subtitles.SubtitleFileUris;
-      const srtUri = subtitleUris.find(uri => uri.includes('.srt'));
-      const vttUri = subtitleUris.find(uri => uri.includes('.vtt'));
+    const command = new GetTranscriptionJobCommand({ TranscriptionJobName: jobName });
+    const response = await this.transcribe.send(command);
+    const job = response.TranscriptionJob;
+
+    if (job.TranscriptionJobStatus === 'COMPLETED') {
+      const srtUri = job.Subtitles.SubtitleFileUris[0];
+      const srtContent = await this.downloadFile(srtUri);
       
-      // Download and store captions
-      const [srtContent, vttContent] = await Promise.all([
-        srtUri ? this.downloadFile(srtUri) : null,
-        vttUri ? this.downloadFile(vttUri) : null
+      // Store captions with Google-Grade prefixing
+      const s3Key = `processed-content/captions/${Date.now()}-${videoTitle}.srt`;
+      await this.s3.putObject({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: s3Key,
+        Body: srtContent,
+        ContentType: 'text/plain'
+      });
+
+      // AI Content Generation (Stage 4)
+      const srtEntries = srtQuizGenerator.parseSRT({ content: srtContent });
+      const [quiz, summary] = await Promise.all([
+        withRetry(() => srtQuizGenerator.generateAIQuestions(srtEntries, videoTitle, '0:00')),
+        withRetry(() => srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoTitle))
       ]);
-      
-      // Store in S3 (Task 2.2: S3 Prefix Architecture)
-      if (srtContent) {
-        await this.s3.putObject({
-          Bucket: process.env.S3_BUCKET_NAME,
-          // --- ARCHITECTURE FIX: Prefix-based organization ---
-          Key: `processed-content/captions/${videoTitle}.srt`,
-          Body: srtContent,
-          ContentType: 'text/plain'
-        }).promise();
-      }
-      
-      if (vttContent) {
-        await this.s3.putObject({
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: `processed-content/captions/${videoTitle}.vtt`,
-          Body: vttContent,
-          ContentType: 'text/vtt'
-        }).promise();
-      }
-      
-      // Store in DynamoDB
-      await srtQuizGenerator.storeSRT(videoTitle, srtContent);
-      
-      return { success: true, srtContent, vttContent };
+
+      await this.updateVideoRecord(videoTitle, courseName, {
+        captionsReady: true,
+        quizReady: true,
+        summaryReady: true,
+        processing: false,
+        processedAt: new Date()
+      });
+
+      console.log(`✅ Event-Driven Completion Success: ${videoTitle}`);
+      return { success: true };
     }
-    
-    return { success: false };
+    return { success: false, status: job.TranscriptionJobStatus };
   }
 
   // Get video metadata

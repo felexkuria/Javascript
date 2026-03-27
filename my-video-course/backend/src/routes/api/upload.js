@@ -3,6 +3,7 @@ const multer = require('multer');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const dynamodb = require('../../utils/dynamodb');
 const cognitoAuth = require('../../middleware/cognitoAuth');
+const s3Signer = require('../../utils/s3Signer');
 
 const router = express.Router();
 const s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
@@ -10,7 +11,7 @@ const s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 // Configure multer for memory storage
 const upload = multer({ 
   storage: multer.memoryStorage(),
-  limits: { fileSize: 500 * 1024 * 1024 } // 500MB limit
+  limits: { fileSize: 50 * 1024 * 1024 } // Reduced limit for legacy/small files
 });
 
 // Upload video endpoint
@@ -118,6 +119,70 @@ router.get('/status/:courseName/:videoTitle', cognitoAuth, async (req, res) => {
       message: 'Status check failed',
       error: error.message
     });
+  }
+});
+
+// 🛰️ Phase 2: Decoupled Ingestion
+// Step 1: Request Presigned URL
+router.post('/request-presigned-url', cognitoAuth, async (req, res) => {
+  try {
+    const { courseName, videoTitle, contentType } = req.body;
+    if (!courseName || !videoTitle || !contentType) {
+      return res.status(400).json({ success: false, message: 'Missing metadata' });
+    }
+
+    const videoKey = `videos/${courseName}/${Date.now()}-${videoTitle.replace(/\s+/g, '_')}.mp4`;
+    const result = await s3Signer.getPresignedUploadUrl(videoKey, contentType);
+
+    if (result.success) {
+      res.json({ success: true, url: result.url, key: result.key });
+    } else {
+      res.status(500).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Step 2: Complete Upload (Register in DynamoDB)
+router.post('/complete', cognitoAuth, async (req, res) => {
+  try {
+    const { courseName, videoTitle, description, s3Key } = req.body;
+    
+    if (!s3Key || !courseName || !videoTitle) {
+      return res.status(400).json({ success: false, message: 'Missing completion data' });
+    }
+
+    const videoData = {
+      _id: Date.now().toString(),
+      title: videoTitle,
+      courseName,
+      description: description || '',
+      s3Key,
+      videoUrl: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${s3Key}`,
+      uploadedBy: req.user.email,
+      createdAt: new Date().toISOString(),
+      captionsReady: false,
+      quizReady: false,
+      summaryReady: false,
+      processing: true
+    };
+    
+    await dynamodb.saveVideo(videoData);
+
+    // Trigger async processing (Stage 5)
+    // Note: In Stage 5, this will be handled by S3 Event Notifications
+    const videoUploadProcessor = require('../../services/videoUploadProcessor');
+    videoUploadProcessor.processUploadedVideo(
+      process.env.S3_BUCKET_NAME, 
+      s3Key, 
+      videoTitle, 
+      courseName
+    ).catch(err => console.error('Processing trigger failed:', err));
+
+    res.json({ success: true, message: 'Upload registered. Processing started.', data: videoData });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
