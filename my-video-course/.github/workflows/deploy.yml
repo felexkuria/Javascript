@@ -1,246 +1,105 @@
-name: Secure Deploy to AWS
+name: 🚀 Build & Deploy Video Course App
 
 on:
   push:
-    branches: [ main, master ]
-  workflow_dispatch:
-
-env:
-  AWS_REGION: us-east-1
-  ECR_REPOSITORY: video-course-app
+    branches: [ main ]
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
-  deploy:
-    name: Build & Deploy
+  build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+      - name: 🛠️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
+      - name: 🧪 Run Unit & Integration Tests
+        run: |
+          npm install
+          npm test
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
 
-    # Added proper Buildx setup for reliable container builds
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: 🔐 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-    - name: Build, tag, and push Docker image
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker buildx build --platform linux/amd64 \
-          --no-cache \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-          --push .
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      - name: 📦 Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.10.2
+      - name: 🏷️ Extract Git SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-    # ------------------------------------------------------------------
-    # Pre-flight: Provision skool.shopmultitouch.com ACM cert + DNS
-    # This must exist BEFORE Terraform tries to enable HTTPS on the ALB.
-    # ------------------------------------------------------------------
-    - name: Ensure ACM Certificate for skool subdomain
-      env:
-        DOMAIN: ${{ secrets.DOMAIN_NAME }}
-        HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
-      run: |
-        # Check if cert already issued
-        EXISTING=$(aws acm list-certificates --region us-east-1 \
-          --query "CertificateSummaryList[?DomainName=='${DOMAIN}' && Status=='ISSUED'].CertificateArn" \
-          --output text)
+      - name: 🐳 Build, Tag, and Push Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: video-course-app
+          IMAGE_TAG: ${{ steps.vars.outputs.sha_short }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
 
-        if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
-          echo "✅ Certificate already exists: $EXISTING"
-          echo "ACM_CERT_ARN=$EXISTING" >> $GITHUB_ENV
-          exit 0
-        fi
+      - name: 🛡️ Scan Image for Vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.login-ecr.outputs.registry }}/video-course-app:${{ steps.vars.outputs.sha_short }}
+          format: 'table'
+          exit-code: '1' # Fail the build on High/Critical
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
 
-        echo "🔐 Requesting ACM certificate for $DOMAIN ..."
-        CERT_ARN=$(aws acm request-certificate \
-          --domain-name "$DOMAIN" \
-          --validation-method DNS \
-          --region us-east-1 \
-          --query CertificateArn --output text)
-        echo "Cert ARN: $CERT_ARN"
-        echo "ACM_CERT_ARN=$CERT_ARN" >> $GITHUB_ENV
+      - name: 📦 Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: video-course-app
+          IMAGE_TAG: ${{ steps.vars.outputs.sha_short }}
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-        # Wait for DNS validation record to appear
-        echo "⏳ Waiting for DNS validation CNAME..."
-        for i in $(seq 1 20); do
-          CNAME=$(aws acm describe-certificate --certificate-arn "$CERT_ARN" \
-            --region us-east-1 \
-            --query 'Certificate.DomainValidationOptions[0].ResourceRecord' \
-            --output json 2>/dev/null || echo "{}")
-          NAME=$(echo "$CNAME" | jq -r '.Name // empty')
-          VALUE=$(echo "$CNAME" | jq -r '.Value // empty')
-          if [ -n "$NAME" ] && [ -n "$VALUE" ]; then
-            echo "📝 Adding DNS validation record: $NAME → $VALUE"
-            aws route53 change-resource-record-sets \
-              --hosted-zone-id "$HOSTED_ZONE_ID" \
-              --change-batch "{\"Changes\":[{\"Action\":\"UPSERT\",\"ResourceRecordSet\":{\"Name\":\"$NAME\",\"Type\":\"CNAME\",\"TTL\":300,\"ResourceRecords\":[{\"Value\":\"$VALUE\"}]}}]}" || true
-            break
-          fi
-          echo "   Waiting for validation record ($i/20)..."
-          sleep 10
-        done
+      - name: 🏗️ Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-        echo "⏳ Waiting for certificate to be issued (can take ~3 min)..."
-        aws acm wait certificate-validated --certificate-arn "$CERT_ARN" --region us-east-1 || true
-        STATUS=$(aws acm describe-certificate --certificate-arn "$CERT_ARN" \
-          --region us-east-1 --query 'Certificate.Status' --output text)
-        echo "Certificate status: $STATUS"
-
-    # ------------------------------------------------------------------
-    # Build terraform.tfvars — only real Terraform variables go here.
-    # NOTE: create_ecr_repo = true if we want Terraform to manage ECR.
-    # ------------------------------------------------------------------
-    - name: Create terraform.tfvars
-      run: |
-        cd terraform
-        cat > terraform.tfvars << EOF
-        aws_region             = "${{ env.AWS_REGION }}"
-        app_name               = "video-course-app"
-        environment            = "prod"
-        vpc_cidr               = "10.0.0.0/16"
-        instance_type          = "t3.medium"
-        key_pair_name          = "${{ secrets.KEY_PAIR_NAME }}"
-        min_size               = 1
-        max_size               = 5
-        desired_capacity       = 2
-        domain_name            = "${{ secrets.DOMAIN_NAME }}"
-        hosted_zone_id         = "${{ secrets.HOSTED_ZONE_ID }}"
-        s3_bucket_name         = "${{ secrets.S3_BUCKET_NAME }}"
-        gemini_api_key         = "${{ secrets.GEMINI_API_KEY }}"
-        nova_api_key           = "${{ secrets.NOVA_API_KEY }}"
-        enable_https           = true
-        create_route53_records = true
-        create_ecr_repo          = true
-        create_dynamodb_tables   = true
-        EOF
-
-    - name: Terraform Init
-      working-directory: ./terraform
-      run: terraform init -reconfigure
-
-    - name: Terraform Plan (visible errors)
-      working-directory: ./terraform
-      run: terraform plan -var-file="terraform.tfvars" -out=tfplan 2>&1
-
-    - name: Terraform Apply
-      working-directory: ./terraform
-      run: terraform apply -auto-approve tfplan 2>&1
-
-    - name: Trigger Instance Refresh
-      env:
-        AWS_REGION: ${{ env.AWS_REGION }}
-      run: |
-        # NOTE: Do NOT use `set -e` here — cancel commands may return non-zero
-        # when there is nothing to cancel, which is perfectly fine.
-
-        # Retrieve the ASG name from Terraform outputs
-        ASG_NAME=$(cd terraform && terraform output -raw autoscaling_group_name 2>/dev/null || true)
-
-        if [ -z "$ASG_NAME" ]; then
-          echo "⚠️  No ASG found in terraform output. Scanning via AWS CLI..."
-          ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
-            --query 'AutoScalingGroups[?contains(AutoScalingGroupName, `video-course-app`)].AutoScalingGroupName' \
-            --output text | head -n 1)
-        fi
-
-        if [ -z "$ASG_NAME" ] || [ "$ASG_NAME" = "None" ]; then
-          echo "❌ ERROR: Could not identify ASG_NAME. Skipping refresh."
-          exit 1
-        fi
-
-        echo "🔍 Checking status for ASG: $ASG_NAME"
-
-        # ------------------------------------------------------------------
-        # Step 1: If an InProgress or Pending refresh exists, cancel it and
-        #         POLL until it reaches a terminal state before continuing.
-        #         AWS rejects StartInstanceRefresh while one is still active,
-        #         even if a cancel has been requested (it takes time).
-        # ------------------------------------------------------------------
-        ACTIVE_REFRESH=$(aws autoscaling describe-instance-refreshes \
-          --auto-scaling-group-name "$ASG_NAME" \
-          --query 'InstanceRefreshes[?Status==`InProgress` || Status==`Pending`].InstanceRefreshId' \
-          --output text | awk '{print $1}')
-
-        if [ -n "$ACTIVE_REFRESH" ] && [ "$ACTIVE_REFRESH" != "None" ]; then
-          echo "⚠️  Active refresh(es) detected. Focusing on ID: $ACTIVE_REFRESH. Cancelling..."
-          aws autoscaling cancel-instance-refresh --auto-scaling-group-name "$ASG_NAME" || true
-
-          echo "⏳ Waiting for cancellation to complete (max 5 min)..."
-          MAX_WAIT=30   # 30 × 10 s = 5 minutes
-          COUNT=0
-          while [ $COUNT -lt $MAX_WAIT ]; do
-            CURRENT_STATUS=$(aws autoscaling describe-instance-refreshes \
-              --auto-scaling-group-name "$ASG_NAME" \
-              --instance-refresh-ids "$ACTIVE_REFRESH" \
-              --query 'InstanceRefreshes[0].Status' \
-              --output text)
-            echo "   Refresh Status ($ACTIVE_REFRESH): $CURRENT_STATUS (attempt $((COUNT+1))/$MAX_WAIT)"
-            # Terminal states: Successful, Failed, Cancelled, RollbackSuccessful, RollbackFailed
-            case "$CURRENT_STATUS" in
-              Successful|Failed|Cancelled|RollbackSuccessful|RollbackFailed)
-                echo "✅ Previous refresh reached terminal state: $CURRENT_STATUS"
-                break
-                ;;
-            esac
-            COUNT=$((COUNT + 1))
-            sleep 10
-          done
-
-          if [ $COUNT -eq $MAX_WAIT ]; then
-            echo "❌ Timed out waiting for previous refresh to cancel. Exiting."
-            exit 1
-          fi
-        fi
-
-        # ------------------------------------------------------------------
-        # Step 2: Start the new instance refresh
-        # ------------------------------------------------------------------
-        echo "🔄 Triggering instance refresh for existing ASG..."
-        aws autoscaling start-instance-refresh \
-          --auto-scaling-group-name "$ASG_NAME" \
-          --strategy Rolling \
-          --preferences '{"MinHealthyPercentage":60}'
-        echo "✅ Instance refresh triggered successfully."
-
-    # Added: Automated Health Check to verify the new container actually starts
-    - name: Wait for Target Group Health
-      run: |
-        cd terraform
-        TARGET_GROUP_ARN=$(terraform output -raw target_group_arn)
-        echo "⏳ Waiting for targets in $TARGET_GROUP_ARN to become healthy..."
-        
-        for i in {1..30}; do
-          HEALTH_STATUS=$(aws elbv2 describe-target-health \
-            --target-group-arn "$TARGET_GROUP_ARN" \
-            --query 'TargetHealthDescriptions[?TargetHealth.State==`healthy`].TargetHealth.State' \
-            --output text)
+      - name: 🚀 Terraform Apply
+        working-directory: ./terraform
+        env:
+          TF_VAR_container_image_tag: ${{ steps.vars.outputs.sha_short }}
+          TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          TF_VAR_nova_api_key: ${{ secrets.NOVA_API_KEY }}
+          TF_VAR_session_secret: ${{ secrets.SESSION_SECRET }}
+          TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
+        run: |
+          terraform init
+          terraform validate
+          terraform apply -auto-approve
+      - name: 🏥 Post-Deployment Health Check
+        run: |
+          # Fetch the ALB DNS name dynamically
+          ALB_URL=$(aws elbv2 describe-load-balancers --query "LoadBalancers[0].DNSName" --output text)
+          echo "Checking health of ALB: http://$ALB_URL/health"
           
-          if [ -n "$HEALTH_STATUS" ]; then
-            echo "✅ Deployment successful! Your platform is live at https://${{ secrets.DOMAIN_NAME }}"
-            exit 0
-          fi
-          echo "...still waiting ($i/30)..."
-          sleep 10
-        done
-        echo "❌ TIMEOUT: Instances did not become healthy."
-        exit 1
+          # Retry loop to allow for instance refresh spin-up
+          for i in {1..20}; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://$ALB_URL/health || echo "failure")
+            if [ "$HTTP_CODE" == "200" ]; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            echo "⌛ Waiting for healthy response (attempt $i, status: $HTTP_CODE)..."
+            sleep 30
+          done
+          
+          echo "❌ Health check failed after 10 minutes!"
+          exit 1

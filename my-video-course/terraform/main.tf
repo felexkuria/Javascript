@@ -91,6 +91,8 @@ module "security" {
   create_cognito         = var.create_cognito
   create_ec2_role        = var.create_ec2_role
   create_cognito_role    = var.create_cognito ? var.create_cognito_role : false
+  create_app_secrets     = var.create_app_secrets
+  app_secrets_id         = var.app_secrets_id
   s3_bucket_arn          = module.storage.s3_bucket_arn
   dynamodb_table_arns = [
     module.storage.dynamodb_videos_arn,
@@ -147,14 +149,7 @@ module "compute" {
     aws_region           = var.aws_region
     s3_bucket_name       = module.storage.s3_bucket_name
     account_id           = data.aws_caller_identity.current.account_id
-    gemini_api_key       = var.gemini_api_key
-    nova_api_key         = var.nova_api_key
-    cognito_user_pool_id = module.security.cognito_user_pool_id
-    cognito_client_id    = module.security.cognito_client_id
-
-    session_secret       = var.session_secret
-    admin_key            = var.admin_key
-    mongodb_uri          = var.mongodb_uri
+    image_tag            = var.container_image_tag
   }))
 }
 

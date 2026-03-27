@@ -20,6 +20,18 @@ Go to your GitHub repository → Settings → Secrets and variables → Actions
 Add these secrets:
 - `AWS_ACCESS_KEY_ID`: Your AWS access key
 - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+- `MONGODB_URI`: Your MongoDB connection string
+- `GEMINI_API_KEY`: Google Gemini Key
+- `NOVA_API_KEY`: AWS Bedrock Key
+- `SESSION_SECRET`: App session secret
+
+### 3. **Configure AWS Secrets Manager**
+We use AWS Secrets Manager for runtime application secrets.
+1. Log in to AWS Console -> Secrets Manager.
+2. Find the secret named `video-course-app-secrets`.
+3. Select **Retrieve secret value** -> **Edit**.
+4. Input your keys in JSON format (GEMINI_API_KEY, MONGODB_URI, etc.). 
+   *The application will pull these automatically at startup.*
 
 ### 3. **Setup Terraform Backend (Optional)**
 Run the "Setup Terraform Backend" workflow manually:

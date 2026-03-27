@@ -203,21 +203,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const chatbot = document.getElementById('floating-chatbot');
         if (chatbot) {
             chatbot.classList.toggle('hidden');
-            console.log('Nova AI Widget Toggled:', !chatbot.classList.contains('hidden'));
+            const isVisible = !chatbot.classList.contains('hidden');
+            if (isVisible) {
+                // Initial focus for premium UX
+                setTimeout(() => document.getElementById('floating-chat-input-widget')?.focus(), 300);
+            }
         }
     };
 
-    // Ensure DOM level binding for senior designer stability
-    document.addEventListener('DOMContentLoaded', () => {
-        const trigger = document.getElementById('floating-trigger');
-        if (trigger) {
-            trigger.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                window.toggleFloatingChatbot();
-            });
-        }
-    });
+    // Corrected binding - removed redundant nested listener
+    const trigger = document.getElementById('floating-trigger');
+    if (trigger) {
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.toggleFloatingChatbot();
+        });
+    }
 
     window.switchLabTab = function(tabId) {
         // Enforce strict !important isolation

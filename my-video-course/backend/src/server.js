@@ -33,3 +33,20 @@ async function startServer() {
 }
 
 startServer();
+// Graceful shutdown (Day 11/12: Zero Downtime)
+const gracefulShutdown = () => {
+  console.log('🛑 Received kill signal, shutting down gracefully');
+  server.close(() => {
+    console.log('✅ Closed out remaining connections');
+    process.exit(0);
+  });
+
+  // Force close after 15s
+  setTimeout(() => {
+    console.error('⚠️ Could not shutdown in time, forcefully closing');
+    process.exit(1);
+  }, 15000);
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);

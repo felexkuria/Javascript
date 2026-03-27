@@ -96,9 +96,23 @@ class GamificationManager {
       lastActivity: new Date().toISOString()
     };
 
+    // --- UI/UX FIX (Designer): Premium Badge Tier ---
+    if (newLevel >= 7 && (userData.level < 7 || !userData.premiumStatus)) {
+      updates.premiumStatus = 'active';
+      updates.premiumUnlocked = true; // Temporary flag for frontend animation
+      updates.achievements = [...(userData.achievements || []), {
+        id: 'premium_legend',
+        title: '🌟 Premium Legend Unlocked!',
+        description: 'You have reached the elite tier of ProjectLevi learners.',
+        earnedAt: new Date().toISOString(),
+        points: 1000,
+        isPremium: true
+      }];
+    }
+
     // Check for level up achievement
     if (newLevel > userData.level) {
-      updates.achievements = [...(userData.achievements || []), {
+      updates.achievements = [...(userData.achievements || (updates.achievements || [])), {
         id: `level_${newLevel}`,
         title: `Level ${newLevel} Reached!`,
         description: `You've reached level ${newLevel}`,

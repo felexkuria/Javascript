@@ -1,3 +1,18 @@
+# Secrets Management (Day 11/12)
+resource "aws_secretsmanager_secret" "app" {
+  count       = var.create_app_secrets ? 1 : 0
+  name        = var.app_secrets_id
+  description = "Application environment secrets for ${var.app_name}"
+
+  # Recovery window set for easy cleanup during training/challenges
+  recovery_window_in_days = 0 
+  
+  tags = {
+    Name        = var.app_secrets_id
+    Environment = var.environment
+  }
+}
+
 # Security Groups
 resource "aws_security_group" "alb_new" {
   count       = var.create_security_groups ? 1 : 0
@@ -139,6 +154,23 @@ resource "aws_iam_role_policy_attachment" "ec2_cognito" {
   count      = var.create_ec2_role ? 1 : 0
   role       = aws_iam_role.ec2_role[0].name
   policy_arn = "arn:aws:iam::aws:policy/AmazonCognitoPowerUser"
+}
+
+resource "aws_iam_role_policy" "ec2_secrets" {
+  count = var.create_ec2_role ? 1 : 0
+  name  = "${var.app_name}-ec2-secrets-policy"
+  role  = aws_iam_role.ec2_role[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+        Resource = "*"
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "ec2_dynamodb" {

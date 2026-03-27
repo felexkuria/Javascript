@@ -243,6 +243,46 @@ class DynamoDBService {
     }
   }
 
+  // --- NEW (Senior Data Engineer): Batch Optimization ---
+  async batchSaveVideos(videos) {
+    if (!this.isConnected || !videos.length) return false;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    const { BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
+
+    try {
+      const chunks = [];
+      const items = videos.map(video => ({
+        PutRequest: {
+          Item: {
+            ...video,
+            videoId: video.videoId || video._id?.toString() || Date.now().toString(),
+            updatedAt: new Date().toISOString()
+          }
+        }
+      }));
+
+      // DynamoDB allows max 25 items per batch
+      for (let i = 0; i < items.length; i += 25) {
+        chunks.push(items.slice(i, i + 25));
+      }
+
+      for (const chunk of chunks) {
+        const params = {
+          RequestItems: {
+            [`video-course-app-videos-${environment}`]: chunk
+          }
+        };
+        await this.docClient.send(new BatchWriteCommand(params));
+      }
+
+      console.log(`🚀 Batch saved ${videos.length} videos successfully.`);
+      return true;
+    } catch (error) {
+      console.error('Batch Save Failed:', error.message);
+      return false;
+    }
+  }
+
   async getVideosForCourse(courseName, userId = 'engineerfelex@gmail.com') {
     if (!this.isConnected) return null;
 
@@ -251,13 +291,14 @@ class DynamoDBService {
     try {
       const params = {
         TableName: `video-course-app-videos-${environment}`,
-        FilterExpression: 'courseName = :courseName',
+        // --- PERFORMANCE FIX (Data Engineer): Changed Scan to Query ---
+        KeyConditionExpression: 'courseName = :courseName', 
         ExpressionAttributeValues: {
           ':courseName': courseName
         }
       };
 
-      const result = await this.docClient.send(new ScanCommand(params));
+      const result = await this.docClient.send(new QueryCommand(params));
       const videos = result.Items || [];
       
       // Remove duplicates by title+order combination and sort by order then title
@@ -285,6 +326,29 @@ class DynamoDBService {
       });
     } catch (error) {
       console.error('Error getting videos from DynamoDB:', error);
+      return null;
+    }
+  }
+
+  // --- NEW (Google Data Engineer): GSI Global Lookup ---
+  async getVideoGlobally(videoId) {
+    if (!this.isConnected) return null;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    
+    try {
+      const params = {
+        TableName: `video-course-app-videos-${environment}`,
+        IndexName: 'VideoIdIndex',
+        KeyConditionExpression: 'videoId = :videoId',
+        ExpressionAttributeValues: {
+          ':videoId': videoId
+        }
+      };
+
+      const result = await this.docClient.send(new QueryCommand(params));
+      return result.Items && result.Items.length > 0 ? result.Items[0] : null;
+    } catch (error) {
+      console.error('GSI Lookup Error:', error.message);
       return null;
     }
   }
@@ -389,30 +453,12 @@ class DynamoDBService {
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
 
     try {
-      // Find the video first using scan since table structure varies
-      const findParams = {
-        TableName: `video-course-app-videos-${environment}`,
-        FilterExpression: 'courseName = :courseName AND videoId = :videoId',
-        ExpressionAttributeValues: {
-          ':courseName': courseName,
-          ':videoId': videoId
-        }
-      };
-
-      const findResult = await this.docClient.send(new ScanCommand(findParams));
-      if (!findResult.Items || findResult.Items.length === 0) {
-        console.error('Video not found for watch status update');
-        return false;
-      }
-
-      const video = findResult.Items[0];
-      
-      // Update using the actual key structure
       const updateParams = {
         TableName: `video-course-app-videos-${environment}`,
-        Key: video.userId ? 
-          { userId: video.userId, videoId: videoId } : 
-          { courseName: courseName, videoId: videoId },
+        Key: { 
+          courseName: courseName, 
+          videoId: videoId 
+        },
         UpdateExpression: 'SET watched = :watched, watchedAt = :watchedAt, updatedAt = :updatedAt',
         ExpressionAttributeValues: {
           ':watched': watched,
