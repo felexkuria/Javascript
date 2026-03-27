@@ -27,8 +27,13 @@ async function withRetry(fn, options = {}) {
         throw error;
       }
 
-      console.warn(`⚠️  Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms error: ${error.message}`);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      // 🎲 Full Jitter Implementation (SRE Best Practice)
+      const jitter = Math.random() * 200; // 0-200ms random offset
+      const totalDelay = delay + jitter;
+
+      console.warn(`⚠️  Retry attempt ${attempt + 1}/${maxRetries} after ${Math.round(totalDelay)}ms (Jitter: ${Math.round(jitter)}ms) Error: ${error.message}`);
+      
+      await new Promise(resolve => setTimeout(resolve, totalDelay));
       delay *= factor;
     }
   }
