@@ -32,14 +32,33 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
+const DynamoDBStore = require('connect-dynamodb')(session);
+
+const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+const store = new DynamoDBStore({
+  table: `video-course-app-sessions-${environment}`,
+  AWSConfigJSON: {
+    region: process.env.AWS_REGION || 'us-east-1',
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
+  },
+  cleanupInterval: 600000 // 10 minutes
+});
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: true, // Ensured for distributed session投影
+  resave: true, 
   saveUninitialized: false,
-  proxy: true, // Required for Load Balancer trust
+  store: store,
+  proxy: true, 
+  name: 'multitouch.sid',
   cookie: {
-    secure: false, // Relaxed for Alpha ALB testing
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000 
   }
 }));
 
