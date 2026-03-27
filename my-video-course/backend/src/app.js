@@ -34,10 +34,11 @@ app.use(cookieParser());
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: false,
+  resave: true, // Ensured for distributed session投影
   saveUninitialized: false,
+  proxy: true, // Required for Load Balancer trust
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Relaxed for Alpha ALB testing
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));

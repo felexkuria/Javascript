@@ -210,8 +210,8 @@
 </head>
 <body class="<%= typeof theme !== 'undefined' ? theme : '' %>" style="font-family: 'Euclid Circular A', 'Inter', system-ui, sans-serif;">
     <nav class="mdb-nav">
-        <div class="flex items-center">
-            <button class="lg:hidden mr-4 text-white p-2 hover:bg-white/5 rounded-lg transition-colors" onclick="if(window.toggleSidebar) toggleSidebar()">
+        <div class="flex items-center flex-1">
+            <button class="lg:hidden mr-4 text-[#00ED64] p-2 hover:bg-[#00ED64]/10 rounded-lg transition-colors" onclick="if(window.toggleSidebar) toggleSidebar()">
                 <i class="fas fa-bars"></i>
             </button>
             <a href="/dashboard" class="nav-brand">
@@ -220,15 +220,14 @@
                 </div>
                 <span class="nav-brand-name">Multitouch<span>Academy</span></span>
             </a>
+            <ul class="nav-links hidden lg:flex ml-8">
+                <li><a href="/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
+                <li><a href="/courses" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'active' : '' %>">Courses</a></li>
+                <% if (typeof user !== 'undefined' && (user.isAdmin || user.role === 'teacher' || user.isTeacher)) { %>
+                    <li><a href="/admin/course-manager" class="nav-link">Manager</a></li>
+                <% } %>
+            </ul>
         </div>
-
-        <ul class="nav-links">
-            <li><a href="/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
-            <li><a href="/courses" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'active' : '' %>">Courses</a></li>
-            <% if (typeof user !== 'undefined' && (user.isAdmin || user.role === 'teacher' || user.isTeacher)) { %>
-                <li><a href="/admin/course-manager" class="nav-link">Manager</a></li>
-            <% } %>
-        </ul>
 
         <div class="nav-actions">
             <button id="themeToggle" class="action-icon-btn" title="Toggle theme">
