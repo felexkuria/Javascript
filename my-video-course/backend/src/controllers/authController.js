@@ -1,5 +1,6 @@
 const authService = require('../services/authService');
 const logger = require('../utils/logger');
+const jwt = require('jsonwebtoken');
 const ADMIN_EMAIL = 'engineerfelex@gmail.com';
 
 class AuthController {
@@ -58,10 +59,22 @@ class AuthController {
     try {
       const { email, password, name } = req.body;
       const user = await authService.signup(email, password, name);
-      res.json({ success: true, user });
+      const token = jwt.sign({ email: user.email, role: user.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
+      res.json({ success: true, token, user });
     } catch (error) {
       logger.error('Signup error', error);
       res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
+  async setupAdmin(req, res) {
+    try {
+      const { email, password, adminKey } = req.body;
+      const user = await authService.setupAdmin(email, password, adminKey);
+      res.json({ success: true, message: 'Admin synchronized successfully', user });
+    } catch (error) {
+      logger.error('Setup Admin error', error);
+      res.status(401).json({ success: false, error: error.message });
     }
   }
 
@@ -94,8 +107,15 @@ class AuthController {
           logger.error('Session save error', err);
           return res.status(500).json({ success: false, error: 'Session commit failure' });
         }
+        const token = jwt.sign(
+          { email: user.email, role: finalRole }, 
+          process.env.JWT_SECRET || 'secret', 
+          { expiresIn: '24h' }
+        );
+
         res.json({ 
           success: true, 
+          token,
           user: req.session.user
         });
       });

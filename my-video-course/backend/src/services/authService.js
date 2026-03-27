@@ -13,7 +13,8 @@ class AuthService {
       // 1. Try DynamoDB first (New Source of Truth)
       let user = await dynamodb.getUser(email);
 
-      if (user) {
+      // 🛡️ Google-Grade Fix: Only use DynamoDB if password hash exists
+      if (user && user.password) {
         const isMatch = await bcrypt.compare(password, user.password);
         if (isMatch) {
           logger.info(`🔐 User authenticated via DynamoDB: ${email}`, { email });
@@ -21,6 +22,11 @@ class AuthService {
         }
         logger.warn(`🚫 Invalid password for DynamoDB user: ${email}`, { email });
         throw new Error('Invalid credentials');
+      }
+
+      // If user exists but has no password (Legacy record), or user doesn't exist, try Cognito
+      if (user && !user.password) {
+        logger.info(`🔄 User ${email} exists without hash. Forcing Cognito verify.`);
       }
 
       // 2. SHADOW MIGRATION: Check legacy Cognito
@@ -50,6 +56,31 @@ class AuthService {
         throw new Error('Invalid credentials');
       }
     } catch (error) {
+      throw error;
+    }
+  }
+
+  async setupAdmin(email, password, adminKey) {
+    try {
+      if (adminKey !== process.env.ADMIN_KEY) {
+        throw new Error('Invalid ADMIN_KEY');
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const adminUser = {
+        email,
+        password: hashedPassword,
+        name: 'Super Admin',
+        role: 'admin',
+        roles: ['admin', 'teacher', 'student'],
+        updatedAt: new Date().toISOString()
+      };
+
+      await dynamodb.saveUser(adminUser);
+      logger.info(`👑 Super Admin Synchronized: ${email}`);
+      return this.sanitizeUser(adminUser);
+    } catch (error) {
+      logger.error('❌ Super Admin Setup Failed', error);
       throw error;
     }
   }

@@ -164,7 +164,7 @@
             console.log(`[Diagnostic] Attempting login for: ${email} (${password.length} chars)`);
             loginBtn.disabled = true;
             loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            loginTextVal.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Verifying Cluster...';
+            loginText.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Verifying Cluster...';
             
             try {
                 const response = await fetch('/api/auth/signin', {
@@ -183,7 +183,7 @@
             finally { 
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                loginTextVal.textContent = selectedRole === 'teacher' ? 'Initialize Instructor Access' : 'Initialize Student Access';
+                loginText.textContent = selectedRole === 'teacher' ? 'Initialize Instructor Access' : 'Initialize Student Access';
             }
         });
 

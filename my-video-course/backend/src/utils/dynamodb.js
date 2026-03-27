@@ -1030,6 +1030,49 @@ class DynamoDBService {
     }
   }
 
+  /**
+   * 🚀 Batch Save Videos (Google-Grade Performance)
+   * Uses DynamoDB BatchWriteItem to save up to 25 videos in a single request.
+   */
+  async batchSaveVideos(courseName, videos) {
+    if (!this.isConnected || !videos) return false;
+    
+    // Ensure we have an array
+    const videoArray = Array.isArray(videos) ? videos : Object.values(videos);
+    if (videoArray.length === 0) return true;
+
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    const tableName = `video-course-app-videos-${environment}`;
+
+    try {
+      const { BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
+      
+      // DynamoDB limits batch writes to 25 items
+      for (let i = 0; i < videoArray.length; i += 25) {
+        const batch = videoArray.slice(i, i + 25);
+        const writeRequests = batch.map(video => ({
+          PutRequest: {
+            Item: this.sanitize({
+              ...video,
+              courseName,
+              updatedAt: new Date().toISOString()
+            })
+          }
+        }));
+
+        await this.docClient.send(new BatchWriteCommand({
+          RequestItems: {
+            [tableName]: writeRequests
+          }
+        }));
+      }
+      return true;
+    } catch (error) {
+      console.error('❌ BatchWrite Error:', error.message);
+      return false;
+    }
+  }
+
   isAvailable() {
     return this.isConnected;
   }
