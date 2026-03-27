@@ -24,7 +24,6 @@ jobs:
           npm install
           npm test
         env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
 
       - name: 🔐 Configure AWS Credentials

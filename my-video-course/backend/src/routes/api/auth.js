@@ -5,6 +5,7 @@ const authController = require('../../controllers/authController');
 // Canonical API endpoints
 router.post('/signup', authController.signup);
 router.post('/signin', authController.signin);
+router.post('/setup-admin', authController.setupAdmin);
 router.post('/logout', authController.logout);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/confirm-forgot', authController.confirmForgotPassword);
