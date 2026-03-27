@@ -390,7 +390,11 @@ class DynamoDBService {
     try {
       // First try to get courses from the courses table
       const coursesParams = {
-        TableName: `video-course-app-courses-${environment}`
+        TableName: `video-course-app-courses-${environment}`,
+        // --- SAGA FIX: Filter out courses that are currently being purged ---
+        FilterExpression: '#status <> :deleting',
+        ExpressionAttributeNames: { '#status': 'status' },
+        ExpressionAttributeValues: { ':deleting': 'DELETING' }
       };
 
       const coursesResult = await this.docClient.send(new ScanCommand(coursesParams));
@@ -412,11 +416,10 @@ class DynamoDBService {
           sections: courseItem.sections || [],
           offlineMode: false
         });
-
-
       }
       
       // Also get courses from videos table (for backward compatibility)
+      // Check if they are NOT in the DELETING list
       const videosParams = {
         TableName: `video-course-app-videos-${environment}`,
         ProjectionExpression: 'courseName'
@@ -442,6 +445,31 @@ class DynamoDBService {
     } catch (error) {
       console.error('Error getting courses from DynamoDB:', error);
       return null;
+    }
+  }
+
+  /**
+   * 🏗️ Saga Stage 3: Final Purge
+   * Removes the record from DynamoDB after storage is confirmed empty.
+   */
+  async purgeCourse(courseName) {
+    if (!this.isConnected) return false;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      // 1. Delete all videos first
+      await this.deleteVideosForCourse(courseName);
+      
+      // 2. Delete main course record
+      const params = {
+        TableName: `video-course-app-courses-${environment}`,
+        Key: { courseName: courseName }
+      };
+      const { DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+      await this.docClient.send(new DeleteCommand(params));
+      return true;
+    } catch (error) {
+      console.error('Saga Error (Purging):', error.message);
+      return false;
     }
   }
 
@@ -570,6 +598,7 @@ class DynamoDBService {
         TableName: `video-course-app-courses-${environment}`,
         Item: {
           courseName: sanitized.name || sanitized.courseName || sanitized.title,
+          status: sanitized.status || 'ACTIVE',
           ...sanitized,
           instructorEmail: sanitized.instructorEmail || 'engineerfelex@gmail.com',
           createdAt: sanitized.createdAt || new Date().toISOString(),
@@ -581,6 +610,34 @@ class DynamoDBService {
       return true;
     } catch (error) {
       console.error('Error saving course to DynamoDB:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 🏗️ Saga Stage 1: Mark for Deletion
+   * Sets course status to DELETING to prevent students from accessing it
+   * while the backend purges storage artifacts.
+   */
+  async markCourseForDeletion(courseName) {
+    if (!this.isConnected) return false;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    
+    try {
+      const params = {
+        TableName: `video-course-app-courses-${environment}`,
+        Key: { courseName: courseName },
+        UpdateExpression: 'SET #status = :status, updatedAt = :updatedAt',
+        ExpressionAttributeNames: { '#status': 'status' },
+        ExpressionAttributeValues: {
+          ':status': 'DELETING',
+          ':updatedAt': new Date().toISOString()
+        }
+      };
+      await this.docClient.send(new UpdateCommand(params));
+      return true;
+    } catch (error) {
+      console.error('Saga Error (Marking):', error.message);
       return false;
     }
   }

@@ -1,106 +1,86 @@
-const { CognitoIdentityProviderClient } = require('@aws-sdk/client-cognito-identity-provider');
-const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const dynamodb = require('../utils/dynamodb');
+const logger = require('../utils/logger');
+const cognitoService = require('./cognitoService');
 
 class AuthService {
-  constructor() {
-    this.cognito = new CognitoIdentityProviderClient({
-      region: process.env.AWS_REGION || 'us-east-1'
-    });
-    this.userPoolId = process.env.COGNITO_USER_POOL_ID;
-    this.clientId = process.env.COGNITO_CLIENT_ID;
-  }
-
-  async signUp(email, password, name, role = 'student') {
-    const params = {
-      ClientId: this.clientId,
-      Username: email,
-      Password: password,
-      UserAttributes: [
-        { Name: 'email', Value: email },
-        { Name: 'name', Value: name },
-        { Name: 'custom:role', Value: role }
-      ]
-    };
-
-    return await this.cognito.signUp(params).promise();
-  }
-
-  async confirmSignUp(email, confirmationCode) {
-    const params = {
-      ClientId: this.clientId,
-      Username: email,
-      ConfirmationCode: confirmationCode
-    };
-
-    return await this.cognito.confirmSignUp(params).promise();
-  }
-
-  async signIn(email, password) {
-    const params = {
-      AuthFlow: 'USER_PASSWORD_AUTH',
-      ClientId: this.clientId,
-      AuthParameters: {
-        USERNAME: email,
-        PASSWORD: password
-      }
-    };
-
+  /**
+   * 🛡️ Google-Grade Authentication Engine
+   * Migrates users from Cognito to DynamoDB transparently.
+   */
+  async login(email, password) {
     try {
-      const result = await this.cognito.initiateAuth(params).promise();
-      console.log('Cognito signIn result:', result);
-      return result;
+      // 1. Try DynamoDB first (New Source of Truth)
+      let user = await dynamodb.getUser(email);
+
+      if (user) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (isMatch) {
+          logger.info(`🔐 User authenticated via DynamoDB: ${email}`, { email });
+          return this.sanitizeUser(user);
+        }
+        logger.warn(`🚫 Invalid password for DynamoDB user: ${email}`, { email });
+        throw new Error('Invalid credentials');
+      }
+
+      // 2. SHADOW MIGRATION: Check legacy Cognito
+      logger.info(`🔄 Shadow Migration: Checking Cognito for ${email}`);
+      try {
+        const cognitoResult = await cognitoService.signIn(email, password);
+        
+        // Cognito login succeeded! Create user in DynamoDB for subsequent logins.
+        const isAdmin = email === 'engineerfelex@gmail.com';
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        user = {
+          email,
+          password: hashedPassword,
+          name: email.split('@')[0], 
+          role: isAdmin ? 'admin' : 'student',
+          roles: isAdmin ? ['admin', 'teacher', 'student'] : ['student'],
+          createdAt: new Date().toISOString()
+        };
+
+        await dynamodb.saveUser(user);
+        logger.info(`✅ Shadow Migration Success: ${email} moved to DynamoDB`);
+        
+        return this.sanitizeUser(user);
+      } catch (cognitoErr) {
+        logger.error(`❌ Authentication failed for ${email} (Both DB & Cognito)`, cognitoErr);
+        throw new Error('Invalid credentials');
+      }
     } catch (error) {
-      console.error('Cognito signIn error:', error.code, error.message);
       throw error;
     }
   }
 
-  async getUserFromToken(accessToken) {
-    const params = {
-      AccessToken: accessToken
-    };
-
-    return await this.cognito.getUser(params).promise();
-  }
-
-  verifyToken(token) {
+  async signup(email, password, name) {
     try {
-      return jwt.decode(token);
+      const existing = await dynamodb.getUser(email);
+      if (existing) throw new Error('User already exists');
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = {
+        email,
+        password: hashedPassword,
+        name,
+        role: 'student',
+        roles: ['student']
+      };
+
+      await dynamodb.saveUser(newUser);
+      logger.info(`🆕 New User Registered in DynamoDB: ${email}`, { email });
+      
+      return this.sanitizeUser(newUser);
     } catch (error) {
-      throw new Error('Invalid token');
+      logger.error(`❌ Signup failed for ${email}`, error);
+      throw error;
     }
   }
 
-  async refreshToken(refreshToken) {
-    const params = {
-      AuthFlow: 'REFRESH_TOKEN_AUTH',
-      ClientId: this.clientId,
-      AuthParameters: {
-        REFRESH_TOKEN: refreshToken
-      }
-    };
-
-    return await this.cognito.initiateAuth(params).promise();
-  }
-
-  async forgotPassword(email) {
-    const params = {
-      ClientId: this.clientId,
-      Username: email
-    };
-
-    return await this.cognito.forgotPassword(params).promise();
-  }
-
-  async confirmForgotPassword(email, confirmationCode, newPassword) {
-    const params = {
-      ClientId: this.clientId,
-      Username: email,
-      ConfirmationCode: confirmationCode,
-      Password: newPassword
-    };
-
-    return await this.cognito.confirmForgotPassword(params).promise();
+  sanitizeUser(user) {
+    const { password, ...safeUser } = user;
+    return safeUser;
   }
 }
 

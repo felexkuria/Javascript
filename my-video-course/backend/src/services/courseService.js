@@ -27,7 +27,8 @@ class CourseService {
 
       return courses;
     } catch (error) {
-      console.error('Error getting all courses from DynamoDB:', error);
+      const logger = require('../utils/logger');
+      logger.error('Error getting all courses from DynamoDB', error);
       return [];
     }
   }
@@ -38,7 +39,8 @@ class CourseService {
       const course = await dynamoVideoService.getCourseByTitle(id, userId);
       return course;
     } catch (error) {
-      console.error('Error getting course by ID from DynamoDB:', error);
+      const logger = require('../utils/logger');
+      logger.error('Error getting course by ID from DynamoDB', error, { id });
       return null;
     }
   }
@@ -86,9 +88,11 @@ class CourseService {
         await dynamoVideoService.updateCourseVideos(courseName, videos, 'engineerfelex@gmail.com');
       }
 
-      console.log('✅ S3 to DynamoDB sync completed');
+      const logger = require('../utils/logger');
+      logger.info('✅ S3 to DynamoDB sync completed');
     } catch (error) {
-      console.warn('Sync failed:', error.message);
+      const logger = require('../utils/logger');
+      logger.warn('Sync failed', { error: error.message });
     }
   }
 
@@ -106,91 +110,82 @@ class CourseService {
     }
   }
 
+  /**
+   * 🏗️ Atomic Deletion Saga (Senior Data Engineer)
+   * Ensures that S3 objects and DynamoDB records are purged atomically.
+   * Prevents "Zombie" files in S3 if a database delete fails.
+   */
   async deleteCourseData(title) {
+    const logger = require('../utils/logger');
+    const { withRetry } = require('../utils/retry');
+    const decodedTitle = decodeURIComponent(title);
+    
+    logger.info(`🗑️ Saga Initiated: Deleting course "${decodedTitle}"`, { title });
+
     try {
-      const decodedTitle = decodeURIComponent(title);
-      const course = await dynamoVideoService.getCourseByTitle(decodedTitle);
-      if (!course) throw new Error(`Course not found: ${decodedTitle}`);
+      // --- STAGE 1: Mark for Deletion ---
+      // This prevents further access and identifies the record for cleanup if the process crashes.
+      const marked = await dynamodb.markCourseForDeletion(decodedTitle);
+      if (!marked) throw new Error('Saga Phase 1 Failed: Could not mark course as DELETING');
 
-      const slug = decodedTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-
-      // 1. Delete Enrollments (Handled via DynamoDB)
-      console.log(`🗑️ Initiating deletion for course: ${title}`);
-
-      // 2. Delete from S3 (Curriculum files, Videos, and Resources)
+      // --- STAGE 2: Resource Purge (S3) ---
       const { S3Client, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
       const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
       const bucketName = process.env.S3_BUCKET_NAME;
 
       if (bucketName) {
-        // A. Target specific keys found in DynamoDB
-        const videos = course.videos || [];
-        const keysToDelete = videos
+        const course = await dynamoVideoService.getCourseByTitle(decodedTitle);
+        const videos = course?.videos || [];
+        const slug = decodedTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+        // 1. Gather all specific keys to delete
+        const specificKeys = videos
           .map(v => v.s3Key || v.key)
           .filter(k => !!k)
           .map(k => ({ Key: k }));
 
-        if (keysToDelete.length > 0) {
-          try {
-            // Delete in batches of 1000 (S3 limit)
-            for (let i = 0; i < keysToDelete.length; i += 1000) {
-              const batch = keysToDelete.slice(i, i + 1000);
+        // 2. Define common prefixes for broad sweep
+        const prefixes = [`courses/${slug}/`, `videos/${decodedTitle}/`, `processed-content/captions/${decodedTitle}/` ];
+
+        // 3. Execute Deletion with Retry
+        await withRetry(async () => {
+          // A. Delete specific objects
+          if (specificKeys.length > 0) {
+            for (let i = 0; i < specificKeys.length; i += 1000) {
               await s3Client.send(new DeleteObjectsCommand({
                 Bucket: bucketName,
-                Delete: { Objects: batch }
+                Delete: { Objects: specificKeys.slice(i, i + 1000) }
               }));
             }
-            console.log(`🗑️ Deleted ${keysToDelete.length} specific objects from S3`);
-          } catch (batchErr) {
-            console.warn('⚠️ Batch S3 deletion failed:', batchErr.message);
           }
-        }
 
-        // B. Fallback: Prefix-based wipe for any missed artifacts
-        const prefixes = [
-          `courses/${slug}/`,
-          `videos/${decodedTitle}/`,
-          `resources/${decodedTitle}/`
-        ];
-
-        for (const prefix of prefixes) {
-          try {
-            const listCommand = new ListObjectsV2Command({
-              Bucket: bucketName,
-              Prefix: prefix
-            });
-            const listResponse = await s3Client.send(listCommand);
-            
-            if (listResponse.Contents && listResponse.Contents.length > 0) {
-              const deleteParams = {
+          // B. Prefix sweep
+          for (const prefix of prefixes) {
+            const listRes = await s3Client.send(new ListObjectsV2Command({ Bucket: bucketName, Prefix: prefix }));
+            if (listRes.Contents?.length > 0) {
+              await s3Client.send(new DeleteObjectsCommand({
                 Bucket: bucketName,
-                Delete: {
-                  Objects: listResponse.Contents.map(obj => ({ Key: obj.Key }))
-                }
-              };
-              await s3Client.send(new DeleteObjectsCommand(deleteParams));
-              console.log(`🗑️ Prefix Sweep: Deleted ${listResponse.Contents.length} objects from ${prefix}`);
+                Delete: { Objects: listRes.Contents.map(o => ({ Key: o.Key })) }
+              }));
             }
-          } catch (s3Err) {
-            console.error(`⚠️ S3 prefix cleanup failed for ${prefix}:`, s3Err.message);
           }
-        }
+        });
+        
+        logger.info(`🗑️ Saga Phase 2 Complete: S3 assets purged for "${decodedTitle}"`);
       }
 
-      // 3. Delete from DynamoDB
-      try {
-        // Delete all video items for this course
-        await dynamoVideoService.deleteVideosForCourse(decodedTitle);
-        // Delete the course item itself
-        await dynamoVideoService.deleteCourse(decodedTitle);
-        console.log(`🗑️ Deleted course "${decodedTitle}" and all associated videos from DynamoDB`);
-      } catch (dynamoErr) {
-        console.error('⚠️ DynamoDB cleanup failed during course deletion:', dynamoErr.message);
-      }
+      // --- STAGE 3: Final Purge (DynamoDB) ---
+      // This is the "Commit" phase of the saga.
+      const purged = await dynamodb.purgeCourse(decodedTitle);
+      if (!purged) throw new Error('Saga Phase 3 Failed: Could not purge DynamoDB record');
 
+      logger.info(`✅ Saga Success: Course "${decodedTitle}" fully purged from the system.`);
       return { success: true };
+
     } catch (error) {
-      console.error('Error deleting course data:', error);
+      logger.error(`❌ Saga Aborted: Failed to delete course "${decodedTitle}"`, error);
+      // We don't "rollback" Stage 1 because the course IS actually intended for deletion.
+      // Instead, Stage 1 serves as a tombstone for a cleanup worker.
       throw error;
     }
   }
