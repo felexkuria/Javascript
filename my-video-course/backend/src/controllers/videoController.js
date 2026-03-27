@@ -1,4 +1,5 @@
 const dynamoVideoService = require('../services/dynamoVideoService');
+const s3VideoService = require('../services/s3VideoService');
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
@@ -10,10 +11,14 @@ exports.getVideos = async (req, res) => {
     }
     const courses = await dynamoVideoService.getAllCourses(userId);
     const allVideos = courses.flatMap(course => course.videos);
-    const totalVideos = allVideos.length;
-    const watchedVideos = allVideos.filter(video => video.watched).length;
+    
+    // Universal S3 Signing
+    const signedVideos = await s3VideoService.processVideoList(allVideos);
+    
+    const totalVideos = signedVideos.length;
+    const watchedVideos = signedVideos.filter(video => video.watched).length;
 
-    res.render('videos', { videos: allVideos, totalVideos, watchedVideos });
+    res.render('videos', { videos: signedVideos, totalVideos, watchedVideos });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -28,7 +33,10 @@ exports.getAllVideos = async (req, res) => {
     const courses = await dynamoVideoService.getAllCourses(userId);
     const videos = courses.flatMap(course => course.videos);
     
-    res.render('dashboard', { videos });
+    // Universal S3 Signing
+    const signedVideos = await s3VideoService.processVideoList(videos);
+    
+    res.render('dashboard', { videos: signedVideos });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -41,18 +49,39 @@ exports.getVideoById = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
     const courses = await dynamoVideoService.getAllCourses(userId);
-    const allVideos = courses.flatMap(course => course.videos);
-    const video = allVideos.find(v => (v._id || v.id || '').toString() === req.params.id);
-
-    if (!video || !video.videoUrl) {
-      return res.status(404).send('Video not found');
+    const videoId = req.params.id;
+    
+    // Find the course containing this video
+    const course = courses.find(c => c.videos.some(v => (v._id || v.id || '').toString() === videoId));
+    
+    if (!course) {
+      return res.status(404).send('Course not found for this node');
     }
 
-    video.videoUrl = `/${video.videoUrl}`;
-    res.render('video', { video });
+    const video = course.videos.find(v => (v._id || v.id || '').toString() === videoId);
+
+    // Universal S3 Signing
+    const signedVideo = await s3VideoService.processVideoUrl(video);
+    
+    // SOTA Smart Curriculum Engine
+    const sections = await dynamoVideoService.getStructuredCurriculum(course, userId);
+
+    // Batch Sign S3 Assets for Sidebar
+    const signedSections = await Promise.all(sections.map(async (section) => ({
+      ...section,
+      lectures: await s3VideoService.processVideoList(section.lectures)
+    })));
+
+    res.render('video', { 
+      video: signedVideo, 
+      courseName: course.name,
+      sections: signedSections,
+      totalVideos: course.videos.length,
+      watchedVideos: course.videos.filter(v => v.watched).length
+    });
   } catch (err) {
-    console.error('Error fetching video:', err);
-    res.status(500).send('Internal Server Error');
+    console.error('Error fetching video curriculum:', err);
+    res.status(500).send('Curriculum Load Error');
   }
 };
 
@@ -97,7 +126,11 @@ exports.getVideosByCourse = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
     const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
-    res.json({ success: true, data: videos });
+    
+    // Universal S3 Signing
+    const signedVideos = await s3VideoService.processVideoList(videos);
+    
+    res.json({ success: true, data: signedVideos });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -115,7 +148,10 @@ exports.getVideo = async (req, res) => {
     if (!video) {
       return res.status(404).json({ success: false, error: 'Video not found' });
     }
-    res.json({ success: true, data: video });
+    
+    // Universal S3 Signing
+    const signedVideo = await s3VideoService.processVideoUrl(video);
+    res.json({ success: true, data: signedVideo });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -236,12 +272,7 @@ exports.getLocalStorageFormat = async (req, res) => {
 exports.getStreamUrl = async (req, res) => {
   try {
     const { videoKey } = req.body;
-    const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
-    const command = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME || 'video-course-bucket-047ad47c',
-      Key: videoKey
-    });
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    const signedUrl = await s3VideoService.generateSignedUrl(`https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${videoKey}`);
     res.json({ success: true, streamUrl: signedUrl });
   } catch (error) {
     console.error('Error generating stream URL:', error);

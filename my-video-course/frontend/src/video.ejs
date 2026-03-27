@@ -89,8 +89,8 @@
                                         <i class="fas fa-expand mr-2"></i> FULLSCREEN
                                     </a>
                                 </div>
-                                <div class="flex-1 overflow-hidden relative border-t border-white/5">
-                                    <iframe src="<%= video.url %>#toolbar=0" class="w-full h-full border-none filter grayscale-[0.2] invert-[0.1] contrast-[1.1]"></iframe>
+                                <div class="flex-1 overflow-hidden relative border-t border-white/5 bg-slate-900 shadow-inner">
+                                    <iframe src="<%= video.url %>#toolbar=0" class="w-full h-full border-none opacity-90 hover:opacity-100 transition-opacity"></iframe>
                                 </div>
                             </div>
                         <% } else if (video && video.url) { %>
@@ -207,9 +207,20 @@
                     <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
                         <% sections.forEach((section, sIdx) => { %>
                             <div class="section-group mb-6">
-                                <div class="flex items-center gap-3 mb-4 px-2">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-[#00ED64]"></div>
-                                    <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#9FB1AD]"><%= section.title %></h3>
+                                <div class="flex items-center justify-between mb-4 px-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-[#00ED64]"></div>
+                                        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#9FB1AD]"><%= section.title %></h3>
+                                    </div>
+                                    <% 
+                                        const sectionWatched = section.lectures.filter(l => l.watched).length;
+                                        const sectionTotal = section.lectures.length;
+                                        const sectionPercent = Math.round((sectionWatched / sectionTotal) * 100);
+                                    %>
+                                    <span class="text-[8px] font-bold text-[#00ED64]/60"><%= sectionPercent %>%</span>
+                                </div>
+                                <div class="w-full h-[1px] bg-white/5 mb-4 relative overflow-hidden">
+                                    <div class="absolute inset-y-0 left-0 bg-[#00ED64]/40" style="width: <%= sectionPercent %>%"></div>
                                 </div>
                                 <div class="space-y-1">
                                     <% section.lectures.forEach((lec, lIdx) => { 
@@ -391,6 +402,14 @@
                 }, 1500);
             }
         };
+
+        // --- Auto-scroll to active node ---
+        window.addEventListener('load', () => {
+            const activeNode = document.querySelector('.lecture-node.active-glow');
+            if (activeNode) {
+                activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
     </script>
 </body>
 </html>

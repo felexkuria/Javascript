@@ -53,8 +53,11 @@ class VideoProcessingService {
         // Generate captions
         captionsUrl = await this.generateCaptions(videoUrl, s3Key, tempDir);
 
-        // Generate AI content
-        aiContent = await this.generateAIContent(captionsUrl, courseName, title);
+        // Generate visual previews (Phase 1: Leapfrog)
+        const previews = await this.generateVideoPreviews(originalPath, tempDir, safeCourse, safeTitle);
+        
+        // Generate AI content (Updated to include visual context)
+        aiContent = await this.generateAIContent(captionsUrl, courseName, title, previews);
       }
 
       // Extract metadata
@@ -265,6 +268,39 @@ class VideoProcessingService {
     return `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${srtKey}`;
   }
 
+  async generateVideoPreviews(inputPath, tempDir, safeCourse, safeTitle) {
+    const previewDir = path.join(tempDir, 'previews');
+    fs.mkdirSync(previewDir, { recursive: true });
+
+    return new Promise((resolve) => {
+      // Extract frame every 30 seconds
+      const ffmpeg = spawn('ffmpeg', [
+        '-i', inputPath,
+        '-vf', 'fps=1/30',
+        '-q:v', '2',
+        path.join(previewDir, 'thumb_%03d.jpg')
+      ]);
+
+      ffmpeg.on('close', async (code) => {
+        if (code !== 0) {
+           console.warn('Frame extraction failed');
+           return resolve([]);
+        }
+
+        const files = fs.readdirSync(previewDir);
+        const uploadPromises = files.map(async (file, index) => {
+          const s3Key = `previews/${safeCourse}/${safeTitle}/${Date.now()}-${file}`;
+          return await this.uploadToS3(path.join(previewDir, file), s3Key, 'image/jpeg');
+        });
+
+        const urls = await Promise.all(uploadPromises);
+        resolve(urls);
+      });
+
+      ffmpeg.on('error', () => resolve([]));
+    });
+  }
+
   generatePlaceholderSRT() {
     return `1
 00:00:00,000 --> 00:00:05,000
@@ -280,19 +316,20 @@ Please follow along and take notes
 `;
   }
 
-  async generateAIContent(captionsUrl, courseName, title) {
+  async generateAIContent(captionsUrl, courseName, title, previews = []) {
     try {
       // Get captions content
       const captionsContent = await this.getCaptionsContent(captionsUrl);
       
-      // Generate AI content
-      const [quiz, summary, todoList] = await Promise.all([
-        aiService.generateQuiz(captionsContent, title),
-        aiService.generateSummary(captionsContent, title),
-        aiService.generateTodoList(captionsContent, title)
+      // Generate AI content (Phase 1: Passing previews to multimodal analysis)
+      const [quiz, summary, todoList, visualInsights] = await Promise.all([
+        aiService.generateQuizFromVideo(title, captionsContent),
+        aiService.summarizeFromSRT(captionsContent, title),
+        aiService.generateTodos(captionsContent, 'video', title),
+        aiService.analyzeVisualContent(title, previews)
       ]);
 
-      return { quiz, summary, todoList };
+      return { quiz, summary, todoList, visualInsights };
     } catch (error) {
       console.error('AI content generation failed:', error);
       return {
