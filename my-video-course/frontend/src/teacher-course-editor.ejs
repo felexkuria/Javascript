@@ -209,8 +209,8 @@
                                                     <div class="progress-flow-neon w-0 h-full"></div>
                                                 </div>
                                             </div>
-                                            <div class="flex items-center gap-4">
-                                                <% if (lecture.s3Key) { %>
+                                            <div class="flex items-center gap-4" id="status-container-<%= lecId %>">
+                                                <% if (lecture.s3Key || lecture.videoUrl) { %>
                                                     <div class="px-3 py-1.5 bg-[#00ED64]/10 border border-[#00ED64]/20 rounded-lg text-[9px] font-black text-[#00ED64] uppercase tracking-widest">
                                                         <i class="fas fa-check-circle mr-2"></i> Synced
                                                     </div>
@@ -219,8 +219,10 @@
                                                         <i class="fas fa-cloud-upload-alt mr-2"></i> Deploy Media
                                                     </button>
                                                 <% } %>
+
                                             </div>
                                         </div>
+
                                     <% }) %>
 
                                     <!-- Action Interface -->
@@ -342,60 +344,116 @@
         }
 
         function triggerUpload(sid, lid) {
+            const card = document.querySelector(`.lesson-card-atlas[data-lecture-id="${lid}"]`);
+            const title = card ? card.dataset.title : 'Legacy Lesson';
+            
             const input = document.createElement('input');
             input.type = 'file';
+            input.accept = 'video/*,application/pdf';
             input.onchange = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                const fd = new FormData();
-                fd.append('video', file);
-                fd.append('sectionId', sid);
-                performUpload(`/api/teacher/courses/${courseId}/lectures/${lid}/upload`, fd, lid);
+                performModernUpload(file, sid, lid, title);
             };
             input.click();
+        }
+
+        async function performModernUpload(file, sid, lid, title) {
+            const progress = document.getElementById(`progress-${lid}`);
+            const statusContainer = document.getElementById(`status-container-${lid}`);
+            
+            try {
+                if (progress) progress.style.display = 'block';
+                if (statusContainer) statusContainer.innerHTML = '<span class="text-[9px] font-black uppercase tracking-widest text-mdb-green animate-pulse">Syncing...</span>';
+
+                // 1. Request Presigned URL (POST Protocol)
+                const preRes = await fetch('/api/upload/request-presigned-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        courseName: decodeURIComponent(courseId),
+                        videoTitle: title,
+                        contentType: file.type || 'video/mp4'
+                    })
+                });
+
+                if (!preRes.ok) throw new Error(`Signing Failed: HTTP ${preRes.status}`);
+                const { url, key } = await preRes.json();
+                if (!url) throw new Error('No secure upload link returned from server');
+
+                // 2. Direct S3 Upload
+                const xhr = new XMLHttpRequest();
+                await new Promise((resolve, reject) => {
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const pct = (e.loaded / e.total) * 100;
+                            if (progress) progress.querySelector('div').style.width = pct + '%';
+                        }
+                    };
+                    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error('Cloud Stream Interrupted'));
+                    xhr.onerror = () => reject(new Error('Network Interruption'));
+                    xhr.open('PUT', url, true);
+                    xhr.setRequestHeader('Content-Type', file.type);
+                    xhr.send(file);
+                });
+
+                // 3. Atomic Ingestion Sync
+                const compRes = await fetch('/api/upload/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        courseName: decodeURIComponent(courseId),
+                        videoTitle: title,
+                        description: '',
+                        s3Key: key,
+                        sectionId: sid,
+                        lectureId: lid
+                    })
+                });
+
+                if (compRes.ok) {
+                    if (statusContainer) {
+                        statusContainer.innerHTML = `
+                            <div class="px-3 py-1.5 bg-[#00ED64]/10 border border-[#00ED64]/20 rounded-lg text-[9px] font-black text-[#00ED64] uppercase tracking-widest">
+                                <i class="fas fa-check-circle mr-2"></i> Synced
+                            </div>`;
+                    }
+                    if (progress) progress.style.display = 'none';
+                } else {
+                    throw new Error('Curriculum sync failed');
+                }
+
+            } catch (err) {
+                console.error('Upload Failure:', err);
+                alert('INGESTION ERROR: ' + err.message);
+                if (statusContainer) {
+                    statusContainer.innerHTML = `
+                        <button class="btn-add-ghost py-2 !text-[9px]" onclick="triggerUpload('${sid}', '${lid}', '${title.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-cloud-upload-alt mr-2"></i> Retry Deployment
+                        </button>`;
+                }
+                if (progress) progress.style.display = 'none';
+            }
         }
 
         function triggerResourceUpload(sid) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.pdf';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const fd = new FormData();
-                fd.append('video', file);
-                fd.append('sectionId', sid);
-                fd.append('type', 'resource');
-                performUpload(`/api/teacher/courses/${courseId}/upload`, fd, sid);
-            };
-            input.click();
+            // Simplified: Add a placeholder lecture first, then trigger upload
+            const title = prompt("Resource Title (PDF):");
+            if (!title) return;
+            
+            fetch(`/api/teacher/courses/${courseId}/sections/${sid}/lectures`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, type: 'pdf' })
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    // Start upload immediately for the new slot
+                    const lid = data.lecture._id;
+                    location.reload(); // Quick reload to show the slot, then user can upload
+                }
+            });
         }
 
-        function performUpload(url, fd, pid) {
-            const xhr = new XMLHttpRequest();
-            const progress = document.getElementById(`progress-${pid}`);
-            if (progress) progress.style.display = 'block';
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    const pct = (e.loaded / e.total) * 100;
-                    if (progress) progress.querySelector('div').style.width = pct + '%';
-                }
-            };
-            xhr.onload = () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    location.reload();
-                } else {
-                    alert('UPLOAD FAILED: ' + (xhr.responseText || 'Internal Server Error'));
-                    if (progress) progress.style.display = 'none';
-                }
-            };
-            xhr.onerror = () => {
-                alert('NETWORK ERROR: Upload interrupted.');
-                if (progress) progress.style.display = 'none';
-            };
-            xhr.open('POST', url, true);
-            xhr.send(fd);
-        }
 
         async function updateMetadata(data) {
             try {
