@@ -95,6 +95,13 @@ app.post('/api/videos/stream-url', sessionAuth, (req, res) => videoController.ge
 app.post('/api/mark-watched', sessionAuth, (req, res) => videoController.markVideoWatchedEnhanced(req, res));
 app.get('/api/next-video', sessionAuth, (req, res) => videoController.getNextVideo(req, res));
 
+// ── FILE SERVING ROUTES ──────────────────────────────────────────────
+app.get('/pdf/*', sessionAuth, (req, res) => webController.servePdf(req, res));
+app.get('/captions/:courseName/:id', sessionAuth, (req, res) => webController.serveCaptions(req, res));
+app.get('/download-srt/:filename', sessionAuth, (req, res) => webController.downloadSrt(req, res));
+app.get('/subtitles/:courseName/:videoTitle.srt', sessionAuth, (req, res) => webController.serveSubtitles(req, res));
+app.get('/videos/:courseName/file/:id', sessionAuth, (req, res) => webController.streamVideo(req, res));
+
 // ── ADMIN & TEACHER ROUTES ─────────────────────────────────────────────
 app.get('/admin/super', sessionAuth, (req, res) => adminController.renderSuperDashboard(req, res));
 app.get('/admin/course-manager', sessionAuth, (req, res) => adminController.renderCourseManager(req, res));
