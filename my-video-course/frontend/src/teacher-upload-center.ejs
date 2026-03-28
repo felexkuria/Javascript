@@ -192,7 +192,17 @@
                             </div>
                             <input type="hidden" id="selectedSectionId">
                         </div>
+
+                        <!-- 🏗️ Slot Selection (New) -->
+                        <div id="lessonSlotContainer" class="mt-10 space-y-6 hidden animate-slide-up">
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Curriculum Slot linking</label>
+                            <div id="lessonSlots" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Populated dynamically -->
+                            </div>
+                            <input type="hidden" id="selectedLectureId">
+                        </div>
                     </section>
+
 
                     <!-- Upload Section -->
                     <section class="premium-glass p-12 rounded-[40px]">
@@ -244,12 +254,16 @@
     <script>
         let selectedFiles = [];
         let selectedSectionId = null;
+        let selectedLectureId = null;
 
         function onCourseChange() {
             const sel = document.getElementById('courseSelect');
             const opt = sel.options[sel.selectedIndex];
             const pills = document.getElementById('sectionPills');
+            const slotContainer = document.getElementById('lessonSlotContainer');
             selectedSectionId = null;
+            selectedLectureId = null;
+            slotContainer.classList.add('hidden');
 
             if (!opt.value) {
                 pills.innerHTML = '<span class="text-gray-600 font-medium text-sm italic">Awaiting curriculum selection...</span>';
@@ -263,14 +277,43 @@
             }
 
             pills.innerHTML = sections.map(s =>
-                `<button class="pill-atlas" data-id="${s._id}" onclick="selectSection(this, '${s._id}')">${s.title}</button>`
+                `<button class="pill-atlas" data-id="${s._id}" onclick="selectSection(this, '${s._id}', ${JSON.stringify(s.lectures || []).replace(/'/g, "&apos;")})">${s.title}</button>`
             ).join('');
         }
 
-        function selectSection(el, id) {
+        function selectSection(el, id, lectures) {
             document.querySelectorAll('.pill-atlas').forEach(p => p.classList.remove('selected'));
             el.classList.add('selected');
             selectedSectionId = id;
+            selectedLectureId = null;
+
+            const slotContainer = document.getElementById('lessonSlotContainer');
+            const slotList = document.getElementById('lessonSlots');
+
+            if (lectures && lectures.length > 0) {
+                slotContainer.classList.remove('hidden');
+                slotList.innerHTML = lectures.map(l => `
+                    <button class="slot-atlas-btn p-6 rounded-2xl flex flex-col items-start gap-2 border border-white/5 bg-white/2 hover:bg-white/5 transition-all text-left w-full" 
+                            data-id="${l._id}" onclick="selectSlot(this, '${l._id}', '${l.title.replace(/'/g, "\\'")}')">
+                        <span class="text-[9px] font-black uppercase tracking-[0.2em] ${l.videoUrl ? 'text-[#00ED64]' : 'text-gray-600'}">
+                            ${l.videoUrl ? '● Ingested' : '○ Vacant Slot'}
+                        </span>
+                        <span class="text-sm font-bold text-white">${l.title}</span>
+                    </button>
+                `).join('');
+            } else {
+                slotContainer.classList.add('hidden');
+                slotList.innerHTML = '';
+            }
+
+            checkReady();
+        }
+
+        function selectSlot(el, id, title) {
+            document.querySelectorAll('.slot-atlas-btn').forEach(b => b.classList.remove('selected-slot'));
+            el.classList.add('selected-slot');
+            selectedLectureId = id;
+            document.getElementById('lectureTitle').value = title;
             checkReady();
         }
 
@@ -432,8 +475,10 @@
                             videoTitle: safeTitle,
                             description: '',
                             s3Key: key,
-                            sectionId: selectedSectionId
+                            sectionId: selectedSectionId,
+                            lectureId: selectedLectureId
                         })
+
                     });
                     
                     if (!completeRes.ok) {

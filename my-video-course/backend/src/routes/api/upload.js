@@ -172,12 +172,11 @@ router.post('/request-presigned-url', async (req, res) => {
 // Step 2: Complete Upload (Register in DynamoDB)
 router.post('/complete', async (req, res) => {
   try {
-    const { courseName, videoTitle, description, s3Key } = req.body;
+    const { courseName, videoTitle, description, s3Key, lectureId } = req.body;
     
     if (!s3Key || !courseName || !videoTitle) {
       return res.status(400).json({ success: false, message: 'Missing completion data' });
     }
-
 
     const safeCourse = sanitize(courseName);
 
@@ -188,11 +187,11 @@ router.post('/complete', async (req, res) => {
     } else if (s3Key.toLowerCase().endsWith('.srt') || s3Key.toLowerCase().endsWith('.vtt')) {
       contentType = 'caption';
     } else if (!s3Key.toLowerCase().endsWith('.mp4')) {
-      contentType = 'resource'; // Generic resource fallback
+      contentType = 'resource';
     }
 
     const videoData = {
-      _id: Date.now().toString(),
+      _id: (lectureId || Date.now()).toString(), // 🏗️ Use existing ID if available to prevent duplicates
       title: videoTitle,
       courseName,
       description: description || '',
@@ -204,25 +203,26 @@ router.post('/complete', async (req, res) => {
       captionsReady: false,
       quizReady: false,
       summaryReady: false,
-      processing: contentType === 'video' // Only trigger processing for actual videos
+      processing: contentType === 'video'
     };
     
-    // 🛰️ Dual-Sync Architecture: Update both Standalone Videos and Course Sections
+    // 🛰️ Dual-Sync Architecture: Update Standalone Videos and Course Curriculum
     await dynamodb.saveVideo(videoData);
 
     try {
-      // Find and update the lecture in the Course model for high-fidelity sync
       const course = await dynamodb.getCourseByTitle(courseName);
       if (course) {
-        // Find by title mismatch or ID link
         let updated = false;
         
-        // Update in nested sections
+        // 🧪 ID-First Matcher: The most reliable way to link ingestion
         if (course.sections) {
           for (const section of course.sections) {
-            const lecture = (section.lectures || []).find(l => 
-              l.title === videoTitle || l._id === videoData._id || l.videoId === videoData.videoId
-            );
+            const lecture = (section.lectures || []).find(l => {
+              const lid = (l.videoId || l._id || l.id || '').toString();
+              return (lectureId && lid === lectureId.toString()) || 
+                     (l.title.toLowerCase().trim() === videoTitle.toLowerCase().trim());
+            });
+
             if (lecture) {
               lecture.s3Key = s3Key;
               lecture.videoUrl = videoData.videoUrl;
