@@ -211,15 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Corrected binding - removed redundant nested listener
-    const trigger = document.getElementById('floating-trigger');
-    if (trigger) {
-        trigger.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            window.toggleFloatingChatbot();
-        });
-    }
+    // Inline onclick is used in video.ejs for the trigger to prevent double execution.
 
     window.switchLabTab = function(tabId) {
         // Enforce strict !important isolation
