@@ -137,7 +137,24 @@ router.post('/request-presigned-url', async (req, res) => {
 
     const safeCourse = sanitize(courseName);
     const safeTitle = sanitize(videoTitle);
-    const ext = contentType === 'application/pdf' ? '.pdf' : '.mp4';
+    
+    // 🔍 Intelligent Extension Detection
+    let ext = '.mp4';
+    if (contentType === 'application/pdf') {
+      ext = '.pdf';
+    } else if (contentType === 'text/vtt' || videoTitle.toLowerCase().endsWith('.vtt')) {
+      ext = '.vtt';
+    } else if (contentType === 'application/x-subrip' || videoTitle.toLowerCase().endsWith('.srt')) {
+      ext = '.srt';
+    } else if (contentType.startsWith('video/')) {
+      ext = '.mp4';
+    } else {
+      // Final fallback: use the extension from the original title if available
+      const lastDot = videoTitle.lastIndexOf('.');
+      if (lastDot > 0) {
+        ext = videoTitle.substring(lastDot).toLowerCase();
+      }
+    }
 
     const videoKey = `videos/${safeCourse}/${Date.now()}-${safeTitle}${ext}`;
     const result = await s3Signer.getPresignedUploadUrl(videoKey, contentType);
@@ -164,6 +181,16 @@ router.post('/complete', async (req, res) => {
 
     const safeCourse = sanitize(courseName);
 
+    // 🏷️ Category Selection
+    let contentType = 'video';
+    if (s3Key.toLowerCase().endsWith('.pdf')) {
+      contentType = 'resource';
+    } else if (s3Key.toLowerCase().endsWith('.srt') || s3Key.toLowerCase().endsWith('.vtt')) {
+      contentType = 'caption';
+    } else if (!s3Key.toLowerCase().endsWith('.mp4')) {
+      contentType = 'resource'; // Generic resource fallback
+    }
+
     const videoData = {
       _id: Date.now().toString(),
       title: videoTitle,
@@ -172,11 +199,12 @@ router.post('/complete', async (req, res) => {
       s3Key,
       videoUrl: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${s3Key}`,
       uploadedBy: req.user?.email || 'unknown',
+      type: contentType,
       createdAt: new Date().toISOString(),
       captionsReady: false,
       quizReady: false,
       summaryReady: false,
-      processing: true
+      processing: contentType === 'video' // Only trigger processing for actual videos
     };
     
     await dynamodb.saveVideo(videoData);

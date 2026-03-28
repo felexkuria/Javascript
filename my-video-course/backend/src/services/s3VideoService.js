@@ -28,8 +28,18 @@ class S3VideoService {
       } else if (videoUrl.includes('amazonaws.com')) {
         const urlParts = videoUrl.split('.amazonaws.com/');
         if (urlParts.length < 2) return videoUrl;
-        key = urlParts[1];
+        
+        // Extract bucket from subdomain (e.g., https://bucket.s3.region.amazonaws.com/key)
+        const host = urlParts[0].replace('https://', '').replace('http://', '');
+        const hostParts = host.split('.');
+        if (hostParts.length >= 2 && hostParts.includes('s3')) {
+          bucket = hostParts[0];
+        }
+        
+        // Key is everything after the first slash of the path
+        key = urlParts[1].split('?')[0]; // Strip query params if they exist
       } else {
+
         return videoUrl;
       }
 
