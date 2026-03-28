@@ -122,7 +122,7 @@
         <%- include('partials/student-sidebar', { activePage: 'dashboard' }) %>
 
         <!-- Main Dashboard Console -->
-        <main class="flex-grow overflow-auto p-8 lg:p-12">
+        <main class="flex-grow overflow-auto p-4 md:p-8 lg:p-12">
             <% 
                 const streak = (typeof gamificationData !== 'undefined' && gamificationData.streakData) ? gamificationData.streakData.currentStreak : 0;
                 const xp = (typeof gamificationData !== 'undefined') ? gamificationData.experiencePoints : 0;
@@ -136,7 +136,7 @@
                         <span class="px-3 py-1 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">Console Status: Online</span>
                         <div class="h-px w-12 bg-white/10"></div>
                     </div>
-                    <h1 class="text-6xl font-black tracking-tighter text-white">Mission <span class="text-[#00ED64]">Control</span></h1>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-white">Mission <span class="text-[#00ED64]">Control</span></h1>
                 </div>
                 <div class="hidden md:flex gap-4">
                     <div class="text-right">
@@ -147,10 +147,10 @@
             </header>
 
             <!-- Mission Hero -->
-            <div class="hero-banner-atlas p-12 lg:p-16 mb-16 shadow-2xl">
+            <div class="hero-banner-atlas p-6 md:p-10 lg:p-16 mb-12 lg:mb-16 shadow-2xl">
                 <div class="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-12">
                     <div class="max-w-xl">
-                        <h2 class="text-4xl lg:text-5xl font-black tracking-tight text-white mb-6 leading-tight">
+                        <h2 class="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white mb-4 lg:mb-6 leading-tight">
                             Continue your <span class="text-[#00ED64]">Expert Architecture</span> journey.
                         </h2>
                         <p class="text-gray-400 text-lg font-medium mb-10 leading-relaxed">
@@ -162,12 +162,12 @@
                             <% } else { %>
                                 <button onclick="window.location.href='/courses'" class="px-8 py-4 btn-atlas-cta uppercase tracking-widest text-[11px]">Browse Catalog</button>
                             <% } %>
-                            <button onclick="window.location.href='/profile'" class="px-8 py-4 bg-white/5 border border-white/10 rounded-16 font-black uppercase tracking-widest text-[11px] hover:bg-white/10 transition-all">View Roadmap</button>
+                            <button onclick="window.location.href='/profile'" class="px-6 md:px-8 py-4 bg-white/5 border border-white/10 rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-white/10 transition-all text-center">View Roadmap</button>
                         </div>
                     </div>
 
                     <!-- Rapid Stats Card -->
-                    <div class="w-full lg:w-96 premium-glass p-8 rounded-[32px] border-[#00ED64]/20">
+                    <div class="w-full lg:w-96 premium-glass p-6 lg:p-8 rounded-[32px] border-[#00ED64]/20 mt-8 lg:mt-0">
                         <div class="grid grid-cols-2 gap-6">
                             <div class="stat-node">
                                 <div class="text-2xl mb-2">⚡</div>
@@ -197,8 +197,8 @@
             </div>
 
             <!-- Curriculum Feed -->
-            <div class="flex items-center justify-between mb-10">
-                <h2 class="text-3xl font-black tracking-tight flex items-center gap-4">
+            <div class="flex flex-col sm:flex-row items-start md:items-center justify-between gap-6 mb-10">
+                <h2 class="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-4">
                     <i class="fas fa-layer-group text-[#00ED64]"></i>
                     Provisioned Tracks
                 </h2>
