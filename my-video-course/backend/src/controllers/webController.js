@@ -290,6 +290,67 @@ class WebController {
       res.status(500).send('Error');
     }
   }
+
+  async servePdf(req, res) {
+    try {
+      // Capture the wildcard path from /pdf/*
+      const pdfPath = req.params[0];
+      if (!pdfPath) return res.status(404).send('PDF path missing');
+
+      const s3VideoService = require('../services/s3VideoService');
+      const bucketName = process.env.S3_BUCKET_NAME || 'video-course-app-video-bucket-prod-6m5k2til';
+      
+      // Construct the full S3 URL to be signed
+      const s3Url = `https://${bucketName}.s3.amazonaws.com/${pdfPath}`;
+      
+      const signedUrl = await s3VideoService.generateSignedUrl(s3Url, 3600);
+      res.redirect(signedUrl);
+    } catch (err) {
+      console.error('Error serving PDF:', err);
+      res.status(500).send('Error generating access token for PDF');
+    }
+  }
+
+  async downloadSrt(req, res) {
+    try {
+      const { filename } = req.params;
+      const s3VideoService = require('../services/s3VideoService');
+      const bucketName = process.env.S3_BUCKET_NAME || 'video-course-app-video-bucket-prod-6m5k2til';
+      const s3Url = `https://${bucketName}.s3.amazonaws.com/captions/${filename}`;
+      const signedUrl = await s3VideoService.generateSignedUrl(s3Url, 3600);
+      res.redirect(signedUrl);
+    } catch (err) {
+      res.status(500).send('Error');
+    }
+  }
+
+  async serveSubtitles(req, res) {
+    try {
+      const { courseName, videoTitle } = req.params;
+      const s3VideoService = require('../services/s3VideoService');
+      const bucketName = process.env.S3_BUCKET_NAME || 'video-course-app-video-bucket-prod-6m5k2til';
+      const s3Key = `courses/${courseName}/captions/${videoTitle}.vtt`;
+      const s3Url = `https://${bucketName}.s3.amazonaws.com/${s3Key}`;
+      const signedUrl = await s3VideoService.generateSignedUrl(s3Url, 3600);
+      res.redirect(signedUrl);
+    } catch (err) {
+      res.status(404).send('Not Found');
+    }
+  }
+
+  async streamVideo(req, res) {
+    try {
+      const { courseName, id } = req.params;
+      const video = await dynamoVideoService.getVideoById(courseName, id);
+      if (!video || !video.videoUrl) return res.status(404).send('Video not found');
+      
+      const s3VideoService = require('../services/s3VideoService');
+      const signedData = await s3VideoService.processVideoUrl(video);
+      res.redirect(signedData.fullVideoUrl || video.videoUrl);
+    } catch (err) {
+      res.status(500).send('Error streaming video');
+    }
+  }
 }
 
 module.exports = new WebController();
