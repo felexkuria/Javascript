@@ -538,6 +538,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    // Sidebar and Accordion Global Controllers
+    window.toggleSideLab = function() {
+        const parent = document.querySelector('.command-center');
+        const btnText = document.getElementById('sideLabBtnText');
+        const btnIcon = document.getElementById('sideLabBtnIcon');
+        
+        if (parent.classList.contains('sidebar-collapsed')) {
+            parent.classList.remove('sidebar-collapsed');
+            if (btnText) btnText.innerText = 'Collapse Lab';
+            if (btnIcon) btnIcon.className = 'fas fa-arrow-right';
+        } else {
+            parent.classList.add('sidebar-collapsed');
+            if (btnText) btnText.innerText = 'Expand Lab';
+            if (btnIcon) btnIcon.className = 'fas fa-arrow-left';
+        }
+    };
+
+    window.toggleCurriculumSection = function(headerEl) {
+        const groupEl = headerEl.closest('.section-group');
+        if (groupEl) {
+            groupEl.classList.toggle('expanded');
+        }
+    };
+
     // Final Theme Sync
     document.documentElement.classList.add('dark');
 });
