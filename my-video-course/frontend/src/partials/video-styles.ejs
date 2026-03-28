@@ -26,6 +26,11 @@ body {
     grid-template-columns: 1fr var(--sidebar-width); 
     height: calc(100vh - 72px); 
     overflow: hidden; 
+    transition: grid-template-columns 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+} 
+
+.command-center.sidebar-collapsed {
+    grid-template-columns: 1fr 0px;
 } 
 
 .learning-canvas { 
@@ -58,7 +63,14 @@ body {
     display: flex; 
     flex-direction: column; 
     z-index: 200; 
+    overflow: hidden; /* Force bounds when shrinking horizontally */
+    min-width: 0;     /* Prevent flex blowouts during transition */
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.command-center.sidebar-collapsed .side-lab {
+    transform: translateX(100%);
+    opacity: 0;
 } 
 
 #sidebar-overlay {
@@ -286,6 +298,29 @@ pre:hover .copy-btn {
 .scroll-premium::-webkit-scrollbar-thumb { background: rgba(0, 237, 100, 0.1); border-radius: 10px; }
 
 /* Removed duplicate floating chatbot and trigger overrides to fall back to chatbot-styles.ejs premium layout */
+
+/* Premium Accordion Styling */
+.section-lectures {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.section-group.expanded .section-lectures {
+    max-height: 1500px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.accordion-chevron {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.section-group.expanded .accordion-chevron {
+    transform: rotate(180deg);
+}
 
 .lab-pane {
     display: none !important;

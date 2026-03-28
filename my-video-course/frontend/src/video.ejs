@@ -22,10 +22,20 @@
         <!-- Main Learning Canvas -->
         <main class="learning-canvas scroll-premium">
             <div class="max-w-[1200px] mx-auto">
-                <!-- Cinematic Breadcrumbs -->
-                <div class="breadcrumb-atlas">
-                    <a href="/dashboard" class="breadcrumb-node hover:opacity-100 transition-all">ACADEMY</a>
-                    <span class="breadcrumb-sep">/</span>
+                <!-- Cinematic Breadcrumbs and Toolbar -->
+                <div class="flex items-center justify-between mb-8">
+                    <div class="breadcrumb-atlas mb-0 border-b-0 pb-0 w-fit">
+                        <a href="/dashboard" class="breadcrumb-node hover:opacity-100 transition-all">ACADEMY</a>
+                        <span class="breadcrumb-sep">/</span>
+                        <a href="/course/<%= encodeURIComponent(courseName) %>" class="breadcrumb-node hover:opacity-100 transition-all truncate max-w-[200px]"><%= courseName %></a>
+                        <span class="breadcrumb-sep">/</span>
+                        <span class="breadcrumb-node active truncate max-w-[300px]"><%= video ? video.title : 'TERMINAL' %></span>
+                    </div>
+                    <button onclick="toggleSideLab()" id="toggleSideLabBtn" class="flex items-center gap-2 text-[10px] uppercase font-black tracking-widest text-[#9FB1AD] hover:text-[#00ED64] transition-all bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg border border-white/5 shadow-lg">
+                        <span id="sideLabBtnText">Collapse Lab</span>
+                        <i id="sideLabBtnIcon" class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
                     <a href="/course/<%= encodeURIComponent(courseName) %>" class="breadcrumb-node hover:opacity-100 transition-all truncate max-w-[200px]"><%= courseName %></a>
                     <span class="breadcrumb-sep">/</span>
                     <span class="breadcrumb-node active truncate max-w-[300px]"><%= video ? video.title : 'TERMINAL' %></span>
@@ -210,23 +220,38 @@
                 <div id="content-curriculum" class="lab-pane active h-full overflow-y-auto px-6 py-6 scroll-premium space-y-6">
                     <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
                         <% sections.forEach((section, sIdx) => { %>
-                            <div class="section-group mb-6">
-                                <div class="flex items-center justify-between mb-4 px-2">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-[#00ED64]"></div>
-                                        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#9FB1AD]"><%= section.title %></h3>
+                            <% 
+                                const sectionWatched = section.lectures.filter(l => l.watched).length;
+                                const sectionTotal = section.lectures.length;
+                                const sectionPercent = Math.round((sectionWatched / sectionTotal) * 100);
+                                let hasActiveVideo = false;
+                                if (video) {
+                                    hasActiveVideo = section.lectures.some((lec) => {
+                                        const lecId = lec.videoId || lec._id || lec.contentId;
+                                        return video.videoId === lecId || video._id === lecId || video.id === lecId;
+                                    });
+                                }
+                            %>
+                            <div class="section-group mb-4 <%= hasActiveVideo || sections.length === 1 ? 'expanded' : '' %>">
+                                <div class="premium-accordion-header cursor-pointer group hover:bg-white/[0.03] p-3 rounded-xl transition-all border border-transparent hover:border-[#00ED64]/10 select-none shadow-md" onclick="toggleCurriculumSection(this)">
+                                    <div class="flex items-center justify-between mb-3 px-1">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-1.5 h-1.5 rounded-full <%= hasActiveVideo ? 'bg-[#00ED64] shadow-[0_0_8px_#00ED64] animate-pulse' : 'bg-[#9FB1AD]/50' %> transition-all"></div>
+                                            <h3 class="text-[10px] font-black uppercase tracking-[0.2em] <%= hasActiveVideo ? 'text-[#00ED64]' : 'text-[#9FB1AD]' %> group-hover:text-white transition-colors"><%= section.title %></h3>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[8px] font-bold text-[#00ED64]/60 bg-[#00ED64]/10 px-2 py-0.5 rounded-md"><%= sectionPercent %>%</span>
+                                            <div class="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#00ED64]/10 transition-colors ml-1">
+                                                <i class="fas fa-chevron-down text-[8px] text-[#9FB1AD] group-hover:text-[#00ED64] accordion-chevron"></i>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <% 
-                                        const sectionWatched = section.lectures.filter(l => l.watched).length;
-                                        const sectionTotal = section.lectures.length;
-                                        const sectionPercent = Math.round((sectionWatched / sectionTotal) * 100);
-                                    %>
-                                    <span class="text-[8px] font-bold text-[#00ED64]/60"><%= sectionPercent %>%</span>
+                                    <div class="w-full h-[2px] bg-[#001E2B] rounded-full relative overflow-hidden">
+                                        <div class="absolute inset-y-0 left-0 bg-gradient-to-r from-[#00684A] to-[#00ED64] transition-all duration-700" style="width: <%= sectionPercent %>%"></div>
+                                    </div>
                                 </div>
-                                <div class="w-full h-[1px] bg-white/5 mb-4 relative overflow-hidden">
-                                    <div class="absolute inset-y-0 left-0 bg-[#00ED64]/40" style="width: <%= sectionPercent %>%"></div>
-                                </div>
-                                <div class="space-y-1">
+                                
+                                <div class="section-lectures mt-2 px-1 space-y-1">
                                     <% section.lectures.forEach((lec, lIdx) => { 
                                         const lecId = lec.videoId || lec._id || lec.contentId || 'missing';
                                         const isActive = video && (video.videoId === lecId || video._id === lecId || video.id === lecId);
