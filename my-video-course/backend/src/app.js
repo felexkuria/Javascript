@@ -120,6 +120,7 @@ app.use('/api/auth', require('./routes/api/auth'));
 app.use('/teacher', sessionAuth, require('./routes/teacher'));
 app.use('/api/teacher', sessionAuth, require('./routes/api/teacher'));
 app.use('/api/courses', sessionAuth, require('./routes/api/courses'));
+app.use('/api/upload', sessionAuth, require('./routes/api/upload'));
 app.use('/api/enrollments', sessionAuth, require('./routes/api/enrollments'));
 app.use('/api/wishlist', sessionAuth, require('./routes/api/wishlist'));
 app.use('/api/quizzes', sessionAuth, require('./routes/api/quizzes'));
