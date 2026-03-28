@@ -210,11 +210,12 @@ router.post('/complete', async (req, res) => {
     await dynamodb.saveVideo(videoData);
 
     try {
-      const course = await dynamodb.getCourseByTitle(courseName);
+      // 🏗️ ID-Locked Persistence: Lookup by the unique Partition Key
+      const course = await dynamodb.getCourse(courseName);
       if (course) {
         let updated = false;
         
-        // 🧪 ID-First Matcher: The most reliable way to link ingestion
+        // 🧪 ID-First Matcher: The most reliable way to link ingestion to specific slots
         if (course.sections) {
           for (const section of course.sections) {
             const lecture = (section.lectures || []).find(l => {
@@ -233,7 +234,7 @@ router.post('/complete', async (req, res) => {
           }
         }
 
-        // Update in flat list
+        // Parallel update in the flat legacy list for playback compatibility
         if (course.videos) {
             const vIdx = course.videos.findIndex(v => v.title === videoTitle || v._id === videoData._id);
             if (vIdx !== -1) {
@@ -242,7 +243,7 @@ router.post('/complete', async (req, res) => {
                 course.videos[vIdx].type = videoData.type;
                 updated = true;
             } else if (!updated) {
-                // If not found, append to flat list for safety
+                // Failover: append to flat list if no existing slot was linked
                 course.videos.push({ ...videoData, section: course.sections?.[0]?.title || 'Uncategorized' });
                 updated = true;
             }
@@ -250,9 +251,10 @@ router.post('/complete', async (req, res) => {
 
         if (updated) {
           await dynamodb.saveCourse(course);
-          console.log(`✅ Atomic Sync: [${videoTitle}] propagated to Course curriculum.`);
+          console.log(`✅ Persisted Sync: [${videoTitle}] is now permanently linked to Course [${courseName}]`);
         }
       }
+
     } catch (syncErr) {
       console.warn(`⚠️  Course sync skipped: ${syncErr.message}`);
     }
