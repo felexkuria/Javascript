@@ -3,6 +3,7 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const dynamodb = require('../utils/dynamodb');
 const dynamoVideoService = require('../services/dynamoVideoService');
 const { v4: uuidv4 } = require('uuid');
+const s3Utils = require('../utils/s3Utils');
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
@@ -25,7 +26,8 @@ exports.generateCertificate = async (req, res) => {
     }
 
     const certId = uuidv4();
-    const fileName = `certificates/${userId}_${courseId}_${certId}.pdf`;
+    const safeCourseId = s3Utils.sanitizeKey(courseId);
+    const fileName = `certificates/${userId}_${safeCourseId}_${certId}.pdf`;
 
     // 2. Generate PDF
     const doc = new PDFDocument({ layout: 'landscape', size: 'A4' });

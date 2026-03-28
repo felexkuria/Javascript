@@ -4,6 +4,7 @@ const srtQuizGenerator = require('./srtQuizGenerator');
 const { withRetry } = require('../utils/retry');
 const logger = require('../utils/logger');
 const dynamoService = require('../utils/dynamodb');
+const s3Utils = require('../utils/s3Utils');
 
 class VideoUploadProcessor {
   constructor() {
@@ -38,7 +39,7 @@ class VideoUploadProcessor {
   // Phase 3: Decoupled Ingestion
   // 🛰️ Submit job to AWS (Step 1)
   async submitTranscriptionJob(videoUrl, videoTitle) {
-    const jobSafeTitle = videoTitle.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'video-' + Date.now().toString(36);
+    const jobSafeTitle = s3Utils.sanitizeKey(videoTitle);
     const jobName = `transcribe-${jobSafeTitle}-${Date.now()}`;
     
     const command = new StartTranscriptionJobCommand({

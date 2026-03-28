@@ -4,6 +4,8 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const dynamodb = require('../../utils/dynamodb');
 const cognitoAuth = require('../../middleware/cognitoAuth');
 const s3Signer = require('../../utils/s3Signer');
+const s3Utils = require('../../utils/s3Utils');
+
 
 const router = express.Router();
 const s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
@@ -14,14 +16,7 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 } // Reduced limit for legacy/small files
 });
 
-const sanitize = (s) => {
-  if (!s) return 'untitled';
-  // Lowercase and replace spaces with underscores
-  // Then remove any characters NOT in [a-z0-9._-]
-  const sanitized = s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
-  // Ensure we never return an empty string to avoid malformed S3 keys (e.g., videos//...)
-  return sanitized || 'untitled_' + Date.now().toString(36);
-};
+const sanitize = (s) => s3Utils.sanitizeKey(s);
 
 // Upload video endpoint
 router.post('/video', cognitoAuth, upload.single('video'), async (req, res) => {

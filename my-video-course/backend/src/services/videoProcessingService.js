@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const os = require('os');
 const dynamodb = require('../utils/dynamodb');
 const aiService = require('./aiService');
+const s3Utils = require('../utils/s3Utils');
 
 class VideoProcessingService {
   constructor() {
@@ -36,8 +37,8 @@ class VideoProcessingService {
       let videoUrl = '';
       let captionsUrl = '';
       let aiContent = { quiz: { questions: [] }, summary: '', todoList: { tasks: [] } };
-
-
+      const safeCourse = s3Utils.sanitizeKey(courseName);
+      const safeTitle = s3Utils.sanitizeKey(title);
 
       if (isPdf) {
         s3Key = `resources/${safeCourse}/${Date.now()}-${safeTitle}${ext}`;
