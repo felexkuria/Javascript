@@ -377,7 +377,18 @@
                     if (progress) progress.querySelector('div').style.width = pct + '%';
                 }
             };
-            xhr.onload = () => location.reload();
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    location.reload();
+                } else {
+                    alert('UPLOAD FAILED: ' + (xhr.responseText || 'Internal Server Error'));
+                    if (progress) progress.style.display = 'none';
+                }
+            };
+            xhr.onerror = () => {
+                alert('NETWORK ERROR: Upload interrupted.');
+                if (progress) progress.style.display = 'none';
+            };
             xhr.open('POST', url, true);
             xhr.send(fd);
         }

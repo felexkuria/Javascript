@@ -2,6 +2,7 @@ const { TranscribeClient, StartTranscriptionJobCommand, GetTranscriptionJobComma
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const fs = require('fs');
 const path = require('path');
+const s3Utils = require('../utils/s3Utils');
 
 class TranscribeService {
   constructor() {
@@ -43,19 +44,20 @@ class TranscribeService {
       
       // Upload audio to S3 first
       console.log(`Uploading audio to S3: ${audioPath}`);
-      const s3Key = `transcribe-input/${jobName}.${format}`;
+      const safeJobName = s3Utils.sanitizeKey(jobName);
+      const s3Key = `transcribe-input/${safeJobName}.${format}`;
       const mediaUri = await this.uploadAudioToS3(audioPath, s3Key);
       console.log(`Audio uploaded to: ${mediaUri}`);
       
       const params = {
-        TranscriptionJobName: jobName,
+        TranscriptionJobName: s3Utils.sanitizeKey(jobName),
         LanguageCode: 'en-US',
         MediaFormat: format,
         Media: {
           MediaFileUri: mediaUri
         },
         OutputBucketName: this.bucket,
-        OutputKey: `transcribe-output/${jobName}.json`,
+        OutputKey: `transcribe-output/${s3Utils.sanitizeKey(jobName)}.json`,
         Subtitles: {
           Formats: ['srt']
         }
@@ -102,7 +104,8 @@ class TranscribeService {
   }
 
   async processLargeVideo(videoPath, videoTitle) {
-    const jobName = `transcribe-${Date.now()}-${videoTitle.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 50)}`;
+    const safeTitle = s3Utils.sanitizeKey(videoTitle);
+    const jobName = `transcribe-${Date.now()}-${safeTitle}`;
     const tempAudioPath = path.join(path.dirname(videoPath), `${path.basename(videoPath, path.extname(videoPath))}_transcribe_temp.wav`);
     
     try {

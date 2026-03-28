@@ -6,19 +6,14 @@ const fs = require('fs');
 const dynamoVideoService = require('../services/dynamoVideoService');
 const thumbnailGenerator = require('../services/thumbnailGenerator');
 const metadataService = require('../utils/metadataService');
+const s3Utils = require('../utils/s3Utils');
 
 /**
  * Sanitize a filename into a safe S3 key segment.
  * Strips everything except alphanumerics, dots, dashes, underscores.
  */
 function sanitizeKey(name) {
-  if (!name) return 'untitled_' + Date.now().toString(36);
-  // Lowercase and replace spaces with underscores, then remove unsafe chars
-  const sanitized = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
-  // Collapse repeated underscores and truncate
-  const final = sanitized.replace(/_{2,}/g, '_').substring(0, 180);
-  
-  return final || 'untitled_' + Date.now().toString(36);
+  return s3Utils.sanitizeKey(name);
 }
 
 class UploadController {
