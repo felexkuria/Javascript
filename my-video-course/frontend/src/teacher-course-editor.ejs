@@ -164,8 +164,10 @@
                 <!-- Curriculum Construction Bay -->
                 <div class="relative curriculum-timeline" id="sections-container">
                     <% if (course.sections && course.sections.length > 0) { %>
-                        <% course.sections.forEach((section, sIdx) => { %>
-                            <div class="section-box mb-12" data-section-id="<%= section._id %>" data-title="<%= section.title %>">
+                        <% course.sections.forEach((section, sIdx) => { 
+                            const secId = section._id || section.id || section.sectionId || ('sec-' + sIdx);
+                        %>
+                            <div class="section-box mb-12" data-section-id="<%= secId %>" data-title="<%= section.title %>">
                                 <!-- Section Header -->
                                 <div class="section-header-atlas premium-glass flex justify-between items-center group">
                                     <div class="flex items-center gap-8">
@@ -178,10 +180,10 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onclick="editSection('<%= section._id %>', '<%= section.title %>')" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-[#00ED64]/10 hover:text-[#00ED64] transition-all">
+                                        <button onclick="editSection('<%= secId %>', '<%= section.title %>')" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-[#00ED64]/10 hover:text-[#00ED64] transition-all">
                                             <i class="fas fa-terminal text-xs"></i>
                                         </button>
-                                        <button onclick="deleteSection('<%= section._id %>')" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-red-500/10 hover:text-red-400 transition-all">
+                                        <button onclick="deleteSection('<%= secId %>')" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-red-500/10 hover:text-red-400 transition-all">
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
                                     </div>
@@ -189,19 +191,21 @@
 
                                 <!-- Lessons Feed -->
                                 <div class="mt-6 space-y-4">
-                                    <% section.lectures.forEach((lecture, lIdx) => { %>
-                                        <div class="lesson-card-atlas premium-glass flex items-center gap-6 group" data-lecture-id="<%= lecture._id %>" data-title="<%= lecture.title %>">
+                                    <% section.lectures.forEach((lecture, lIdx) => { 
+                                        const lecId = lecture._id || lecture.videoId || lecture.id || '';
+                                    %>
+                                        <div class="lesson-card-atlas premium-glass flex items-center gap-6 group" data-lecture-id="<%= lecId %>" data-title="<%= lecture.title %>">
                                             <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-[#00ED64]/60 group-hover:text-[#00ED64] transition-colors">
                                                 <i class="fas <%= lecture.type === 'pdf' ? 'fa-file-pdf' : 'fa-play-circle' %>"></i>
                                             </div>
                                             <div class="flex-grow">
                                                 <div class="flex items-center gap-4 mb-2">
                                                     <span class="text-base font-bold text-white/90 group-hover:text-white"><%= lecture.title %></span>
-                                                    <button onclick="editLecture('<%= section._id %>', '<%= lecture._id %>', '<%= lecture.title %>')" class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-[#00ED64]">
+                                                    <button onclick="editLecture('<%= secId %>', '<%= lecId %>', '<%= lecture.title %>')" class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-[#00ED64]">
                                                         <i class="fas fa-pen text-[10px]"></i>
                                                     </button>
                                                 </div>
-                                                <div class="progress-micro-line" id="progress-<%= lecture._id %>">
+                                                <div class="progress-micro-line" id="progress-<%= lecId %>">
                                                     <div class="progress-flow-neon w-0 h-full"></div>
                                                 </div>
                                             </div>
@@ -211,7 +215,7 @@
                                                         <i class="fas fa-check-circle mr-2"></i> Synced
                                                     </div>
                                                 <% } else { %>
-                                                    <button class="btn-add-ghost py-2 !text-[9px]" onclick="triggerUpload('<%= section._id %>', '<%= lecture._id %>')">
+                                                    <button class="btn-add-ghost py-2 !text-[9px]" onclick="triggerUpload('<%= secId %>', '<%= lecId %>')">
                                                         <i class="fas fa-cloud-upload-alt mr-2"></i> Deploy Media
                                                     </button>
                                                 <% } %>
@@ -221,10 +225,10 @@
 
                                     <!-- Action Interface -->
                                     <div class="ml-16 pt-4 flex gap-4">
-                                        <button onclick="addLecture('<%= section._id %>')" class="btn-add-ghost">
+                                        <button onclick="addLecture('<%= secId %>')" class="btn-add-ghost">
                                             <i class="fas fa-plus mr-2"></i> Append Lesson
                                         </button>
-                                        <button onclick="triggerResourceUpload('<%= section._id %>')" class="btn-add-ghost !border-blue-500/30 !text-blue-400 hover:!bg-blue-500/10">
+                                        <button onclick="triggerResourceUpload('<%= secId %>')" class="btn-add-ghost !border-blue-500/30 !text-blue-400 hover:!bg-blue-500/10">
                                             <i class="fas fa-file-pdf mr-2"></i> Append Resource
                                         </button>
                                     </div>
