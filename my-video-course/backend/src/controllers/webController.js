@@ -146,15 +146,18 @@ class WebController {
         return res.status(404).render('error', { message: 'Course not found' });
       }
 
-      const videos = course.videos || [];
+      // 🏥 Recovery & Hydration: Fetch fresh videos from the standalone Videos table
+      // This ensures we get real S3 URLs even if the Course model's internal list is stale
+      const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
+      
       const video = videos.find(v => 
-        (v.videoId && v.videoId === videoId) || 
-        (v._id && v._id.toString() === videoId) || 
+        (v.videoId && v.videoId.toString() === videoId.toString()) || 
+        (v._id && v._id.toString() === videoId.toString()) || 
         (v.title === videoId)
       ) || videos[0];
 
       if (!video) {
-        return res.status(404).render('error', { message: 'Video not found' });
+        return res.status(404).render('error', { message: 'Video not found in this course' });
       }
 
       // SOTA Smart Curriculum Engine

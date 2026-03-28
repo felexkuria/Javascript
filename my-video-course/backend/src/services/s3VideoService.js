@@ -34,13 +34,17 @@ class S3VideoService {
         const hostParts = host.split('.');
         if (hostParts.length >= 2 && hostParts.includes('s3')) {
           bucket = hostParts[0];
+        } else if (hostParts.length > 0) {
+          // Fallback: first part of host might be the bucket
+          bucket = hostParts[0];
         }
         
         // Key is everything after the first slash of the path
-        key = urlParts[1].split('?')[0]; // Strip query params if they exist
+        key = urlParts[1].split('?')[0]; 
       } else {
-
-        return videoUrl;
+        // 🏗️ Key-Only Recovery: If it's not a URL, treat it as a raw S3 Key
+        key = videoUrl;
+        bucket = this.bucketName;
       }
 
       const commandParams = {
@@ -70,23 +74,18 @@ class S3VideoService {
       video.embedUrl = `https://www.youtube.com/embed/${video.youtubeId}?enablejsapi=1`;
     } else if (this.isS3Video(video.videoUrl)) {
       video.isS3Video = true;
-      // Generate direct signed URL for video element
       video.fullVideoUrl = await this.generateSignedUrl(video.videoUrl, 3600);
       
-      // Also sign thumbnails if available
-      if (video.thumbnailUrl) {
-        video.thumbnailUrl = await this.generateSignedUrl(video.thumbnailUrl, 3600);
-      }
-      
-      // Sign captions if available
-      if (video.captionsUrl) {
-        video.captionsUrl = await this.generateSignedUrl(video.captionsUrl, 3600);
-      }
+      if (video.thumbnailUrl) video.thumbnailUrl = await this.generateSignedUrl(video.thumbnailUrl, 3600);
+      if (video.captionsUrl) video.captionsUrl = await this.generateSignedUrl(video.captionsUrl, 3600);
     } else if (this.isRelativeUrl(video.videoUrl)) {
-      // Convert relative URLs from legacy data to S3 URLs
-      const s3Url = this.convertToS3Url(video.videoUrl);
+      // 🏗️ Smart Key Recovery: If it's a relative path, it's a raw S3 Key.
+      // We pass it directly to generateSignedUrl which handles the bucket.
       video.isS3Video = true;
-      video.fullVideoUrl = await this.generateSignedUrl(s3Url, 3600);
+      video.fullVideoUrl = await this.generateSignedUrl(video.videoUrl, 3600);
+      
+      if (video.thumbnailUrl) video.thumbnailUrl = await this.generateSignedUrl(video.thumbnailUrl, 3600);
+      if (video.captionsUrl) video.captionsUrl = await this.generateSignedUrl(video.captionsUrl, 3600);
     } else {
       video.fullVideoUrl = video.videoUrl;
     }

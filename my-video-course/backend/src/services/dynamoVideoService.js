@@ -247,11 +247,17 @@ class DynamoVideoService {
   // Get a specific video by ID or title
   async getVideoById(courseName, videoId, userId = 'guest') {
     const videos = await this.getVideosForCourse(courseName, userId);
-    return videos.find(v => 
-      (v.videoId === videoId) || 
-      (v._id && v._id.toString() === videoId) || 
+    const targetId = (videoId || '').toString();
+
+    // 🛡️ Robust Matcher: Find by any ID variation
+    const video = videos.find(v => 
+      (v.videoId && v.videoId.toString() === targetId) || 
+      (v._id && v._id.toString() === targetId) || 
+      (v.id && v.id.toString() === targetId) ||
       (v.title === videoId)
     );
+
+    return video;
   }
 
   // Update video watch status for specific user
