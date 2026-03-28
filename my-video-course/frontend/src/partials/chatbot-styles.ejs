@@ -35,12 +35,20 @@
 }
 
 .chatbot-header {
+    flex-shrink: 0;
     padding: 24px 32px;
     background: rgba(0, 237, 100, 0.03);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.chatbot-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .chatbot-title {
@@ -170,6 +178,7 @@
 
 /* Input Area */
 .chat-input-container {
+    flex-shrink: 0;
     padding: 32px;
     background: rgba(0, 0, 0, 0.2);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
