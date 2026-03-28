@@ -238,11 +238,17 @@ class DynamoVideoService {
     });
   }
 
-  // Get a specific course by its title/name
+  // Get a specific course by its unique partition key (courseName)
   async getCourseByTitle(courseName, userId = 'guest') {
+    // 🏗️ Performance Boost: Direct indexed lookup on the partition key
+    const course = await dynamodb.getCourse(courseName);
+    if (course) return course;
+
+    // Fallback: If not found by ID, try finding by title in the full course list
     const courses = await this.getAllCourses(userId);
-    return courses.find(c => c.name === courseName || c.title === courseName);
+    return courses.find(c => c.title === courseName);
   }
+
 
   // Get a specific video by ID or title
   async getVideoById(courseName, videoId, userId = 'guest') {

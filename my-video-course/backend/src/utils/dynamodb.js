@@ -585,6 +585,24 @@ class DynamoDBService {
     }
   }
 
+  async getCourse(courseName) {
+    if (!this.isConnected) return null;
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    
+    try {
+      const params = {
+        TableName: `video-course-app-courses-${environment}`,
+        Key: { courseName: courseName }
+      };
+      
+      const result = await this.docClient.send(new GetCommand(params));
+      return result.Item || null;
+    } catch (error) {
+      console.error('Error fetching course by ID:', error.message);
+      return null;
+    }
+  }
+
   // Course operations
   async saveCourse(course) {
     if (!this.isConnected) return false;
@@ -593,12 +611,17 @@ class DynamoDBService {
 
     try {
       const sanitized = this.sanitize(course);
+      
+      // 🛡️ Partition Key Hardening: Ensure we use the correct ID
+      const pk = sanitized.courseName || sanitized.name || sanitized.title;
+      if (!pk) throw new Error('Cannot save course: Missing Course ID (courseName)');
+
       const params = {
         TableName: `video-course-app-courses-${environment}`,
         Item: {
-          courseName: sanitized.name || sanitized.courseName || sanitized.title,
-          status: sanitized.status || 'ACTIVE',
           ...sanitized,
+          courseName: pk,
+          status: sanitized.status || 'ACTIVE',
           instructorEmail: sanitized.instructorEmail || 'engineerfelex@gmail.com',
           createdAt: sanitized.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -612,6 +635,7 @@ class DynamoDBService {
       return false;
     }
   }
+
 
   /**
    * 🏗️ Saga Stage 1: Mark for Deletion
