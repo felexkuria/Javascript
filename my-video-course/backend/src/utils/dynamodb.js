@@ -1,6 +1,5 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../../../.env') });
-
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 const { DynamoDBClient, UpdateItemCommand, DeleteItemCommand } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, ScanCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
 

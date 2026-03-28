@@ -333,9 +333,12 @@
                 const statusEl = document.getElementById(id + '_status');
                 const fillEl = document.getElementById(id + '_fill');
                 
-                const sanitize = (s) => s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
-                const safeCourse = sanitize(courseName);
-                const safeTitle = sanitize(lectureTitle || file.name.replace(/\.[^.]+$/, ''));
+                const sanitize = (s) => {
+                    if (!s) return '';
+                    return s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
+                };
+                const safeCourse = sanitize(courseName) || 'untitled_course';
+                const safeTitle = sanitize(lectureTitle || file.name.replace(/\.[^.]+$/, '')) || 'untitled_video_' + Date.now().toString(36);
 
                 try {
                     // Step 1: Request Presigned URL
