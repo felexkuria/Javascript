@@ -1,27 +1,27 @@
 <div class="video-section animate-slide-up">
-    <div class="video-container" id="videoContainer">
+    <div class="video-container" id="videoContainer" style="position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
         <% if (isYouTube) { %>
         <iframe id="youtubePlayer" 
                 src="<%= video.embedUrl %>" 
-                style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; border: none;"
+                style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; border: none; object-fit: cover;"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen>
         </iframe>
         <% } else if (video && video.videoUrl && (video.videoUrl.toLowerCase().includes('.pdf') || video.type === 'resource' || video.type === 'pdf')) { %>
-        <div class="pdf-viewer-container" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: #525659; display: flex; flex-direction: column;">
+        <div class="pdf-viewer-container" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: #1e1e24; display: flex; flex-direction: column;">
             <iframe src="<%= video.fullVideoUrl || video.videoUrl %>" 
-                    style="flex: 1; border: none;"
+                    style="flex: 1; border: none; width: 100%; height: 100%;"
                     id="pdfViewer">
             </iframe>
-            <div class="pdf-fallback" style="padding: 10px; background: rgba(0,0,0,0.8); color: white; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                <span>Unable to view PDF?</span>
-                <a href="<%= video.videoUrl %>" download="<%= video.title %>.pdf" style="color: #00ED64; text-decoration: none; font-weight: 600;">Download Document ↓</a>
+            <div class="pdf-fallback" style="padding: 12px 20px; background: rgba(0,0,0,0.9); color: white; display: flex; justify-content: space-between; align-items: center; font-size: 14px; border-top: 1px solid #333;">
+                <span>View document offline or bypass browser PDF viewer:</span>
+                <a href="<%= video.fullVideoUrl || video.videoUrl %>" download="<%= video.title %>.pdf" target="_blank" style="color: #00ED64; text-decoration: none; font-weight: 600; padding: 4px 12px; background: rgba(0,237,100,0.1); border-radius: 6px;">Download PDF ↓</a>
             </div>
         </div>
         <% } else { %>
         <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video" preload="metadata" 
                poster="<%= video.thumbnailUrl || '/thumbnails/' + video._id + '.jpg' %>"
-               style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; object-fit: contain; background: #000;">
+               style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; object-fit: contain; background: #000; border: none; outline: none;">
             <source src="<%= video.fullVideoUrl || video.videoUrl %>" type="video/mp4" id="videoSource">
             <% if (video.captionsUrl) { %>
             <track label="English" kind="subtitles" srclang="en" src="/captions/<%= courseName %>/<%= video._id %>" default />

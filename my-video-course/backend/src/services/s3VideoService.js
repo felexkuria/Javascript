@@ -33,10 +33,16 @@ class S3VideoService {
         return videoUrl;
       }
 
-      const command = new GetObjectCommand({
+      const commandParams = {
         Bucket: bucket.trim(),
         Key: key.trim()
-      });
+      };
+
+      if (key.toLowerCase().endsWith('.pdf')) {
+        commandParams.ResponseContentDisposition = 'inline';
+      }
+
+      const command = new GetObjectCommand(commandParams);
       
       const signedUrl = await getSignedUrl(this.s3, command, { expiresIn });
       return signedUrl;
