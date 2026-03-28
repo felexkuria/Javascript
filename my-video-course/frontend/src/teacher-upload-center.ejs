@@ -255,14 +255,17 @@
         let selectedFiles = [];
         let selectedSectionId = null;
         let selectedLectureId = null;
+        let currentCourseSections = [];
 
         function onCourseChange() {
             const sel = document.getElementById('courseSelect');
             const opt = sel.options[sel.selectedIndex];
             const pills = document.getElementById('sectionPills');
             const slotContainer = document.getElementById('lessonSlotContainer');
+            
             selectedSectionId = null;
             selectedLectureId = null;
+            currentCourseSections = [];
             slotContainer.classList.add('hidden');
 
             if (!opt.value) {
@@ -270,27 +273,32 @@
                 return;
             }
 
-            const sections = JSON.parse(opt.dataset.sections || '[]');
-            if (!sections.length) {
+            currentCourseSections = JSON.parse(opt.dataset.sections || '[]');
+            if (!currentCourseSections.length) {
                 pills.innerHTML = '<span class="text-red-400 font-medium text-sm">No sections detected in this curriculum.</span>';
                 return;
             }
 
-            pills.innerHTML = sections.map(s =>
-                `<button class="pill-atlas" data-id="${s._id}" onclick="selectSection(this, '${s._id}', ${JSON.stringify(s.lectures || []).replace(/'/g, "&apos;")})">${s.title}</button>`
+            pills.innerHTML = currentCourseSections.map(s =>
+                `<button class="pill-atlas" data-id="${s._id}" onclick="selectSectionHandler(this, '${s._id}')">${s.title}</button>`
             ).join('');
+            
+            checkReady();
         }
 
-        function selectSection(el, id, lectures) {
+        function selectSectionHandler(el, id) {
             document.querySelectorAll('.pill-atlas').forEach(p => p.classList.remove('selected'));
             el.classList.add('selected');
             selectedSectionId = id;
             selectedLectureId = null;
 
+            const section = currentCourseSections.find(s => s._id === id);
+            const lectures = section ? (section.lectures || []) : [];
+
             const slotContainer = document.getElementById('lessonSlotContainer');
             const slotList = document.getElementById('lessonSlots');
 
-            if (lectures && lectures.length > 0) {
+            if (lectures.length > 0) {
                 slotContainer.classList.remove('hidden');
                 slotList.innerHTML = lectures.map(l => `
                     <button class="slot-atlas-btn p-6 rounded-2xl flex flex-col items-start gap-2 border border-white/5 bg-white/2 hover:bg-white/5 transition-all text-left w-full" 
@@ -315,6 +323,14 @@
             selectedLectureId = id;
             document.getElementById('lectureTitle').value = title;
             checkReady();
+        }
+
+        function checkReady() {
+            const hasCourse = document.getElementById('courseSelect').value;
+            const hasSection = selectedSectionId;
+            const hasFiles = selectedFiles.length > 0;
+            const btn = document.getElementById('uploadBtn');
+            if (btn) btn.disabled = !(hasCourse && hasSection && hasFiles);
         }
 
         function onFileSelected(files) {
