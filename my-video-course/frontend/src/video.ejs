@@ -105,22 +105,32 @@
                     </div>
                 </div>
 
-                <div class="premium-meta-bay">
-                    <div class="flex items-center justify-between mb-8">
-                        <div>
-                            <p class="text-[10px] font-black text-[#00ED64] uppercase tracking-[0.3em] mb-2"><%= courseName %></p>
-                            <h1 class="text-4xl font-black tracking-tight"><%= video ? video.title : 'Lecture Module' %></h1>
+                <div class="premium-meta-bay glass">
+                    <div class="mb-10">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="atlas-badge"><%= courseName %></span>
+                            <div class="w-px h-3 bg-white/10"></div>
+                            <span class="technical-label text-[#00ED64]">Node 01: Architecture</span>
                         </div>
-                        <div class="text-right">
-                            <p class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-widest mb-1 opacity-50">Technical Lead</p>
+                        <h1 class="text-5xl font-black tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+                            <%= video ? video.title : 'Lecture Module' %>
+                        </h1>
+                        <div class="flex items-center gap-6">
                             <div class="flex items-center gap-3">
-                                <span class="text-sm font-black text-white">Engineer Felex</span>
-                                <div class="w-2 h-2 rounded-full bg-[#00ED64] animate-pulse"></div>
+                                <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                                    <i class="fas fa-user-astronaut text-[10px] text-[#9FB1AD]"></i>
+                                </div>
+                                <span class="text-[11px] font-bold text-[#E7EEEB] uppercase tracking-widest">Engineer Felex</span>
+                            </div>
+                            <div class="w-1 h-1 rounded-full bg-white/20"></div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-clock text-[9px] text-[#9FB1AD]"></i>
+                                <span class="text-[11px] font-bold text-[#9FB1AD] uppercase tracking-widest"><%= video && video.duration ? video.duration : '24:00' %></span>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="prose prose-invert max-w-none text-[#9FB1AD] text-sm leading-relaxed mb-12">
+                    <div class="prose prose-invert max-w-none text-[#9FB1AD] text-sm leading-relaxed mb-12 border-l-2 border-[#00ED64]/20 pl-8 py-2">
                         <%= video ? video.description : 'Detailed architectural deep dive into this technical module.' %>
                     </div>
 
@@ -131,14 +141,14 @@
                                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00ED64] to-[#00684A] flex items-center justify-center text-[#001E2B] shadow-lg shadow-[#00ED64]/10">
                                     <i class="fas fa-dna text-xs"></i>
                                 </div>
-                                <h3 class="text-xl font-black tracking-tight uppercase">AI Learning <span class="premium-text">Lab</span></h3>
+                                <h3 class="text-xl font-black tracking-tight uppercase">AI Learning <span class="text-[#00ED64]">Insights</span></h3>
                             </div>
-                            <button id="refreshTodos" class="btn-atlas btn-atlas-secondary text-[10px] py-3 px-6">
-                                <i class="fas fa-sync-alt mr-2"></i> SYNC INSIGHTS
+                            <button id="refreshTodos" class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#00ED64] bg-[#00ED64]/10 border border-[#00ED64]/20 px-6 py-3 rounded-xl hover:bg-[#00ED64]/20 transition-all">
+                                <i class="fas fa-sync-alt"></i> SYNC ENGINE
                             </button>
                         </div>
 
-                        <div id="ai-todo-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-2">
+                        <div id="ai-todo-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Populated by video-scripts.ejs -->
                             <div class="col-span-2 py-12 text-center opacity-40 italic text-[11px] font-bold uppercase tracking-widest">
                                 <i class="fas fa-circle-notch fa-spin mb-4 block text-lg"></i>
@@ -172,19 +182,19 @@
         <aside class="side-lab">
             <div class="lab-tabs">
                 <button onclick="switchLabTab('curriculum')" id="tab-curriculum" class="lab-tab-btn active">
-                    <i class="fas fa-list-ul"></i> Path
-                </button>
-                <button onclick="switchLabTab('advisor')" id="tab-advisor" class="lab-tab-btn">
-                    <i class="fas fa-brain"></i> AI Advisor
+                    Path
                 </button>
                 <button onclick="switchLabTab('notes')" id="tab-notes" class="lab-tab-btn">
-                    <i class="fas fa-pen-nib"></i> Notes
+                    Notes
+                </button>
+                <button onclick="switchLabTab('advisor')" id="tab-advisor" class="lab-tab-btn">
+                    Advisor
                 </button>
             </div>
 
             <div class="lab-content flex-1 overflow-hidden relative">
                 <!-- Curriculum Tab -->
-                <div id="content-curriculum" class="lab-pane active h-full overflow-y-auto px-6 py-6 scroll-premium space-y-6">
+                <div id="content-curriculum" class="lab-pane active h-full overflow-y-auto px-6 py-10 scroll-premium space-y-4">
                     <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
                         <% sections.forEach((section, sIdx) => { %>
                             <% 
@@ -199,44 +209,31 @@
                                     });
                                 }
                             %>
-                            <div class="section-group mb-4 <%= hasActiveVideo || sections.length === 1 ? 'expanded' : '' %>">
-                                <div class="premium-accordion-header cursor-pointer group hover:bg-white/[0.03] p-3 rounded-xl transition-all border border-transparent hover:border-[#00ED64]/10 select-none shadow-md" onclick="toggleCurriculumSection(this)">
-                                    <div class="flex items-center justify-between mb-3 px-1">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-1.5 h-1.5 rounded-full <%= hasActiveVideo ? 'bg-[#00ED64] shadow-[0_0_8px_#00ED64] animate-pulse' : 'bg-[#9FB1AD]/50' %> transition-all"></div>
-                                            <h3 class="text-[10px] font-black uppercase tracking-[0.2em] <%= hasActiveVideo ? 'text-[#00ED64]' : 'text-[#9FB1AD]' %> group-hover:text-white transition-colors"><%= section.title %></h3>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-[8px] font-bold text-[#00ED64]/60 bg-[#00ED64]/10 px-2 py-0.5 rounded-md"><%= sectionPercent %>%</span>
-                                            <div class="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#00ED64]/10 transition-colors ml-1">
-                                                <i class="fas fa-chevron-down text-[8px] text-[#9FB1AD] group-hover:text-[#00ED64] accordion-chevron"></i>
-                                            </div>
-                                        </div>
+                            <div class="section-group mb-8 <%= hasActiveVideo || sections.length === 1 ? 'expanded' : '' %>">
+                                <div class="px-2 mb-4 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-1.5 h-1.5 rounded-full <%= hasActiveVideo ? 'bg-[#00ED64] shadow-[0_0_8px_#00ED64]' : 'bg-white/20' %>"></div>
+                                        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#9FB1AD]"><%= section.title %></h3>
                                     </div>
-                                    <div class="w-full h-[2px] bg-[#001E2B] rounded-full relative overflow-hidden">
-                                        <div class="absolute inset-y-0 left-0 bg-gradient-to-r from-[#00684A] to-[#00ED64] transition-all duration-700" style="width: <%= (typeof sectionPercent !== 'undefined' ? sectionPercent : 0) %>%"></div>
-                                    </div>
+                                    <span class="text-[9px] font-bold text-[#00ED64]"><%= sectionPercent %>% Complete</span>
                                 </div>
                                 
-                                <div class="section-lectures mt-2 px-1 space-y-1">
+                                <div class="space-y-3">
                                     <% section.lectures.forEach((lec, lIdx) => { 
                                         const lecId = lec.videoId || lec._id || lec.contentId || 'missing';
                                         const isActive = video && (video.videoId === lecId || video._id === lecId || video.id === lecId);
                                     %>
                                         <a href="/course/<%= encodeURIComponent(courseName) %>/video/<%= encodeURIComponent(lecId) %>" 
-                                           class="lecture-node flex items-center gap-4 p-4 rounded-xl transition-all duration-300 border border-transparent <%= isActive ? 'bg-[#00ED64]/10 border-[#00ED64]/30 active-glow shadow-lg shadow-[#00ED64]/5 ring-1 ring-[#00ED64]/20' : 'hover:bg-white/5 active:scale-[0.98]' %>">
-                                            <div class="w-8 h-8 rounded-lg <%= isActive ? 'bg-[#00ED64] text-[#001E2B] shadow-[0_0_15px_rgba(0,237,100,0.4)]' : 'bg-white/5 text-[#9FB1AD]' %> flex items-center justify-center shrink-0 shadow-lg">
-                                                <i class="fas <%= lec.type === 'pdf' ? 'fa-file-pdf' : (isActive ? 'fa-play' : 'fa-lock-open') %> text-[10px]"></i>
+                                           class="curriculum-node <%= isActive ? 'active' : '' %>">
+                                            <div class="w-8 h-8 rounded-lg <%= isActive ? 'bg-[#00ED64] text-[#001E2B]' : 'bg-white/5 text-[#9FB1AD]' %> flex items-center justify-center shrink-0">
+                                                <i class="fas <%= lec.type === 'pdf' ? 'fa-file-pdf' : (isActive ? 'fa-play' : (lec.watched ? 'fa-check' : 'fa-play opacity-40')) %> text-[10px]"></i>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <p class="text-[12px] font-bold truncate <%= isActive ? 'text-[#00ED64]' : 'text-[#E7EEEB]' %>"><%= lec.title %></p>
-                                                <p class="text-[9px] font-medium text-[#9FB1AD] mt-1 uppercase tracking-wider opacity-60">Node <%= sIdx + 1 %>.<%= lIdx + 1 %></p>
-                                            </div>
-                                            <% if (lec.watched) { %>
-                                                <div class="text-[#00ED64] text-[10px] animate-pulse">
-                                                    <i class="fas fa-check-circle"></i>
+                                                <p class="text-[12px] font-bold truncate leading-none <%= isActive ? 'text-white' : 'text-[#E7EEEB]/80' %>"><%= lec.title %></p>
+                                                <div class="curriculum-progress-rail">
+                                                    <div class="curriculum-progress-fill" style="width: <%= lec.watched ? '100' : (isActive ? '45' : '0') %>%"></div>
                                                 </div>
-                                            <% } %>
+                                            </div>
                                         </a>
                                     <% }) %>
                                 </div>

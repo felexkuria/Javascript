@@ -328,70 +328,165 @@ class DynamoVideoService {
 
   // Get user gamification data
   async getUserGamificationData(userId) {
+    let data = null;
     if (this.isDynamoAvailable()) {
       try {
-        const data = await dynamodb.getGamificationData(userId);
-        if (data) {
-          return data;
-        }
+        data = await dynamodb.getGamificationData(userId);
       } catch (error) {
         console.error('DynamoDB error, falling back to localStorage:', error);
       }
     }
 
     // Fallback to localStorage only for engineerfelex@gmail.com
-    if (userId === 'engineerfelex@gmail.com') {
-      const gamificationData = this.getGamificationData();
-      return gamificationData['default_user'] || null;
+    if (!data && userId === 'engineerfelex@gmail.com') {
+      const gData = this.getGamificationData();
+      data = gData['default_user'] || null;
     }
 
-    // New users get default empty data
-    return {
+    // 🏗️ Schema Normalization Layer (Fixes Flat vs Nested logic)
+    const normalized = {
       userStats: {
         totalPoints: 0,
         videosWatched: {},
         coursesCompleted: 0,
         currentLevel: 1,
-        experiencePoints: 0
+        experiencePoints: 0,
+        quizzesTaken: 0,
+        perfectQuizzes: 0,
+        studyDays: 0
       },
       achievements: [],
       streakData: {
         currentStreak: 0,
         longestStreak: 0,
-        lastActiveDate: null,
-        streakDates: []
+        lastActivity: new Date().toISOString()
       }
     };
-  }
 
-  // Update user gamification data
-  async updateUserGamificationData(userId, data) {
-    if (this.isDynamoAvailable()) {
-      try {
-        const success = await dynamodb.saveGamificationData(userId, data);
-        if (success) {
-          return true;
-        }
-      } catch (error) {
-        console.error('DynamoDB error, falling back to localStorage:', error);
-      }
+    if (data) {
+      const stats = data.userStats || data; // Handle both nested and flat schemas
+      normalized.userStats = {
+        totalPoints: Number(stats.totalPoints || data.totalPoints || 0),
+        videosWatched: stats.videosWatched || data.videosWatched || {},
+        coursesCompleted: Number(stats.coursesCompleted || data.coursesCompleted || 0),
+        currentLevel: Number(stats.currentLevel || data.currentLevel || 1),
+        experiencePoints: Number(stats.experiencePoints || data.experiencePoints || 0),
+        quizzesTaken: Number(stats.quizzesTaken || data.quizzesTaken || 0),
+        perfectQuizzes: Number(stats.perfectQuizzes || data.perfectQuizzes || 0),
+        studyDays: Number(stats.studyDays || data.studyDays || 0)
+      };
+      normalized.achievements = data.achievements || [];
+      normalized.streakData = data.streakData || normalized.streakData;
     }
 
-    // Fallback to localStorage
+    return normalized;
+  }
+
+  // Update user gamification data with schema enforcement
+  async updateUserGamificationData(userId, data) {
+    if (!this.isDynamoAvailable()) return false;
     try {
-      const gamificationData = this.getGamificationData();
-      gamificationData[userId] = {
-        ...data,
-        updatedAt: new Date().toISOString()
+      // 🛡️ Enforce clean nested schema on save
+      const cleanData = {
+        userStats: data.userStats,
+        achievements: data.achievements,
+        streakData: data.streakData
       };
       
-      fs.writeFileSync(this.gamificationPath, JSON.stringify(gamificationData, null, 2));
-      return true;
+      // Remove any top-level polluting attributes accidentally passed from legacy calls
+      delete cleanData.userStats.userId;
+      
+      return await dynamodb.saveGamificationData(userId, cleanData);
     } catch (error) {
-      console.error('Error updating gamification localStorage:', error);
+      console.error('Error updating gamification data:', error);
       return false;
     }
   }
+
+  async updateStreak(userId) {
+    const data = await this.getUserGamificationData(userId);
+    const today = new Date().toDateString();
+    
+    // Initialized by getUserGamificationData
+    const streak = data.streakData;
+    const lastActivity = streak.lastActivity ? new Date(streak.lastActivity).toDateString() : null;
+    
+    if (lastActivity !== today) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      if (lastActivity === yesterday.toDateString()) {
+        streak.currentStreak += 1;
+      } else {
+        streak.currentStreak = 1; // Reset or start new
+      }
+      
+      if (streak.currentStreak > (streak.longestStreak || 0)) {
+        streak.longestStreak = streak.currentStreak;
+      }
+      
+      streak.lastActivity = new Date().toISOString();
+      
+      // Award points for streak milestones (match legacy logic)
+      if (streak.currentStreak > 0 && streak.currentStreak % 7 === 0) {
+        const bonus = streak.currentStreak * 10;
+        data.userStats.totalPoints += bonus;
+        data.achievements.push({
+          id: `streak_${streak.currentStreak}`,
+          title: `${streak.currentStreak} Day Streak!`,
+          description: `Studied for ${streak.currentStreak} consecutive days`,
+          earnedAt: new Date().toISOString(),
+          points: bonus
+        });
+      }
+      
+      await this.updateUserGamificationData(userId, data);
+    }
+    return data;
+  }
+
+  async recordCourseCompletion(userId, courseName) {
+    const data = await this.getUserGamificationData(userId);
+    data.userStats.coursesCompleted = (data.userStats.coursesCompleted || 0) + 1;
+    
+    const achievement = {
+      id: `course_completed_${courseName.replace(/\s+/g, '_')}_${Date.now()}`,
+      title: 'Path Mastery!',
+      description: `Successfully completed the educational track: ${courseName}`,
+      earnedAt: new Date().toISOString(),
+      points: 500
+    };
+    
+    data.achievements.push(achievement);
+    data.userStats.totalPoints += 500;
+    
+    await this.updateUserGamificationData(userId, data);
+    return data;
+  }
+
+  async recordQuizCompletion(userId, score, totalQuestions) {
+    const data = await this.getUserGamificationData(userId);
+    const percentage = (score / totalQuestions) * 100;
+    let points = Math.round(percentage * 2); // 0-200 points
+    
+    data.userStats.quizzesTaken += 1;
+    if (percentage === 100) {
+      data.userStats.perfectQuizzes += 1;
+      points += 100; // Bonus
+      data.achievements.push({
+        id: `perfect_quiz_${Date.now()}`,
+        title: 'Architectural Excellence!',
+        description: 'Achieved a perfect score in a technical assessment.',
+        earnedAt: new Date().toISOString(),
+        points: 100
+      });
+    }
+    
+    data.userStats.totalPoints += points;
+    await this.updateUserGamificationData(userId, data);
+    return data;
+  }
+
 
   // Migrate data from localStorage to DynamoDB
   async migrateToDatabase() {
