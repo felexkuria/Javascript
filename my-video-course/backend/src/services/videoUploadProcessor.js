@@ -38,7 +38,8 @@ class VideoUploadProcessor {
   // Phase 3: Decoupled Ingestion
   // 🛰️ Submit job to AWS (Step 1)
   async submitTranscriptionJob(videoUrl, videoTitle) {
-    const jobName = `transcribe-${videoTitle.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`;
+    const jobSafeTitle = videoTitle.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'video-' + Date.now().toString(36);
+    const jobName = `transcribe-${jobSafeTitle}-${Date.now()}`;
     
     const command = new StartTranscriptionJobCommand({
       TranscriptionJobName: jobName,

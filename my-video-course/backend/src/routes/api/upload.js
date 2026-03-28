@@ -14,6 +14,15 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 } // Reduced limit for legacy/small files
 });
 
+const sanitize = (s) => {
+  if (!s) return 'untitled';
+  // Lowercase and replace spaces with underscores
+  // Then remove any characters NOT in [a-z0-9._-]
+  const sanitized = s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
+  // Ensure we never return an empty string to avoid malformed S3 keys (e.g., videos//...)
+  return sanitized || 'untitled_' + Date.now().toString(36);
+};
+
 // Upload video endpoint
 router.post('/video', cognitoAuth, upload.single('video'), async (req, res) => {
   try {
@@ -131,7 +140,6 @@ router.post('/request-presigned-url', cognitoAuth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing metadata' });
     }
 
-    const sanitize = (s) => s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
     const safeCourse = sanitize(courseName);
     const safeTitle = sanitize(videoTitle);
 
@@ -157,7 +165,7 @@ router.post('/complete', cognitoAuth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing completion data' });
     }
 
-    const sanitize = (s) => s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
+
     const safeCourse = sanitize(courseName);
 
     const videoData = {
