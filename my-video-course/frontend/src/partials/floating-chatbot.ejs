@@ -35,6 +35,10 @@
     <i class="fas fa-comment-dots"></i>
     <span class="notification-dot" id="chat-notification" style="display: none;"></span>
 </button>
+<!-- Code Beauty Components -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 
 <script>
     function toggleFloatingChatbot() {
@@ -86,12 +90,21 @@
             
             document.getElementById(typingId).remove();
             
+            const htmlContent = window.marked ? marked.parse(data.response) : data.response.replace(/\n/g, '<br>');
+            
             const botDiv = document.createElement('div');
             botDiv.className = 'chat-message bot';
             botDiv.innerHTML = `
-                <div class="message-bubble">${data.response.replace(/\n/g, '<br>')}</div>
+                <div class="message-bubble w-full overflow-x-auto">${htmlContent}</div>
                 <div class="message-meta">Nova Lite • Just now</div>
             `;
+            messages.appendChild(botDiv);
+            
+            if (window.hljs) {
+                botDiv.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+            }
             messages.appendChild(botDiv);
             messages.scrollTop = messages.scrollHeight;
         } catch (error) {
