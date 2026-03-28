@@ -7,7 +7,7 @@ const cognitoAuth = async (req, res, next) => {
   
   if (!token) {
     // Return JSON for API requests, redirect for web requests
-    if (req.path.startsWith('/api/')) {
+    if (req.originalUrl.startsWith('/api/')) {
       return res.status(401).json({ error: 'Authentication required' });
     }
     return res.redirect('/api/auth/login');
@@ -49,11 +49,11 @@ const cognitoAuth = async (req, res, next) => {
       req.session.destroy();
     }
     
-    // Return JSON for API requests, redirect for web requests
-    if (req.path.startsWith('/api/')) {
-      return res.status(401).json({ error: 'Session expired, please login again' });
+    // Return appropriate response based on request type
+    if (req.originalUrl.startsWith('/api/')) {
+      return res.status(401).json({ error: 'Session expired. Please login again.' });
     }
-    res.redirect('/login');
+    return res.redirect('/login');
   }
 };
 

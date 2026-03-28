@@ -343,35 +343,64 @@
                 try {
                     // Step 1: Request Presigned URL
                     log(`REQUEST: Slot for [${file.name}]...`);
-                    const signRes = await fetch('/api/upload/request-presigned-url', {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                        },
-                        body: JSON.stringify({
-                            courseName: safeCourse,
-                            videoTitle: safeTitle,
-                            contentType: file.type || 'video/mp4'
-                        })
-                    });
+                    let signRes;
+                    try {
+                        signRes = await fetch('/api/upload/request-presigned-url', {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                            },
+                            body: JSON.stringify({
+                                courseName: safeCourse,
+                                videoTitle: safeTitle,
+                                contentType: file.type || 'video/mp4'
+                            })
+                        });
+                    } catch (fetchErr) {
+                        throw new Error(`Fetch Exception: ${fetchErr.message}`);
+                    }
                     
                     if (!signRes.ok) {
+                        if (signRes.status === 401) {
+                            log('FAIL: Session expired. Redirecting to login...');
+                            setTimeout(() => window.location.href = '/login', 2000);
+                            throw new Error('Authentication required');
+                        }
                         const errData = await signRes.json().catch(() => ({}));
                         throw new Error(errData.error || `Sign failed: ${signRes.status}`);
                     }
                     
-                    const { url, key, success } = await signRes.json();
-                    if (!success) throw new Error('Sign failed');
+                    let url, key, success;
+                    try {
+                        const parsed = await signRes.json();
+                        url = parsed.url;
+                        key = parsed.key;
+                        success = parsed.success;
+                    } catch (parseErr) {
+                        throw new Error(`JSON Parse Exception: ${parseErr.message}`);
+                    }
+                    
+                    if (!success) throw new Error('Sign failed response');
 
                     // Step 2: Direct S3 Upload
                     statusEl.textContent = 'Streaming to S3';
-                    log(`STREAM: Initializing direct pipe to S3 segment...`);
+                    log(`STREAM: Initializing direct pipe...`);
                     
                     await new Promise((resolve, reject) => {
                         const xhr = new XMLHttpRequest();
-                        xhr.open('PUT', url);
-                        xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+                        try {
+                            xhr.open('PUT', url);
+                        } catch (xhrOpenErr) {
+                            reject(new Error(`XHR Open Exception (URL=${url.substring(0,30)}...): ${xhrOpenErr.message}`));
+                            return;
+                        }
+                        try {
+                            xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+                        } catch (xhrHeaderErr) {
+                            reject(new Error(`XHR Header Exception (Type=${file.type}): ${xhrHeaderErr.message}`));
+                            return;
+                        }
                         
                         xhr.upload.onprogress = e => {
                             if (e.lengthComputable) {
