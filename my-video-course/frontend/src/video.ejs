@@ -85,17 +85,17 @@
                                             <h3 class="text-sm font-black text-white truncate max-w-[400px]"><%= video.title %></h3>
                                         </div>
                                     </div>
-                                    <a href="<%= video.url %>" target="_blank" class="btn-atlas btn-atlas-primary text-[10px] py-2 px-6">
+                                    <a href="<%= (video.fullVideoUrl || video.url) %>" target="_blank" class="btn-atlas btn-atlas-primary text-[10px] py-2 px-6">
                                         <i class="fas fa-expand mr-2"></i> FULLSCREEN
                                     </a>
                                 </div>
                                 <div class="flex-1 overflow-hidden relative border-t border-white/5 bg-slate-900 shadow-inner">
-                                    <iframe src="<%= video.url %>#toolbar=0" class="w-full h-full border-none opacity-90 hover:opacity-100 transition-opacity"></iframe>
+                                    <iframe src="<%= (video.fullVideoUrl || video.url) %>#toolbar=0" class="w-full h-full border-none opacity-90 hover:opacity-100 transition-opacity"></iframe>
                                 </div>
                             </div>
-                        <% } else if (video && video.url) { %>
-                            <video id="videoPlayer" class="w-full h-full" controls crossorigin="anonymous" playsinline <%= video.thumbnail ? `poster="${video.thumbnail}"` : '' %>>
-                                <source src="<%= video.url %>" type="video/mp4">
+                        <% } else if (video && (video.fullVideoUrl || video.url)) { %>
+                            <video id="videoPlayer" class="w-full h-full" controls crossorigin="anonymous" playsinline <%= video.thumbnailUrl ? `poster="${video.thumbnailUrl}"` : '' %>>
+                                <source src="<%= video.fullVideoUrl || video.url %>" type="video/mp4">
                             </video>
                         <% } %>
                     </div>

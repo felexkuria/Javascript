@@ -333,9 +333,10 @@
                 const statusEl = document.getElementById(id + '_status');
                 const fillEl = document.getElementById(id + '_fill');
                 
-                statusEl.textContent = 'Requesting Slot';
-                statusEl.classList.remove('opacity-40');
-                
+                const sanitize = (s) => s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
+                const safeCourse = sanitize(courseName);
+                const safeTitle = sanitize(lectureTitle || file.name.replace(/\.[^.]+$/, ''));
+
                 try {
                     // Step 1: Request Presigned URL
                     log(`REQUEST: Slot for [${file.name}]...`);
@@ -346,14 +347,19 @@
                             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                         },
                         body: JSON.stringify({
-                            courseName,
-                            videoTitle: lectureTitle || file.name.replace(/\.[^.]+$/, ''),
+                            courseName: safeCourse,
+                            videoTitle: safeTitle,
                             contentType: file.type || 'video/mp4'
                         })
                     });
                     
-                    const { url, key, success, error: signError } = await signRes.json();
-                    if (!success) throw new Error(signError || 'Sign failed');
+                    if (!signRes.ok) {
+                        const errData = await signRes.json().catch(() => ({}));
+                        throw new Error(errData.error || `Sign failed: ${signRes.status}`);
+                    }
+                    
+                    const { url, key, success } = await signRes.json();
+                    if (!success) throw new Error('Sign failed');
 
                     // Step 2: Direct S3 Upload
                     statusEl.textContent = 'Streaming to S3';
@@ -390,16 +396,21 @@
                             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                         },
                         body: JSON.stringify({
-                            courseName,
-                            videoTitle: lectureTitle || file.name.replace(/\.[^.]+$/, ''),
+                            courseName: safeCourse,
+                            videoTitle: safeTitle,
                             description: '',
                             s3Key: key,
                             sectionId: selectedSectionId
                         })
                     });
                     
+                    if (!completeRes.ok) {
+                        const errData = await completeRes.json().catch(() => ({}));
+                        throw new Error(errData.error || `Commit failed: ${completeRes.status}`);
+                    }
+                    
                     const compData = await completeRes.json();
-                    if (!compData.success) throw new Error(compData.error || 'Commit failed');
+                    if (!compData.success) throw new Error('Commit failed');
 
                     statusEl.textContent = 'Ready';
                     statusEl.classList.add('opacity-40');

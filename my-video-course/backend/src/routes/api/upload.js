@@ -131,7 +131,11 @@ router.post('/request-presigned-url', cognitoAuth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing metadata' });
     }
 
-    const videoKey = `videos/${courseName}/${Date.now()}-${videoTitle.replace(/\s+/g, '_')}.mp4`;
+    const sanitize = (s) => s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
+    const safeCourse = sanitize(courseName);
+    const safeTitle = sanitize(videoTitle);
+
+    const videoKey = `videos/${safeCourse}/${Date.now()}-${safeTitle}.mp4`;
     const result = await s3Signer.getPresignedUploadUrl(videoKey, contentType);
 
     if (result.success) {
@@ -152,6 +156,9 @@ router.post('/complete', cognitoAuth, async (req, res) => {
     if (!s3Key || !courseName || !videoTitle) {
       return res.status(400).json({ success: false, message: 'Missing completion data' });
     }
+
+    const sanitize = (s) => s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
+    const safeCourse = sanitize(courseName);
 
     const videoData = {
       _id: Date.now().toString(),
