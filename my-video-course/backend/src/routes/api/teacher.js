@@ -95,7 +95,7 @@ router.patch('/courses/:id/sections/:sectionId', async (req, res) => {
     const course = await dynamoVideoService.getCourseByTitle(id, userId);
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
     
-    const sectionIndex = (course.sections || []).findIndex(s => s._id === sectionId);
+    const sectionIndex = (course.sections || []).findIndex(s => s._id === sectionId || s.sectionId === sectionId || s.id === sectionId);
     if (sectionIndex === -1) return res.status(404).json({ success: false, message: 'Section not found' });
     
     course.sections[sectionIndex].title = title;
@@ -150,7 +150,7 @@ router.post('/courses/:id/sections/:sectionId/lectures', async (req, res) => {
     course.videos.push(flatLecture); 
     
     // 2. Add to Nested Sections for Editor compatibility
-    const sectionIndex = (course.sections || []).findIndex(s => s._id === sectionId);
+    const sectionIndex = (course.sections || []).findIndex(s => s._id === sectionId || s.sectionId === sectionId || s.id === sectionId);
     if (sectionIndex !== -1) {
         course.sections[sectionIndex].lectures = course.sections[sectionIndex].lectures || [];
         course.sections[sectionIndex].lectures.push(newLecture);
@@ -178,14 +178,14 @@ router.patch('/courses/:id/sections/:sectionId/lectures/:lectureId', async (req,
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
     
     // Update in Sections
-    const sectionIndex = (course.sections || []).findIndex(s => s._id === sectionId);
+    const sectionIndex = (course.sections || []).findIndex(s => s._id === sectionId || s.sectionId === sectionId || s.id === sectionId);
     if (sectionIndex !== -1) {
-        const lectureIndex = (course.sections[sectionIndex].lectures || []).findIndex(l => l._id === lectureId);
+        const lectureIndex = (course.sections[sectionIndex].lectures || []).findIndex(l => l._id === lectureId || l.videoId === lectureId || l.id === lectureId);
         if (lectureIndex !== -1) course.sections[sectionIndex].lectures[lectureIndex].title = title;
     }
     
     // Update in flat list
-    const videoIndex = (course.videos || []).findIndex(v => v._id === lectureId);
+    const videoIndex = (course.videos || []).findIndex(v => v._id === lectureId || v.videoId === lectureId || v.id === lectureId);
     if (videoIndex !== -1) {
         course.videos[videoIndex].title = title;
         // Also update in standalone table
@@ -221,7 +221,7 @@ router.post('/courses/:id/lectures/:lectureId/upload', upload.single('video'), a
     const course = await dynamoVideoService.getCourseByTitle(id, userId);
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
 
-    const videoIndex = course.videos.findIndex(v => v._id === lectureId);
+    const videoIndex = course.videos.findIndex(v => v._id === lectureId || v.videoId === lectureId || v.id === lectureId);
     if (videoIndex === -1) return res.status(404).json({ success: false, message: 'Lecture not found' });
 
     // Process and upload

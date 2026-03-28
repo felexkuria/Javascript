@@ -154,14 +154,30 @@ class AIService {
   }
 
   async generateChatResponse(message, context = {}) {
-    try {
-      // High-performance chat prioritized on Gemini 1.5 Flash for low latency
-      if (this.genAI) {
-        return await this.generateDavidMalanResponse(message, context);
+    const { system, user } = promptManager.getPrompt('david_malan', { 
+      question: message, 
+      context: context?.transcript ? context.transcript.slice(0, 1000) : '' 
+    });
+
+    // 1. Primary Priority: Gemini 1.5 Flash
+    if (this.genAI) {
+      try {
+        const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const result = await model.generateContent(`${system}\n\nUser: ${user}`);
+        const response = await result.response;
+        return response.text();
+      } catch (geminiError) {
+        console.warn("⚠️ Gemini Primary Chat failed, failing over to Nova:", geminiError.message);
+        // Fallthrough seamlessly to Nova
       }
-      return await this.generateWithNova(message, "You are a helpful assistant.");
-    } catch (error) {
-      console.warn("AI chat failed, falling back to static:", error.message);
+    }
+
+    // 2. Secondary Priority: Nova Lite
+    try {
+      console.log("🚀 Executing Nova Lite secondary failover...");
+      return await this.generateWithNova(user, system);
+    } catch (novaError) {
+      console.warn("❌ Both AI engines failed entirely. Activating static offline fallback:", novaError.message);
       return this.staticMalanResponse(message, context);
     }
   }
@@ -198,14 +214,7 @@ class AIService {
     }
   }
 
-  async generateDavidMalanResponse(question, context) {
-    const { system, user } = promptManager.getPrompt('david_malan', { 
-      question, 
-      context: context?.transcript ? context.transcript.slice(0, 1000) : '' 
-    });
-    return await this.fallbackToGemini(user, { systemPrompt: system });
-  }
-  
+
   staticMalanResponse(question, context) {
     return `That's a great question! Let me break this down for you step by step. Think of it like building with LEGO blocks - each concept connects to create something bigger. the key thing to remember is that learning happens one step at a time. What specifically would you like me to clarify?`;
   }
@@ -280,7 +289,7 @@ class AIService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const fullPrompt = `${context.systemPrompt || ''}\n\nPrompt: ${prompt}`;
       
       const result = await model.generateContent(fullPrompt);
