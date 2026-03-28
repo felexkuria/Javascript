@@ -228,11 +228,26 @@ router.post('/courses/:id/lectures/:lectureId/upload', upload.single('video'), a
     const result = await videoProcessingService.processVideo(file, course.title, course.videos[videoIndex].title);
     
     // Update lecture with s3Key
+    // Update lecture with s3Key and valid URL
     course.videos[videoIndex].s3Key = result.s3Key;
-    course.videos[videoIndex].url = result.id || 'uploaded';
-    course.videos[videoIndex].videoUrl = result.id; // compat
+    course.videos[videoIndex].videoUrl = result.videoUrl;
+    course.videos[videoIndex].url = result.videoUrl; // compatibility
     
+    // Also update in the nested sections structure
+    const sectionId = course.videos[videoIndex].section;
+    const sIdx = (course.sections || []).findIndex(s => s._id === sectionId || s.sectionId === sectionId || s.id === sectionId);
+    if (sIdx !== -1) {
+        const lIdx = (course.sections[sIdx].lectures || []).findIndex(l => l._id === lectureId || l.videoId === lectureId || l.id === lectureId);
+        if (lIdx !== -1) {
+            course.sections[sIdx].lectures[lIdx].s3Key = result.s3Key;
+            course.sections[sIdx].lectures[lIdx].videoUrl = result.videoUrl;
+            course.sections[sIdx].lectures[lIdx].url = result.videoUrl;
+        }
+    }
+
     await dynamodb.saveCourse(course);
+    await dynamodb.saveVideo({ ...course.videos[videoIndex], courseName: id, videoId: lectureId });
+
 
     res.json({ success: true, lecture: course.videos[videoIndex] });
   } catch (error) {
