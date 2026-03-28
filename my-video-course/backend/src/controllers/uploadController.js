@@ -12,12 +12,13 @@ const metadataService = require('../utils/metadataService');
  * Strips everything except alphanumerics, dots, dashes, underscores.
  */
 function sanitizeKey(name) {
-  return name
-    .replace(/\s+/g, '_')               // spaces → underscores
-    .replace(/[^a-zA-Z0-9._-]/g, '')   // remove all other unsafe chars
-    .replace(/_{2,}/g, '_')             // collapse repeated underscores
-    .toLowerCase()
-    .substring(0, 180);                 // S3 key max 1024, keep reasonable
+  if (!name) return 'untitled_' + Date.now().toString(36);
+  // Lowercase and replace spaces with underscores, then remove unsafe chars
+  const sanitized = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
+  // Collapse repeated underscores and truncate
+  const final = sanitized.replace(/_{2,}/g, '_').substring(0, 180);
+  
+  return final || 'untitled_' + Date.now().toString(36);
 }
 
 class UploadController {

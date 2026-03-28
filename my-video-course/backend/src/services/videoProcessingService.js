@@ -37,9 +37,7 @@ class VideoProcessingService {
       let captionsUrl = '';
       let aiContent = { quiz: { questions: [] }, summary: '', todoList: { tasks: [] } };
 
-      const sanitize = (str) => (str || 'unnamed').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
-      const safeCourse = sanitize(courseName);
-      const safeTitle = sanitize(title);
+
 
       if (isPdf) {
         s3Key = `resources/${safeCourse}/${Date.now()}-${safeTitle}${ext}`;
