@@ -457,11 +457,12 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i> Analyzing...';
             btn.disabled = true;
             try {
-                const videoTitle = '<%= video ? video.title : "" %>';
+                const videoTitle = <%- JSON.stringify(video ? video.title : "") %>;
+                const courseNameStr = <%- JSON.stringify(courseName) %>;
                 await fetch('/api/ai/video/todos/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ courseName, videoTitle })
+                    body: JSON.stringify({ courseName: courseNameStr, videoTitle })
                 });
                 await loadAITodos();
             } catch (err) { console.error('AI Refresh failed:', err); }

@@ -24,12 +24,24 @@ class S3Signer {
    */
   async getPresignedUploadUrl(key, contentType, expiresIn = 3600) {
     try {
+      // 🛡️ Parameter Hardening: SDK v3 is strict on whitespace and patterns
+      let bucket = (process.env.S3_BUCKET_NAME || '').trim();
+      
+      // Remove any 's3://' prefix if accidentally entered in .env
+      if (bucket.startsWith('s3://')) {
+        bucket = bucket.replace('s3://', '');
+      }
+
+      if (!bucket) throw new Error('S3_BUCKET_NAME is not configured');
+      if (!key) throw new Error('S3 Key is required for presigning');
+
       const command = new PutObjectCommand({
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: key,
-        ContentType: contentType
+        Bucket: bucket,
+        Key: key.trim(),
+        ContentType: contentType || 'application/octet-stream'
       });
 
+      console.log(`📡 Presigning Request: [Bucket: ${bucket}] [Key: ${key}] [Type: ${contentType}]`);
       const url = await getSignedUrl(this.client, command, { expiresIn });
       return { success: true, url, key };
     } catch (error) {
