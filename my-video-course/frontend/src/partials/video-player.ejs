@@ -8,7 +8,7 @@
         </iframe>
         <% } else if (video && video.videoUrl && (video.videoUrl.toLowerCase().endsWith('.pdf') || video.type === 'resource')) { %>
         <div class="pdf-viewer-container" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: #525659; display: flex; flex-direction: column;">
-            <iframe src="<%= video.videoUrl %>" 
+            <iframe src="<%= video.fullVideoUrl || video.videoUrl %>" 
                     style="flex: 1; border: none;"
                     id="pdfViewer">
             </iframe>
@@ -19,9 +19,9 @@
         </div>
         <% } else { %>
         <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video" preload="metadata" 
-               poster="/thumbnails/<%= video._id %>.jpg"
+               poster="<%= video.thumbnailUrl || '/thumbnails/' + video._id + '.jpg' %>"
                style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
-            <source src="<%= video.videoUrl %>" type="video/mp4" id="videoSource">
+            <source src="<%= video.fullVideoUrl || video.videoUrl %>" type="video/mp4" id="videoSource">
             <% if (video.captionsUrl) { %>
             <track label="English" kind="subtitles" srclang="en" src="/captions/<%= courseName %>/<%= video._id %>" default />
             <% } %>

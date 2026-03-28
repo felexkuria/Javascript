@@ -57,8 +57,25 @@ body {
     backdrop-filter: blur(40px); 
     display: flex; 
     flex-direction: column; 
-    z-index: 40; 
+    z-index: 200; 
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 } 
+
+#sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 150;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#sidebar-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
 
 .video-hero { 
     position: relative; 
@@ -224,10 +241,21 @@ pre:hover .copy-btn {
         overflow: visible; 
     } 
     .side-lab { 
-        height: 600px; 
-        border-left: none; 
-        border-top: 1px solid rgba(255,255,255,0.05); 
+        position: fixed;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: var(--sidebar-width);
+        max-width: 85%;
+        height: 100vh;
+        transform: translateX(100%);
+        border-left: 1px solid rgba(255,255,255,0.1);
+        box-shadow: -20px 0 50px rgba(0,0,0,0.5);
     } 
+
+    .side-lab.mobile-open {
+        transform: translateX(0);
+    }
 }
 
 /* AI Advisor Dynamic Aesthetics */

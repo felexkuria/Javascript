@@ -167,35 +167,25 @@ class WebController {
         lectures: await s3VideoService.processVideoList(section.lectures)
       })));
 
-      // Find next/prev
       const currentIndex = videos.findIndex(v => (v.videoId === video.videoId) || (v._id === video._id));
       const prevVideo = currentIndex > 0 ? videos[currentIndex - 1] : null;
       const nextVideo = currentIndex < videos.length - 1 ? videos[currentIndex + 1] : null;
       const isLastVideo = currentIndex === videos.length - 1;
       const isLastInChapter = nextVideo && (nextVideo.section !== video.section);
 
-      // Handle S3 Signing
-      let processedUrl = video.videoUrl || video.url;
-      const isYouTube = !!(processedUrl && (processedUrl.includes('youtube.com') || processedUrl.includes('youtu.be') || video.type === 'youtube'));
-
-      if (processedUrl && (processedUrl.includes('amazonaws.com') || video.s3Key) && !isYouTube) {
-        try {
-          const s3VideoService = require('../services/s3VideoService');
-          const processed = await s3VideoService.processVideoUrl(video, 'student', courseName);
-          processedUrl = processed.fullVideoUrl || processed.videoUrl;
-        } catch (s3Err) {
-          console.warn('S3 Signing failed:', s3Err.message);
-        }
-      }
+      // SOTA Secure Media Delivery (Universal S3 Signing)
+      const signedVideo = await s3VideoService.processVideoUrl(video, 'student', courseName);
+      const isYouTube = !!(signedVideo.isYouTube || (signedVideo.videoUrl && (signedVideo.videoUrl.includes('youtube.com') || signedVideo.videoUrl.includes('youtu.be'))));
 
       res.render('video', {
         course,
         courseName,
         video: {
-          ...video,
-          id: video.videoId || video._id,
-          videoUrl: processedUrl
+          ...signedVideo,
+          id: signedVideo.videoId || signedVideo._id,
+          videoUrl: signedVideo.fullVideoUrl || signedVideo.videoUrl
         },
+        courseTitle: course.title,
         sections: signedSections,
         prevVideo,
         nextVideo,

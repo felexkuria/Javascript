@@ -206,6 +206,16 @@
         .nav-brand-name, .profile-name { display: none; }
         .nav-brand { margin-right: 16px; }
       }
+
+      /* Responsive Utility Hardening (Tailwind Fallbacks) */
+      @media (min-width: 1024px) {
+        .lg\:hidden { display: none !important; }
+        .lg\:flex { display: flex !important; }
+      }
+      @media (max-width: 1023px) {
+        .hidden { display: none !important; }
+        .flex { display: flex !important; }
+      }
     </style>
 </head>
 <body class="<%= typeof theme !== 'undefined' ? theme : '' %>" style="font-family: 'Euclid Circular A', 'Inter', system-ui, sans-serif;">
