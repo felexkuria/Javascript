@@ -36,12 +36,9 @@
                         <i id="sideLabBtnIcon" class="fas fa-arrow-right"></i>
                     </button>
                 </div>
-                    <a href="/course/<%= encodeURIComponent(courseName) %>" class="breadcrumb-node hover:opacity-100 transition-all truncate max-w-[200px]"><%= courseName %></a>
-                    <span class="breadcrumb-sep">/</span>
-                    <span class="breadcrumb-node active truncate max-w-[300px]"><%= video ? video.title : 'TERMINAL' %></span>
-                </div>
 
                 <!-- Achievement HUD Atlas Style -->
+
                 <div class="flex items-center gap-6 mb-12">
                     <div class="atlas-card glass px-8 py-4 flex items-center gap-5">
                         <div class="w-10 h-10 rounded-xl bg-[#00ED64]/10 flex items-center justify-center text-[#00ED64] border border-[#00ED64]/20 shadow-inner">
@@ -80,40 +77,10 @@
                     </div>
                 </div>
                     <div class="video-container relative h-full">
-                        <% if (video && (video.isYouTube || video.url && video.url.includes('youtube.com'))) { %>
-                            <% 
-                                let embedUrl = video.url;
-                                if (embedUrl.includes('watch?v=')) embedUrl = embedUrl.replace('watch?v=', 'embed/');
-                                if (!embedUrl.includes('?')) embedUrl += '?rel=0&showinfo=0&modestbranding=1';
-                            %>
-                            <iframe src="<%= embedUrl %>" allowfullscreen></iframe>
-                        <% } else if (video && (video.type === 'pdf' || (video.url && /\.pdf(\?|$)/i.test(video.url)))) { %>
-                            <div class="pdf-viewer-premium h-full w-full bg-[#001E2B] flex flex-col pt-12">
-                                <div class="px-8 pb-4 flex items-center justify-between">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20">
-                                            <i class="fas fa-file-pdf"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-[9px] font-black uppercase tracking-widest text-red-500/60">Documentation Node</p>
-                                            <h3 class="text-sm font-black text-white truncate max-w-[400px]"><%= video.title %></h3>
-                                        </div>
-                                    </div>
-                                    <a href="<%= (video.fullVideoUrl || video.url) %>" target="_blank" class="btn-atlas btn-atlas-primary text-[10px] py-2 px-6">
-                                        <i class="fas fa-expand mr-2"></i> FULLSCREEN
-                                    </a>
-                                </div>
-                                <div class="flex-1 overflow-hidden relative border-t border-white/5 bg-slate-900 shadow-inner">
-                                    <iframe src="<%= (video.fullVideoUrl || video.url) %>#toolbar=0" class="w-full h-full border-none opacity-90 hover:opacity-100 transition-opacity"></iframe>
-                                </div>
-                            </div>
-                        <% } else if (video && (video.fullVideoUrl || video.url)) { %>
-                            <video id="videoPlayer" class="w-full h-full" controls crossorigin="anonymous" playsinline <%= video.thumbnailUrl ? `poster="${video.thumbnailUrl}"` : '' %>>
-                                <source src="<%= video.fullVideoUrl || video.url %>" type="video/mp4">
-                            </video>
-                        <% } %>
+                        <%- include('partials/video-player', { video, courseName, isYouTube }) %>
                     </div>
                 </div>
+
 
                 <div class="flex items-center justify-between mt-8 p-6 glass rounded-2xl">
                     <div class="flex items-center gap-6">

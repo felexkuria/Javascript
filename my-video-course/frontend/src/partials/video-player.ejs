@@ -9,20 +9,21 @@
         </iframe>
         <% } else if (video && video.videoUrl && (video.videoUrl.toLowerCase().includes('.pdf') || video.type === 'resource' || video.type === 'pdf')) { %>
         <div class="pdf-viewer-container" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: #1e1e24; display: flex; flex-direction: column;">
-            <iframe src="<%= video.fullVideoUrl || video.videoUrl %>" 
+            <iframe src="<%= video.fullVideoUrl || video.videoUrl || video.url %>" 
                     style="flex: 1; border: none; width: 100%; height: 100%;"
                     id="pdfViewer">
             </iframe>
             <div class="pdf-fallback" style="padding: 12px 20px; background: rgba(0,0,0,0.9); color: white; display: flex; justify-content: space-between; align-items: center; font-size: 14px; border-top: 1px solid #333;">
                 <span>View document offline or bypass browser PDF viewer:</span>
-                <a href="<%= video.fullVideoUrl || video.videoUrl %>" download="<%= video.title %>.pdf" target="_blank" style="color: #00ED64; text-decoration: none; font-weight: 600; padding: 4px 12px; background: rgba(0,237,100,0.1); border-radius: 6px;">Download PDF ↓</a>
+                <a href="<%= video.fullVideoUrl || video.videoUrl || video.url %>" download="<%= video.title %>.pdf" target="_blank" style="color: #00ED64; text-decoration: none; font-weight: 600; padding: 4px 12px; background: rgba(0,237,100,0.1); border-radius: 6px;">Download PDF ↓</a>
             </div>
         </div>
         <% } else { %>
         <video id="videoPlayer" controls crossorigin="anonymous" class="interactive-video" preload="metadata" 
                poster="<%= video.thumbnailUrl || '/thumbnails/' + video._id + '.jpg' %>"
                style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; object-fit: contain; background: #000; border: none; outline: none;">
-            <source src="<%= video.fullVideoUrl || video.videoUrl %>" type="video/mp4" id="videoSource">
+            <source src="<%= video.fullVideoUrl || video.videoUrl || video.url %>" type="video/mp4" id="videoSource">
+
             <% if (video.captionsUrl) { %>
             <track label="English" kind="subtitles" srclang="en" src="/captions/<%= courseName %>/<%= video._id %>" default />
             <% } %>
