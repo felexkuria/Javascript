@@ -300,41 +300,38 @@
         </aside>
     </div>
 
-    <!-- Senior Floating Nova AI Widget [RESTORED] -->
-    <div id="floating-chatbot" class="fixed bottom-24 right-32 w-[380px] h-[550px] bg-[#001E2B]/95 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-[0_40px_100px_rgba(0,0,0,0.8)] z-[200] hidden flex-col overflow-hidden animate-message-in">
-        <div class="p-6 border-b border-white/5 bg-[#00ED64]/5 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-[#00ED64] flex items-center justify-center text-[#001E2B] shadow-lg shadow-[#00ED64]/20 animate-pulse">
-                    <i class="fas fa-bolt text-xs"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-black text-white uppercase tracking-widest">Nova AI Assistant</h4>
-                    <p class="text-[9px] font-bold text-[#00ED64] uppercase opacity-70">Protocol Layer 0.1</p>
-                </div>
+    <!-- Floating AI Assistant Widget (Atlas Look) -->
+    <div id="floating-chatbot" class="floating-chatbot glass">
+        <div class="chatbot-header">
+            <div class="chatbot-title">
+                <i class="fas fa-brain chatbot-icon"></i>
+                <span>AI Assistant</span>
+                <span class="ai-model-badge">Nova Lite</span>
             </div>
-            <button onclick="toggleFloatingChatbot()" class="text-[#9FB1AD] hover:text-white transition-colors">
-                <i class="fas fa-times"></i>
+            <button class="chatbot-toggle" onclick="toggleFloatingChatbot()">
+                <i class="fas fa-minus"></i>
             </button>
         </div>
-        <div id="floating-chat-messages-widget" class="flex-1 overflow-y-auto p-6 space-y-4 scroll-premium">
-            <!-- Syncs with sidebar but provides floating experience -->
-        </div>
-        <div class="p-4 border-t border-white/5 bg-[#001E2B]">
-            <div class="relative">
-                <input type="text" id="floating-chat-input-widget" placeholder="Query Nova Lite..." 
-                       class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-6 pr-14 text-sm font-bold text-white focus:border-[#00ED64]/30 focus:outline-none transition-all">
-                <button onclick="sendFloatingChatMessageWidget()" class="absolute right-2 top-2 w-10 h-10 bg-[#00ED64] text-[#001E2B] rounded-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
-                    <i class="fas fa-paper-plane text-xs"></i>
+        
+        <div class="chatbot-body flex flex-col h-[calc(100%-80px)]">
+            <div class="chat-messages scroll-premium" id="floating-chat-messages-widget">
+                <!-- Syncs with sidebar but provides floating experience -->
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" id="floating-chat-input-widget" placeholder="Query Nova Lite..." maxlength="500">
+                <button onclick="sendFloatingChatMessage()" class="btn-send">
+                    <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Floating Trigger Bubble -->
-    <div id="floating-trigger" onclick="toggleFloatingChatbot()" class="fixed bottom-6 right-32 w-14 h-14 bg-[#00ED64] text-[#001E2B] rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,237,100,0.3)] cursor-pointer z-[190] hover:scale-110 active:scale-95 transition-all group">
-        <i class="fas fa-comment-dots text-xl"></i>
-        <div class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#001E2B] animate-bounce"></div>
-    </div>
+    <button id="floating-trigger" class="chatbot-trigger" onclick="toggleFloatingChatbot()">
+        <i class="fas fa-comment-dots"></i>
+        <span class="notification-dot" style="display: none;"></span>
+    </button>
 
     <!-- Achievement Popup (Universal) -->
     <div id="achievement-popup">
