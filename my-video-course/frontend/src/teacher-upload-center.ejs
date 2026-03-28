@@ -362,14 +362,14 @@
                     }
                     
                     if (!signRes.ok) {
+                        const errData = await signRes.json().catch(() => ({ error: 'RAW HTML or empty' }));
+                        log(`FAIL: HTTP ${signRes.status} | Server Msg: ${errData.error || errData.message || 'None'}`);
                         if (signRes.status === 401) {
-                            log('FAIL: Session expired. Redirecting to login...');
-                            setTimeout(() => window.location.href = '/login', 2000);
-                            throw new Error('Authentication required');
+                            setTimeout(() => window.location.href = '/login', 3000);
                         }
-                        const errData = await signRes.json().catch(() => ({}));
-                        throw new Error(errData.error || `Sign failed: ${signRes.status}`);
+                        throw new Error(`Sign failed: HTTP ${signRes.status}`);
                     }
+
                     
                     let url, key, success;
                     try {
@@ -437,9 +437,14 @@
                     });
                     
                     if (!completeRes.ok) {
-                        const errData = await completeRes.json().catch(() => ({}));
-                        throw new Error(errData.error || `Commit failed: ${completeRes.status}`);
+                        const errData = await completeRes.json().catch(() => ({ error: 'RAW HTML or empty' }));
+                        log(`FAIL: HTTP ${completeRes.status} | Server Msg: ${errData.error || errData.message || 'None'}`);
+                        if (completeRes.status === 401) {
+                            setTimeout(() => window.location.href = '/login', 3000);
+                        }
+                        throw new Error(`Commit failed: HTTP ${completeRes.status}`);
                     }
+
                     
                     const compData = await completeRes.json();
                     if (!compData.success) throw new Error('Commit failed');
