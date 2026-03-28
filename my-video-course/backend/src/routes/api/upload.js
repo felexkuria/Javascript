@@ -180,15 +180,16 @@ router.post('/complete', async (req, res) => {
 
     const safeCourse = sanitize(courseName);
 
-    // 🏷️ Category Selection
+    // 🏷️ Category Selection (Standardized for Iconography)
     let contentType = 'video';
     if (s3Key.toLowerCase().endsWith('.pdf')) {
-      contentType = 'resource';
+      contentType = 'pdf'; 
     } else if (s3Key.toLowerCase().endsWith('.srt') || s3Key.toLowerCase().endsWith('.vtt')) {
       contentType = 'caption';
     } else if (!s3Key.toLowerCase().endsWith('.mp4')) {
       contentType = 'resource';
     }
+
 
     const videoData = {
       _id: (lectureId || Date.now()).toString(), // 🏗️ Use existing ID if available to prevent duplicates
