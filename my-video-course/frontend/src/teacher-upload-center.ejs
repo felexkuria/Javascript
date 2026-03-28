@@ -449,18 +449,21 @@
                     const compData = await completeRes.json();
                     if (!compData.success) throw new Error('Commit failed');
 
-                    statusEl.textContent = 'Ready';
-                    statusEl.classList.add('opacity-40');
-                    log(`SUCCESS: [${file.name}] ingested & processing started.`);
+                    statusEl.textContent = 'SYNCED';
+                    statusEl.style.color = '#00ED64';
+                    statusEl.classList.remove('opacity-40');
+                    fillEl.style.background = 'linear-gradient(90deg, #00ED64, #00C853)';
+                    log(`SUCCESS: [${file.name}] synced to curriculum.`);
                     
                 } catch (err) {
-                    statusEl.textContent = 'Block';
+                    statusEl.textContent = 'ERROR';
                     statusEl.style.color = '#ff3b30';
                     log(`FAIL: ${err.message}`);
                     console.error('Upload flow error:', err);
                 }
             }
             btn.disabled = false;
+            log(`PROTOCOL SYNC COMPLETE: Total ingestion sequence finalized.`);
         }
 
         function log(msg) {
