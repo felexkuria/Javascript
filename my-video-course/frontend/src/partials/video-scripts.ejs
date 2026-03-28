@@ -202,9 +202,9 @@ document.addEventListener('DOMContentLoaded', function() {
     window.toggleFloatingChatbot = function() {
         const chatbot = document.getElementById('floating-chatbot');
         if (chatbot) {
-            chatbot.classList.toggle('hidden');
-            const isVisible = !chatbot.classList.contains('hidden');
-            if (isVisible) {
+            const isVisible = chatbot.style.display === 'flex';
+            chatbot.style.display = isVisible ? 'none' : 'flex';
+            if (!isVisible) {
                 // Initial focus for premium UX
                 setTimeout(() => document.getElementById('floating-chat-input-widget')?.focus(), 300);
             }
