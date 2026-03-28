@@ -40,7 +40,7 @@ const cognitoAuth = async (req, res, next) => {
     };
     next();
   } catch (error) {
-    console.warn('Token expired, logging out user');
+    console.error(`[AUTH FATAL] Token rejected on ${req.originalUrl}:`, error.message);
     
     // Clear all authentication data
     res.clearCookie('cognitoToken');

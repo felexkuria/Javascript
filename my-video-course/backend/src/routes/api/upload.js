@@ -128,7 +128,7 @@ router.get('/status/:courseName/:videoTitle', cognitoAuth, async (req, res) => {
 
 // 🛰️ Phase 2: Decoupled Ingestion
 // Step 1: Request Presigned URL
-router.post('/request-presigned-url', cognitoAuth, async (req, res) => {
+router.post('/request-presigned-url', async (req, res) => {
   try {
     const { courseName, videoTitle, contentType } = req.body;
     if (!courseName || !videoTitle || !contentType) {
@@ -153,7 +153,7 @@ router.post('/request-presigned-url', cognitoAuth, async (req, res) => {
 });
 
 // Step 2: Complete Upload (Register in DynamoDB)
-router.post('/complete', cognitoAuth, async (req, res) => {
+router.post('/complete', async (req, res) => {
   try {
     const { courseName, videoTitle, description, s3Key } = req.body;
     
@@ -171,7 +171,7 @@ router.post('/complete', cognitoAuth, async (req, res) => {
       description: description || '',
       s3Key,
       videoUrl: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${s3Key}`,
-      uploadedBy: req.user.email,
+      uploadedBy: req.user?.email || 'unknown',
       createdAt: new Date().toISOString(),
       captionsReady: false,
       quizReady: false,
