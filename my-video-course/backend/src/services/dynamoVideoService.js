@@ -101,16 +101,37 @@ class DynamoVideoService {
       id: v.videoId || v._id
     }));
 
-    // 3. User explicit sections if they exist in the model
+    // 3. Use explicit sections if they exist in the model
     if (course.sections && course.sections.length > 0) {
-      return course.sections.map(s => ({
-        ...s,
-        lectures: s.lectures.map(l => {
-          const matchingVideo = allVideos.find(v => (v.id || v._id || '').toString() === (l.videoId || l._id || l.id || '').toString());
-          return { ...l, ...matchingVideo, watched: matchingVideo?.watched || false };
-        }),
-        progress: this.getSectionProgress(s.lectures)
-      }));
+      return course.sections.map(s => {
+        const hydratedLectures = (s.lectures || []).map(l => {
+          // 🛡️ Robust Matcher: Try every possible ID variation (videoId, _id, id) as a string
+          const lectureId = (l.videoId || l._id || l.id || '').toString();
+          const matchingVideo = allVideos.find(v => 
+            (v.id || '').toString() === lectureId || 
+            (v._id || '').toString() === lectureId || 
+            (v.videoId || '').toString() === lectureId
+          );
+
+          // 🏗️ Smart Hydration: Prefer the real S3 assets from the flat list
+          return { 
+            ...l, 
+            ...(matchingVideo || {}),
+            watched: matchingVideo?.watched || l.watched || false,
+            // Explicitly ensure critical S3 fields are NOT lost if l has stale placeholders
+            videoUrl: matchingVideo?.videoUrl || matchingVideo?.url || l.videoUrl || l.url,
+            s3Key: matchingVideo?.s3Key || l.s3Key,
+            captionsUrl: matchingVideo?.captionsUrl || l.captionsUrl,
+            type: matchingVideo?.type || l.type || 'video'
+          };
+        });
+
+        return {
+          ...s,
+          lectures: hydratedLectures,
+          progress: this.getSectionProgress(hydratedLectures)
+        };
+      });
     }
 
     // 4. Smart Regex Grouping (Fallback)

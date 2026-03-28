@@ -207,17 +207,66 @@ router.post('/complete', async (req, res) => {
       processing: contentType === 'video' // Only trigger processing for actual videos
     };
     
+    // 🛰️ Dual-Sync Architecture: Update both Standalone Videos and Course Sections
     await dynamodb.saveVideo(videoData);
 
+    try {
+      // Find and update the lecture in the Course model for high-fidelity sync
+      const course = await dynamodb.getCourseByTitle(courseName);
+      if (course) {
+        // Find by title mismatch or ID link
+        let updated = false;
+        
+        // Update in nested sections
+        if (course.sections) {
+          for (const section of course.sections) {
+            const lecture = (section.lectures || []).find(l => 
+              l.title === videoTitle || l._id === videoData._id || l.videoId === videoData.videoId
+            );
+            if (lecture) {
+              lecture.s3Key = s3Key;
+              lecture.videoUrl = videoData.videoUrl;
+              lecture.url = videoData.videoUrl;
+              lecture.type = videoData.type;
+              updated = true;
+            }
+          }
+        }
+
+        // Update in flat list
+        if (course.videos) {
+            const vIdx = course.videos.findIndex(v => v.title === videoTitle || v._id === videoData._id);
+            if (vIdx !== -1) {
+                course.videos[vIdx].s3Key = s3Key;
+                course.videos[vIdx].videoUrl = videoData.videoUrl;
+                course.videos[vIdx].type = videoData.type;
+                updated = true;
+            } else if (!updated) {
+                // If not found, append to flat list for safety
+                course.videos.push({ ...videoData, section: course.sections?.[0]?.title || 'Uncategorized' });
+                updated = true;
+            }
+        }
+
+        if (updated) {
+          await dynamodb.saveCourse(course);
+          console.log(`✅ Atomic Sync: [${videoTitle}] propagated to Course curriculum.`);
+        }
+      }
+    } catch (syncErr) {
+      console.warn(`⚠️  Course sync skipped: ${syncErr.message}`);
+    }
+
     // Trigger async processing (Stage 5)
-    // Note: In Stage 5, this will be handled by S3 Event Notifications
     const videoUploadProcessor = require('../../services/videoUploadProcessor');
-    videoUploadProcessor.processUploadedVideo(
-      process.env.S3_BUCKET_NAME, 
-      s3Key, 
-      videoTitle, 
-      courseName
-    ).catch(err => console.error('Processing trigger failed:', err));
+    if (videoData.processing) {
+      videoUploadProcessor.processUploadedVideo(
+        process.env.S3_BUCKET_NAME, 
+        s3Key, 
+        videoTitle, 
+        courseName
+      ).catch(err => console.error('Processing trigger failed:', err));
+    }
 
     res.json({ success: true, message: 'Upload registered. Processing started.', data: videoData });
   } catch (error) {

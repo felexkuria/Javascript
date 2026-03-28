@@ -267,17 +267,28 @@ class WebController {
       const courseName = decodeURIComponent(req.params.courseName).trim();
       const id = req.params.id;
       const video = await dynamoVideoService.getVideoById(courseName, id);
-      if (!video || !video.captionsUrl) return res.status(404).send('No captions');
       
-      const captionPath = path.join(__dirname, '../../../frontend/public/videos', video.captionsUrl);
-      if (fs.existsSync(captionPath)) {
-        res.setHeader('Content-Type', 'text/vtt');
-        res.sendFile(captionPath);
-      } else {
-        res.status(404).send('File not found');
+      if (!video || !video.captionsUrl) {
+          return res.status(404).send('No captions found for this video');
       }
+      
+      const s3VideoService = require('../services/s3VideoService');
+      const bucketName = process.env.S3_BUCKET_NAME || 'video-course-app-video-bucket-prod-6m5k2til';
+      
+      // Construct the full S3 URL for signing
+      let s3Url = video.captionsUrl;
+      const bucketUrlPrefix = `https://${bucketName}.s3.amazonaws.com/`;
+      
+      if (!s3Url.startsWith('http')) {
+        s3Url = bucketUrlPrefix + s3Url;
+      }
+      
+      console.log(`📡 Signing Caption: ${s3Url}`);
+      const signedUrl = await s3VideoService.generateSignedUrl(s3Url, 3600);
+      res.redirect(signedUrl);
     } catch (err) {
-      res.status(500).send('Error');
+      console.error('Error serving captions:', err);
+      res.status(500).send('Error generating signed caption access');
     }
   }
 
