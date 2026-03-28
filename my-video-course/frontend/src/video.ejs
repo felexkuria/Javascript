@@ -13,6 +13,7 @@
 </head>
 <body class="dark bg-[#001E2B] font-sans antialiased text-[#E7EEEB] min-h-screen">
     <%- include('partials/header', { title: (video ? video.title : 'Lecture') + ' - ' + courseName, activePage: 'video' }) %>
+    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <div class="command-center">
         <!-- Main Learning Canvas -->
@@ -372,6 +373,21 @@
                 }, 100);
             }
         }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.side-lab');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar && overlay) {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+                
+                // Prevent body scroll when menu is open
+                document.body.style.overflow = sidebar.classList.contains('mobile-open') ? 'hidden' : '';
+            }
+        }
+
+        // Global export for header onclick
+        window.toggleSidebar = toggleSidebar;
 
         // --- Persistent Notes Protocol ---
         const notesArea = document.querySelector('#content-notes textarea');
