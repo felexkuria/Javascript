@@ -173,6 +173,41 @@ document.addEventListener('DOMContentLoaded', function() {
     if (videoPlayer) {
         videoPlayer.addEventListener('ended', markVideoAsWatched);
         let watchedMarked = false;
+        const inputWidget = document.getElementById('floating-chat-input-widget');
+        if (inputWidget) {
+            inputWidget.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendFloatingChatMessage();
+            });
+        }
+        
+        // Expose save function to global scope
+        window.saveAiResponseToNotes = function(btn) {
+            const rawContent = decodeURIComponent(btn.getAttribute('data-content'));
+            const notesBox = document.getElementById('studentNotes');
+            if (!notesBox) return;
+            
+            const timestamp = new Date().toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const separator = notesBox.value.trim() ? '\n\n---\n\n' : '';
+            const noteEntry = `${separator}📅 [${timestamp}] AI Advisor Insight:\n${rawContent}`;
+            
+            notesBox.value += noteEntry;
+            
+            // Switch to notes tab automatically
+            if (typeof switchLabTab === 'function') switchLabTab('notes');
+            
+            // Trigger cloud save
+            if (typeof saveStudentNotes === 'function') saveStudentNotes();
+            
+            // Temporary UI feedback on button
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Saved';
+            btn.classList.add('text-[#00ED64]', 'border-[#00ED64]/50');
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('text-[#00ED64]', 'border-[#00ED64]/50');
+            }, 2000);
+        };
+
         videoPlayer.addEventListener('timeupdate', function() {
             if (!videoPlayer.duration) return;
             const watchPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
@@ -250,6 +285,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="max-w-[90%] bg-[#00ED64] text-[#001E2B] p-4 rounded-2xl rounded-tr-none text-[13px] font-bold">
                     ${message}
                 </div>
+                <div class="flex items-center gap-2 mt-2">
+                    <div class="text-[9px] font-black text-[#9FB1AD] uppercase tracking-[0.2em] opacity-70">Student • ${userTime}</div>
+                    <div class="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center">
+                        <i class="fas fa-user text-[8px] text-white/50"></i>
+                    </div>
+                </div>
             `;
             messages.appendChild(userDiv);
             messages.scrollTop = messages.scrollHeight;
@@ -306,11 +347,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="relative max-w-[95%] bg-white/[0.03] border border-white/10 text-[#E7EEEB] p-5 rounded-2xl rounded-tl-none text-[13px] font-medium leading-[1.6] shadow-2xl overflow-x-auto">
                             ${htmlContent}
                         </div>
-                        <div class="flex items-center gap-3 mt-3">
-                            <div class="w-4 h-4 rounded-full bg-gradient-to-br from-[#00ED64] to-[#00684A] flex items-center justify-center">
-                                <i class="fas fa-bolt text-[8px] text-[#001E2B]"></i>
+                        <div class="flex items-center w-full mt-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-4 h-4 rounded-full bg-gradient-to-br from-[#00ED64] to-[#00684A] flex items-center justify-center">
+                                    <i class="fas fa-bolt text-[8px] text-[#001E2B]"></i>
+                                </div>
+                                <div class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em] opacity-70">Nova AI • ${botTime}</div>
                             </div>
-                            <div class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em] opacity-70">Nova AI • ${botTime}</div>
+                            <button onclick="saveAiResponseToNotes(this)" data-content="${encodeURIComponent(data.response)}" class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-bold uppercase tracking-wider text-[#9FB1AD] hover:text-[#00ED64] border border-white/10 hover:border-[#00ED64]/30 flex items-center gap-2 bg-white/5 py-1 px-3 rounded-full hover:bg-[#00ED64]/10">
+                                <i class="fas fa-bookmark"></i> Save Note
+                            </button>
                         </div>
                     `;
                     
