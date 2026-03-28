@@ -285,43 +285,7 @@ pre:hover .copy-btn {
 .scroll-premium::-webkit-scrollbar { width: 4px; }
 .scroll-premium::-webkit-scrollbar-thumb { background: rgba(0, 237, 100, 0.1); border-radius: 10px; }
 
-/* Senior Floating Assistant Enhancements */
-#floating-chatbot {
-    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    position: fixed !important;
-    bottom: 110px !important;
-    right: 30px !important;
-    width: 380px !important;
-    height: 550px !important;
-    top: auto !important;
-    z-index: 10000 !important;
-    display: flex !important;
-}
-
-#floating-chatbot.hidden {
-    opacity: 0 !important;
-    visibility: hidden;
-    transform: translateY(40px) scale(0.95) !important;
-    pointer-events: none !important;
-}
-
-#floating-trigger {
-    position: fixed !important;
-    bottom: 30px !important;
-    right: 30px !important;
-    width: 60px !important;
-    height: 60px !important;
-    background: #00ED64 !important;
-    color: #001E2B !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-shadow: 0 10px 40px rgba(0, 237, 100, 0.4) !important;
-    z-index: 10001 !important;
-    cursor: pointer !important;
-    border: none !important;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+/* Removed duplicate floating chatbot and trigger overrides to fall back to chatbot-styles.ejs premium layout */
 }
 
 #floating-trigger:hover {

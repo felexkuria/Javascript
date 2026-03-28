@@ -258,7 +258,7 @@
     </div>
 
     <script>
-        const courseId = '<%= encodeURIComponent(course._id) %>';
+        const courseId = '<%= encodeURIComponent(course.courseName || course.name || course.title) %>';
 
         // Core Orchestration Logic
         async function publishCourse() {
