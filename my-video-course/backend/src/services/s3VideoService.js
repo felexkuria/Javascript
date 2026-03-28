@@ -15,17 +15,27 @@ class S3VideoService {
 
   async generateSignedUrl(videoUrl, expiresIn = 3600) {
     try {
-      if (!videoUrl || !videoUrl.includes('amazonaws.com')) {
+      if (!videoUrl) return videoUrl;
+
+      let bucket = this.bucketName;
+      let key = '';
+
+      // 🛰️ Universal S3 Parsing (HTTPS or s3:// URI)
+      if (videoUrl.startsWith('s3://')) {
+        const parts = videoUrl.replace('s3://', '').split('/');
+        bucket = parts.shift();
+        key = parts.join('/');
+      } else if (videoUrl.includes('amazonaws.com')) {
+        const urlParts = videoUrl.split('.amazonaws.com/');
+        if (urlParts.length < 2) return videoUrl;
+        key = urlParts[1];
+      } else {
         return videoUrl;
       }
 
-      const urlParts = videoUrl.split('.amazonaws.com/');
-      if (urlParts.length < 2) return videoUrl;
-
-      const key = urlParts[1];
       const command = new GetObjectCommand({
-        Bucket: this.bucketName,
-        Key: key
+        Bucket: bucket.trim(),
+        Key: key.trim()
       });
       
       const signedUrl = await getSignedUrl(this.s3, command, { expiresIn });
@@ -78,7 +88,8 @@ class S3VideoService {
     return videoUrl && (
       videoUrl.includes('amazonaws.com') || 
       videoUrl.includes('s3.') || 
-      videoUrl.startsWith('https://s3')
+      videoUrl.startsWith('https://s3') ||
+      videoUrl.startsWith('s3://')
     );
   }
 

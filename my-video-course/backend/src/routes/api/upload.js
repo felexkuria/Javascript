@@ -137,8 +137,9 @@ router.post('/request-presigned-url', cognitoAuth, async (req, res) => {
 
     const safeCourse = sanitize(courseName);
     const safeTitle = sanitize(videoTitle);
+    const ext = contentType === 'application/pdf' ? '.pdf' : '.mp4';
 
-    const videoKey = `videos/${safeCourse}/${Date.now()}-${safeTitle}.mp4`;
+    const videoKey = `videos/${safeCourse}/${Date.now()}-${safeTitle}${ext}`;
     const result = await s3Signer.getPresignedUploadUrl(videoKey, contentType);
 
     if (result.success) {
