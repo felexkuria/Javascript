@@ -205,9 +205,9 @@
                 </button>
             </div>
 
-            <div class="lab-content scroll-premium">
+            <div class="lab-content flex-1 overflow-hidden relative">
                 <!-- Curriculum Tab -->
-                <div id="content-curriculum" class="lab-pane active space-y-6">
+                <div id="content-curriculum" class="lab-pane active h-full overflow-y-auto px-6 py-6 scroll-premium space-y-6">
                     <% if (typeof sections !== 'undefined' && sections.length > 0) { %>
                         <% sections.forEach((section, sIdx) => { %>
                             <div class="section-group mb-6">
@@ -263,8 +263,8 @@
                 </div>
 
                 <!-- AI Advisor Tab -->
-                <div id="content-advisor" class="lab-pane h-full flex flex-col">
-                    <div id="floating-chat-messages" class="flex-1 space-y-6 pb-24 scroll-premium">
+                <div id="content-advisor" class="lab-pane h-full flex flex-col relative px-6">
+                    <div id="floating-chat-messages" class="flex-1 overflow-y-auto space-y-6 pt-6 pb-24 scroll-premium">
                         <!-- Messages go here -->
                         <div class="flex flex-col items-start animate-message-in">
                             <div class="max-w-[90%] bg-white/5 border border-white/10 text-[#E7EEEB] p-5 rounded-2xl rounded-tl-none text-[13px] leading-relaxed">
@@ -288,8 +288,8 @@
                 </div>
 
                 <!-- Notes Tab -->
-                <div id="content-notes" class="lab-pane">
-                    <textarea id="studentNotes" class="w-full h-[400px] bg-white/5 border border-white/10 rounded-2xl p-6 text-sm font-medium text-[#9FB1AD] focus:border-[#00ED64]/50 focus:outline-none transition-all placeholder:opacity-30" 
+                <div id="content-notes" class="lab-pane h-full overflow-y-auto px-6 py-6 scroll-premium">
+                    <textarea id="studentNotes" class="w-full h-[calc(100%-80px)] bg-white/5 border border-white/10 rounded-2xl p-6 text-sm font-medium text-[#9FB1AD] focus:border-[#00ED64]/50 focus:outline-none transition-all placeholder:opacity-30" 
                               placeholder="Record your architectural insights here..."></textarea>
                     <button id="saveNotesBtn" onclick="saveStudentNotes()" class="btn-atlas btn-atlas-primary w-full mt-6 py-4 flex items-center justify-center gap-2">
                         <i class="fas fa-save" id="saveIcon"></i> 
