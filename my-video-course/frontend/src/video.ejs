@@ -233,63 +233,76 @@
                         %>
                         <script>
                             document.addEventListener('DOMContentLoaded', () => {
-                                if (<%= courseComplete %>) {
+                               const videoTitle = <%- JSON.stringify(video ? video.title : "") %>;
+                               const courseNameStr = <%- JSON.stringify(courseName) %>;
+                                if (<%- JSON.stringify(courseComplete) %>) {
                                     document.getElementById('claimCertificateBanner')?.classList.remove('hidden');
                                 }
                             });
                         </script>
-                        <% sections.forEach((section, sIdx) => { %>
-                            <% 
-                                const sectionWatched = section.lectures.filter(l => l.watched).length;
-                                const sectionTotal = section.lectures.length;
-                                const sectionPercent = Math.round((sectionWatched / sectionTotal) * 100);
-                                let hasActiveVideo = false;
-                                if (video) {
-                                    hasActiveVideo = section.lectures.some((lec) => {
-                                        const lecId = lec.videoId || lec._id || lec.contentId;
-                                        return video.videoId === lecId || video._id === lecId || video.id === lecId;
-                                    });
-                                }
-                            %>
-                            <div class="section-group mb-8 <%= hasActiveVideo || sections.length === 1 ? 'expanded' : '' %> shadow-lg rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl">
-                                <div class="px-5 py-4 flex items-center justify-between cursor-pointer border border-white/5 bg-[#001E2B]/40 backdrop-blur-xl hover:bg-white/[0.04] active:scale-[0.98] transition-all group/header" onclick="toggleSectionGroup(this)">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-2 h-2 rounded-full <%= hasActiveVideo ? 'bg-[#00ED64] shadow-[0_0_15px_#00ED64]' : 'bg-white/10' %> transition-all duration-500 group-hover/header:rotate-180"></div>
-                                        <div class="flex flex-col">
-                                            <span class="text-[7px] font-black text-[#00ED64]/40 uppercase tracking-[0.4em] mb-0.5">Cluster <%= (sIdx + 1).toString().padStart(2, '0') %></span>
-                                            <h3 class="text-[11px] font-black uppercase tracking-[0.3em] text-[#9FB1AD] group-hover/header:text-white transition-colors"><%= section.title %></h3>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-5">
-                                        <div class="text-right">
-                                            <div class="text-[8px] font-black text-[#00ED64] tracking-[0.2em]"><%= sectionPercent %>%</div>
-                                            <div class="text-[7px] font-bold text-[#9FB1AD]/40 uppercase tracking-widest">Synced</div>
-                                        </div>
-                                        <i class="fas fa-chevron-down text-[9px] text-[#9FB1AD]/30 accordion-chevron group-hover/header:text-white transition-all"></i>
-                                    </div>
-                                </div>
-                                
-                                <div class="section-lectures space-y-3 px-2 pt-4">
-                                    <% section.lectures.forEach((lec, lIdx) => { 
-                                        const lecId = lec.videoId || lec._id || lec.contentId || 'missing';
-                                        const isActive = video && (video.videoId === lecId || video._id === lecId || video.id === lecId);
-                                    %>
-                                        <a href="/course/<%= encodeURIComponent(courseName) %>/video/<%= encodeURIComponent(lecId) %>" 
-                                           class="curriculum-node <%= isActive ? 'active' : '' %>">
-                                            <div class="w-8 h-8 rounded-lg <%= isActive ? 'bg-[#00ED64] text-[#001E2B]' : 'bg-white/5 text-[#9FB1AD]' %> flex items-center justify-center shrink-0">
-                                                <i class="fas <%= lec.type === 'pdf' ? 'fa-file-pdf' : (isActive ? 'fa-play' : (lec.watched ? 'fa-check' : 'fa-play opacity-40')) %> text-[10px]"></i>
+                        <div class="curriculum-timeline space-y-6">
+                            <% sections.forEach((section, sIdx) => { %>
+                                <% 
+                                    const sectionWatched = section.lectures.filter(l => l.watched).length;
+                                    const sectionTotal = section.lectures.length;
+                                    const sectionPercent = Math.round((sectionWatched / sectionTotal) * 100);
+                                    let hasActiveVideo = false;
+                                    if (typeof video !== 'undefined' && video) {
+                                        hasActiveVideo = section.lectures.some((lec) => {
+                                            const lecId = lec.videoId || lec._id || lec.contentId;
+                                            return video.videoId === lecId || video._id === lecId || video.id === lecId;
+                                        });
+                                    }
+                                %>
+                                <div class="section-group <%= hasActiveVideo || sections.length === 1 ? 'expanded' : '' %>">
+                                    <!-- Premium Section Header -->
+                                    <div class="section-header-atlas premium-glass group/header" onclick="toggleSectionGroup(this)">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-10 h-10 rounded-xl bg-[#001E2B] border border-[#00ED64]/30 flex items-center justify-center font-black text-[#00ED64] text-sm shadow-inner shrink-0 text-center">
+                                                <%= sIdx + 1 %>
                                             </div>
-                                            <div class="flex-1 min-w-0">
-                                                <p class="text-[12px] font-bold truncate leading-none <%= isActive ? 'text-white' : 'text-[#E7EEEB]/80' %>"><%= lec.title %></p>
-                                                <div class="curriculum-progress-rail">
-                                                    <div class="curriculum-progress-fill" style="width: <%= lec.watched ? '100' : (isActive ? '45' : '0') %>%"></div>
+                                            <div class="flex flex-col min-w-0">
+                                                <span class="text-[7px] font-black text-[#00ED64]/60 uppercase tracking-[0.3em] mb-0.5">Strategic Node</span>
+                                                <h3 class="text-[11px] font-black uppercase tracking-[0.2em] text-white/90 group-hover/header:text-[#00ED64] transition-colors truncate"><%= section.title %></h3>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-4 shrink-0">
+                                            <div class="text-right hidden sm:block">
+                                                <div class="text-[9px] font-black text-[#00ED64] tracking-widest"><%= sectionPercent %>%</div>
+                                                <div class="text-[6px] font-bold text-[#9FB1AD]/40 uppercase tracking-[0.2em]">Validated</div>
+                                            </div>
+                                            <i class="fas fa-chevron-down chevron-toggle"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Lesson Timeline Content -->
+                                    <div class="section-content-wrapper space-y-3">
+                                        <% section.lectures.forEach((lec, lIdx) => { 
+                                            const lecId = lec.videoId || lec._id || lec.contentId || 'missing';
+                                            const isActive = typeof video !== 'undefined' && video && (video.videoId === lecId || video._id === lecId || video.id === lecId);
+                                        %>
+                                            <a href="/course/<%= encodeURIComponent(courseName) %>/video/<%= encodeURIComponent(lecId) %>" 
+                                               class="lesson-card-atlas <%= isActive ? 'active' : '' %> group/lesson">
+                                                <div class="w-8 h-8 rounded-lg <%= isActive ? 'bg-[#00ED64] text-[#001E2B]' : 'bg-white/5 text-[#9FB1AD]' %> flex items-center justify-center shrink-0 transition-all group-hover/lesson:scale-110">
+                                                    <i class="fas <%= lec.type === 'pdf' ? 'fa-file-pdf' : (isActive ? 'fa-play' : (lec.watched ? 'fa-check-circle text-[#00ED64]' : 'fa-play opacity-30')) %> text-[10px]"></i>
                                                 </div>
-                                            </div>
-                                        </a>
-                                    <% }) %>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex justify-between items-center mb-1">
+                                                        <p class="text-[11px] font-bold truncate leading-none <%= isActive ? 'text-white' : 'text-[#E7EEEB]/70' %>"><%= lec.title %></p>
+                                                        <% if (isActive) { %>
+                                                            <span class="text-[7px] font-black text-[#00ED64] uppercase tracking-widest animate-pulse">Streaming</span>
+                                                        <% } %>
+                                                    </div>
+                                                    <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                        <div class="h-full bg-[#00ED64]" style="width: <%= lec.watched ? '100' : (isActive ? '45' : '0') %>%"></div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        <% }) %>
+                                    </div>
                                 </div>
-                            </div>
-                        <% }) %>
+                            <% }) %>
+                        </div>
                     <% } else { %>
                         <div class="py-20 text-center px-6">
                             <div class="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center text-[#9FB1AD] mx-auto mb-6 opacity-20 border border-white/10">
@@ -335,8 +348,7 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="absolute bottom-6 left-6 right-6">
+                    <div class="chat-input-container-sidebar mt-auto p-6 bg-white/5 border-t border-white/10">
                         <div class="relative">
                             <input type="text" id="floating-chat-input" placeholder="Query Nova AI..." 
                                    class="w-full bg-[#001E2B] border border-white/10 rounded-2xl py-4 pl-6 pr-14 text-sm font-bold text-white focus:border-[#00ED64]/50 focus:outline-none transition-all shadow-2xl">
@@ -350,7 +362,7 @@
                 <!-- Notes Tab -->
                 <div id="content-notes" class="lab-pane h-full overflow-y-auto px-6 py-6 scroll-premium">
                     <textarea id="studentNotes" class="w-full h-[calc(100%-80px)] bg-white/5 border border-white/10 rounded-2xl p-6 text-sm font-medium text-[#9FB1AD] focus:border-[#00ED64]/50 focus:outline-none transition-all placeholder:opacity-30" 
-                              placeholder="Record your architectural insights here..."></textarea>
+                               placeholder="Record your architectural insights here..."></textarea>
                     <button id="saveNotesBtn" onclick="saveStudentNotes()" class="btn-atlas btn-atlas-primary w-full mt-6 py-4 flex items-center justify-center gap-2">
                         <i class="fas fa-save" id="saveIcon"></i> 
                         <span id="saveText">PERSIST NOTES</span>
@@ -392,7 +404,7 @@
 
     <!-- Floating Trigger Bubble -->
     <button id="floating-trigger" class="chatbot-trigger" onclick="toggleFloatingChatbot()">
-        <i class="fas fa-comment-dots"></i>
+        <i class="fas fa-bolt"></i>
         <span class="notification-dot" style="display: none;"></span>
     </button>
 

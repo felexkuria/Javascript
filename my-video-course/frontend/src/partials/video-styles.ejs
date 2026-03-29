@@ -1,3 +1,4 @@
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root { 
     --atlas-green: #00ED64; 
@@ -12,7 +13,7 @@
 body { 
     background-color: var(--atlas-midnight); 
     color: #E7EEEB; 
-    font-family: 'Euclid Circular A', 'Inter', system-ui, sans-serif; 
+    font-family: 'Euclid Circular A', 'Outfit', 'Inter', system-ui, sans-serif; 
     overflow-x: hidden; 
     -webkit-font-smoothing: antialiased; 
 } 
@@ -199,6 +200,100 @@ body {
     opacity: 0;
     pointer-events: none;
 } 
+
+/* Hardened Jobsian Curriculum Styles */
+.premium-glass {
+    background: rgba(2, 52, 48, 0.4);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(0, 237, 100, 0.1);
+}
+
+.curriculum-timeline {
+    position: relative;
+}
+
+.curriculum-timeline::before {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 20px;
+    bottom: 20px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--atlas-green) 0%, transparent 100%);
+    opacity: 0.15;
+}
+
+.section-group {
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.section-header-atlas {
+    padding: 16px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.section-header-atlas:hover {
+    border-color: var(--atlas-green);
+    background: rgba(0, 237, 100, 0.05);
+}
+
+.lesson-card-atlas {
+    margin-left: 52px;
+    padding: 12px 16px;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    text-decoration: none;
+    color: inherit;
+}
+
+.lesson-card-atlas:hover {
+    border-color: var(--atlas-green);
+    background: rgba(0, 237, 100, 0.03);
+    transform: translateX(6px);
+}
+
+.lesson-card-atlas.active {
+    background: rgba(0, 237, 100, 0.1);
+    border-color: var(--atlas-green);
+}
+
+.chevron-toggle {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 10px;
+    color: rgba(0, 237, 100, 0.4);
+}
+
+.section-group.expanded .chevron-toggle {
+    transform: rotate(180deg);
+}
+
+.section-content-wrapper {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+}
+
+.section-group.expanded .section-content-wrapper {
+    max-height: 5000px;
+    opacity: 1;
+    margin-top: 12px;
+}
 
 #achievement-popup.show {
     transform: translateX(0);

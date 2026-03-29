@@ -104,12 +104,24 @@ class DynamoVideoService {
     // 3. Use explicit sections if they exist in the model
     if (course.sections && course.sections.length > 0) {
       return course.sections.map(s => {
-        const hydratedLectures = (s.lectures || []).map(l => {
-          // 🛡️ Robust Matcher: Try every possible ID variation (videoId, _id, id) as a string
+        // 🛡️ Robust Duplication Filter: Ensure unique lectures per section even if data is redundant
+        const uniqueLectures = [];
+        const seenIds = new Set();
+        
+        (s.lectures || []).forEach(l => {
+          // 🛡️ Hyper-Resilient ID Matcher: Support every possible field including title fallback
+          const lectureId = (l.videoId || l.contentId || l.id || l._id || l.lectureId || l.title || '').toString();
+          if (!lectureId || seenIds.has(lectureId)) return;
+          seenIds.add(lectureId);
+          uniqueLectures.push(l);
+        });
+
+        const hydratedLectures = uniqueLectures.map(l => {
           const lectureId = (l.videoId || l._id || l.id || '').toString();
           const matchingVideo = allVideos.find(v => 
             (v.id || '').toString() === lectureId || 
             (v._id || '').toString() === lectureId || 
+            (v.contentId || '').toString() === lectureId ||
             (v.videoId || '').toString() === lectureId
           );
 
