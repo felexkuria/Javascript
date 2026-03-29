@@ -136,6 +136,9 @@ class DynamoVideoService {
             captionsUrl: matchingVideo?.captionsUrl || l.captionsUrl,
             type: matchingVideo?.type || l.type || 'video'
           };
+        }).filter(l => {
+          // 🛡️ Phantom Module Defense: A module with no video URL is a broken link and should not be displayed
+          return l.videoUrl && l.videoUrl !== 'undefined' && l.videoUrl !== 'null';
         });
 
         return {
@@ -143,7 +146,7 @@ class DynamoVideoService {
           lectures: hydratedLectures,
           progress: this.getSectionProgress(hydratedLectures)
         };
-      });
+      }).filter(s => s.lectures.length > 0); // Hide empty sections resulting from phantom pruning
     }
 
     // 4. Smart Regex Grouping (Fallback)
