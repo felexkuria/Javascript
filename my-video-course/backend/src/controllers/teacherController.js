@@ -204,6 +204,20 @@ class TeacherController {
       res.status(500).json({ success: false, message: 'Error deleting course: ' + error.message });
     }
   }
+
+  async deleteLecture(req, res) {
+    try {
+      const { id, sectionId, lectureId } = req.params;
+      const courseService = require('../services/courseService');
+      
+      await courseService.deleteLectureData(id, sectionId, lectureId);
+      
+      res.json({ success: true, message: 'Lecture and associated storage purged successfully' });
+    } catch (error) {
+      console.error('Error deleting lecture:', error);
+      res.status(500).json({ success: false, message: 'Error deleting lecture: ' + error.message });
+    }
+  }
 }
 
 module.exports = new TeacherController();

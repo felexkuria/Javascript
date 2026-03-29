@@ -206,6 +206,13 @@ router.patch('/courses/:id/sections/:sectionId/lectures/:lectureId', async (req,
 });
 
 
+
+// Delete Lecture
+router.delete('/courses/:id/sections/:sectionId/lectures/:lectureId', async (req, res) => {
+  teacherController.deleteLecture(req, res);
+});
+
+
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const videoProcessingService = require('../../services/videoProcessingService');

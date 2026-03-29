@@ -188,6 +188,68 @@ class CourseService {
       throw error;
     }
   }
+
+  /**
+   * 🏗️ Atomic Lecture Deletion (Senior Data Engineer)
+   * Purges S3 assets and DynamoDB records for a single lecture.
+   */
+  async deleteLectureData(courseName, sectionId, lectureId) {
+    const logger = require('../utils/logger');
+    const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+    
+    logger.info(`🗑️ Lecture Purge Initiated: ${lectureId} in ${courseName}`);
+
+    try {
+      // 1. Fetch Course to find s3Key
+      const course = await dynamoVideoService.getCourseByTitle(courseName);
+      if (!course) throw new Error('Course not found');
+
+      const video = (course.videos || []).find(v => v._id === lectureId || v.videoId === lectureId || v.id === lectureId);
+      const s3Key = video?.s3Key;
+
+      // 2. S3 Purge (Stage 1)
+      if (s3Key && process.env.S3_BUCKET_NAME) {
+        const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
+        await s3Client.send(new DeleteObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: s3Key
+        }));
+        logger.info(`✅ S3 Asset Purged: ${s3Key}`);
+      }
+
+      // 3. Standalone Video Table (Stage 2)
+      const { DynamoDBDocumentClient, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+      const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+      const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+      const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-east-1' });
+      const docClient = DynamoDBDocumentClient.from(ddbClient);
+
+      await docClient.send(new DeleteCommand({
+        TableName: `video-course-app-videos-${environment}`,
+        Key: { courseName, videoId: lectureId }
+      }));
+
+      // 4. Course Manifest Cleanup (Stage 3)
+      // Remove from flat videos
+      course.videos = (course.videos || []).filter(v => v._id !== lectureId && v.videoId !== lectureId && v.id !== lectureId);
+      
+      // Remove from sections
+      if (course.sections) {
+        course.sections = course.sections.map(s => ({
+          ...s,
+          lectures: (s.lectures || []).filter(l => l._id !== lectureId && l.videoId !== lectureId && l.id !== lectureId)
+        }));
+      }
+
+      await dynamodb.saveCourse(course);
+      logger.info(`✅ Course Manifest Updated: ${lectureId} removed.`);
+
+      return { success: true };
+    } catch (error) {
+      logger.error('❌ Lecture Purge Failed:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new CourseService();

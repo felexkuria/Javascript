@@ -131,6 +131,28 @@
             background: #00ED64;
             box-shadow: 0 0 10px #00ED64;
         }
+
+        .chevron-toggle {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .section-collapsed .chevron-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .section-content-wrapper {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            max-height: 5000px;
+            opacity: 1;
+        }
+
+        .section-collapsed .section-content-wrapper {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0 !important;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="dark overflow-x-hidden">
@@ -170,10 +192,15 @@
                         %>
                             <div class="section-box mb-12" data-section-id="<%= secId %>" data-title="<%= section.title %>">
                                 <!-- Section Header -->
-                                <div class="section-header-atlas premium-glass flex justify-between items-center group">
+                                <div class="section-header-atlas premium-glass flex justify-between items-center group" 
+                                     onclick="toggleSectionCollapse(this, '<%= secId %>')"
+                                     id="header-<%= secId %>">
                                     <div class="flex items-center gap-8">
-                                        <div class="w-12 h-12 rounded-2xl bg-[#001E2B] border border-[#00ED64]/30 flex items-center justify-center font-black text-[#00ED64] text-lg shadow-inner">
-                                            <%= sIdx + 1 %>
+                                        <div class="flex items-center gap-4">
+                                            <i class="fas fa-chevron-down text-[#00ED64]/40 group-hover:text-[#00ED64] text-xs chevron-toggle"></i>
+                                            <div class="w-12 h-12 rounded-2xl bg-[#001E2B] border border-[#00ED64]/30 flex items-center justify-center font-black text-[#00ED64] text-lg shadow-inner">
+                                                <%= sIdx + 1 %>
+                                            </div>
                                         </div>
                                         <div>
                                             <h3 class="text-2xl font-black text-white tracking-tight"><%= section.title %></h3>
@@ -181,17 +208,17 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onclick="editSection('<%= secId %>', '<%= section.title %>')" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-[#00ED64]/10 hover:text-[#00ED64] transition-all">
+                                        <button onclick="event.stopPropagation(); editSection('<%= secId %>', '<%= section.title %>')" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-[#00ED64]/10 hover:text-[#00ED64] transition-all">
                                             <i class="fas fa-terminal text-xs"></i>
                                         </button>
-                                        <button onclick="deleteSection('<%= secId %>')" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-red-500/10 hover:text-red-400 transition-all">
+                                        <button onclick="event.stopPropagation(); deleteSection('<%= secId %>')" class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-red-500/10 hover:text-red-400 transition-all">
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- Lessons Feed -->
-                                <div class="mt-6 space-y-4">
+                                <div class="mt-6 space-y-4 section-content-wrapper" id="content-<%= secId %>">
                                     <% section.lectures.forEach((lecture, lIdx) => { 
                                         const lecId = lecture._id || lecture.videoId || lecture.id || '';
                                     %>
@@ -202,9 +229,14 @@
                                             <div class="flex-grow">
                                                 <div class="flex items-center gap-4 mb-2">
                                                     <span class="text-base font-bold text-white/90 group-hover:text-white"><%= lecture.title %></span>
-                                                    <button onclick="editLecture('<%= secId %>', '<%= lecId %>', '<%= lecture.title %>')" class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-[#00ED64]">
-                                                        <i class="fas fa-pen text-[10px]"></i>
-                                                    </button>
+                                                    <div class="flex gap-2">
+                                                        <button onclick="editLecture('<%= secId %>', '<%= lecId %>', '<%= lecture.title %>')" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                                                            <i class="fas fa-edit text-xs text-[#00ED64]/60"></i>
+                                                        </button>
+                                                        <button onclick="deleteLecture('<%= secId %>', '<%= lecId %>', '<%= lecture.title %>')" class="p-2 hover:bg-red-500/10 rounded-lg transition-colors text-red-400">
+                                                            <i class="fas fa-trash-alt text-xs"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div class="progress-micro-line" id="progress-<%= lecId %>">
                                                     <div class="progress-flow-neon w-0 h-full"></div>
@@ -228,10 +260,10 @@
 
                                     <!-- Action Interface -->
                                     <div class="ml-16 pt-4 flex gap-4">
-                                        <button onclick="addLecture('<%= secId %>')" class="btn-add-ghost">
+                                        <button onclick="event.stopPropagation(); addLecture('<%= secId %>')" class="btn-add-ghost">
                                             <i class="fas fa-plus mr-2"></i> Append Lesson
                                         </button>
-                                        <button onclick="triggerResourceUpload('<%= secId %>')" class="btn-add-ghost !border-blue-500/30 !text-blue-400 hover:!bg-blue-500/10">
+                                        <button onclick="event.stopPropagation(); triggerResourceUpload('<%= secId %>')" class="btn-add-ghost !border-blue-500/30 !text-blue-400 hover:!bg-blue-500/10">
                                             <i class="fas fa-file-pdf mr-2"></i> Append Resource
                                         </button>
                                     </div>
@@ -342,6 +374,25 @@
                 });
                 if ((await res.json()).success) location.reload();
             } catch (e) { console.error(e); }
+        }
+
+        async function deleteLecture(sectionId, lectureId, title) {
+            if (!confirm(`Are you sure you want to permanently delete "${title}"? This will also purge the video file from the cloud.`)) return;
+            
+            try {
+                const res = await fetch(`/api/teacher/courses/${courseId}/sections/${sectionId}/lectures/${lectureId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Purge failed');
+                }
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         function triggerUpload(sid, lid) {
@@ -471,6 +522,14 @@
                 });
                 if ((await res.json()).success) location.reload();
             } catch (e) { console.error(e); }
+        }
+
+        // UI Logic
+        function toggleSectionCollapse(header, sectionId) {
+            const sectionBox = header.closest('.section-box');
+            if (sectionBox) {
+                sectionBox.classList.toggle('section-collapsed');
+            }
         }
 
         // Initialize UI Systems
