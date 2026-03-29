@@ -17,7 +17,7 @@ class EnterpriseUploadController {
     }
 
     this.s3Client = new S3Client(config);
-    this.bucketName = process.env.S3_BUCKET_NAME || 'video-course-bucket-047ad47c';
+    this.bucketName = process.env.S3_BUCKET_NAME || 'video-course-app-video-bucket-prod-6m5k2til';
   }
 
   async getUploadStats(req, res) {
@@ -197,7 +197,7 @@ param(
 )
 
 # Enterprise configuration
-$S3_BUCKET = "video-course-bucket-047ad47c"
+$S3_BUCKET = "video-course-app-video-bucket-prod-6m5k2til"
 $S3_PREFIX = "videos/$CourseName/"
 $LOCAL_PATH = Get-Location
 $LOG_FILE = "enterprise-upload-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
@@ -405,7 +405,7 @@ Write-EnterpriseLog "🎉 Enterprise Upload Process Completed" "SUCCESS"`;
 
 COURSE_NAME="{{courseName}}"
 PARALLEL_UPLOADS={{parallelUploads}}
-S3_BUCKET="video-course-bucket-047ad47c"
+S3_BUCKET="video-course-app-video-bucket-prod-6m5k2til"
 S3_PREFIX="videos/$COURSE_NAME/"
 LOCAL_PATH="$(pwd)"
 LOG_FILE="enterprise-upload-$(date +%Y%m%d-%H%M%S).log"
