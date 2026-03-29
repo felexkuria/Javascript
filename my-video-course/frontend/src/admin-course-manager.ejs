@@ -118,19 +118,20 @@
 
         <!-- Main Content -->
         <main class="flex-grow p-10 lg:p-16">
-            <header class="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">
+            <!-- Hero Section / Sticky Command Bar -->
+            <header class="sticky top-16 z-30 bg-[#001E2B]/90 backdrop-blur-xl -mx-4 px-4 lg:-mx-12 lg:px-12 py-8 mb-12 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-8 transition-all">
                 <div>
-                    <div class="flex items-center gap-4 mb-4">
-                        <span class="px-4 py-1.5 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-[0.3em] rounded-full border border-[#00ED64]/20">Global Governance</span>
-                        <div class="h-px w-16 bg-white/5"></div>
+                    <div class="flex items-center gap-4 mb-3">
+                        <span class="px-4 py-1 bg-[#00ED64]/10 text-[#00ED64] text-[9px] font-black uppercase tracking-[0.3em] rounded-full border border-[#00ED64]/20">Global Governance</span>
+                        <div class="h-px w-12 bg-white/5"></div>
                     </div>
-                    <h1 class="text-6xl font-black tracking-tighter text-white">Course <span class="text-[#00ED64]">Orchestrator</span></h1>
-                    <p class="text-gray-400 text-lg font-medium mt-2">Provision and manage high-fidelity engineering curricula.</p>
+                    <h1 class="text-4xl font-black tracking-tighter text-white">Course <span class="text-[#00ED64]">Orchestrator</span></h1>
                 </div>
-                <button onclick="showCreateModal()" class="btn-atlas-action px-8 py-4 uppercase tracking-widest text-xs flex items-center gap-2">
+                <button onclick="showCreateModal()" class="btn-atlas-action px-8 py-4 uppercase tracking-widest text-[10px] flex items-center gap-2">
                     <i class="fas fa-plus"></i> Initialize New Track
                 </button>
             </header>
+
 
             <!-- Stats Ribbon -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
