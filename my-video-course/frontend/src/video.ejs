@@ -251,16 +251,25 @@
                                     });
                                 }
                             %>
-                            <div class="section-group mb-8 <%= hasActiveVideo || sections.length === 1 ? 'expanded' : '' %>">
-                                <div class="px-2 mb-4 flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-1.5 h-1.5 rounded-full <%= hasActiveVideo ? 'bg-[#00ED64] shadow-[0_0_8px_#00ED64]' : 'bg-white/20' %>"></div>
-                                        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#9FB1AD]"><%= section.title %></h3>
+                            <div class="section-group mb-8 <%= hasActiveVideo || sections.length === 1 ? 'expanded' : '' %> shadow-lg rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl">
+                                <div class="px-5 py-4 flex items-center justify-between cursor-pointer border border-white/5 bg-[#001E2B]/40 backdrop-blur-xl hover:bg-white/[0.04] active:scale-[0.98] transition-all group/header" onclick="toggleSectionGroup(this)">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-2 h-2 rounded-full <%= hasActiveVideo ? 'bg-[#00ED64] shadow-[0_0_15px_#00ED64]' : 'bg-white/10' %> transition-all duration-500 group-hover/header:rotate-180"></div>
+                                        <div class="flex flex-col">
+                                            <span class="text-[7px] font-black text-[#00ED64]/40 uppercase tracking-[0.4em] mb-0.5">Cluster <%= (sIdx + 1).toString().padStart(2, '0') %></span>
+                                            <h3 class="text-[11px] font-black uppercase tracking-[0.3em] text-[#9FB1AD] group-hover/header:text-white transition-colors"><%= section.title %></h3>
+                                        </div>
                                     </div>
-                                    <span class="text-[9px] font-bold text-[#00ED64]"><%= sectionPercent %>% Complete</span>
+                                    <div class="flex items-center gap-5">
+                                        <div class="text-right">
+                                            <div class="text-[8px] font-black text-[#00ED64] tracking-[0.2em]"><%= sectionPercent %>%</div>
+                                            <div class="text-[7px] font-bold text-[#9FB1AD]/40 uppercase tracking-widest">Synced</div>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-[9px] text-[#9FB1AD]/30 accordion-chevron group-hover/header:text-white transition-all"></i>
+                                    </div>
                                 </div>
                                 
-                                <div class="space-y-3">
+                                <div class="section-lectures space-y-3 px-2 pt-4">
                                     <% section.lectures.forEach((lec, lIdx) => { 
                                         const lecId = lec.videoId || lec._id || lec.contentId || 'missing';
                                         const isActive = video && (video.videoId === lecId || video._id === lecId || video.id === lecId);
@@ -409,6 +418,14 @@
     <%- include('partials/video-scripts', { video, courseName, isLastVideo, isLastInChapter }) %>
 
     <script>
+
+        function toggleSectionGroup(header) {
+            const group = header.closest('.section-group');
+            if (group) {
+                group.classList.toggle('expanded');
+            }
+        }
+
         function switchLabTab(tabId) {
             document.querySelectorAll('.lab-tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');

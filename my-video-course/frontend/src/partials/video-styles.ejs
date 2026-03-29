@@ -309,18 +309,26 @@ pre:hover .copy-btn {
 /* Removed duplicate floating chatbot and trigger overrides to fall back to chatbot-styles.ejs premium layout */
 
 /* Premium Accordion Styling */
+.section-group {
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
 .section-lectures {
     max-height: 0;
     overflow: hidden;
     opacity: 0;
-    transform: translateY(-5px);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(-8px) scale(0.98);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
 }
 
 .section-group.expanded .section-lectures {
-    max-height: 1500px;
+    max-height: 2000px;
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    padding-bottom: 1.5rem;
 }
 
 .accordion-chevron {
