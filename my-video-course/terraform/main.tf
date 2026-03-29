@@ -99,6 +99,11 @@ module "security" {
     module.storage.dynamodb_gamification_arn,
     module.storage.dynamodb_users_arn
   ]
+  gemini_api_key = var.gemini_api_key
+  nova_api_key   = var.nova_api_key
+  mongodb_uri    = var.mongodb_uri
+  session_secret = var.session_secret
+  admin_key      = var.admin_key
 }
 
 module "storage" {

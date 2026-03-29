@@ -204,14 +204,14 @@ class AIController {
         const aiResponse = await aiService.generateChatResponse(message, context);
         res.json({ 
           response: aiResponse,
-          aiModel: 'Amazon Nova Pro'
+          aiModel: aiResponse.includes('David J. Malan') ? 'Static Fallback' : (process.env.GEMINI_API_KEY ? 'Gemini 1.5 Flash' : 'Amazon Nova Lite')
         });
       } catch (aiError) {
-        console.warn('Nova Pro service failed:', aiError.message);
+        console.warn('AI Service Failover Protocol Activated:', aiError.message);
         const offlineResponse = this.getOfflineResponse(message, courseName, videoTitle);
         res.json({ 
           response: offlineResponse,
-          aiModel: 'Nova Pro Fallback'
+          aiModel: 'Offline Fallback'
         });
       }
     } catch (error) {

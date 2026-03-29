@@ -42,3 +42,33 @@ variable "create_app_secrets" {
 variable "app_secrets_id" {
   type = string
 }
+
+variable "gemini_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "nova_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "mongodb_uri" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "session_secret" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "admin_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}

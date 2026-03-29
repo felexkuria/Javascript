@@ -34,6 +34,7 @@ class AIService {
     
     // Initialize Gemini as fallback
     this.genAI = null;
+    this.geminiDisabled = false; // Proactive failover for leaked keys
     if (GoogleGenerativeAI && process.env.GEMINI_API_KEY) {
       try {
         this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -43,6 +44,18 @@ class AIService {
       }
     }
   }
+
+  async generateContent(prompt, options = {}) {
+    // Primary: Nova Lite (Stable for general generation)
+    // Fallback: Gemini 1.5 Flash
+    try {
+      return await this.generateWithNova(prompt, options.systemPrompt);
+    } catch (error) {
+      console.warn("Nova generation failed, falling back to Gemini:", error.message);
+      return await this.fallbackToGemini(prompt, { systemPrompt: options.systemPrompt });
+    }
+  }
+
    async generateWithNova(prompt, systemPrompt = "You are a helpful assistant.") {
     // 1. Check for custom Proxy Endpoint first (Premium High-Fidelity Flow)
     if (process.env.NOVA_ENDPOINT && process.env.NOVA_API_KEY && process.env.NOVA_API_KEY.includes('bedrock-api-key')) {
@@ -181,14 +194,18 @@ class AIService {
       context: context?.transcript ? context.transcript.slice(0, 1000) : '' 
     });
 
-    // 1. Primary Priority: Gemini 1.5 Flash
-    if (this.genAI) {
+    // 1. Primary Priority: Gemini 2.0 Flash
+    if (this.genAI && !this.geminiDisabled) {
       try {
-        const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         const result = await model.generateContent(`${system}\n\nUser: ${user}`);
         const response = await result.response;
         return response.text();
       } catch (geminiError) {
+        if (geminiError.message.includes('403') || geminiError.message.includes('leaked')) {
+          console.error("🚫 Gemini Key is LEAKED. Proactively disabling Gemini for this session.");
+          this.geminiDisabled = true;
+        }
         console.warn("⚠️ Gemini Primary Chat failed, failing over to Nova:", geminiError.message);
         // Fallthrough seamlessly to Nova
       }
@@ -209,11 +226,11 @@ class AIService {
     
     const { system, user } = promptManager.getPrompt('visual_reasoning', { title });
     
-    // In Phase 1: We use Gemini 1.1 Flash for visual summaries to keep it fast
+    // In Phase 1: We use Gemini 2.0 Flash for visual summaries
     try {
       if (!this.genAI) return "Vision AI not configured.";
       
-      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       
       // Prepare image parts (for now just the first 3 frames for key insights)
       const imageParts = await Promise.all(previews.slice(0, 3).map(async (url) => {
@@ -306,18 +323,21 @@ class AIService {
   }
 
   async fallbackToGemini(prompt, context) {
-    if (!this.genAI) {
+    if (!this.genAI || this.geminiDisabled) {
       return this.staticFallback(prompt, context);
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const fullPrompt = `${context.systemPrompt || ''}\n\nPrompt: ${prompt}`;
       
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
       return response.text();
     } catch (error) {
+      if (error.message.includes('403') || error.message.includes('leaked')) {
+        this.geminiDisabled = true;
+      }
       console.error('Gemini fallback failed:', error);
       return this.staticFallback(prompt, context);
     }

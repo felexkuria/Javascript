@@ -13,6 +13,18 @@ resource "aws_secretsmanager_secret" "app" {
   }
 }
 
+resource "aws_secretsmanager_secret_version" "app" {
+  count         = var.create_app_secrets ? 1 : 0
+  secret_id     = aws_secretsmanager_secret.app[0].id
+  secret_string = jsonencode({
+    GEMINI_API_KEY  = var.gemini_api_key
+    NOVA_API_KEY    = var.nova_api_key
+    MONGODB_URI     = var.mongodb_uri
+    SESSION_SECRET  = var.session_secret
+    ADMIN_KEY       = var.admin_key
+  })
+}
+
 # Security Groups
 resource "aws_security_group" "alb_new" {
   count       = var.create_security_groups ? 1 : 0
