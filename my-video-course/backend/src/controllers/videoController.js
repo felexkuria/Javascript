@@ -319,9 +319,12 @@ exports.markVideoWatchedEnhanced = async (req, res) => {
       const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
       
       // Points only awarded on FIRST watch of this specific video
+      let awardedPoints = 0;
       if (!gamificationData.userStats.videosWatched[videoId]) {
-        // Award Base Points (10)
-        gamificationData.userStats.totalPoints += 10;
+        // Award Base Points (100)
+        const baseXP = 100;
+        gamificationData.userStats.totalPoints += baseXP;
+        awardedPoints += baseXP;
         gamificationData.userStats.videosWatched[videoId] = true;
         
         // Calculate Achievements
@@ -336,15 +339,23 @@ exports.markVideoWatchedEnhanced = async (req, res) => {
           if (!gamificationData.achievements.find(a => a.id === achievement.id)) {
             gamificationData.achievements.push({ ...achievement, unlockedAt: new Date().toISOString() });
             gamificationData.userStats.totalPoints += achievement.points;
+            awardedPoints += achievement.points;
           }
         });
         
         // PERSIST with schema enforcement
         await dynamoVideoService.updateUserGamificationData(userId, gamificationData);
       }
-    }
 
-    res.json({ success, message: success ? 'Video marked as watched' : 'Failed' });
+      res.json({ 
+        success, 
+        pointsAwarded: awardedPoints, 
+        totalPoints: gamificationData.userStats.totalPoints,
+        message: 'Video marked as watched' 
+      });
+    } else {
+      res.json({ success, message: 'Failed to mark watched' });
+    }
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

@@ -38,8 +38,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 markBtn.innerHTML = '<i class="fas fa-check-double text-[#00ED64]"></i> COMPLETED';
                 markBtn.classList.add('opacity-50');
                 
-                // 🚀 XP Velocity Pop & Confetti!
-                window.rewardXP(100);
+                // 🚀 XP Velocity Pop & Confetti! (Synced with Backend)
+                const points = data.pointsAwarded || 0;
+                if (points > 0) {
+                    window.rewardXP(points);
+                } else {
+                    // Just show hint if already watched
+                    window.showAtlasHint?.('VIDEO SYNCED TO CURRICULUM');
+                }
             }
             
             if (window.gamificationSystem) {
