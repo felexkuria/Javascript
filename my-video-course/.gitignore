@@ -27,6 +27,7 @@ terraform/terraform.tfvars
 terraform/terraform.tfvars.example
 terraform/terraform.tfvars*
 *.tfplan
+tfplan
 *.tfstate*
 
 # Logs

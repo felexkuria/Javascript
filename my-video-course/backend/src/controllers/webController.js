@@ -157,7 +157,10 @@ class WebController {
       ) || videos[0];
 
       if (!video) {
-        return res.status(404).render('error', { message: 'Video not found in this course' });
+        return res.status(404).render('error', { 
+          message: `Video "${videoId}" not found in curriculum for course "${courseName}"`, 
+          details: 'The system attempted to locate the media asset in DynamoDB but the reference is missing or its course mapping is invalid.' 
+        });
       }
 
       // SOTA Smart Curriculum Engine

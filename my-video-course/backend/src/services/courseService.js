@@ -21,8 +21,7 @@ class CourseService {
         videoCount: c.videos?.length || 0,
         watchedVideos: c.videos?.filter(v => v.watched).length || 0,
         completionPercentage: c.videos?.length > 0 ? 
-          Math.round((c.videos.filter(v => v.watched).length / c.videos.length) * 100) : 0,
-        isMongo: false
+          Math.round((c.videos.filter(v => v.watched).length / c.videos.length) * 100) : 0
       }));
 
       return courses;

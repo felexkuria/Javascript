@@ -61,8 +61,13 @@ class S3VideoService {
         Key: key.trim()
       };
 
-      if (key.toLowerCase().endsWith('.pdf')) {
+      const ext = key.toLowerCase().split('.').pop();
+      if (ext === 'pdf') {
         commandParams.ResponseContentDisposition = 'inline';
+        commandParams.ResponseContentType = 'application/pdf';
+      } else if (['mp4', 'mov', 'webm', 'm4v'].includes(ext)) {
+        commandParams.ResponseContentDisposition = 'inline';
+        commandParams.ResponseContentType = ext === 'webm' ? 'video/webm' : 'video/mp4';
       }
 
       const command = new GetObjectCommand(commandParams);
