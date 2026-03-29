@@ -1,10 +1,23 @@
-const dynamoVideoService = require('../services/dynamoVideoService');
+// 🛰️ SOTA: Dynamic Environment Injection
+try { require('dotenv').config(); } catch (e) { /* silent fail */ }
+
 const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 
 class EnterpriseUploadController {
   constructor() {
-    this.s3Client = new S3Client({ region: 'us-east-1' });
-    this.bucketName = 'video-course-bucket-047ad47c';
+    const config = {
+      region: process.env.AWS_REGION || 'us-east-1',
+    };
+
+    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+      config.credentials = {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      };
+    }
+
+    this.s3Client = new S3Client(config);
+    this.bucketName = process.env.S3_BUCKET_NAME || 'video-course-bucket-047ad47c';
   }
 
   async getUploadStats(req, res) {

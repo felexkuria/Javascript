@@ -8,7 +8,14 @@ const s3Utils = require('../../utils/s3Utils');
 
 
 const router = express.Router();
-const s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
+const s3Config = { region: process.env.AWS_REGION || 'us-east-1' };
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+  s3Config.credentials = {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  };
+}
+const s3 = new S3Client(s3Config);
 
 // Configure multer for memory storage
 const upload = multer({ 

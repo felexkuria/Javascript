@@ -1,4 +1,8 @@
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+// 🛰️ SOTA: Dynamic Environment Injection
+// Load dotenv to support standalone script usage (test_signer.js, migration scripts)
+try { require('dotenv').config(); } catch (e) { /* silent fail if not installed */ }
+
+const { S3Client, PutObjectCommand, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 /**
@@ -7,12 +11,20 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
  */
 class S3Signer {
   constructor() {
-    this.client = new S3Client({
-      region: process.env.AWS_REGION || 'us-east-1'
-      // 🛡️ SOTA: Default Provider Chain
-      // Removing explicit mapping to allow the SDK to lazily resolve credentials
-      // from process.env, which eliminates race conditions with dotenv.
-    });
+    const config = {
+      region: process.env.AWS_REGION || 'us-east-1',
+      // Maximize resilience: Only provide credentials if they are non-empty strings.
+      // This prevents "Resolved credential object is not valid" (AWS SDK v3 error).
+    };
+
+    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+      config.credentials = {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      };
+    }
+
+    this.client = new S3Client(config);
   }
 
   /**

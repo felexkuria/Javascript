@@ -1,15 +1,24 @@
+// 🛰️ SOTA: Dynamic Environment Injection
+// Load dotenv to support standalone script usage (test_signer.js, migration scripts)
+try { require('dotenv').config(); } catch (e) { /* silent fail if not installed */ }
+
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 class S3VideoService {
   constructor() {
-    this.s3 = new S3Client({ 
+    const config = {
       region: process.env.AWS_REGION || 'us-east-1',
-      credentials: {
+    };
+
+    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+      config.credentials = {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-      }
-    });
+      };
+    }
+
+    this.s3 = new S3Client(config);
     this.bucketName = process.env.S3_BUCKET_NAME || 'video-course-app-video-bucket-prod-6m5k2til';
   }
 
