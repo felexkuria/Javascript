@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function markVideoAsWatched() {
-        fetch('/api/mark-watched', {
+        return fetch('/api/mark-watched', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ videoId, courseName })
@@ -50,6 +50,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     isLastInChapter: isLastInChapterVal
                 });
             }
+
+            // Check for certification eligibility
+            try {
+                const nodes = document.querySelectorAll('.curriculum-node');
+                const watchedNodes = document.querySelectorAll('.curriculum-node .fa-check, .curriculum-node.active');
+                if (watchedNodes.length >= nodes.length) {
+                     document.getElementById('claimCertificateBanner')?.classList.remove('hidden');
+                }
+            } catch (e) {}
         })
         .catch(error => console.error('Error:', error));
     }
@@ -262,6 +271,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (messages) messages.scrollTop = messages.scrollHeight;
                 document.getElementById('floating-chat-input')?.focus();
             }, 100);
+        }
+        
+        // Contextual AI Loads
+        if (tabId === 'quiz' && typeof loadQuiz === 'function') loadQuiz();
+        if (tabId === 'lab' && typeof loadLab === 'function') loadLab();
+        if (tabId === 'notes') {
+            if (typeof loadStudentNotes === 'function') loadStudentNotes();
+            document.getElementById('studentNotes')?.focus();
         }
     };
 
@@ -529,13 +546,256 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-load on boot
     loadStudentNotes();
 
-    // Enhance Tab Switch to trigger load
-    const originalSwitch = window.switchLabTab;
-    window.switchLabTab = function(tabId) {
-        originalSwitch(tabId);
-        if (tabId === 'notes') {
-            loadStudentNotes();
-            notesArea?.focus();
+    // --- ASSESSMENT & LAB ORCHESTRATION ---
+    async function loadQuiz() {
+        const container = document.getElementById('quiz-container');
+        if (!container) return;
+        
+        try {
+            const response = await fetch(`/api/quizzes/${videoId}`);
+            const data = await response.json();
+            
+            if (data.success && data.quiz && data.quiz.length > 0) {
+                renderQuiz(data.quiz);
+            } else {
+                container.innerHTML = `
+                    <div class="py-20 text-center opacity-40">
+                        <i class="fas fa-satellite-dish text-2xl mb-4"></i>
+                        <p class="text-[10px] font-black uppercase tracking-widest">Assessment Protocol Pending Ingestion</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            container.innerHTML = `<p class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Engine Failure: Assessment Load Aborted</p>`;
+        }
+    }
+
+    async function loadLab() {
+        const container = document.getElementById('lab-container');
+        if (!container) return;
+        
+        try {
+            const response = await fetch(`/api/ai/lab/${encodeURIComponent(courseName)}/${videoId}`);
+            const data = await response.json();
+            
+            if (data.success && data.lab) {
+                renderLab(data.lab);
+            } else {
+                container.innerHTML = `
+                    <div class="py-20 text-center opacity-40">
+                        <i class="fas fa-terminal text-2xl mb-4"></i>
+                        <p class="text-[10px] font-black uppercase tracking-widest">Lab Environment Pending Provisioning</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            container.innerHTML = `<p class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Engine Failure: Lab Provisioning Timeout</p>`;
+        }
+    }
+
+    function renderQuiz(questions) {
+        const container = document.getElementById('quiz-container');
+        let score = 0;
+
+        function showQuestion(idx) {
+            const q = questions[idx];
+            container.innerHTML = `
+                <div class="px-2">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em] bg-[#00ED64]/10 border border-[#00ED64]/20 px-3 py-1 rounded-md">Step ${idx + 1}/${questions.length}</div>
+                        <div class="h-px flex-1 bg-white/5"></div>
+                    </div>
+                    <h3 class="text-lg font-black text-white leading-tight mb-8">${q.question}</h3>
+                    <div class="space-y-4 mb-10">
+                        ${q.options.map((opt, i) => `
+                            <button onclick="handleQuizAnswer(${i}, ${idx})" class="quiz-option-btn w-full text-left p-5 glass border border-white/5 rounded-2xl hover:bg-white/5 hover:border-[#00ED64]/30 transition-all flex items-center gap-4 group">
+                                <div class="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center text-[10px] font-black group-hover:bg-[#00ED64] group-hover:text-[#001E2B] transition-all">${String.fromCharCode(65 + i)}</div>
+                                <span class="text-[13px] font-bold text-white/80 group-hover:text-white transition-all">${opt}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            window.handleQuizAnswer = (selectedIdx, currentIdx) => {
+                const q = questions[currentIdx];
+                const isCorrect = selectedIdx === q.correct;
+                if (isCorrect) score++;
+                
+                const optionBtns = document.querySelectorAll('.quiz-option-btn');
+                optionBtns.forEach((btn, i) => {
+                    btn.disabled = true;
+                    if (i === q.correct) btn.classList.add('border-[#00ED64]/50', 'bg-[#00ED64]/10');
+                    else if (i === selectedIdx && !isCorrect) btn.classList.add('border-red-500/50', 'bg-red-500/10');
+                });
+
+                const feedback = document.createElement('div');
+                feedback.className = `mt-6 p-6 rounded-2xl text-[12px] leading-relaxed animate-in fade-in duration-300 ${isCorrect ? 'bg-[#00ED64]/5 border border-[#00ED64]/20 text-[#00ED64]' : 'bg-red-500/5 border border-red-500/20 text-red-500'}`;
+                feedback.innerHTML = `<div class="font-black uppercase tracking-widest mb-2">${isCorrect ? '✅ Protocol Confirmed' : '❌ Validation Failure'}</div>${q.explanation}`;
+                container.querySelector('.px-2').appendChild(feedback);
+
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'btn-atlas btn-atlas-primary w-full mt-8 py-4';
+                nextBtn.innerText = currentIdx + 1 < questions.length ? 'NEXT STEP' : 'EXECUTE FINAL GRADE';
+                nextBtn.onclick = () => {
+                    if (currentIdx + 1 < questions.length) showQuestion(currentIdx + 1);
+                    else submitQuiz(score, questions.length);
+                };
+                container.querySelector('.px-2').appendChild(nextBtn);
+            };
+        }
+        showQuestion(0);
+    }
+
+    async function submitQuiz(score, total) {
+        const container = document.getElementById('quiz-container');
+        const percentage = Math.round((score / total) * 100);
+        
+        container.innerHTML = `
+            <div class="text-center py-20 animate-in zoom-in duration-500">
+                <div class="w-24 h-24 rounded-full bg-[#00ED64]/10 border border-[#00ED64]/30 flex items-center justify-center mx-auto mb-8">
+                    <span class="text-4xl font-black text-[#00ED64]">${percentage}%</span>
+                </div>
+                <h4 class="text-xl font-black text-white uppercase tracking-tight mb-2">${percentage >= 70 ? 'PROTOCOL ACHIEVED' : 'PROTOCOL SUB-OPTIMAL'}</h4>
+                <p class="text-[10px] font-black text-[#9FB1AD] uppercase tracking-[0.2em] mb-12">Grade: ${score}/${total} Vectors Verified</p>
+                <button onclick="loadQuiz()" class="btn-atlas border border-white/10 w-full py-4 text-[11px] font-black tracking-widest mb-4">RE-INITIALIZE ASSESSMENT</button>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/api/quizzes/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videoId, score, totalQuestions: total })
+            });
+            const data = await response.json();
+            if (data.success) {
+                const userPointsEl = document.getElementById('userPoints');
+                if (userPointsEl) userPointsEl.innerText = data.userStats.totalPoints;
+                window.showAtlasHint?.(`ASSESSMENT PERSISTED: +${percentage * 2} XP`);
+            }
+        } catch (e) { console.error('Grade sync error:', e); }
+    }
+
+    function renderLab(lab) {
+        const container = document.getElementById('lab-container');
+        container.innerHTML = `
+            <div class="px-2">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="technical-label text-[#00ED64]">Phase: Execution</span>
+                    <div class="h-px flex-1 bg-white/5"></div>
+                    <span class="technical-label opacity-40">${lab.difficulty}</span>
+                </div>
+                <h3 class="text-2xl font-black text-white tracking-tight mb-4">${lab.title}</h3>
+                <p class="text-[13px] text-[#9FB1AD] leading-relaxed mb-8">${lab.scenario}</p>
+                
+                <div class="atlas-card glass p-6 mb-8 border-l-4 border-[#00ED64]">
+                    <h4 class="text-[10px] font-black uppercase tracking-widest text-white mb-4">Tactical Objectives</h4>
+                    <ul class="space-y-3">
+                        ${lab.objectives.map(obj => `
+                            <li class="flex items-start gap-3 text-[12px] font-bold text-white/70">
+                                <i class="fas fa-dot-circle text-[#00ED64] mt-1 text-[8px]"></i>
+                                <span>${obj}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+
+                <div class="space-y-8 mb-12">
+                    <h4 class="text-[10px] font-black uppercase tracking-widest text-[#9FB1AD]">Execution Steps</h4>
+                    <div class="space-y-6">
+                        ${lab.steps.map((step, i) => `
+                            <div class="flex gap-4">
+                                <div class="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0 text-[9px] font-black text-[#9FB1AD]">${i + 1}</div>
+                                <p class="text-[12px] font-medium text-white/80">${step}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <button id="verifyLabBtn" onclick="completeLab('${lab.title}')" class="btn-atlas btn-atlas-primary w-full py-5 flex items-center justify-center gap-3 shadow-[0_4px_20px_rgba(0,237,100,0.15)]">
+                    <i class="fas fa-satellite-dish"></i> VERIFY DEPLOYMENT
+                </button>
+            </div>
+        `;
+    }
+
+    window.completeLab = async function(labId) {
+        const btn = document.getElementById('verifyLabBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> PROBING INFRASTRUCTURE...';
+        
+        try {
+            const response = await fetch('/api/quizzes/lab/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ labId, points: 200 })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                btn.innerHTML = '<i class="fas fa-check-double"></i> DEPLOYMENT VERIFIED';
+                btn.className = 'btn-atlas w-full py-5 flex items-center justify-center gap-3 bg-gradient-to-r from-[#00ED64] to-[#00A345] text-[#001E2B] rounded-2xl';
+                const userPointsEl = document.getElementById('userPoints');
+                if (userPointsEl) userPointsEl.innerText = data.userStats.totalPoints;
+                window.showAtlasHint?.('LAB COMPLETED: +200 XP');
+            }
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-satellite-dish"></i> RETRY VERIFICATION';
+        }
+    }
+
+    // --- ARCHITECT CERTIFICATION PROTOCOL ---
+    window.generateArchitectCertificate = async function() {
+        const btn = document.getElementById('claimCertBtn');
+        const originalHtml = btn.innerHTML;
+        
+        btn.disabled = true;
+        btn.innerHTML = `
+            <i class="fas fa-circle-notch fa-spin"></i>
+            <span>PROVISIONING CREDENTIALS...</span>
+        `;
+        
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch('/api/certificates/generate', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ courseId: courseName })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                btn.innerHTML = `
+                    <i class="fas fa-check-double"></i>
+                    <span>CERTIFICATE ISSUED</span>
+                `;
+                btn.className = 'w-full py-4 bg-[#E7EEEB] text-[#00684A] rounded-xl text-[11px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2';
+                
+                window.showAtlasHint?.('ARCHITECT CERTIFICATION SECURED: +500 XP');
+                
+                // Redirect to certificates page after delay
+                setTimeout(() => {
+                    window.location.href = '/certificates';
+                }, 2000);
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (err) {
+            console.error('Certification Error:', err);
+            btn.disabled = false;
+            btn.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>VERIFICATION FAILED</span>
+            `;
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+            }, 3000);
         }
     };
 
@@ -558,12 +818,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.toggleCurriculumSection = function(headerEl) {
         const groupEl = headerEl.closest('.section-group');
-        if (groupEl) {
-            groupEl.classList.toggle('expanded');
-        }
+        if (groupEl) groupEl.classList.toggle('expanded');
     };
 
-    // Final Theme Sync
+    // Final Theme Sync and Ingestion
     document.documentElement.classList.add('dark');
 });
 </script>

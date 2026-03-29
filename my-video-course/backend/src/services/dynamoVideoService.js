@@ -487,6 +487,23 @@ class DynamoVideoService {
     return data;
   }
 
+  async recordLabCompletion(userId, labId, points = 200) {
+    const data = await this.getUserGamificationData(userId);
+    data.userStats.totalPoints += points;
+    data.userStats.experiencePoints += points;
+    
+    data.achievements.push({
+      id: `lab_completed_${labId}_${Date.now()}`,
+      title: 'Architectural Deployment!',
+      description: 'Successfully executed a high-fidelity technical lab scenario.',
+      earnedAt: new Date().toISOString(),
+      points: points
+    });
+    
+    await this.updateUserGamificationData(userId, data);
+    return data;
+  }
+
 
   // Migrate data from localStorage to DynamoDB
   async migrateToDatabase() {

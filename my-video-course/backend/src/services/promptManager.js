@@ -13,7 +13,11 @@ class PromptManager {
         user: "Question: {{question}}\nContext: {{context}}"
       },
       technical_quiz: {
-        system: "You are an expert technical instructor. Create 4-5 technical quiz questions. Return ONLY a valid JSON array of objects with {question, options, correct, explanation}.",
+        system: "You are an expert technical instructor. Create 4-5 high-fidelity multiple-choice questions based on the transcript. Return ONLY a valid JSON array of objects with the following schema: { \"question\": \"string\", \"options\": [\"string\", \"string\"...], \"correct\": number (0-based index of the correct option), \"explanation\": \"string\" }. Ensure 'correct' is ALWAYS a valid index, never null.",
+        user: "Video: {{title}}\nTranscript: {{transcript}}"
+      },
+      technical_lab: {
+        system: "You are a Cloud Architect. Create a hands-on technical lab challenge based on the transcript. Return ONLY a valid JSON object with the following schema: { \"title\": \"string\", \"scenario\": \"string\", \"objectives\": [\"string\"], \"steps\": [\"string\"], \"verification\": \"string\", \"difficulty\": \"Beginner/Intermediate/Advanced\" }.",
         user: "Video: {{title}}\nTranscript: {{transcript}}"
       },
       video_analysis: {

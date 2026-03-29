@@ -234,6 +234,23 @@ class AIController {
 
     return `That's a thoughtful question about ${videoTitle || 'this topic'}! While I'm running in offline mode right now, I encourage you to break down the problem step by step.\n\nIn ${courseName?.includes('Terraform') ? 'Terraform and Infrastructure as Code' : 'DevOps'}, we always start with the fundamentals and build up. Don't be afraid to experiment in a safe environment - that's how we learn best!\n\nKeep exploring and asking great questions like this one! 🚀`;
   }
+
+  async getLab(req, res) {
+    try {
+      const { courseName, videoId } = req.params;
+      const labGeneratorService = require('../services/labGeneratorService');
+      const lab = await labGeneratorService.getStoredLab(decodeURIComponent(courseName), videoId);
+      
+      if (!lab) {
+        return res.status(404).json({ success: false, error: 'Lab not found' });
+      }
+      
+      res.json({ success: true, lab });
+    } catch (error) {
+      console.error('Error fetching lab:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new AIController();

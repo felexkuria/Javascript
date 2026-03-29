@@ -47,35 +47,43 @@ async function loadCertificates() {
     
     if (data.success && data.certificates.length > 0) {
       data.certificates.forEach(cert => {
-        const date = new Date(cert.issuedDate).toLocaleDateString('en-US', { 
+        const date = new Date(cert.issuedAt || cert.issuedDate).toLocaleDateString('en-US', { 
           month: 'long', day: 'numeric', year: 'numeric' 
         });
         
         grid.innerHTML += `
-          <div class="bg-white dark:bg-[#023430] rounded-3xl border border-gray-100 dark:border-[#133A41] overflow-hidden hover:shadow-[0_20px_40px_rgba(0,30,43,0.08)] transition-all duration-500 group">
-            <div class="p-8">
-              <div class="flex justify-between items-start mb-6">
-                <div class="w-14 h-14 bg-[#001E2B] rounded-2xl flex items-center justify-center text-[#00ED64] text-2xl shadow-lg">
+          <div class="bg-white dark:bg-[#023430] rounded-[32px] border border-gray-100 dark:border-[#133A41] overflow-hidden hover:shadow-[0_30px_60px_-12px_rgba(0,30,43,0.3)] transition-all duration-700 group relative">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#00ED64]/10 to-transparent rounded-full -mr-16 -mt-16 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+            
+            <div class="p-10 relative z-10">
+              <div class="flex justify-between items-start mb-10">
+                <div class="w-16 h-16 bg-[#001E2B] rounded-2xl flex items-center justify-center text-[#00ED64] text-3xl shadow-xl border border-[#00ED64]/20 group-hover:scale-110 transition-transform duration-500">
                   <i class="fas fa-certificate"></i>
                 </div>
-                <span class="inline-flex items-center px-3 py-1 bg-[#00ED64]/10 text-[#00684A] dark:text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full">
-                  <i class="fas fa-check-circle mr-1.5"></i> Verified
-                </span>
+                <div class="flex flex-col items-end gap-2">
+                    <span class="inline-flex items-center px-4 py-1.5 bg-[#00ED64]/10 text-[#00ED64] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#00ED64]/20">
+                        <i class="fas fa-shield-alt mr-2"></i> ARCHITECT VERIFIED
+                    </span>
+                    <span class="text-[9px] font-mono text-gray-500 dark:text-[#9FB1AD] uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-opacity">AUTH: ${cert.certificateId.split('-')[0]}</span>
+                </div>
               </div>
               
-              <h3 class="text-lg font-black text-[#001E2B] dark:text-[#E7EEEB] mb-1 group-hover:text-[#00684A] dark:group-hover:text-[#00ED64] transition-colors">
+              <h3 class="text-2xl font-black text-[#001E2B] dark:text-[#E7EEEB] mb-2 leading-tight group-hover:text-[#00ED64] transition-colors duration-500">
                 ${cert.courseName}
               </h3>
-              <p class="text-xs text-gray-400 font-bold mb-6">Issued on ${date}</p>
+              <p class="text-xs text-gray-400 dark:text-[#9FB1AD] font-bold tracking-wide mb-10 uppercase">Ingested on ${date}</p>
               
-              <div class="flex items-center justify-between pt-6 border-t border-gray-50 dark:border-[#133A41]">
-                <span class="text-[10px] font-mono text-gray-400 uppercase tracking-tighter">ID: ${cert.certificateId.split('-')[0]}...</span>
-                <a href="${cert.s3Url}" target="_blank" class="flex items-center gap-2 text-sm font-black text-[#00684A] dark:text-[#00ED64] hover:gap-3 transition-all">
-                  Download PDF <i class="fas fa-download"></i>
+              <div class="flex items-center justify-between pt-8 border-t border-gray-100 dark:border-white/5">
+                <div class="flex -space-x-2">
+                    <div class="w-6 h-6 rounded-full bg-[#00ED64] border-2 border-[#023430] flex items-center justify-center"><i class="fas fa-check text-[8px] text-[#001E2B]"></i></div>
+                    <div class="w-6 h-6 rounded-full bg-[#00684A] border-2 border-[#023430]"></div>
+                </div>
+                <a href="${cert.s3Url}" target="_blank" class="flex items-center gap-3 text-[11px] font-black text-[#00684A] dark:text-[#00ED64] uppercase tracking-widest hover:gap-5 transition-all">
+                  DOWNLOAD CREDENTIALS <i class="fas fa-arrow-right"></i>
                 </a>
               </div>
             </div>
-            <div class="h-1.5 w-full bg-[#00ED64]"></div>
+            <div class="h-1.5 w-0 group-hover:w-full bg-[#00ED64] transition-all duration-700"></div>
           </div>
         `;
       });
