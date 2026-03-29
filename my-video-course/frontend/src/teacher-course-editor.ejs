@@ -378,9 +378,12 @@
                     })
                 });
 
-                if (!preRes.ok) throw new Error(`Signing Failed: HTTP ${preRes.status}`);
+                if (!preRes.ok) {
+                    const errData = await preRes.json().catch(() => ({}));
+                    throw new Error(`Signing Failed: ${errData.error || 'Server Error ' + preRes.status}`);
+                }
                 const { url, key } = await preRes.json();
-                if (!url) throw new Error('No secure upload link returned from server');
+                if (!url) throw new Error('Security Protocol Error: No secure link provisioned');
 
                 // 2. Direct S3 Upload
                 const xhr = new XMLHttpRequest();
@@ -391,7 +394,7 @@
                             if (progress) progress.querySelector('div').style.width = pct + '%';
                         }
                     };
-                    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error('Cloud Stream Interrupted'));
+                    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error(`S3 Stream Failure: ${xhr.status}`));
                     xhr.onerror = () => reject(new Error('Network Interruption'));
                     xhr.open('PUT', url, true);
                     xhr.setRequestHeader('Content-Type', file.type);
@@ -420,18 +423,21 @@
                             </div>`;
                     }
                     if (progress) progress.style.display = 'none';
+                    window.showAtlasHint?.('INGESTED: Curriculum Sync Complete');
                 } else {
-                    throw new Error('Curriculum sync failed');
+                    const errData = await compRes.json().catch(() => ({}));
+                    throw new Error(errData.message || 'Atomic sync failed');
                 }
 
             } catch (err) {
                 console.error('Upload Failure:', err);
-                alert('INGESTION ERROR: ' + err.message);
-                if (statusContainer) {
-                    statusContainer.innerHTML = `
-                        <button class="btn-add-ghost py-2 !text-[9px]" onclick="triggerUpload('${sid}', '${lid}', '${title.replace(/'/g, "\\'")}')">
-                            <i class="fas fa-cloud-upload-alt mr-2"></i> Retry Deployment
-                        </button>`;
+                const statusLabel = document.getElementById(`status-container-${lid}`);
+                if (statusLabel) {
+                    statusLabel.innerHTML = `
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="text-[8px] font-bold text-red-500 uppercase">${err.message.substring(0, 30)}...</span>
+                            <button class="text-[9px] font-black text-[#00ED64] underline uppercase" onclick="triggerUpload('${sid}', '${lid}')">Retry</button>
+                        </div>`;
                 }
                 if (progress) progress.style.display = 'none';
             }

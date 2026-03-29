@@ -45,8 +45,13 @@ class S3Signer {
       const url = await getSignedUrl(this.client, command, { expiresIn });
       return { success: true, url, key };
     } catch (error) {
-      console.error('❌ Presigned URL Generation Failed:', error.message);
-      return { success: false, error: error.message };
+      const errorDetail = {
+        message: error.message,
+        code: error.name || error.code || 'UnknownError',
+        requestId: error.$metadata?.requestId || 'N/A'
+      };
+      console.error('❌ Presigned URL Generation Failed:', JSON.stringify(errorDetail, null, 2));
+      return { success: false, error: `${errorDetail.code}: ${errorDetail.message} (Req: ${errorDetail.requestId})` };
     }
   }
 }

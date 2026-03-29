@@ -140,24 +140,23 @@ router.post('/request-presigned-url', async (req, res) => {
     
     // 🔍 Intelligent Extension Detection
     let ext = '.mp4';
-    if (contentType === 'application/pdf') {
-      ext = '.pdf';
-    } else if (contentType === 'text/vtt' || videoTitle.toLowerCase().endsWith('.vtt')) {
-      ext = '.vtt';
-    } else if (contentType === 'application/x-subrip' || videoTitle.toLowerCase().endsWith('.srt')) {
-      ext = '.srt';
-    } else if (contentType.startsWith('video/')) {
-      ext = '.mp4';
-    } else {
-      // Final fallback: use the extension from the original title if available
-      const lastDot = videoTitle.lastIndexOf('.');
-      if (lastDot > 0) {
-        ext = videoTitle.substring(lastDot).toLowerCase();
-      }
+    const mimeMap = {
+      'application/pdf': '.pdf',
+      'text/vtt': '.vtt',
+      'application/x-subrip': '.srt',
+      'video/mp4': '.mp4',
+      'video/quicktime': '.mov',
+      'video/x-matroska': '.mkv'
+    };
+    
+    if (mimeMap[contentType]) {
+      ext = mimeMap[contentType];
+    } else if (videoTitle.toLowerCase().includes('.')) {
+      ext = videoTitle.substring(videoTitle.lastIndexOf('.')).toLowerCase();
     }
 
     const videoKey = `videos/${safeCourse}/${Date.now()}-${safeTitle}${ext}`;
-    const result = await s3Signer.getPresignedUploadUrl(videoKey, contentType);
+    const result = await s3Signer.getPresignedUploadUrl(videoKey, contentType || 'application/octet-stream');
 
     if (result.success) {
       res.json({ success: true, url: result.url, key: result.key });
