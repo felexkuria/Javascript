@@ -106,7 +106,9 @@ app.get('/videos/:courseName/file/:id', sessionAuth, (req, res) => webController
 app.get('/admin/super', sessionAuth, (req, res) => adminController.renderSuperDashboard(req, res));
 app.get('/admin/course-manager', sessionAuth, (req, res) => adminController.renderCourseManager(req, res));
 app.get('/admin/teacher-requests', sessionAuth, (req, res) => adminController.renderTeacherRequests(req, res));
+app.get('/admin/analytics', sessionAuth, (req, res) => adminController.renderAnalytics(req, res));
 app.get('/admin/tools', sessionAuth, (req, res) => adminController.renderAdminPanel(req, res));
+
 app.post('/api/admin/users/:id/deactivate', sessionAuth, (req, res) => adminController.deactivateUser(req, res));
 app.post('/api/admin/users/:id/reactivate', sessionAuth, (req, res) => adminController.reactivateUser(req, res));
 app.delete('/api/admin/courses/:id', sessionAuth, (req, res) => adminController.deleteCourse(req, res));

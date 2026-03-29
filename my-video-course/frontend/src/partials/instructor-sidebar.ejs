@@ -16,10 +16,11 @@
     <nav class="flex-1 px-4 space-y-1.5 overflow-y-auto">
         <div class="px-5 py-3 text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] mb-2">Command Center</div>
         
-        <a href="/teacher/dashboard" class="flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20 shadow-lg shadow-[#00ED64]/5' : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent' %>">
-            <i class="fas fa-chart-line w-5 group-hover:text-[#00ED64] transition-colors"></i> 
-            <span class="tracking-tight">Analytics Bay</span>
+        <a href="/admin/analytics" class="flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group <%= typeof activePage !== 'undefined' && activePage === 'analytics' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20 shadow-lg shadow-[#00ED64]/5' : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent' %>">
+            <i class="fas fa-chart-pie w-5 group-hover:text-[#00ED64] transition-colors"></i> 
+            <span class="tracking-tight">Platform Telemetry</span>
         </a>
+
         
         <a href="/admin/course-manager" class="flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20 shadow-lg shadow-[#00ED64]/5' : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent' %>">
             <i class="fas fa-layer-group w-5 group-hover:text-[#00ED64] transition-colors"></i> 

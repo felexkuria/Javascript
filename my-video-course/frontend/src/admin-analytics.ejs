@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlas Telemetry — Platform Performance</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'mongo-green': '#00ED64',
+              'mongo-slate': '#001E2B',
+              'mongo-forest': '#00684A',
+              'atlas-blue': '#016BF8'
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body { background: #001E2B; color: #E8EDEB; font-family: 'Inter', sans-serif; }
+        .atlas-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .atlas-card:hover { border-color: rgba(0, 237, 100, 0.3); transform: translateY(-4px); }
+        .premium-title {
+            background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body class="bg-mongo-slate">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <%- include('partials/instructor-sidebar', { activePage: 'analytics' }) %>
+
+        <main class="flex-1 p-8 md:p-12 overflow-y-auto">
+            <!-- Header -->
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="w-2 h-2 rounded-full bg-mongo-green animate-pulse"></span>
+                        <span class="text-[10px] font-black text-mongo-green uppercase tracking-widest leading-none">Telemetry Node: Active</span>
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">Platform <span class="premium-title">Telemetry</span></h1>
+                </div>
+                <!-- Controls -->
+                <div class="flex gap-4">
+                    <select id="timeRange" class="atlas-card px-4 py-2 text-xs font-bold text-gray-400 bg-transparent outline-none focus:border-mongo-green">
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d">Last 30 Days</option>
+                    </select>
+                    <button onclick="refreshData()" class="p-3 atlas-card hover:bg-white/5 transition-all">
+                        <i class="fas fa-sync-alt text-mongo-green"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- KPI Cards -->
+            <div id="kpi-grid" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                <!-- Skeleton Loader -->
+                <div class="atlas-card p-6 h-32 loading-shimmer"></div>
+                <div class="atlas-card p-6 h-32 loading-shimmer"></div>
+                <div class="atlas-card p-6 h-32 loading-shimmer"></div>
+                <div class="atlas-card p-6 h-32 loading-shimmer"></div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                <!-- Engagement Trend -->
+                <div class="atlas-card p-8">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-sm font-black uppercase tracking-widest text-[#9FB1AD]">System XP Velocity</h3>
+                        <i class="fas fa-chart-line text-mongo-green opacity-30"></i>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Distribution -->
+                <div class="atlas-card p-8">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-sm font-black uppercase tracking-widest text-[#9FB1AD]">Curriculum Distribution</h3>
+                        <i class="fas fa-cubes text-mongo-green opacity-30"></i>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Performance Table -->
+            <section class="atlas-card p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="h-8 w-1.5 bg-mongo-green rounded-full"></div>
+                        <h2 class="text-xl font-black tracking-tight text-white">Resource <span class="premium-title">Performance Matrix</span></h2>
+                    </div>
+                </div>
+                <div id="course-table" class="space-y-4">
+                    <!-- Table content will be injected -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let growthChart, categoryChart;
+
+        async function refreshData() {
+            try {
+                const response = await fetch('/api/courses/analytics?timeRange=' + document.getElementById('timeRange').value);
+                const result = await response.json();
+                if (result.success) {
+                    updateDashboard(result.data);
+                }
+            } catch (err) {
+                console.error('Failed to pull telemetry:', err);
+            }
+        }
+
+        function updateDashboard(data) {
+            // 1. Update KPI Cards
+            const kpis = [
+                { label: 'Platform Engineers', value: data.metrics.totalStudents, icon: 'fa-users', color: 'text-atlas-blue' },
+                { label: 'Deployed Repository', value: data.metrics.totalCourses, icon: 'fa-database', color: 'text-mongo-green' },
+                { label: 'Learning Assets', value: data.metrics.totalVideos, icon: 'fa-film', color: 'text-purple-400' },
+                { label: 'Aggregate System XP', value: data.metrics.totalPoints.toLocaleString(), icon: 'fa-rocket', color: 'text-orange-400' }
+            ];
+
+            const kpiGrid = document.getElementById('kpi-grid');
+            kpiGrid.innerHTML = kpis.map(kpi => `
+                <div class="atlas-card p-6 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-[10px] font-black text-[#9FB1AD] uppercase tracking-widest">${kpi.label}</p>
+                        <i class="fas ${kpi.icon} ${kpi.color} opacity-30 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="text-3xl font-black text-white group-hover:scale-105 transition-transform origin-left">
+                        ${kpi.value}
+                    </div>
+                </div>
+            `).join('');
+
+            // 2. Render Growth Chart
+            const trendData = data.charts.engagementTrend;
+            if (growthChart) growthChart.destroy();
+            growthChart = new Chart(document.getElementById('growthChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: trendData.labels,
+                    datasets: [{
+                        label: 'XP Awarded',
+                        data: trendData.data,
+                        borderColor: '#00ED64',
+                        backgroundColor: 'rgba(0, 237, 100, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#00ED64'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { grid: { display: false }, ticks: { color: '#9FB1AD', font: { weight: 'bold', size: 10 } } }
+                    }
+                }
+            });
+
+            // 3. Render Distribution Chart
+            const catData = data.charts.curriculumDistribution;
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(document.getElementById('categoryChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: catData.map(c => c.name),
+                    datasets: [{
+                        data: catData.map(c => c.count),
+                        backgroundColor: ['#00ED64', '#016BF8', '#FFA500', '#C12A2A', '#8E44AD'],
+                        borderWidth: 0,
+                        hoverOffset: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'right',
+                            labels: { color: '#E8EDEB', font: { size: 10, weight: 'bold' }, padding: 20 }
+                        }
+                    },
+                    cutout: '70'
+                }
+            });
+
+            // 4. Update Table
+            const topCourses = data.charts.topCourses;
+            document.getElementById('course-table').innerHTML = topCourses.map(course => `
+                <div class="flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-lg bg-mongo-slate border border-white/10 flex items-center justify-center text-mongo-green font-black">
+                            ${course.name.charAt(0)}
+                        </div>
+                        <div class="font-bold text-white">${course.name}</div>
+                    </div>
+                    <div class="flex items-center gap-8">
+                        <div class="text-right">
+                            <div class="text-[10px] font-black text-[#9FB1AD] uppercase tracking-widest">Active Engineers</div>
+                            <div class="font-black text-mongo-green">${course.students}</div>
+                        </div>
+                        <span class="px-2 py-1 bg-mongo-green/10 text-mongo-green text-[8px] font-black rounded border border-mongo-green/20 uppercase tracking-tighter tracking-widest">Trained</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initial Load
+        refreshData();
+        // Auto refresh every 5 minutes
+        setInterval(refreshData, 300000);
+    </script>
+</body>
+</html>
