@@ -431,3 +431,33 @@ pre:hover .copy-btn {
     color: rgba(255,255,255,0.1);
     font-size: 8px;
 }
+
+/* 🚀 XP Velocity Pop Celebration */
+@keyframes xpPop {
+    0% { transform: scale(1); filter: brightness(1); }
+    40% { transform: scale(1.4); filter: brightness(1.8) drop-shadow(0 0 15px var(--atlas-green)); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+
+.xp-pop {
+    animation: xpPop 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards !important;
+}
+
+.xp-increment-float {
+    position: absolute;
+    top: -20px;
+    right: -10px;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--atlas-green);
+    animation: floatUpFade 1.2s ease-out forwards;
+    pointer-events: none;
+    z-index: 100;
+}
+
+@keyframes floatUpFade {
+    0% { transform: translateY(0); opacity: 0; }
+    20% { transform: translateY(-10px); opacity: 1; }
+    100% { transform: translateY(-40px); opacity: 0; }
+}
+</style>

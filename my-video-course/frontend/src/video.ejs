@@ -13,6 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <!-- Celebration Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body class="dark bg-[#001E2B] font-sans antialiased text-[#E7EEEB] min-h-screen">
     <%- include('partials/header', { title: (video ? video.title : 'Lecture') + ' - ' + courseName, activePage: 'video' }) %>
@@ -46,7 +48,7 @@
                         </div>
                         <div>
                             <p class="technical-label">Velocity (XP)</p>
-                            <p id="userPoints" class="text-lg font-black text-white leading-none">0</p>
+                            <p id="userPoints" class="text-lg font-black text-white leading-none"><%= (typeof gamificationData !== 'undefined' && gamificationData.userStats) ? gamificationData.userStats.totalPoints : 0 %></p>
                         </div>
                     </div>
                     <div class="atlas-card glass px-8 py-4 flex items-center gap-5">
@@ -55,7 +57,7 @@
                         </div>
                         <div>
                             <p class="technical-label">Path Mastery</p>
-                            <p id="userStreak" class="text-lg font-black text-white leading-none">0 DAYS</p>
+                            <p id="userStreak" class="text-lg font-black text-white leading-none"><%= (typeof gamificationData !== 'undefined' && gamificationData.streakData) ? gamificationData.streakData.currentStreak : 0 %> DAYS</p>
                         </div>
                     </div>
                     <div class="ml-auto flex items-center gap-2">

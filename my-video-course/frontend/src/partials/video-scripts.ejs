@@ -37,6 +37,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (markBtn) {
                 markBtn.innerHTML = '<i class="fas fa-check-double text-[#00ED64]"></i> COMPLETED';
                 markBtn.classList.add('opacity-50');
+                
+                // 🚀 XP Velocity Pop & Confetti! (Synced with Backend)
+                const points = data.pointsAwarded || 0;
+                if (points > 0) {
+                    window.rewardXP(points);
+                } else {
+                    // Just show hint if already watched
+                    window.showAtlasHint?.('VIDEO SYNCED TO CURRICULUM');
+                }
             }
             
             if (window.gamificationSystem) {
@@ -153,12 +162,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     videoPlayer.requestFullscreen();
                     showKeyHint('Fullscreen');
+                    awardShortcutPoints('fullscreen');
                 }
                 break;
             case 'j':
                 e.preventDefault();
                 videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
                 showKeyHint('⏪ -10s');
+                awardShortcutPoints('seek_backward');
                 break;
             case 'k':
             case ' ':
@@ -170,14 +181,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     videoPlayer.pause();
                     showKeyHint('⏸️ Pause');
                 }
+                awardShortcutPoints('play_pause');
                 break;
             case 'l':
                 e.preventDefault();
                 videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 10);
                 showKeyHint('⏩ +10s');
+                awardShortcutPoints('seek_forward');
                 break;
         }
     });
+
+    async function awardShortcutPoints(action) {
+        try {
+            const response = await fetch('/api/gamification/keyboard-shortcut', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action })
+            });
+            const data = await response.json();
+            if (data.success && data.awarded) {
+                window.rewardXP(data.awarded);
+            }
+        } catch (e) { /* silent fail for shortcuts */ }
+    }
 
     if (videoPlayer) {
         videoPlayer.addEventListener('ended', markVideoAsWatched);
@@ -499,7 +526,59 @@ document.addEventListener('DOMContentLoaded', function() {
         if (popup && iconEl && titleEl && nameEl && pointsEl) {
             iconEl.textContent = icon; titleEl.textContent = title; nameEl.textContent = name; pointsEl.textContent = points;
             popup.classList.add('show');
+            
+            // Trigger celebration for achievements
+            if (points) window.rewardXP(parseInt(points));
+            
             setTimeout(() => { popup.classList.remove('show'); }, 4000);
+        }
+    };
+
+    // --- 🚀 XP Velocity Celebration Engine ---
+    window.triggerXPEffect = function(points) {
+        const xpCounter = document.getElementById('userPoints');
+        if (!xpCounter) return;
+
+        // 1. Full Screen Confetti
+        if (window.confetti) {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#00ED64', '#00684A', '#FFFFFF', '#00A345']
+            });
+            
+            // Side bursts for extra impact
+            setTimeout(() => {
+                confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#00ED64'] });
+                confetti({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#00ED64'] });
+            }, 250);
+        }
+
+        // 2. Velocity Pop Animation
+        xpCounter.classList.remove('xp-pop');
+        void xpCounter.offsetWidth; // Trigger reflow
+        xpCounter.classList.add('xp-pop');
+
+        // 3. Floating Increment Text
+        const floatingInc = document.createElement('div');
+        floatingInc.className = 'xp-increment-float';
+        floatingInc.innerText = `+${points} XP`;
+        xpCounter.parentElement.appendChild(floatingInc);
+        setTimeout(() => floatingInc.remove(), 1200);
+
+        // 4. Subtle Haptic/Hint
+        window.showAtlasHint?.(`VELOCITY INCREASE: +${points} XP`);
+    };
+
+    window.rewardXP = function(points) {
+        if (!points || points <= 0) return;
+        
+        const xpCounter = document.getElementById('userPoints');
+        if (xpCounter) {
+            const currentPoints = parseInt(xpCounter.innerText) || 0;
+            xpCounter.innerText = currentPoints + points;
+            window.triggerXPEffect(points);
         }
     };
     
@@ -670,9 +749,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             const data = await response.json();
             if (data.success) {
-                const userPointsEl = document.getElementById('userPoints');
-                if (userPointsEl) userPointsEl.innerText = data.userStats.totalPoints;
-                window.showAtlasHint?.(`ASSESSMENT PERSISTED: +${percentage * 2} XP`);
+                // Unified trigger
+                window.rewardXP(percentage * 2);
             }
         } catch (e) { console.error('Grade sync error:', e); }
     }
@@ -736,9 +814,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 btn.innerHTML = '<i class="fas fa-check-double"></i> DEPLOYMENT VERIFIED';
                 btn.className = 'btn-atlas w-full py-5 flex items-center justify-center gap-3 bg-gradient-to-r from-[#00ED64] to-[#00A345] text-[#001E2B] rounded-2xl';
-                const userPointsEl = document.getElementById('userPoints');
-                if (userPointsEl) userPointsEl.innerText = data.userStats.totalPoints;
-                window.showAtlasHint?.('LAB COMPLETED: +200 XP');
+                window.rewardXP(200);
             }
         } catch (e) {
             btn.disabled = false;
@@ -777,7 +853,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 btn.className = 'w-full py-4 bg-[#E7EEEB] text-[#00684A] rounded-xl text-[11px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2';
                 
-                window.showAtlasHint?.('ARCHITECT CERTIFICATION SECURED: +500 XP');
+                window.rewardXP(500);
                 
                 // Redirect to certificates page after delay
                 setTimeout(() => {
