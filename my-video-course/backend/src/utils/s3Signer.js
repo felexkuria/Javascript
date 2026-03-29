@@ -8,11 +8,10 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 class S3Signer {
   constructor() {
     this.client = new S3Client({
-      region: process.env.AWS_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-      }
+      region: process.env.AWS_REGION || 'us-east-1'
+      // 🛡️ SOTA: Default Provider Chain
+      // Removing explicit mapping to allow the SDK to lazily resolve credentials
+      // from process.env, which eliminates race conditions with dotenv.
     });
   }
 
@@ -29,7 +28,7 @@ class S3Signer {
       
       // Remove any 's3://' prefix if accidentally entered in .env
       if (bucket.startsWith('s3://')) {
-        bucket = bucket.replace('s3://', '');
+        bucket = bucket.replace('s3://', '').trim();
       }
 
       if (!bucket) throw new Error('S3_BUCKET_NAME is not configured');
