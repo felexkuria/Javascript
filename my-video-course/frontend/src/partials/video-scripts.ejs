@@ -1,5 +1,8 @@
 <script>
-
+// ⚔️ Global Orchestration Context
+window.courseName = '<%= courseName %>';
+window.videoId = '<%= video ? (video.videoId || video._id || "") : "" %>';
+window.chatKey = `chat_${window.courseName}_${window.videoId}`;
 
 document.addEventListener('DOMContentLoaded', function() {
     const videoPlayer = document.getElementById('videoPlayer');
@@ -10,10 +13,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const generateSRTButton = document.getElementById('generateSRTButton');
     const keyHint = document.getElementById('keyHint');
     
-    let courseName = '<%= courseName %>';
-    let videoId = '<%= video ? (video.videoId || video._id || "") : "" %>';
+    let courseName = window.courseName;
+    let videoId = window.videoId;
     let chatHistory = [];
-    const chatKey = `chat_${courseName}_${videoId}`;
+    const chatKey = window.chatKey;
     
     function showKeyHint(text) {
         if (window.showAtlasHint) {
@@ -503,13 +506,28 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const videoTitle = <%- JSON.stringify(video ? video.title : "") %>;
                 const courseNameStr = <%- JSON.stringify(courseName) %>;
+                
+                // 1. Force Refresh Todos
                 await fetch('/api/ai/video/todos/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ courseName: courseNameStr, videoTitle })
                 });
+                
+                // 2. We don't have a "force generate quiz/lab" endpoint yet, 
+                // but the active ingestion will trigger on next load.
+                // Or we can add specific generation endpoints.
+                
+                console.log('🔄 Sync complete. Re-provisioning UI nodes...');
                 await loadAITodos();
-            } catch (err) { console.error('AI Refresh failed:', err); }
+                await loadQuiz();
+                await loadLab();
+                
+                window.showAtlasHint?.('AI ENGINE SYNC COMPLETE');
+            } catch (err) { 
+                console.error('AI Refresh failed:', err); 
+                window.showAtlasHint?.('SYNC PROTOCOL ERROR');
+            }
             finally { btn.innerHTML = originalText; btn.disabled = false; }
         });
     }
@@ -626,12 +644,20 @@ document.addEventListener('DOMContentLoaded', function() {
     loadStudentNotes();
 
     // --- ASSESSMENT & LAB ORCHESTRATION ---
-    async function loadQuiz() {
+    window.loadQuiz = async function() {
         const container = document.getElementById('quiz-container');
         if (!container) return;
         
+        container.innerHTML = `
+            <div class="py-20 text-center">
+                <div class="velocity-pulse mx-auto mb-6"></div>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#00ED64]">Calibrating Assessment Vectors...</p>
+                <p class="text-[8px] font-bold text-[#9FB1AD]/40 uppercase tracking-widest mt-2 px-10">AI is analyzing transcript and provisioning quiz clusters</p>
+            </div>
+        `;
+        
         try {
-            const response = await fetch(`/api/quizzes/${videoId}`);
+            const response = await fetch(`/api/quizzes/${videoId}?courseName=${encodeURIComponent(courseName)}`);
             const data = await response.json();
             
             if (data.success && data.quiz && data.quiz.length > 0) {
@@ -640,18 +666,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 container.innerHTML = `
                     <div class="py-20 text-center opacity-40">
                         <i class="fas fa-satellite-dish text-2xl mb-4"></i>
-                        <p class="text-[10px] font-black uppercase tracking-widest">Assessment Protocol Pending Ingestion</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-[#00ED64]">Calibrating Assessment Vectors...</p>
+                        <p class="text-[8px] font-bold uppercase tracking-widest mt-2">Connecting to AI learning nodes</p>
                     </div>
                 `;
             }
         } catch (error) {
-            container.innerHTML = `<p class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Engine Failure: Assessment Load Aborted</p>`;
+            container.innerHTML = `<p class="text-[10px] text-red-500 font-bold uppercase tracking-widest text-center py-20">Engine Failure: Assessment Load Aborted</p>`;
         }
-    }
+    };
 
-    async function loadLab() {
+    window.loadLab = async function() {
         const container = document.getElementById('lab-container');
         if (!container) return;
+
+        container.innerHTML = `
+            <div class="py-20 text-center">
+                <i class="fas fa-terminal fa-spin text-2xl mb-6 text-[#00ED64] opacity-50"></i>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#00ED64]">Provisioning Engineering Lab...</p>
+                <p class="text-[8px] font-bold text-[#9FB1AD]/40 uppercase tracking-widest mt-2 px-10">Constructing technical objectives from module architecture</p>
+            </div>
+        `;
         
         try {
             const response = await fetch(`/api/ai/lab/${encodeURIComponent(courseName)}/${videoId}`);
@@ -662,15 +697,16 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 container.innerHTML = `
                     <div class="py-20 text-center opacity-40">
-                        <i class="fas fa-terminal text-2xl mb-4"></i>
-                        <p class="text-[10px] font-black uppercase tracking-widest">Lab Environment Pending Provisioning</p>
+                        <i class="fas fa-microchip text-2xl mb-4"></i>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-[#00ED64]">Provisioning Engineering Lab...</p>
+                        <p class="text-[8px] font-bold uppercase tracking-widest mt-2">Establishing secure learning node connection</p>
                     </div>
                 `;
             }
         } catch (error) {
-            container.innerHTML = `<p class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Engine Failure: Lab Provisioning Timeout</p>`;
+            container.innerHTML = `<p class="text-[10px] text-red-500 font-bold uppercase tracking-widest text-center py-20">Engine Failure: Lab Provisioning Timeout</p>`;
         }
-    }
+    };
 
     function renderQuiz(questions) {
         const container = document.getElementById('quiz-container');
@@ -892,12 +928,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    window.toggleCurriculumSection = function(headerEl) {
+    window.toggleSectionGroup = function(headerEl) {
         const groupEl = headerEl.closest('.section-group');
         if (groupEl) groupEl.classList.toggle('expanded');
     };
 
     // Final Theme Sync and Ingestion
     document.documentElement.classList.add('dark');
+    
+    // ⚔️ Proactive Ingestion: Trigger assessment provisioning on load
+    setTimeout(() => {
+        if (typeof loadQuiz === 'function') loadQuiz();
+        if (typeof loadLab === 'function') loadLab();
+    }, 800);
 });
 </script>

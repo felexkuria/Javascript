@@ -237,9 +237,33 @@ class AIController {
 
   async getLab(req, res) {
     try {
-      const { courseName, videoId } = req.params;
+      const courseName = decodeURIComponent(req.params.courseName);
+      const videoId = req.params.videoId;
       const labGeneratorService = require('../services/labGeneratorService');
-      const lab = await labGeneratorService.getStoredLab(decodeURIComponent(courseName), videoId);
+      const srtQuizGenerator = require('../services/srtQuizGenerator');
+      
+      let lab = await labGeneratorService.getStoredLab(courseName, videoId);
+      
+      if (!lab) {
+        console.log(`🧪 Lab not found for ${videoId}. Attempting active ingestion...`);
+        const video = await dynamoVideoService.getVideoById(courseName, videoId);
+        
+        if (video && video.videoUrl && !video.isYouTube) {
+          const videoPath = path.join(__dirname, '../../../frontend/public/videos', video.videoUrl);
+          if (fs.existsSync(videoPath)) {
+            try {
+              const srtPath = await srtQuizGenerator.generateSRT(videoPath);
+              const srtEntries = srtQuizGenerator.parseSRT(srtPath);
+              
+              if (srtEntries && srtEntries.length > 5) {
+                lab = await labGeneratorService.generateLabFromSRT(srtEntries, video.title, courseName, videoId);
+              }
+            } catch (err) {
+              console.warn('Active lab generation failed:', err.message);
+            }
+          }
+        }
+      }
       
       if (!lab) {
         return res.status(404).json({ success: false, error: 'Lab not found' });

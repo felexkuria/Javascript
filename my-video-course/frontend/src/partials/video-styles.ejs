@@ -207,12 +207,15 @@ body {
 }
 
 /* Ensure floating chatbot doesn't overlap sidebar on desktop */
+/* Ensure floating chatbot doesn't overlap sidebar on desktop */
 @media (min-width: 1201px) {
     .floating-chatbot {
-        right: calc(var(--sidebar-width) + 40px) !important;
+        left: 40px !important;
+        right: auto !important;
     }
     .chatbot-trigger {
-        right: calc(var(--sidebar-width) + 40px) !important;
+        left: 40px !important;
+        right: auto !important;
     }
 }
 /* Syntax Highlighting IDE Theme Integration */
