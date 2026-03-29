@@ -5,6 +5,7 @@
 const { TranscribeClient, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const srtQuizGenerator = require('../services/srtQuizGenerator');
+const labGeneratorService = require('../services/labGeneratorService');
 const dynamoVideoService = require('../services/dynamoVideoService');
 const logger = require('../utils/logger');
 const https = require('https');
@@ -29,11 +30,10 @@ exports.handler = async (event) => {
     const job = jobRes.TranscriptionJob;
     const srtUri = job.Subtitles.SubtitleFileUris[0];
     
-    // Extract metadata from Job Name (formatted by start_transcribe)
-    // Format: "Title-Timestamp"
+    // 🔍 SOTA Metadata Extraction: Format: "Title-Timestamp"
     const jobNameParts = jobName.split('-');
     const videoTitle = jobNameParts.slice(1, -1).join('-').replace(/[^a-zA-Z0-9 ]/g, ' '); 
-    const courseName = "Course"; // In a real scenario, this would be in the metadata or job name
+    const courseName = "Course"; // Fallback, real implementation would fetch from GSI
 
     // 2. Download Caption File
     const srtContent = await downloadFile(srtUri);
@@ -47,22 +47,27 @@ exports.handler = async (event) => {
       ContentType: 'text/plain'
     }));
 
-    // 4. Generate AI Content
+    // 4. 🧠 Parallel Orchestration: Quiz + Summary + Lab
     const srtEntries = srtQuizGenerator.parseSRT({ content: srtContent });
-    const [quiz, summary] = await Promise.all([
-      srtQuizGenerator.generateAIQuestions(srtEntries, videoTitle, '0:00'),
-      srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoTitle)
+    
+    // Find video for correct ID linking
+    const videos = await dynamoVideoService.getVideosForCourse(courseName);
+    const video = videos.find(v => v.title.toLowerCase().includes(videoTitle.toLowerCase()));
+    const videoId = video ? (video._id || video.videoId) : 'master';
+
+    const [quiz, summary, lab] = await Promise.all([
+      srtQuizGenerator.generateAIQuestions(srtEntries, videoTitle, 600),
+      srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoTitle),
+      labGeneratorService.generateLabFromSRT(srtEntries, videoTitle, courseName, videoId)
     ]);
 
     // 5. Update DynamoDB (Final Commit)
-    const videos = await dynamoVideoService.getVideosForCourse(courseName);
-    const video = videos.find(v => v.title.toLowerCase().includes(videoTitle.toLowerCase()));
-    
     if (video) {
         await dynamoVideoService.updateVideo(courseName, video._id, {
             captionsReady: true,
             quizReady: true,
             summaryReady: true,
+            labReady: true,
             processing: false,
             processedAt: new Date().toISOString()
         });

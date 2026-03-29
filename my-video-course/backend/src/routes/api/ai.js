@@ -16,4 +16,7 @@ router.post('/video/todos/generate', aiController.generateTodos);
 router.post('/video/todos/update', aiController.updateTodo);
 router.get('/video/todos/progress/:courseName/:videoTitle', aiController.getTodoProgress);
 
+// Technical Labs
+router.get('/lab/:courseName/:videoId', aiController.getLab);
+
 module.exports = router;

@@ -92,4 +92,32 @@ async function getAllQuizzes(userId) {
   };
 }
 
+// Submit quiz results
+router.post('/complete', async (req, res) => {
+  try {
+    const userId = req.user?.email || 'guest';
+    const { videoId, score, totalQuestions } = req.body;
+    
+    const result = await dynamoVideoService.recordQuizCompletion(userId, score, totalQuestions);
+    res.json({ success: true, userStats: result.userStats });
+  } catch (error) {
+    console.error('Quiz completion error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Submit lab results
+router.post('/lab/complete', async (req, res) => {
+  try {
+    const userId = req.user?.email || 'guest';
+    const { labId, points } = req.body;
+    
+    const result = await dynamoVideoService.recordLabCompletion(userId, labId, points);
+    res.json({ success: true, userStats: result.userStats });
+  } catch (error) {
+    console.error('Lab completion error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

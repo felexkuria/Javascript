@@ -138,19 +138,41 @@ class AIService {
     return await this.generateQuizFromVideo(videoTitle, textOnly);
   }
 
-  async generateQuizFromVideo(videoTitle, transcript = '') {
-    const { system, user } = promptManager.getPrompt('technical_quiz', { title: videoTitle, transcript: transcript.slice(0, 3000) });
+  async generateQuizQuestions(transcript, videoTitle) {
+    const { system, user } = promptManager.getPrompt('technical_quiz', { title: videoTitle, transcript: transcript.slice(0, 4000) });
     const response = await this.generateWithNova(user, system);
     try {
-      return JSON.parse(response);
+      const jsonMatch = response.match(/\[.*\]/s);
+      return JSON.parse(jsonMatch ? jsonMatch[0] : response);
     } catch {
       return [{
         question: `What is the main concept covered in "${videoTitle}"?`,
-        options: ['Concepts', 'Techniques', 'Examples', 'All of the above'],
-        correct: 3,
-        explanation: 'This video covers comprehensive concepts and practical implementations.'
+        options: ['System Architecture', 'Implementation Techniques', 'Strategic Planning', 'Operational Excellence'],
+        correct: 0,
+        explanation: 'This module focuses on the core building blocks of high-fidelity engineering systems.'
       }];
     }
+  }
+
+  async generateLab(transcript, videoTitle) {
+    const { system, user } = promptManager.getPrompt('technical_lab', { title: videoTitle, transcript: transcript.slice(0, 4000) });
+    const response = await this.generateWithNova(user, system);
+    try {
+      const jsonMatch = response.match(/\{.*\}/s);
+      return JSON.parse(jsonMatch ? jsonMatch[0] : response);
+    } catch {
+      return {
+        title: `${videoTitle} Application Lab`,
+        scenario: 'Implement the core architectural patterns discussed in the video.',
+        objectives: ['Deploy basic infrastructure', 'Verify connectivity'],
+        steps: ['Access the cloud console', 'Initialize the requested resources'],
+        difficulty: 'Intermediate'
+      };
+    }
+  }
+
+  async generateQuizFromVideo(videoTitle, transcript = '') {
+    return this.generateQuizQuestions(transcript, videoTitle);
   }
 
   async generateChatResponse(message, context = {}) {

@@ -285,15 +285,23 @@ class SRTQuizGenerator {
     const contentSampleSize = Math.min(srtEntries.length, Math.max(15, Math.ceil(srtEntries.length / 4)));
     const content = srtEntries.slice(0, contentSampleSize).map(e => e.text).join(' ');
     
-    const response = await aiService.generateQuizQuestions(content, videoTitle, questionCount);
+    const response = await aiService.generateQuizQuestions(content, videoTitle);
     
-    const jsonMatch = response.match(/\[.*\]/s);
-    if (!jsonMatch) throw new Error('No JSON found in response');
+    let questions = [];
+    try {
+      questions = response;
+    } catch (e) {
+      console.error('Quiz JSON Parse Error:', e);
+      throw new Error('Failed to parse AI quiz generation');
+    }
+
+    // --- SELF-HEALING LAYER ---
+    questions = await this.healQuizQuestions(questions, videoTitle);
     
-    // Clean up malformed JSON
-    const cleanJson = jsonMatch[0].replace(/,\s*([}\]])/g, '$1');
-    const questions = JSON.parse(cleanJson);
-    const finalQuestions = questions.slice(0, questionCount).map((q, i) => ({ ...q, id: `ai_${this.hashString(videoTitle)}_${i}` }));
+    const finalQuestions = questions.slice(0, questionCount).map((q, i) => ({ 
+        ...q, 
+        id: `ai_${this.hashString(videoTitle)}_${i}` 
+    }));
     
     // Store quiz
     try {
@@ -303,6 +311,38 @@ class SRTQuizGenerator {
     }
     
     return finalQuestions;
+  }
+
+  // Self-Healing logic for malformed quiz data
+  async healQuizQuestions(questions, title) {
+    const healed = [];
+    for (const q of questions) {
+        if (q.correct === null || typeof q.correct === 'undefined' || isNaN(q.correct)) {
+            console.warn(`🚑 Healing malformed question for: ${title}`);
+            try {
+                // Secondary check: can we find it in the explanation?
+                const foundIndex = q.options.findIndex(opt => q.explanation.toLowerCase().includes(opt.toLowerCase()));
+                if (foundIndex !== -1) {
+                    q.correct = foundIndex;
+                } else {
+                    // LLM Heal: Ask Nova specifically for the index
+                    const healPrompt = `I have a multiple choice question where the correct index is missing. 
+                    Question: ${q.question}
+                    Options: ${JSON.stringify(q.options)}
+                    Explanation: ${q.explanation}
+                    Return ONLY the index (0, 1, 2, or 3) of the correct answer.`;
+                    
+                    const result = await aiService.generateWithNova(healPrompt, "You are a technical grading assistant.");
+                    const idx = parseInt(result.replace(/[^0-9]/g, ''));
+                    q.correct = isNaN(idx) ? 0 : idx;
+                }
+            } catch (err) {
+                q.correct = 0; // Absolute fallback
+            }
+        }
+        healed.push(q);
+    }
+    return healed;
   }
   
   // Generate summary and key topics from SRT
