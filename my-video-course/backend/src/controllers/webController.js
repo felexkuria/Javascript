@@ -146,6 +146,9 @@ class WebController {
         return res.status(404).render('error', { message: 'Course not found' });
       }
 
+      // Fetch user gamification status
+      const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
+
       // 🏥 Recovery & Hydration: Fetch fresh videos from the standalone Videos table
       // This ensures we get real S3 URLs even if the Course model's internal list is stale
       const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
@@ -200,7 +203,11 @@ class WebController {
         aiEnabled: true,
         userId,
         totalVideos: videos.length,
-        watchedVideos: videos.filter(v => v.watched).length
+        watchedVideos: videos.filter(v => v.watched).length,
+        gamificationData: (typeof gamificationData !== 'undefined' && gamificationData) ? gamificationData : {
+          userStats: { totalPoints: 0, currentLevel: 1, experiencePoints: 0 },
+          streakData: { currentStreak: 0 }
+        }
       });
     } catch (err) {
       console.error('Error rendering video:', err);
