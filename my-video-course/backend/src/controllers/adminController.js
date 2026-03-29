@@ -28,7 +28,7 @@ class AdminController {
       let totalS3Bytes = 0;
       try {
         const s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
-        const bucket = process.env.S3_BUCKET_NAME || 'video-course-bucket-047ad47c';
+        const bucket = process.env.S3_BUCKET_NAME || 'video-course-app-video-bucket-prod-6m5k2til';
 
         const allObjects = [];
         let token;

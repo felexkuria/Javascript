@@ -3,7 +3,7 @@
 # Place this script in your video download folder and run it
 
 # Configuration
-S3_BUCKET="video-course-bucket-047ad47c"
+S3_BUCKET="video-course-app-video-bucket-prod-6m5k2til"
 S3_PREFIX="videos/dev-ops-bootcamp_202201/"
 LOCAL_VIDEO_PATH="$(pwd)"
 

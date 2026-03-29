@@ -20,7 +20,7 @@ domain_name = "skool.shopmultitouch.com"
 hosted_zone_id = "Z099975417SC"
 
 # S3 Configuration (using existing)
-s3_bucket_name = "video-course-bucket-047ad47c"
+s3_bucket_name = "video-course-app-video-bucket-prod-6m5k2til"
 
 # Database Configuration
 mongodb_uri = "mongodb+srv://engineerfelex:rIyJt3l@cluster0.vte1e4l.mongodb.net/videoCourseDB?retryWrites=true&w=majority&appName=Cluster0"

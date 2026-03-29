@@ -7,10 +7,10 @@ async function testCaptions() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        videoUrl: 'https://video-course-bucket-047ad47c.s3.us-east-1.amazonaws.com/videos/dev-ops-bootcamp_202201/1756426922323_lesson_2.mp4',
+        videoUrl: 'https://video-course-app-video-bucket-prod-6m5k2til.s3.us-east-1.amazonaws.com/videos/dev-ops-bootcamp_202201/1756426922323_lesson_2.mp4',
         courseName: 'dev-ops-bootcamp_202201',
         videoTitle: 'lesson_2',
-        s3Bucket: 'video-course-bucket-047ad47c'
+        s3Bucket: 'video-course-app-video-bucket-prod-6m5k2til'
       })
     });
     

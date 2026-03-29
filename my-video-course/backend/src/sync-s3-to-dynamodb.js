@@ -9,7 +9,7 @@ const s3Client = new S3Client({ region: 'us-east-1' });
 const dynamoClient = new DynamoDBClient({ region: 'us-east-1' });
 const dynamodb = DynamoDBDocumentClient.from(dynamoClient);
 
-const BUCKET_NAME = 'video-course-bucket-047ad47c';
+const BUCKET_NAME = 'video-course-app-video-bucket-prod-6m5k2til';
 const TABLE_NAME = process.env.NODE_ENV === 'production' ? 'video-course-app-videos-prod' : 'video-course-app-videos-dev';
 
 async function syncS3ToDynamoDB() {

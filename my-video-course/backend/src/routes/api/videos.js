@@ -45,7 +45,7 @@ router.post('/stream-url', async (req, res) => {
     
     const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
     const command = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME || 'video-course-bucket-047ad47c',
+      Bucket: process.env.S3_BUCKET_NAME || 'video-course-app-video-bucket-prod-6m5k2til',
       Key: videoKey
     });
     

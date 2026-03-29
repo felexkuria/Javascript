@@ -2,7 +2,7 @@
 REM Batch script to sync videos from Windows EC2 to S3
 REM Alternative to PowerShell script
 
-SET S3_BUCKET=video-course-bucket-047ad47c
+SET S3_BUCKET=video-course-app-video-bucket-prod-6m5k2til
 SET S3_PREFIX=videos/dev-ops-bootcamp_202201/
 SET LOCAL_VIDEO_PATH=C:\Downloads\Videos
 
