@@ -37,7 +37,7 @@ exports.generateCertificate = async (req, res) => {
       return res.json({ success: true, certificate: existing });
     }
 
-    const certId = uuidv4();
+    const certId = `MTA-2026-${courseName.substring(0, 3).toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const safeCourseId = s3Utils.sanitizeKey(courseId);
     const fileName = `certificates/${userId}_${safeCourseId}_${certId}.pdf`;
 

@@ -397,8 +397,8 @@ class DynamoVideoService {
         totalPoints: Number(stats.totalPoints || data.totalPoints || 0),
         videosWatched: stats.videosWatched || data.videosWatched || {},
         coursesCompleted: Number(stats.coursesCompleted || data.coursesCompleted || 0),
-        currentLevel: Number(stats.currentLevel || data.currentLevel || 1),
-        experiencePoints: Number(stats.experiencePoints || data.experiencePoints || 0),
+        currentLevel: Math.floor(Math.sqrt((Number(stats.experiencePoints || data.experiencePoints || stats.totalPoints || data.totalPoints || 0)) / 100)) + 1,
+        experiencePoints: Number(stats.experiencePoints || data.experiencePoints || stats.totalPoints || data.totalPoints || 0),
         quizzesTaken: Number(stats.quizzesTaken || data.quizzesTaken || 0),
         perfectQuizzes: Number(stats.perfectQuizzes || data.perfectQuizzes || 0),
         studyDays: Number(stats.studyDays || data.studyDays || 0)

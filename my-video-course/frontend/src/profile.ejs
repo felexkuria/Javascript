@@ -212,7 +212,7 @@
                             </div>
                         </div>
                         <div class="xp-conduit mb-6">
-                            <div id="level-progress" class="xp-flow-neon" style="width: <%= progressPercent %>%"></div>
+                            <div id="level-progress" class="xp-flow-neon" style="width: <%= (progressPercent || 0) + '%' %>"></div>
                         </div>
                         <div class="flex justify-between items-center">
                             <span id="current-xp" class="text-xs font-black text-[#00ED64] uppercase tracking-widest"><%= totalXP %> XP ARCHIVED</span>
@@ -395,15 +395,14 @@
                 document.getElementById('longest-streak').textContent = progress.longestStreak || 0;
                 document.getElementById('user-level').textContent = progress.level || 1;
                 
-                const currentXP = progress.points || 0;
-                const currentLevel = Math.floor(Math.sqrt(currentXP / 100)) + 1;
-                const nextLevelXP = Math.pow(currentLevel, 2) * 100;
-                const prevLevelXP = Math.pow(currentLevel - 1, 2) * 100;
-                const progressPercent = Math.min(100, Math.max(0, ((currentXP - prevLevelXP) / (nextLevelXP - prevLevelXP)) * 100));
+                const currentXP = progress.experiencePoints || progress.points || 0;
+                const currentLevel = GamificationSystem.calculateLevel(currentXP);
+                const progressPercent = GamificationSystem.calculateProgress(currentXP, currentLevel);
                 
                 document.getElementById('level-progress').style.width = `${progressPercent}%`;
                 document.getElementById('current-xp').textContent = `${currentXP} XP ARCHIVED`;
-                document.getElementById('next-level-xp').textContent = `${Math.max(0, nextLevelXP - currentXP)} XP TO ASCENSION`;
+                const nextLVL = Math.pow(currentLevel, 2) * 100;
+                document.getElementById('next-level-xp').textContent = `${Math.max(0, nextLVL - currentXP)} XP TO ASCENSION`;
             }
 
             loadFromCache();

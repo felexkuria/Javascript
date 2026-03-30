@@ -27,6 +27,15 @@ class GamificationSystem {
       streakDates: []
     };
   }
+  static calculateLevel(xp) {
+    return Math.floor(Math.sqrt((xp || 0) / 100)) + 1;
+  }
+
+  static calculateProgress(xp, level) {
+    const nextLevelXP = Math.pow(level, 2) * 100;
+    const prevLevelXP = Math.pow(level - 1, 2) * 100;
+    return Math.min(100, Math.max(0, (((xp || 0) - prevLevelXP) / (nextLevelXP - prevLevelXP)) * 100));
+  }
 
   getNSKey(key) {
     return `${key}_${this.userId}`;
@@ -425,13 +434,20 @@ class GamificationSystem {
   // Check and handle level up (Unifed with Backend Square Root Intelligence)
   checkLevelUp() {
     const totalXP = (this.userStats.experiencePoints || this.userStats.totalPoints || 0);
-    const newLevel = Math.floor(Math.sqrt(totalXP / 100)) + 1;
+    const newLevel = GamificationSystem.calculateLevel(totalXP);
+    const oldLevel = this.userStats.currentLevel || 1;
     
-    if (newLevel > (this.userStats.currentLevel || 1)) {
-      const oldLevel = this.userStats.currentLevel;
+    // Always sync currentLevel to the mathematical truth
+    if (newLevel !== oldLevel) {
+      console.log(`📡 Gamification: Synchronizing Rank Logic (${oldLevel} -> ${newLevel})`);
       this.userStats.currentLevel = newLevel;
-      this.showLevelUpNotification(newLevel);
-      this.triggerConfetti();
+      this.saveToStorage();
+
+      if (newLevel > oldLevel) {
+        this.showLevelUpNotification(newLevel);
+        this.triggerConfetti();
+        this.triggerLevelUpEffect(newLevel);
+      }
       
       // Sync Sidebar if present
       const sidebarLevel = document.getElementById('sidebar-level');
@@ -688,9 +704,7 @@ class GamificationSystem {
     if (sidebarXP) sidebarXP.innerText = totalXP;
     if (sidebarLevel) sidebarLevel.innerText = level;
     if (progressBar) {
-      const nextLevelXP = Math.pow(level, 2) * 100;
-      const prevLevelXP = Math.pow(level - 1, 2) * 100;
-      const progress = Math.min(100, Math.max(0, ((totalXP - prevLevelXP) / (nextLevelXP - prevLevelXP)) * 100));
+      const progress = GamificationSystem.calculateProgress(totalXP, level);
       progressBar.style.width = `${progress}%`;
     }
 
