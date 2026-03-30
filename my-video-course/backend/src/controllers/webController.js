@@ -233,8 +233,8 @@ class WebController {
         user: req.user,
         aiEnabled: true,
         userId,
-        totalVideos: videos.length,
-        watchedVideos: videos.filter(v => v.watched).length,
+        totalVideos: allVideos.length,
+        watchedVideos: allVideos.filter(v => v.watched).length,
         gamificationData: (typeof gamificationData !== 'undefined' && gamificationData) ? gamificationData : {
           userStats: { totalPoints: 0, currentLevel: 1, experiencePoints: 0 },
           streakData: { currentStreak: 0 }
