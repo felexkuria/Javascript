@@ -209,35 +209,215 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (e) { /* silent fail for shortcuts */ }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // 🎬 AUTO-PLAY NEXT VIDEO + XP + FULL-SCREEN CONFETTI ENGINE
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── Auto-Next Overlay injection ──────────────────────────────────────────
+    const autoNextOverlay = document.createElement('div');
+    autoNextOverlay.id = 'auto-next-overlay';
+    autoNextOverlay.style.cssText = [
+        'position:fixed', 'inset:0', 'z-index:9999',
+        'display:none', 'align-items:center', 'justify-content:center',
+        'background:rgba(0,30,43,0.92)', 'backdrop-filter:blur(16px)',
+        '-webkit-backdrop-filter:blur(16px)'
+    ].join(';');
+    autoNextOverlay.innerHTML = `
+        <div style="text-align:center;padding:48px;background:rgba(255,255,255,0.03);border:1px solid rgba(0,237,100,0.2);border-radius:32px;max-width:480px;width:90%;box-shadow:0 40px 80px rgba(0,0,0,0.5);">
+            <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+            <p style="font-size:10px;font-weight:900;letter-spacing:0.3em;text-transform:uppercase;color:#00ED64;margin-bottom:8px;">LECTURE COMPLETE</p>
+            <h2 style="font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;letter-spacing:-0.02em;" id="auto-next-title">Up Next</h2>
+            <p style="font-size:11px;font-weight:700;color:#9FB1AD;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:32px;" id="auto-next-subtitle">Loading next lecture...</p>
+
+            <!-- Circular countdown ring -->
+            <div style="position:relative;width:88px;height:88px;margin:0 auto 32px;">
+                <svg width="88" height="88" style="transform:rotate(-90deg);">
+                    <circle cx="44" cy="44" r="38" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
+                    <circle id="auto-next-ring" cx="44" cy="44" r="38" fill="none" stroke="#00ED64" stroke-width="6"
+                        stroke-dasharray="238.76" stroke-dashoffset="0"
+                        style="transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 6px #00ED64);"/>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                    <span id="auto-next-count" style="font-size:26px;font-weight:900;color:#fff;">5</span>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:center;">
+                <button id="auto-next-cancel" style="padding:14px 28px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;color:#9FB1AD;font-size:11px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                    ✕ Cancel
+                </button>
+                <button id="auto-next-now" style="padding:14px 28px;background:#00ED64;border:none;border-radius:16px;color:#001E2B;font-size:11px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 20px rgba(0,237,100,0.25);transition:all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    ▶ Play Now
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(autoNextOverlay);
+
+    // ── Full-Screen Confetti Burst ────────────────────────────────────────────
+    function fireCompletionConfetti() {
+        if (!window.confetti) return;
+        const MDB_GREEN = '#00ED64';
+        const GOLD      = '#FFD700';
+        const WHITE     = '#FFFFFF';
+        const TEAL      = '#00A345';
+
+        // 1. Central shower
+        confetti({ particleCount: 180, spread: 90, origin: { y: 0.45 },
+            colors: [MDB_GREEN, GOLD, WHITE, TEAL], scalar: 1.1 });
+
+        // 2. Left cannon
+        setTimeout(() => confetti({
+            particleCount: 90, angle: 60, spread: 65,
+            origin: { x: 0, y: 0.6 },
+            colors: [MDB_GREEN, WHITE], scalar: 1.0
+        }), 200);
+
+        // 3. Right cannon
+        setTimeout(() => confetti({
+            particleCount: 90, angle: 120, spread: 65,
+            origin: { x: 1, y: 0.6 },
+            colors: [MDB_GREEN, GOLD], scalar: 1.0
+        }), 200);
+
+        // 4. Top-center starburst
+        setTimeout(() => confetti({
+            particleCount: 120, spread: 120, startVelocity: 55,
+            origin: { x: 0.5, y: 0.1 },
+            colors: [MDB_GREEN, WHITE, GOLD, TEAL], scalar: 0.9
+        }), 450);
+
+        // 5. Lingering sparkles
+        setTimeout(() => confetti({
+            particleCount: 60, spread: 60,
+            origin: { x: 0.3, y: 0.7 },
+            colors: [MDB_GREEN, WHITE], scalar: 0.7, gravity: 0.6
+        }), 700);
+        setTimeout(() => confetti({
+            particleCount: 60, spread: 60,
+            origin: { x: 0.7, y: 0.7 },
+            colors: [GOLD, WHITE], scalar: 0.7, gravity: 0.6
+        }), 750);
+    }
+
+    // ── Auto-next navigation ──────────────────────────────────────────────────
+    let autoNextTimer  = null;
+    let autoNextCancel = false;
+    let nextVideoCache = null;
+
+    async function fetchNextVideo() {
+        try {
+            const res = await fetch(
+                `/api/next-video?currentVideoId=${encodeURIComponent(videoId)}&courseName=${encodeURIComponent(courseName)}&direction=next`
+            );
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.error ? null : data;
+        } catch (e) { return null; }
+    }
+
+    function navigateToNext(nextVideo) {
+        const targetId = nextVideo?.videoId || nextVideo?._id;
+        if (targetId) {
+            window.location.href = `/course/${encodeURIComponent(courseName)}/video/${encodeURIComponent(targetId)}?autoplay=true`;
+        }
+    }
+
+    async function showAutoNextOverlay() {
+        // Pre-fetch next video info
+        nextVideoCache = await fetchNextVideo();
+        if (!nextVideoCache) {
+            // No next video — just do XP + confetti, no overlay
+            return;
+        }
+
+        const titleEl    = document.getElementById('auto-next-title');
+        const subtitleEl = document.getElementById('auto-next-subtitle');
+        const countEl    = document.getElementById('auto-next-count');
+        const ring       = document.getElementById('auto-next-ring');
+        const circumference = 238.76;
+
+        if (titleEl)    titleEl.textContent    = nextVideoCache.title || 'Next Lecture';
+        if (subtitleEl) subtitleEl.textContent  = courseName;
+
+        autoNextOverlay.style.display = 'flex';
+        autoNextCancel = false;
+
+        let secondsLeft = 5;
+        if (countEl) countEl.textContent = secondsLeft;
+        if (ring) ring.style.strokeDashoffset = '0';
+
+        // Countdown tick
+        autoNextTimer = setInterval(() => {
+            if (autoNextCancel) { clearInterval(autoNextTimer); return; }
+            secondsLeft--;
+            if (countEl) countEl.textContent = secondsLeft;
+            // Ring drains as time passes
+            if (ring) ring.style.strokeDashoffset = String(circumference * (1 - secondsLeft / 5));
+
+            if (secondsLeft <= 0) {
+                clearInterval(autoNextTimer);
+                if (!autoNextCancel) {
+                    autoNextOverlay.style.display = 'none';
+                    navigateToNext(nextVideoCache);
+                }
+            }
+        }, 1000);
+    }
+
+    document.getElementById('auto-next-cancel')?.addEventListener('click', () => {
+        autoNextCancel = true;
+        clearInterval(autoNextTimer);
+        autoNextOverlay.style.display = 'none';
+        window.showAtlasHint?.('AUTO-PLAY CANCELLED');
+    });
+
+    document.getElementById('auto-next-now')?.addEventListener('click', () => {
+        autoNextCancel = true;
+        clearInterval(autoNextTimer);
+        autoNextOverlay.style.display = 'none';
+        if (nextVideoCache) navigateToNext(nextVideoCache);
+    });
+
+    // ── Video Player Event Hooks ──────────────────────────────────────────────
     if (videoPlayer) {
-        videoPlayer.addEventListener('ended', markVideoAsWatched);
         let watchedMarked = false;
+
+        // 🔥 VIDEO ENDED: Award XP → Confetti → Auto-next overlay
+        videoPlayer.addEventListener('ended', async function() {
+            // 1. Mark complete & award XP (100 base points)
+            await markVideoAsWatched();
+
+            // 2. Fire full-screen confetti
+            fireCompletionConfetti();
+
+            // 3. Show auto-next countdown overlay (fires immediately after confetti starts)
+            setTimeout(() => showAutoNextOverlay(), 600);
+        });
+
         const inputWidget = document.getElementById('floating-chat-input-widget');
         if (inputWidget) {
             inputWidget.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') sendFloatingChatMessage();
             });
         }
-        
+
         // Expose save function to global scope
         window.saveAiResponseToNotes = function(btn) {
             const rawContent = decodeURIComponent(btn.getAttribute('data-content'));
             const notesBox = document.getElementById('studentNotes');
             if (!notesBox) return;
-            
+
             const timestamp = new Date().toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             const separator = notesBox.value.trim() ? '\n\n---\n\n' : '';
             const noteEntry = `${separator}📅 [${timestamp}] AI Advisor Insight:\n${rawContent}`;
-            
+
             notesBox.value += noteEntry;
-            
-            // Switch to notes tab automatically
             if (typeof switchLabTab === 'function') switchLabTab('notes');
-            
-            // Trigger cloud save
             if (typeof saveStudentNotes === 'function') saveStudentNotes();
-            
-            // Temporary UI feedback on button
+
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-check"></i> Saved';
             btn.classList.add('text-[#00ED64]', 'border-[#00ED64]/50');
@@ -247,6 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 2000);
         };
 
+        // Auto-mark at 90% progress (silent, no overlay/confetti)
         videoPlayer.addEventListener('timeupdate', function() {
             if (!videoPlayer.duration) return;
             const watchPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
@@ -255,6 +436,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 watchedMarked = true;
             }
         });
+
+        // Auto-play if page was navigated to with ?autoplay=true
+        if (new URLSearchParams(window.location.search).get('autoplay') === 'true') {
+            videoPlayer.play().catch(() => {/* Browser may block autoplay */});
+        }
     }
 
     window.startVideoQuiz = async function() {
@@ -552,30 +738,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // --- 🚀 XP Velocity Celebration Engine ---
+    // --- 🚀 XP Velocity Celebration Engine (Enhanced) ---
     window.triggerXPEffect = function(points) {
         const xpCounter = document.getElementById('userPoints');
         if (!xpCounter) return;
 
-        // 1. Full Screen Confetti
-        if (window.confetti) {
+        // 1. Inline confetti burst (used for shortcut points, quiz points, etc.)
+        // Full-screen completion confetti is fired separately by fireCompletionConfetti()
+        if (window.confetti && points > 50) {
             confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#00ED64', '#00684A', '#FFFFFF', '#00A345']
+                particleCount: Math.min(points * 1.5, 200),
+                spread: 80,
+                origin: { y: 0.55 },
+                colors: ['#00ED64', '#00684A', '#FFFFFF', '#00A345', '#FFD700']
             });
-            
-            // Side bursts for extra impact
             setTimeout(() => {
-                confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#00ED64'] });
-                confetti({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#00ED64'] });
-            }, 250);
+                confetti({ particleCount: 40, angle: 60, spread: 50, origin: { x: 0 }, colors: ['#00ED64'] });
+                confetti({ particleCount: 40, angle: 120, spread: 50, origin: { x: 1 }, colors: ['#00ED64'] });
+            }, 300);
         }
 
         // 2. Velocity Pop Animation
         xpCounter.classList.remove('xp-pop');
-        void xpCounter.offsetWidth; // Trigger reflow
+        void xpCounter.offsetWidth;
         xpCounter.classList.add('xp-pop');
 
         // 3. Floating Increment Text
@@ -585,7 +770,7 @@ document.addEventListener('DOMContentLoaded', function() {
         xpCounter.parentElement.appendChild(floatingInc);
         setTimeout(() => floatingInc.remove(), 1200);
 
-        // 4. Subtle Haptic/Hint
+        // 4. Hint
         window.showAtlasHint?.(`VELOCITY INCREASE: +${points} XP`);
     };
 

@@ -91,6 +91,13 @@ app.get('/video/:courseName', sessionAuth, (req, res) => webController.renderVid
 app.get('/course/:courseName/video/:videoId?', sessionAuth, (req, res) => webController.renderVideo(req, res));
 app.get('/videos/:courseName/:videoId', sessionAuth, (req, res) => webController.renderVideo(req, res));
 app.post('/api/mark-watched', sessionAuth, (req, res) => videoController.markVideoWatchedEnhanced(req, res));
+// Auto-play next video endpoint (used by video-scripts.ejs completion handler)
+app.get('/api/next-video', sessionAuth, (req, res) => videoController.getNextVideo(req, res));
+// Convenience endpoints also handled by /api/videos router but kept explicit for frontend compatibility
+app.get('/api/videos/watch-dates', sessionAuth, (req, res) => videoController.getWatchDates(req, res));
+app.get('/api/videos/localStorage', (req, res) => videoController.getLocalStorageFormat(req, res));
+app.post('/api/videos/stream-url', sessionAuth, (req, res) => videoController.getStreamUrl(req, res));
+
 
 // ── FILE SERVING ROUTES ──────────────────────────────────────────────
 app.get('/pdf/*', sessionAuth, (req, res) => webController.servePdf(req, res));
