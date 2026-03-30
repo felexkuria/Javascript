@@ -97,15 +97,27 @@ class S3VideoService {
       // We pass it directly to generateSignedUrl which handles the bucket.
       video.isS3Video = true;
       video.fullVideoUrl = await this.generateSignedUrl(video.videoUrl, 3600);
+      if (video.thumbnailUrl) {
+          video.thumbnailUrl = await this.generateSignedUrl(video.thumbnailUrl, 3600);
+      } else if (video.visualInsights && Array.isArray(video.visualInsights) && video.visualInsights.length > 0) {
+          // 🛰️ Phase 1 Leapfrog: If no explicit thumbnail, use the first visual insight frame
+          video.thumbnailUrl = await this.generateSignedUrl(video.visualInsights[0], 3600);
+      }
       
-      if (video.thumbnailUrl) video.thumbnailUrl = await this.generateSignedUrl(video.thumbnailUrl, 3600);
+      // Batch sign all visual insights for the UI timeline
+      if (video.visualInsights && Array.isArray(video.visualInsights)) {
+          video.visualInsights = await Promise.all(
+              video.visualInsights.map(item => this.isS3Video(item) ? this.generateSignedUrl(item, 3600) : item)
+          );
+      }
+      
       if (video.captionsUrl) video.captionsUrl = await this.generateSignedUrl(video.captionsUrl, 3600);
     } else {
       video.fullVideoUrl = video.videoUrl;
     }
 
     return video;
-  }
+}
 
   async processVideoList(videos, userRole = 'student') {
     if (!videos || !Array.isArray(videos)) return videos;

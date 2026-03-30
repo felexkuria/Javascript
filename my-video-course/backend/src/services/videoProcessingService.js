@@ -81,6 +81,8 @@ class VideoProcessingService {
         captionsUrl,
         duration, // Store extracted duration/pages here
         type: isPdf ? 'pdf' : 'video',
+        thumbnailUrl: previews && previews.length > 0 ? previews[0] : null,
+        visualInsights: previews, // Phase 1 Step-down
         ...aiContent,
         createdAt: new Date().toISOString()
       };
