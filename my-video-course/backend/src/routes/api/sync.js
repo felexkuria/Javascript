@@ -15,4 +15,16 @@ router.post('/s3-to-dynamodb', async (req, res) => {
   }
 });
 
+router.post('/repair-manifest', async (req, res) => {
+  try {
+    const { courseName } = req.body;
+    if (!courseName) return res.status(400).json({ success: false, message: 'courseName is required' });
+    
+    const result = await s3SyncService.verifyManifest(courseName);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

@@ -35,14 +35,15 @@ class S3SyncService {
           const videoUrl = `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${file.Key}`;
           
           const videoData = {
-            _id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            videoId: fileName.split('-')[0] || Date.now().toString(),
             courseName,
-            title,
+            title: title.split('-').slice(1).join(' ') || title,
             description: `Video: ${title}`,
             videoUrl,
             s3Key: file.Key,
             watched: false,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           };
 
           await dynamodb.saveVideo(videoData);
@@ -55,6 +56,86 @@ class S3SyncService {
       console.error('S3 sync error:', error.message);
       return 0;
     }
+  }
+
+  // Verify and repair course manifest links
+  async verifyManifest(courseName) {
+    try {
+      const { ScanCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
+      const COURSES_TABLE = 'video-course-app-courses-prod';
+      
+      const courseResult = await dynamodb.docClient.send(new ScanCommand({
+        TableName: COURSES_TABLE,
+        FilterExpression: "courseName = :courseName",
+        ExpressionAttributeValues: { ":courseName": courseName }
+      }));
+
+      const course = courseResult.Items?.[0];
+      if (!course) return { success: false, message: 'Course not found' };
+
+      let itemsRepaired = 0;
+      const sections = course.sections || [];
+      
+      for (const section of sections) {
+        for (const lecture of section.lectures || []) {
+          if (lecture.type === 'video') {
+            const s3Key = (lecture.videoUrl || '').split('.com/')[1] || lecture.videoUrl;
+            const exists = await this.checkS3Exists(s3Key);
+            
+            if (!exists) {
+              const recovery = await this.findRecoveryVideo(lecture.title, courseName);
+              if (recovery) {
+                const newUrl = `https://${this.bucketName}.s3.amazonaws.com/${recovery.s3Key}`;
+                lecture.videoUrl = newUrl;
+                lecture.url = newUrl;
+                lecture.fullVideoUrl = newUrl;
+                lecture.videoId = recovery.videoId;
+                itemsRepaired++;
+              }
+            }
+          }
+        }
+      }
+
+      if (itemsRepaired > 0) {
+        await dynamodb.docClient.send(new UpdateCommand({
+          TableName: COURSES_TABLE,
+          Key: { courseName: course.courseName },
+          UpdateExpression: "SET sections = :sections, updatedAt = :updatedAt",
+          ExpressionAttributeValues: {
+            ":sections": sections,
+            ":updatedAt": new Date().toISOString()
+          }
+        }));
+      }
+
+      return { success: true, repairedCount: itemsRepaired };
+    } catch (error) {
+      console.error('Manifest verification error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async checkS3Exists(key) {
+    if (!key) return false;
+    const { HeadObjectCommand } = require('@aws-sdk/client-s3');
+    try {
+      await this.s3.send(new HeadObjectCommand({ Bucket: this.bucketName, Key: key }));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async findRecoveryVideo(title, courseName) {
+    const { ScanCommand } = require('@aws-sdk/lib-dynamodb');
+    const VIDEOS_TABLE = 'video-course-app-videos-prod';
+    const result = await dynamodb.docClient.send(new ScanCommand({
+      TableName: VIDEOS_TABLE,
+      FilterExpression: "contains(title, :title)",
+      ExpressionAttributeValues: { ":title": title.trim() }
+    }));
+    return result.Items?.[0] || null;
   }
 }
 

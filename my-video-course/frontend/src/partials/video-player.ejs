@@ -51,7 +51,7 @@
                 The S3 media asset for <span class="text-[#00ED64]">"<%= video.title %>"</span> has failed the validation handshake. This typically indicates a synchronization gap in the engineering manifest.
             </p>
             <div class="flex gap-4">
-                <button onclick="window.location.reload()" class="px-8 py-3 bg-[#00ED64] text-[#001E2B] rounded-xl text-[10px] font-black tracking-widest uppercase hover:scale-105 transition-transform">
+                <button onclick="window.repairAndReload('<%= courseName %>')" class="px-8 py-3 bg-[#00ED64] text-[#001E2B] rounded-xl text-[10px] font-black tracking-widest uppercase hover:scale-105 transition-transform">
                     RETRY SYNC
                 </button>
                 <div class="px-6 py-3 border border-white/10 rounded-xl text-[10px] font-bold text-white/40 uppercase tracking-widest">
@@ -70,6 +70,33 @@
             window.handleSourceError = function(source) {
                 console.error("Video source failed to load:", source.src);
                 showErrorOverlay();
+            };
+
+            window.repairAndReload = async function(courseName) {
+                const btn = event.currentTarget;
+                const originalText = btn.innerText;
+                btn.innerText = 'SYNCING...';
+                btn.disabled = true;
+                
+                try {
+                    const response = await fetch('/api/sync/repair-manifest', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ courseName })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('Manifest repaired:', result.repairedCount, 'items fixed');
+                        window.location.reload();
+                    } else {
+                        throw new Error(result.error || 'Sync failed');
+                    }
+                } catch (error) {
+                    console.error('Repair failed:', error);
+                    alert('Sync error: ' + error.message);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
             };
 
             function showErrorOverlay() {
