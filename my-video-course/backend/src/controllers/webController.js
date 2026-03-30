@@ -137,7 +137,9 @@ class WebController {
     try {
       const courseName = decodeURIComponent(req.params.courseName).trim();
 
-      const videoId = (req.params.videoId === 'undefined' || !req.params.videoId) ? null : req.params.videoId;
+      const rawVideoId = req.params.videoId;
+      // 🔧 FIX: Safely normalize videoId — never null when comparisons need .toString()
+      const videoId = (!rawVideoId || rawVideoId === 'undefined') ? null : rawVideoId.toString();
       const userId = req.user?.email || 'guest';
       const autoplay = req.query.autoplay === 'true';
 
@@ -150,21 +152,25 @@ class WebController {
       const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
 
       // 🏥 Recovery & Hydration: Fetch fresh videos from the standalone Videos table
-      // This ensures we get real S3 URLs even if the Course model's internal list is stale
       const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
-      
-      const video = videos.find(v => 
-        (v.videoId && v.videoId.toString() === videoId.toString()) || 
-        (v._id && v._id.toString() === videoId.toString()) || 
-        (v.title === videoId)
-      ) || videos[0];
+
+      // 🔧 FIX: Null-safe find — videoId may be null (first video default), or a string ID
+      const video = videoId
+        ? (videos.find(v =>
+            (v.videoId && v.videoId.toString() === videoId) ||
+            (v._id     && v._id.toString()     === videoId) ||
+            (v.id      && v.id.toString()       === videoId) ||
+            (v.title   === videoId)
+          ) || videos[0])
+        : videos[0];
 
       if (!video) {
-        return res.status(404).render('error', { 
-          message: `Video "${videoId}" not found in curriculum for course "${courseName}"`, 
-          details: 'The system attempted to locate the media asset in DynamoDB but the reference is missing or its course mapping is invalid.' 
+        return res.status(404).render('error', {
+          message: `Video "${videoId}" not found in curriculum for course "${courseName}"`,
+          details: 'The system attempted to locate the media asset in DynamoDB but the reference is missing or its course mapping is invalid.'
         });
       }
+
 
       // SOTA Smart Curriculum Engine
       const sections = await dynamoVideoService.getStructuredCurriculum(course, userId);
