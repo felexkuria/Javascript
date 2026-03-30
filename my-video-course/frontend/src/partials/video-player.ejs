@@ -72,7 +72,7 @@
                 </div>
                 <div class="telemetry-node">
                     <div class="node-label">Asset Duration</div>
-                    <div class="node-value"><%= video.duration || '24:00' %></div>
+                    <div class="node-value"><%= (video.isPdf || video.type === 'pdf' || (video.title && video.title.toLowerCase().includes('pdf'))) ? 'STATIC RESOURCE' : (video.duration || '24:00') %></div>
                 </div>
             </div>
 

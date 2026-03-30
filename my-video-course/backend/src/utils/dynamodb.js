@@ -793,6 +793,21 @@ class DynamoDBService {
     }
   }
 
+  async getAllEnrollments() {
+    if (!this.isConnected) return [];
+    const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    try {
+      const params = {
+        TableName: `video-course-app-enrollments-${environment}`
+      };
+      const result = await this.docClient.send(new ScanCommand(params));
+      return result.Items || [];
+    } catch (error) {
+      console.error('Error scanning all enrollments:', error);
+      return [];
+    }
+  }
+
   // Certificate operations
   async saveCertificate(certificate) {
     if (!this.isConnected) return false;

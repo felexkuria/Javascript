@@ -216,18 +216,25 @@ class CourseController {
       const userId = req.user?.id || req.user?.email || 'default_user';
       
       // 🛰️ Aggregate Platform Wide Telemetry
-      const [courses, allUsers, allGamification] = await Promise.all([
+      const [courses, allUsers, allGamification, allEnrollments] = await Promise.all([
         dynamoVideoService.getAllCourses(userId),
         dynamodb.getAllUsers(),
-        dynamodb.getAllGamificationData()
+        dynamodb.getAllGamificationData(),
+        dynamodb.getAllEnrollments()
       ]);
       
-      // 1. Core Metrics
+      // 1. Core Metrics (Live Aggregation)
       const totalVideos = courses.reduce((sum, c) => sum + (c.videos?.length || 0), 0);
       const totalPoints = allGamification.reduce((sum, g) => sum + Number(g.userStats?.totalPoints || g.totalPoints || 0), 0);
       const students = allUsers.filter(u => u.role !== 'teacher' && u.role !== 'admin').length;
       
-      // 2. Category Distribution
+      // 2. Enrollment Mapping (High Fidelity Matrix)
+      const enrollmentMap = {};
+      allEnrollments.forEach(e => {
+        enrollmentMap[e.courseName] = (enrollmentMap[e.courseName] || 0) + 1;
+      });
+      
+      // 3. Category Distribution
       const categoryMap = {};
       courses.forEach(c => {
         const cat = c.category || 'Core Engineering';
@@ -235,15 +242,27 @@ class CourseController {
       });
       const categories = Object.entries(categoryMap).map(([name, count]) => ({ name, count }));
 
-      // 3. Simulated Growth Trend (for Chart.js)
+      // 4. Activity Velocity (7-Day XP Distribution)
       const labels = [];
       const data = [];
+      const now = new Date();
+      
       for (let i = 6; i >= 0; i--) {
-        const date = new Date();
+        const date = new Date(now);
         date.setDate(date.getDate() - i);
-        labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
-        // Realistic simulated trend based on total points
-        data.push(Math.floor(totalPoints / 7 * (1 + (Math.random() * 0.4 - 0.2))) + (7-i) * 50);
+        const dayString = date.toLocaleDateString('en-US', { weekday: 'short' });
+        labels.push(dayString);
+        
+        // Count events from this specific day
+        const dayStart = new Date(date.setHours(0,0,0,0)).getTime();
+        const dayEnd = new Date(date.setHours(23,59,59,999)).getTime();
+        
+        const dayPoints = allGamification.filter(g => {
+          const ts = new Date(g.updatedAt || g.createdAt).getTime();
+          return ts >= dayStart && ts <= dayEnd;
+        }).reduce((sum, g) => sum + 50, 0); // 🏛️ XP Weighting: 50 per activity event
+        
+        data.push(dayPoints + (totalPoints > 0 ? 100 : 0)); // Minimum base node activity
       }
 
       res.json({
@@ -259,7 +278,10 @@ class CourseController {
           charts: {
             engagementTrend: { labels, data },
             curriculumDistribution: categories,
-            topCourses: courses.slice(0, 5).map(c => ({ name: c.title || c.name, students: Math.floor(Math.random() * 100) + 1 }))
+            topCourses: courses.map(c => ({ 
+              name: c.title || c.name, 
+              students: enrollmentMap[c.name] || 0 
+            })).sort((a, b) => b.students - a.students).slice(0, 5)
           }
         }
       });
