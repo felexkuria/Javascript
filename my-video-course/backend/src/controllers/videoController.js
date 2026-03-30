@@ -406,3 +406,14 @@ exports.getVideoStatus = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+// --- NEW (Senior Data Engineer): Activity Pulse Lookup ---
+exports.getWatchDates = async (req, res) => {
+  try {
+    const userId = req.user?.email || 'guest';
+    const dates = await dynamoVideoService.getWatchDates(userId);
+    res.json(dates);
+  } catch (err) {
+    console.error('Error fetching watch dates:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
