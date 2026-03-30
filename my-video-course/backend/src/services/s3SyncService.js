@@ -62,7 +62,11 @@ class S3SyncService {
   async verifyManifest(courseName) {
     try {
       const { ScanCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
-      const COURSES_TABLE = 'video-course-app-courses-prod';
+      const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+      const COURSES_TABLE = `video-course-app-courses-${environment}`;
+      const VIDEOS_TABLE = `video-course-app-videos-${environment}`;
+      
+      console.log(`🔍 Auditing manifest for ${courseName} on table: ${COURSES_TABLE}`);
       
       const courseResult = await dynamodb.docClient.send(new ScanCommand({
         TableName: COURSES_TABLE,

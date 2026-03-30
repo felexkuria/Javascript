@@ -15,8 +15,9 @@ const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-eas
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 
 const BUCKET_NAME = 'video-course-app-video-bucket-prod-6m5k2til';
-const COURSES_TABLE = 'video-course-app-courses-prod';
-const VIDEOS_TABLE = 'video-course-app-videos-prod';
+const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+const COURSES_TABLE = `video-course-app-courses-${environment}`;
+const VIDEOS_TABLE = `video-course-app-videos-${environment}`;
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
