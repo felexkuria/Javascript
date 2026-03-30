@@ -93,6 +93,7 @@ app.get('/videos/:courseName/:videoId', sessionAuth, (req, res) => webController
 app.get('/api/videos/localStorage', (req, res) => videoController.getLocalStorageFormat(req, res));
 app.post('/api/videos/stream-url', sessionAuth, (req, res) => videoController.getStreamUrl(req, res));
 app.post('/api/mark-watched', sessionAuth, (req, res) => videoController.markVideoWatchedEnhanced(req, res));
+app.get('/api/videos/watch-dates', sessionAuth, (req, res) => videoController.getWatchDates(req, res));
 app.get('/api/next-video', sessionAuth, (req, res) => videoController.getNextVideo(req, res));
 
 // ── FILE SERVING ROUTES ──────────────────────────────────────────────
@@ -127,5 +128,6 @@ app.use('/api/enrollments', sessionAuth, require('./routes/api/enrollments'));
 app.use('/api/wishlist', sessionAuth, require('./routes/api/wishlist'));
 app.use('/api/quizzes', sessionAuth, require('./routes/api/quizzes'));
 app.use('/api/ai', sessionAuth, require('./routes/api/ai'));
+app.use('/api/certificates', sessionAuth, require('./routes/api/certificates'));
 
 module.exports = app;

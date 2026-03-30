@@ -4,6 +4,8 @@ const dynamodb = require('../utils/dynamodb');
 const dynamoVideoService = require('../services/dynamoVideoService');
 const { v4: uuidv4 } = require('uuid');
 const s3Utils = require('../utils/s3Utils');
+const fs = require('fs');
+const path = require('path');
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
@@ -79,68 +81,83 @@ exports.generateCertificate = async (req, res) => {
       });
 
       // --- HIGH-FIDELITY ATLAS DESIGN ---
-      // Background & Base Geometry
+      // 1. Background Logic
       doc.rect(0, 0, doc.page.width, doc.page.height).fill('#001E2B');
       
-      // Abstract Geometric Patterns (Aesthetic Pulse)
+      // Technical Geometric Accents (Geometric Pulse)
       doc.save();
-      doc.opacity(0.1);
-      for (let i = 0; i < 5; i++) {
-        doc.moveTo(Math.random() * 800, 0)
-           .lineTo(Math.random() * 800, 600)
-           .stroke('#00ED64');
+      doc.lineWidth(1).strokeColor('#00ED64').opacity(0.15);
+      
+      // Vertical Circuit Lines
+      for (let i = 0; i < doc.page.width; i += 60) {
+        doc.moveTo(i, 0).lineTo(i, doc.page.height).stroke();
       }
+      
+      // Angular Accents
+      doc.lineWidth(2).opacity(0.3);
+      doc.moveTo(0, 0).lineTo(150, 150).stroke();
+      doc.moveTo(doc.page.width, doc.page.height).lineTo(doc.page.width - 150, doc.page.height - 150).stroke();
       doc.restore();
 
-      // Border Accents
-      doc.rect(40, 40, doc.page.width - 80, doc.page.height - 80).stroke('#00ED64');
-      doc.rect(50, 50, doc.page.width - 100, doc.page.height - 100).opacity(0.3).stroke('#00ED64');
+      // Border Architecture
+      doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40).lineWidth(3).strokeColor('#00ED64');
+      doc.rect(30, 30, doc.page.width - 60, doc.page.height - 60).lineWidth(1).opacity(0.2).stroke('#FFFFFF');
 
-      // Header Branding
+      // 2. Branding (Logo Integration)
+      try {
+        const logoPath = path.join(__dirname, '../../../frontend/public/images/logo-multitouch.png');
+        if (fs.existsSync(logoPath)) {
+          doc.image(logoPath, (doc.page.width / 2) - 30, 60, { width: 60 });
+        }
+      } catch (e) {
+        console.warn('Logo embed failed:', e.message);
+      }
+
       doc.fillColor('#00ED64')
         .font('Helvetica-Bold')
-        .fontSize(32)
-        .text('MULTITOUCH ACADEMY', 0, 100, { align: 'center', characterSpacing: 2 });
+        .fontSize(24)
+        .text('MULTITOUCH ACADEMY', 0, 130, { align: 'center', characterSpacing: 3 });
 
-      doc.fillColor('#E7EEEB')
-        .fontSize(14)
+      doc.fillColor('#9FB1AD')
+        .fontSize(12)
         .font('Helvetica')
-        .text('OFFICIAL CLOUD ENGINEERING CERTIFICATION', 0, 140, { align: 'center', characterSpacing: 4 });
+        .text('OFFICIAL ENGINEERING CREDENTIAL', 0, 160, { align: 'center', characterSpacing: 5 });
 
-      // Main Content
+      // 3. Identification Tier
       doc.fillColor('#FFFFFF')
         .fontSize(18)
-        .text('This credential verifies that', 0, 220, { align: 'center' });
+        .font('Helvetica')
+        .text('This verifies that', 0, 220, { align: 'center' });
 
       doc.fillColor('#00ED64')
-        .fontSize(44)
+        .fontSize(48)
         .font('Helvetica-Bold')
-        .text(req.user.name || 'Architect Student', 0, 255, { align: 'center' });
+        .text(req.user?.name || 'Architect Student', 0, 250, { align: 'center' });
 
       doc.fillColor('#FFFFFF')
         .fontSize(16)
         .font('Helvetica')
-        .text('has successfully completed the professional track', 0, 320, { align: 'center' });
+        .text('successfully mastered the curriculum', 0, 310, { align: 'center' });
 
-      doc.fillColor('#E7EEEB')
-        .fontSize(28)
+      doc.fillColor('#FFFFFF')
+        .fontSize(30)
         .font('Helvetica-Bold')
-        .text(course.title || course.name, 0, 355, { align: 'center' });
+        .text(course.title || course.name, 0, 345, { align: 'center', characterSpacing: 1 });
 
-      // Footer Metrics
+      // 4. Verification Metrics
       const footerY = 480;
-      doc.fillColor('#9FB1AD')
-        .fontSize(10)
+      doc.fillColor('#516462')
+        .fontSize(9)
         .font('Helvetica')
-        .text(`ISSUED: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`, 100, footerY);
+        .text(`ISSUED ON: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}`, 70, footerY);
       
       doc.text(`CERTIFICATE ID: ${certId.toUpperCase()}`, 0, footerY, { align: 'center' });
       
       doc.fillColor('#00ED64')
         .font('Helvetica-Bold')
-        .text('VERIFIED ARCHITECT SIGNATURE', 550, footerY);
+        .text('VERIFIED BY MULTITOUCH CI/CD', doc.page.width - 250, footerY);
       
-      doc.rect(550, footerY - 5, 200, 1).fill('#00ED64'); // Signature line
+      doc.rect(doc.page.width - 250, footerY - 5, 180, 0.5).fill('#00ED64');
 
       doc.end();
     });
