@@ -189,19 +189,22 @@
         });
 
         function loginAsSuperAdmin() {
+            // 🔧 SECURITY FIX: Never embed plaintext passwords in HTML source
             document.getElementById('email').value = 'engineerfelex@gmail.com';
-            document.getElementById('password').value = 'hyjnij-honrun-2cEdju';
+            document.getElementById('password').focus();
             updateRole('teacher');
         }
 
         async function setupSuperAdmin() {
-            const adminKey = prompt("Enter ADMIN_KEY:");
+            const adminKey = prompt('Enter ADMIN_KEY:');
             if (!adminKey) return;
+            const password = prompt('Enter admin password:');
+            if (!password) return;
             try {
                 const response = await fetch('/api/auth/setup-admin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: 'engineerfelex@gmail.com', password: 'hyjnij-honrun-2cEdju', adminKey })
+                    body: JSON.stringify({ email: 'engineerfelex@gmail.com', password, adminKey })
                 });
                 const data = await response.json();
                 alert(data.success ? 'Success' : 'Error: ' + data.error);

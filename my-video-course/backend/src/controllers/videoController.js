@@ -36,7 +36,8 @@ exports.getAllVideos = async (req, res) => {
     // Universal S3 Signing
     const signedVideos = await s3VideoService.processVideoList(videos);
     
-    res.render('dashboard', { videos: signedVideos });
+    // 🔧 FIX: Return JSON for API consumers (was wrongly rendering the dashboard HTML view)
+    res.json({ success: true, data: signedVideos });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -144,7 +145,8 @@ exports.getVideo = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
     const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
-    const video = videos.find(v => v._id.toString() === videoId);
+    // 🔧 FIX: Null-guard — v._id can be undefined when the primary key is videoId
+    const video = videos.find(v => (v._id || v.videoId || v.id || '').toString() === videoId);
     if (!video) {
       return res.status(404).json({ success: false, error: 'Video not found' });
     }
@@ -164,7 +166,8 @@ exports.markWatched = async (req, res) => {
     
     // Get video details first
     const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
-    const video = videos.find(v => v._id.toString() === videoId);
+    // 🔧 FIX: Null-guard — v._id can be undefined when the primary key is videoId
+    const video = videos.find(v => (v._id || v.videoId || v.id || '').toString() === videoId);
     
     if (!video) {
       return res.status(404).json({ success: false, error: 'Video not found' });

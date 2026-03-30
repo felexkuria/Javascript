@@ -38,24 +38,21 @@ router.get('/', async (req, res) => {
 
 async function getQuizForVideo(videoId, userId, courseName = null) {
   // Check DynamoDB for quiz data
+  // 🔧 FIX: Use the correct table name (video-course-app-captions-{env})
+  // Quiz data is cached via dynamoVideoService.cacheLearningContent() using videoId_quiz pattern
   const dynamodb = require('../../utils/dynamodb');
   const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
   
-  if (dynamodb.isAvailable()) {
+  // 1. First try the learning content cache (correct table)
+  if (courseName && dynamodb.isAvailable()) {
     try {
-      const { ScanCommand } = require('@aws-sdk/lib-dynamodb');
-      const params = {
-        TableName: `video-course-quizzes-${environment}`,
-        FilterExpression: 'videoId = :videoId',
-        ExpressionAttributeValues: { ':videoId': videoId }
-      };
-      
-      const result = await dynamodb.docClient.send(new ScanCommand(params));
-      if (result.Items && result.Items.length > 0) {
-        return result.Items[0].questions;
+      const dynamoVideoService = require('../../services/dynamoVideoService');
+      const cached = await dynamoVideoService.getCachedLearningContent(courseName, videoId, 'quiz');
+      if (cached) {
+        return JSON.parse(cached);
       }
     } catch (error) {
-      console.log('DynamoDB quiz lookup failed');
+      console.log('Learning cache quiz lookup failed:', error.message);
     }
   }
   

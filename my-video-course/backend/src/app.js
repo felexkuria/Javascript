@@ -90,11 +90,7 @@ app.get('/course/:courseName', sessionAuth, (req, res) => webController.renderCo
 app.get('/video/:courseName', sessionAuth, (req, res) => webController.renderVideo(req, res));
 app.get('/course/:courseName/video/:videoId?', sessionAuth, (req, res) => webController.renderVideo(req, res));
 app.get('/videos/:courseName/:videoId', sessionAuth, (req, res) => webController.renderVideo(req, res));
-app.get('/api/videos/localStorage', (req, res) => videoController.getLocalStorageFormat(req, res));
-app.post('/api/videos/stream-url', sessionAuth, (req, res) => videoController.getStreamUrl(req, res));
 app.post('/api/mark-watched', sessionAuth, (req, res) => videoController.markVideoWatchedEnhanced(req, res));
-app.get('/api/videos/watch-dates', sessionAuth, (req, res) => videoController.getWatchDates(req, res));
-app.get('/api/next-video', sessionAuth, (req, res) => videoController.getNextVideo(req, res));
 
 // ── FILE SERVING ROUTES ──────────────────────────────────────────────
 app.get('/pdf/*', sessionAuth, (req, res) => webController.servePdf(req, res));

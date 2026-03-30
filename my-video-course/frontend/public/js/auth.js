@@ -12,8 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Check if user is already logged in
-    if (token && window.location.pathname === '/api/auth/login') {
+    // Redirect already-logged-in users away from login page
+    // 🔧 FIX: Was checking /api/auth/login (API endpoint) — should be /login (web page)
+    if (token && (window.location.pathname === '/login' || window.location.pathname === '/signup')) {
         window.location.href = '/dashboard';
         return;
     }

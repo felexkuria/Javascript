@@ -225,6 +225,7 @@
         .flex { display: flex !important; }
       }
     </style>
+    <%- typeof extraStyles !== 'undefined' ? extraStyles : '' %>
 </head>
 <body class="<%= typeof theme !== 'undefined' ? theme : '' %>" style="font-family: 'Euclid Circular A', 'Inter', system-ui, sans-serif;">
     <nav class="mdb-nav">

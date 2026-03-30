@@ -407,6 +407,8 @@ class DynamoVideoService {
       normalized.streakData = data.streakData || normalized.streakData;
       
       // --- NEW (Senior Data Engineer): SOTA Activity Backfill ---
+      // 🔧 FIX: Null-guard streakDates before accessing .length (first-login crash)
+      if (!normalized.streakData.streakDates) normalized.streakData.streakDates = [];
       if (normalized.streakData.streakDates.length === 0 && Object.keys(normalized.userStats.videosWatched).length > 0) {
         console.log(`[SYS] Backfilling streak dates for user ${userId}...`);
         const watchDates = new Set();
@@ -429,13 +431,13 @@ class DynamoVideoService {
     try {
       // 🛡️ Enforce clean nested schema on save
       const cleanData = {
-        userStats: data.userStats,
-        achievements: data.achievements,
-        streakData: data.streakData
+        userStats: data.userStats ? { ...data.userStats } : {},
+        achievements: data.achievements || [],
+        streakData: data.streakData || { currentStreak: 0, longestStreak: 0, streakDates: [] }
       };
       
-      // Remove any top-level polluting attributes accidentally passed from legacy calls
-      delete cleanData.userStats.userId;
+      // 🔧 FIX: Safe-delete userId only if it exists (prevents TypeError on clean data)
+      if (cleanData.userStats && 'userId' in cleanData.userStats) delete cleanData.userStats.userId;
       
       return await dynamodb.saveGamificationData(userId, cleanData);
     } catch (error) {
@@ -656,12 +658,14 @@ class DynamoVideoService {
   }
 
   // Caption caching methods
+  // 🔧 FIX: Use this.isDynamoAvailable() + dynamodb.docClient (not this.isConnected / this.docClient)
   async getCachedCaption(courseName, videoId) {
-    if (!this.isConnected) return null;
+    if (!this.isDynamoAvailable()) return null;
     
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
     
     try {
+      const { GetCommand } = require('@aws-sdk/lib-dynamodb');
       const params = {
         TableName: `video-course-app-captions-${environment}`,
         Key: { 
@@ -670,7 +674,7 @@ class DynamoVideoService {
         }
       };
       
-      const result = await this.docClient.send(new GetCommand(params));
+      const result = await dynamodb.docClient.send(new GetCommand(params));
       return result.Item?.captionContent || null;
     } catch (error) {
       console.error('Error getting cached caption:', error);
@@ -679,11 +683,12 @@ class DynamoVideoService {
   }
   
   async cacheCaption(courseName, videoId, captionContent) {
-    if (!this.isConnected) return false;
+    if (!this.isDynamoAvailable()) return false;
     
     const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
     
     try {
+      const { PutCommand } = require('@aws-sdk/lib-dynamodb');
       const params = {
         TableName: `video-course-app-captions-${environment}`,
         Item: {
@@ -694,7 +699,7 @@ class DynamoVideoService {
         }
       };
       
-      await this.docClient.send(new PutCommand(params));
+      await dynamodb.docClient.send(new PutCommand(params));
       return true;
     } catch (error) {
       console.error('Error caching caption:', error);

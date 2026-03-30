@@ -1,6 +1,8 @@
-// Session-based authentication middleware with JWT token support
+// Session-based authentication middleware with JWT token support and verified email extraction
+const jwt = require('jsonwebtoken');
+
 module.exports = function(req, res, next) {
-  // Check session first
+  // Check session first (primary auth mechanism)
   if (req.session && req.session.user) {
     req.user = req.session.user;
     return next();
@@ -11,26 +13,31 @@ module.exports = function(req, res, next) {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
     try {
-      // For now, just check if token exists (Cognito validation happens in cognitoAuth)
-      if (token) {
-        // Set a basic user object - will be populated by Cognito middleware if needed
-        req.user = { fromToken: true };
-        return next();
-      }
+      // 🔧 FIX: Properly verify and decode JWT so req.user.email is available downstream
+      const secret = process.env.JWT_SECRET || 'secret';
+      const decoded = jwt.verify(token, secret);
+      
+      // Populate req.user with verified claims (email, role)
+      req.user = {
+        email: decoded.email,
+        role: decoded.role || 'student',
+        roles: decoded.roles || [decoded.role || 'student'],
+        isAdmin: decoded.role === 'admin' || decoded.email === 'engineerfelex@gmail.com',
+        isTeacher: decoded.role === 'teacher' || decoded.role === 'admin',
+        fromToken: true
+      };
+      return next();
     } catch (error) {
-      console.error('Token validation error:', error);
+      // Token is invalid/expired — fall through to redirect
+      console.warn('JWT verification failed:', error.message);
     }
   }
   
-  // Redirect to login for web routes
-  if (req.path.startsWith('/admin') || req.path.startsWith('/dashboard') || req.path === '/') {
-    return res.redirect('/login');
-  }
-  
   // Return 401 for API routes
-  if (req.path.startsWith('/api/')) {
-    return res.status(401).json({ error: 'Authentication required' });
+  if (req.accepts('json') && req.path.startsWith('/api/')) {
+    return res.status(401).json({ error: 'Authentication required', code: 'UNAUTHENTICATED' });
   }
   
+  // Redirect to login for web routes
   res.redirect('/login');
 };
