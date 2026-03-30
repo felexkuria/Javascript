@@ -721,3 +721,168 @@ input, select, textarea { font-family: inherit; }
     padding: var(--space-4);
   }
 }
+
+/* ============================================================
+   AI Calibration HUD & Neural Core
+   Intelligence Sync Engine Design
+   ============================================================ */
+
+.hud-backdrop {
+  background: radial-gradient(circle at center, #001E2B 0%, #000B0F 100%);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 150;
+}
+
+/* Suppress system clutter when HUD is active */
+.hud-active .system-badge,
+.hud-active #videoOverlay,
+.hud-active .play-button {
+  display: none !important;
+}
+
+/* Geometric Grid Overlay - Specific to HUD */
+.hud-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0, 237, 100, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 237, 100, 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Neural Core Animation */
+.neural-core-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.neural-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 237, 100, 0.2);
+  animation: rotate-hud-ring linear infinite;
+}
+
+.ring-1 { width: 100%; height: 100%; border-top-color: var(--mdb-green); border-width: 2px; animation-duration: 4s; }
+.ring-2 { width: 80%; height: 80%; border-right-color: #00afff; border-width: 1.5px; animation-duration: 3s; animation-direction: reverse; }
+.ring-3 { width: 60%; height: 60%; border-bottom-color: var(--mdb-green); border-width: 1px; animation-duration: 2s; }
+
+.neural-nucleus {
+  width: 20px;
+  height: 20px;
+  background: var(--mdb-green);
+  border-radius: 50%;
+  box-shadow: 0 0 30px var(--mdb-green), 0 0 60px var(--mdb-green);
+  animation: nucleus-pulse 2s ease-in-out infinite;
+}
+
+@keyframes rotate-hud-ring {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes nucleus-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+/* High-Tech Telemetry */
+.hud-telemetry {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  max-width: 600px;
+  width: 90%;
+  margin-top: 1rem;
+  z-index: 10;
+}
+
+.telemetry-node {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.node-label {
+  font-size: 8px;
+  font-weight: 900;
+  color: var(--mdb-slate-mid);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+
+.node-value {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Calibration Scanning Line */
+.hud-scanner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--mdb-green), transparent);
+  box-shadow: 0 0 15px var(--mdb-green);
+  opacity: 0.5;
+  animation: scan-line 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100vh); }
+}
+
+.sync-status-msg {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: var(--mdb-green);
+  margin-top: 1.5rem;
+  animation: status-flicker 3s infinite;
+  z-index: 10;
+}
+
+@keyframes status-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 22%, 24%, 55% { opacity: 0.5; }
+}
+
+/* Retry Button Glow Effect */
+.btn-hud-retry {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--mdb-green);
+  background: rgba(0, 237, 100, 0.1);
+  color: var(--mdb-green);
+  transition: all 0.3s;
+}
+
+.btn-hud-retry:hover {
+  background: var(--mdb-green);
+  color: var(--mdb-midnight);
+  box-shadow: 0 0 20px var(--mdb-green);
+}

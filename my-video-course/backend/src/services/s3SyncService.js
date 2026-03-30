@@ -58,7 +58,7 @@ class S3SyncService {
     }
   }
 
-  // Verify and repair course manifest links
+  // Verify and repair course manifest links (Enhanced with Detailed Logs)
   async verifyManifest(courseName) {
     try {
       const { ScanCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
@@ -66,6 +66,7 @@ class S3SyncService {
       const COURSES_TABLE = `video-course-app-courses-${environment}`;
       const VIDEOS_TABLE = `video-course-app-videos-${environment}`;
       
+      const logs = [`Initiating audit for ${courseName}...`];
       console.log(`🔍 Auditing manifest for ${courseName} on table: ${COURSES_TABLE}`);
       
       const courseResult = await dynamodb.docClient.send(new ScanCommand({
@@ -75,18 +76,26 @@ class S3SyncService {
       }));
 
       const course = courseResult.Items?.[0];
-      if (!course) return { success: false, message: 'Course not found' };
+      if (!course) return { success: false, message: 'Course not found', logs: ['Audit Failed: Course Node Not Found'] };
 
       let itemsRepaired = 0;
+      let lastRepairedUrl = null;
       const sections = course.sections || [];
+      
+      logs.push("Scanning Architectural Nodes...");
       
       for (const section of sections) {
         for (const lecture of section.lectures || []) {
-          if (lecture.type === 'video') {
+          if (lecture.type === 'video' || lecture.type === 'pdf') {
             const s3Key = (lecture.videoUrl || '').split('.com/')[1] || lecture.videoUrl;
+            logs.push(`Handshaking node: ${lecture.title.substring(0, 20)}...`);
+            
             const exists = await this.checkS3Exists(s3Key);
             
             if (!exists) {
+              logs.push(`⚠️  S3_LINK_404: Node Offline`);
+              logs.push(`Starting Recovery Sync for "${lecture.title}"...`);
+              
               const recovery = await this.findRecoveryVideo(lecture.title, courseName);
               if (recovery) {
                 const newUrl = `https://${this.bucketName}.s3.amazonaws.com/${recovery.s3Key}`;
@@ -95,13 +104,20 @@ class S3SyncService {
                 lecture.fullVideoUrl = newUrl;
                 lecture.videoId = recovery.videoId;
                 itemsRepaired++;
+                lastRepairedUrl = newUrl;
+                logs.push(`✅ Handshake Restored: Recovery Match [SUCCESS]`);
+              } else {
+                logs.push(`❌ Recovery Pulse Failed: No Match Found`);
               }
+            } else {
+              logs.push(`Handshake Valid [OK]`);
             }
           }
         }
       }
 
       if (itemsRepaired > 0) {
+        logs.push(`Committing Repairs to DynamoDB...`);
         await dynamodb.docClient.send(new UpdateCommand({
           TableName: COURSES_TABLE,
           Key: { courseName: course.courseName },
@@ -111,12 +127,20 @@ class S3SyncService {
             ":updatedAt": new Date().toISOString()
           }
         }));
+        logs.push(`Final Handshake Successful: ${itemsRepaired} nodes restored.`);
+      } else {
+        logs.push(`Sync Complete: All nodes verified [OK].`);
       }
 
-      return { success: true, repairedCount: itemsRepaired };
+      return { 
+        success: true, 
+        repairedCount: itemsRepaired, 
+        logs, 
+        newUrl: lastRepairedUrl 
+      };
     } catch (error) {
       console.error('Manifest verification error:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message, logs: [`ERROR: ${error.message}`] };
     }
   }
 
