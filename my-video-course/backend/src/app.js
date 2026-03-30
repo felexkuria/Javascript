@@ -130,4 +130,38 @@ app.use('/api/quizzes', sessionAuth, require('./routes/api/quizzes'));
 app.use('/api/ai', sessionAuth, require('./routes/api/ai'));
 app.use('/api/certificates', sessionAuth, require('./routes/api/certificates'));
 
+// ── PREVIOUSLY UNREGISTERED ROUTES (Internal Server Error Fix) ────────
+app.use('/api/learning', sessionAuth, require('./routes/api/learning'));
+app.use('/api/videos', require('./routes/api/videos'));
+app.use('/api/gamification', sessionAuth, require('./routes/api/gamification'));
+app.use('/api/captions', sessionAuth, require('./routes/api/captions'));
+app.use('/api/sync', sessionAuth, require('./routes/api/sync'));
+// NOTE: routes/api/users.js and routes/api/admin.js depend on legacy Mongoose
+// models (../../models/User, TeacherRequest) removed during DynamoDB migration.
+// They are intentionally excluded until rewritten to use dynamodb utils.
+
+// ── GLOBAL 404 HANDLER ───────────────────────────────────────────────
+app.use((req, res) => {
+  if (req.accepts('json') && req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found', path: req.path });
+  }
+  res.status(404).render('error', { message: `Page not found: ${req.path}` });
+});
+
+// ── GLOBAL ERROR HANDLER ─────────────────────────────────────────────
+// This catch-all must be the LAST middleware (4 arguments = Express error handler)
+app.use((err, req, res, next) => {
+  console.error('🔴 Unhandled Server Error:', err.stack || err.message);
+  const status = err.status || err.statusCode || 500;
+  if (req.accepts('json') && req.path.startsWith('/api/')) {
+    return res.status(status).json({
+      error: 'Internal Server Error',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
+    });
+  }
+  res.status(status).render('error', {
+    message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
+  });
+});
+
 module.exports = app;
