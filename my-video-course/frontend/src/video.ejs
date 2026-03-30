@@ -423,10 +423,47 @@
         COMMAND EXECUTED
     </div>
 
+    <!-- Mobile Lab Toggle Button (bottom drawer trigger) -->
+    <button id="mobile-lab-toggle" onclick="toggleMobileLab()" aria-label="Open Learning Lab">
+        <i class="fas fa-layer-group"></i>
+    </button>
+
     <!-- Gamification Data Context -->
     <input type="hidden" id="isLastVideo" value="<%= typeof isLastVideo !== 'undefined' ? isLastVideo : false %>">
     <input type="hidden" id="isLastInChapter" value="<%= typeof isLastInChapter !== 'undefined' ? isLastInChapter : false %>">
 
     <%- include('partials/video-scripts', { video, courseName, isLastVideo, isLastInChapter }) %>
+    <script>
+    // ── Mobile Lab Drawer ────────────────────────────────────────────────────
+    function toggleMobileLab() {
+        const lab = document.querySelector('.side-lab');
+        const overlay = document.getElementById('sidebar-overlay');
+        const isOpen = lab?.classList.contains('mobile-open');
+        if (isOpen) {
+            lab?.classList.remove('mobile-open');
+            overlay?.classList.remove('active');
+        } else {
+            lab?.classList.add('mobile-open');
+            overlay?.classList.add('active');
+        }
+    }
+
+    // Override toggleSidebar for mobile behavior
+    window.toggleSidebar = function() {
+        if (window.innerWidth <= 768) {
+            toggleMobileLab();
+        } else {
+            const parent = document.querySelector('.command-center');
+            parent?.classList.toggle('sidebar-collapsed');
+        }
+    };
+
+    // Tap overlay to close drawer on mobile
+    document.getElementById('sidebar-overlay')?.addEventListener('click', function() {
+        const lab = document.querySelector('.side-lab');
+        lab?.classList.remove('mobile-open');
+        this.classList.remove('active');
+    });
+    </script>
 </body>
 </html>

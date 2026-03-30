@@ -151,28 +151,49 @@ class WebController {
       // Fetch user gamification status
       const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
 
-      // 🏥 Recovery & Hydration: Fetch fresh videos from the standalone Videos table
-      const videos = await dynamoVideoService.getVideosForCourse(courseName, userId);
+      // ── Video Resolution Strategy ────────────────────────────────────────────
+      // course.videos[] uses _id (from DynamoDB course record, matches sidebar URLs)
+      // getVideosForCourse() returns a standalone-table with videoId (different IDs)
+      // We must match against course.videos first, then use the standalone table for S3 URLs.
+      const courseVideos = course.videos || [];
+      const standaloneVideos = await dynamoVideoService.getVideosForCourse(courseName, userId);
 
-      // 🔧 FIX: Null-safe find — videoId may be null (first video default), or a string ID
-      const video = videoId
-        ? (videos.find(v =>
+      // 🔧 FIX: Look up by _id in course.videos first (this is what sidebar links use)
+      let video = null;
+      if (videoId) {
+        // 1. Primary: match in course.videos by _id or videoId
+        video = courseVideos.find(v =>
+          (v._id      && v._id.toString()     === videoId) ||
+          (v.videoId  && v.videoId.toString() === videoId) ||
+          (v.id       && v.id.toString()       === videoId) ||
+          (v.title    === videoId)
+        );
+
+        // 2. Fallback: match in standalone videos table
+        if (!video) {
+          video = standaloneVideos.find(v =>
             (v.videoId && v.videoId.toString() === videoId) ||
-            (v._id     && v._id.toString()     === videoId) ||
-            (v.id      && v.id.toString()       === videoId) ||
-            (v.title   === videoId)
-          ) || videos[0])
-        : videos[0];
+            (v._id     && v._id.toString()     === videoId)
+          );
+        }
+      }
+
+      // 3. Default: first video in course
+      if (!video) {
+        video = courseVideos[0] || standaloneVideos[0];
+      }
 
       if (!video) {
         return res.status(404).render('error', {
           message: `Video "${videoId}" not found in curriculum for course "${courseName}"`,
-          details: 'The system attempted to locate the media asset in DynamoDB but the reference is missing or its course mapping is invalid.'
+          details: 'The media asset reference is missing or its course mapping is invalid.'
         });
       }
 
+      // ── Curriculum structure for sidebar ───────────────────────────────────
+      const allVideos = courseVideos.length > 0 ? courseVideos : standaloneVideos;
 
-      // SOTA Smart Curriculum Engine
+
       const sections = await dynamoVideoService.getStructuredCurriculum(course, userId);
       
       // Batch Sign S3 Assets for Sidebar
@@ -182,11 +203,12 @@ class WebController {
         lectures: await s3VideoService.processVideoList(section.lectures)
       })));
 
-      const currentIndex = videos.findIndex(v => (v.videoId === video.videoId) || (v._id === video._id));
-      const prevVideo = currentIndex > 0 ? videos[currentIndex - 1] : null;
-      const nextVideo = currentIndex < videos.length - 1 ? videos[currentIndex + 1] : null;
-      const isLastVideo = currentIndex === videos.length - 1;
+      const currentIndex = allVideos.findIndex(v => (v._id && v._id === video._id) || (v.videoId && v.videoId === video.videoId));
+      const prevVideo = currentIndex > 0 ? allVideos[currentIndex - 1] : null;
+      const nextVideo = currentIndex < allVideos.length - 1 ? allVideos[currentIndex + 1] : null;
+      const isLastVideo = currentIndex === allVideos.length - 1;
       const isLastInChapter = nextVideo && (nextVideo.section !== video.section);
+
 
       // SOTA Secure Media Delivery (Universal S3 Signing)
       const signedVideo = await s3VideoService.processVideoUrl(video, 'student', courseName);
