@@ -90,13 +90,31 @@ class S3VideoService {
       video.isS3Video = true;
       video.fullVideoUrl = await this.generateSignedUrl(video.videoUrl, 3600);
       
+      // Semantic Auto-tag (Check both URL extension and Title context)
+      const isPdfUrl = video.videoUrl.toLowerCase().split('?')[0].endsWith('.pdf');
+      const isPdfTitle = (video.title || '').toLowerCase().includes('pdf');
+      
+      if (isPdfUrl || isPdfTitle) {
+        video.type = 'pdf';
+        video.isPdf = true;
+      }
+
       if (video.thumbnailUrl) video.thumbnailUrl = await this.generateSignedUrl(video.thumbnailUrl, 3600);
       if (video.captionsUrl) video.captionsUrl = await this.generateSignedUrl(video.captionsUrl, 3600);
     } else if (this.isRelativeUrl(video.videoUrl)) {
       // 🏗️ Smart Key Recovery: If it's a relative path, it's a raw S3 Key.
-      // We pass it directly to generateSignedUrl which handles the bucket.
       video.isS3Video = true;
       video.fullVideoUrl = await this.generateSignedUrl(video.videoUrl, 3600);
+
+      // Semantic Auto-tag for relative keys
+      const isPdfRelUrl = video.videoUrl.toLowerCase().endsWith('.pdf');
+      const isPdfRelTitle = (video.title || '').toLowerCase().includes('pdf');
+      
+      if (isPdfRelUrl || isPdfRelTitle) {
+        video.type = 'pdf';
+        video.isPdf = true;
+      }
+
       if (video.thumbnailUrl) {
           video.thumbnailUrl = await this.generateSignedUrl(video.thumbnailUrl, 3600);
       } else if (video.visualInsights && Array.isArray(video.visualInsights) && video.visualInsights.length > 0) {

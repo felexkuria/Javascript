@@ -7,7 +7,7 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen>
         </iframe>
-        <% } else if (video && video.videoUrl && (video.videoUrl.toLowerCase().includes('.pdf') || video.type === 'resource' || video.type === 'pdf')) { %>
+        <% } else if (video && (video.isPdf || video.type === 'pdf' || (video.videoUrl && video.videoUrl.toLowerCase().includes('.pdf')) || (video.title && video.title.toLowerCase().includes('pdf')))) { %>
         <div class="pdf-viewer-container" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: #1e1e24; display: flex; flex-direction: column;">
             <iframe src="<%= video.fullVideoUrl || video.videoUrl || video.url %>" 
                     style="flex: 1; border: none; width: 100%; height: 100%;"
@@ -42,6 +42,7 @@
         </div>
         <% } %>
         
+        <% if (!video.isPdf && video.type !== 'pdf' && !(video.title && video.title.toLowerCase().includes('pdf'))) { %>
         <div id="mediaErrorOverlay" class="hidden hud-backdrop">
             <div class="hud-grid"></div>
             <div class="hud-scanner"></div>
@@ -75,12 +76,17 @@
                 </div>
             </div>
 
-            <div class="mt-12 flex gap-6">
+            <div id="hudLogs" class="hud-logs hidden">
+                <!-- Appended via JS -->
+            </div>
+
+            <div class="mt-12 flex gap-6" id="hudControls">
                 <button onclick="window.repairAndReload('<%= courseName %>')" class="btn-hud-retry px-10 py-4 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase">
                     REINITIATE HANDSHAKE
                 </button>
             </div>
         </div>
+        <% } %>
 
         <script>
         (function() {
@@ -96,9 +102,13 @@
 
             window.repairAndReload = async function(courseName) {
                 const btn = event.currentTarget;
-                const originalText = btn.innerText;
+                const controls = document.getElementById('hudControls');
+                const logContainer = document.getElementById('hudLogs');
+                
                 btn.innerText = 'SYNCING...';
                 btn.disabled = true;
+                logContainer.classList.remove('hidden');
+                logContainer.innerHTML = '';
                 
                 try {
                     const response = await fetch('/api/sync/repair-manifest', {
@@ -107,21 +117,74 @@
                         body: JSON.stringify({ courseName })
                     });
                     const result = await response.json();
+                    
+                    // Progressive Log Output for High-Fidelity UX
+                    if (result.logs) {
+                        for (const log of result.logs) {
+                            const entry = document.createElement('div');
+                            entry.className = 'hud-log-entry';
+                            entry.innerText = log;
+                            logContainer.appendChild(entry);
+                            logContainer.scrollTop = logContainer.scrollHeight;
+                            await new Promise(r => setTimeout(r, 200)); // Cinematic delay
+                        }
+                    }
+
                     if (result.success) {
-                        console.log('Manifest repaired:', result.repairedCount, 'items fixed');
-                        window.location.reload();
+                        const overlay = document.getElementById('mediaErrorOverlay');
+                        overlay.classList.add('calibration-complete');
+                        
+                        // Update Video Source immediately if URL was repaired
+                        if (result.newUrl) {
+                            const video = document.getElementById('videoPlayer');
+                            const source = document.getElementById('videoSource');
+                            if (source) source.src = result.newUrl;
+                            if (video) video.load();
+                        }
+
+                        // Replace retry with START PROTOCOL
+                        controls.innerHTML = `
+                            <button onclick="window.startProtocol()" class="btn-hud-start px-12 py-5 rounded-xl text-[12px] font-black tracking-[0.3em] uppercase">
+                                START PROTOCOL
+                            </button>
+                        `;
                     } else {
                         throw new Error(result.error || 'Sync failed');
                     }
                 } catch (error) {
-                    console.error('Repair failed:', error);
-                    alert('Sync error: ' + error.message);
-                    btn.innerText = originalText;
+                    const entry = document.createElement('div');
+                    entry.className = 'hud-log-entry text-red-500';
+                    entry.innerText = 'CRITICAL: ' + error.message;
+                    logContainer.appendChild(entry);
+                    btn.innerText = 'RETRY HANDSHAKE';
                     btn.disabled = false;
                 }
             };
 
+            window.startProtocol = function() {
+                const overlay = document.getElementById('mediaErrorOverlay');
+                const video = document.getElementById('videoPlayer');
+                
+                overlay.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+                overlay.style.opacity = '0';
+                overlay.style.transform = 'scale(1.1)';
+                
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    document.body.classList.remove('hud-active');
+                    if (video) {
+                        video.style.display = 'block';
+                        video.play().catch(e => console.log("Autoplay blocked, user interaction required"));
+                    }
+                }, 800);
+            };
+
             function showErrorOverlay() {
+                // Universal PDF Suppression Guard (Backend Type + Title + URL Verification)
+                <% if (video && (video.isPdf || video.type === 'pdf' || (video.title && video.title.toLowerCase().includes('pdf')) || (video.videoUrl && video.videoUrl.toLowerCase().split('?')[0].endsWith('.pdf')))) { %>
+                return;
+                <% } %>
+
                 const overlay = document.getElementById('mediaErrorOverlay');
                 if (overlay) overlay.classList.remove('hidden');
                 

@@ -94,6 +94,11 @@
 }
 
 /* ---- Atlas Patterns ----------------------------------------- */
+.hidden {
+  display: none !important;
+  color: transparent;
+  pointer-events: none;
+}
 .glass {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(12px);
@@ -343,6 +348,71 @@ input, select, textarea { font-family: inherit; }
   box-shadow: var(--shadow-md);
   border-color: rgba(0,237,100,.35);
   transform: translateY(-2px);
+}
+.btn-hud-retry:hover {
+  background: #00ED64;
+  color: #001E2B;
+  box-shadow: 0 0 30px rgba(0, 237, 100, 0.4);
+  transform: translateY(-2px);
+}
+
+/* New: HUD Terminal Logs */
+.hud-logs {
+  width: 100%;
+  max-width: 500px;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 237, 100, 0.1);
+  border-radius: 8px;
+  margin-top: 30px;
+  padding: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #9FB1AD;
+  overflow-y: auto;
+  text-align: left;
+  mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+}
+
+.hud-log-entry {
+  margin-bottom: 4px;
+  border-left: 2px solid #00ED64;
+  padding-left: 8px;
+  animation: log-fade-in 0.3s ease-out forwards;
+}
+
+@keyframes log-fade-in {
+  from { opacity: 0; transform: translateX(-5px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* New: Start Protocol Button */
+.btn-hud-start {
+  background: #00ED64;
+  color: #001E2B;
+  box-shadow: 0 0 50px rgba(0, 237, 100, 0.5);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.btn-hud-start:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 80px rgba(0, 237, 100, 0.8);
+}
+
+/* Success State */
+.calibration-complete .neural-ring {
+  border-color: #00ED64 !important;
+  box-shadow: 0 0 20px rgba(0, 237, 100, 0.2);
+}
+
+.calibration-complete .neural-dot {
+  background: #00ED64 !important;
+  box-shadow: 0 0 30px #00ED64;
+}
+
+.calibration-complete .sync-status-msg {
+  color: #00ED64 !important;
+  text-shadow: 0 0 10px rgba(0, 237, 100, 0.5);
 }
 .card-body { padding: var(--space-6); }
 
