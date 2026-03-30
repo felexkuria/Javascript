@@ -328,8 +328,11 @@ class GamificationSystem {
         
         console.log(`Total watched videos across all courses: ${totalWatchedVideos}`);
         
-        // Update streak data with actual watch dates
-        this.streakData.streakDates = Array.from(watchDates).sort();
+        // Update streak data with actual watch dates (Merging Local + Server)
+        const serverDates = this.streakData.streakDates || [];
+        const combinedDates = new Set([...serverDates, ...watchDates]);
+        this.streakData.streakDates = Array.from(combinedDates).sort();
+        
         this.calculateStreakFromDates();
         
         // Force recount from localStorage to ensure accuracy
@@ -343,7 +346,7 @@ class GamificationSystem {
         
         this.saveUserStats();
         this.saveStreakData();
-        this.syncWithMongoDB();
+        await this.syncWithMongoDB();
       }
     } catch (error) {
       console.warn('Failed to sync with localStorage videos:', error);
@@ -419,14 +422,20 @@ class GamificationSystem {
     this.updateProgressDisplay();
   }
 
-  // Check and handle level up
+  // Check and handle level up (Unifed with Backend Square Root Intelligence)
   checkLevelUp() {
-    const pointsForNextLevel = this.userStats.currentLevel * 100;
-    if (this.userStats.experiencePoints >= pointsForNextLevel) {
-      this.userStats.currentLevel++;
-      this.userStats.experiencePoints -= pointsForNextLevel;
-      this.showLevelUpNotification();
+    const totalXP = (this.userStats.experiencePoints || this.userStats.totalPoints || 0);
+    const newLevel = Math.floor(Math.sqrt(totalXP / 100)) + 1;
+    
+    if (newLevel > (this.userStats.currentLevel || 1)) {
+      const oldLevel = this.userStats.currentLevel;
+      this.userStats.currentLevel = newLevel;
+      this.showLevelUpNotification(newLevel);
       this.triggerConfetti();
+      
+      // Sync Sidebar if present
+      const sidebarLevel = document.getElementById('sidebar-level');
+      if (sidebarLevel) sidebarLevel.innerText = newLevel;
     }
   }
 
@@ -668,51 +677,55 @@ class GamificationSystem {
 
   // Update progress display in UI
   updateProgressDisplay() {
-    // Don't override if server has already rendered the data
-    const pointsElements = document.querySelectorAll('.user-points');
-    pointsElements.forEach(el => {
-      if (el.textContent === '0' || el.textContent === '') {
-        const points = this.userStats.totalPoints || 0;
-        el.textContent = points.toLocaleString();
-      }
+    const totalXP = (this.userStats.experiencePoints || this.userStats.totalPoints || 0);
+    const level = this.userStats.currentLevel || 1;
+    
+    // Update Global Sidebar if present
+    const sidebarXP = document.getElementById('sidebar-xp');
+    const sidebarLevel = document.getElementById('sidebar-level');
+    const progressBar = document.getElementById('sidebar-progress-bar');
+    
+    if (sidebarXP) sidebarXP.innerText = totalXP;
+    if (sidebarLevel) sidebarLevel.innerText = level;
+    if (progressBar) {
+      const nextLevelXP = Math.pow(level, 2) * 100;
+      const prevLevelXP = Math.pow(level - 1, 2) * 100;
+      const progress = Math.min(100, Math.max(0, ((totalXP - prevLevelXP) / (nextLevelXP - prevLevelXP)) * 100));
+      progressBar.style.width = `${progress}%`;
+    }
+
+    // Standard UI counters
+    document.querySelectorAll('.user-points').forEach(el => {
+      el.textContent = totalXP.toLocaleString();
     });
     
-    // Update level display
-    const levelElements = document.querySelectorAll('.user-level');
-    levelElements.forEach(el => {
-      if (el.textContent === '1' || el.textContent === '') {
-        el.textContent = this.userStats.currentLevel || 1;
-      }
+    document.querySelectorAll('.user-level').forEach(el => {
+      el.textContent = level;
     });
     
-    // Update streak display
-    const streakElements = document.querySelectorAll('.user-streak');
-    streakElements.forEach(el => {
-      if (el.textContent === '0' || el.textContent === '') {
-        el.textContent = this.streakData.currentStreak || 0;
-      }
+    document.querySelectorAll('.user-streak').forEach(el => {
+      el.textContent = this.streakData.currentStreak || 0;
     });
   }
 
   // Show level up notification
-  showLevelUpNotification() {
+  showLevelUpNotification(newLevel) {
     const notification = document.getElementById('achievement-notification');
+    if (!notification) return;
+
     notification.innerHTML = `
       <div class="achievement-content level-up">
         <div class="achievement-icon">🎉</div>
         <div class="achievement-text">
           <div class="achievement-title">Level Up!</div>
-          <div class="achievement-name">Level ${this.userStats.currentLevel}</div>
-          <div class="achievement-points">Keep learning!</div>
+          <div class="achievement-name">Level ${newLevel || this.userStats.currentLevel}</div>
+          <div class="achievement-points">Infrastructure Architect Mastery +1</div>
         </div>
       </div>
     `;
     
     notification.classList.add('show');
-    
-    setTimeout(() => {
-      notification.classList.remove('show');
-    }, 4000);
+    setTimeout(() => notification.classList.remove('show'), 4000);
   }
 
   // Trigger confetti effect

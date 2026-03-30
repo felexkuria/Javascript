@@ -6,6 +6,7 @@
     <title><%= typeof title !== 'undefined' ? title : 'Multitouch Academy' %></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/images/logo-multitouch.png">
     <link rel="stylesheet" href="/css/main.css">
     <%- include('partials/chatbot-styles') %>
     
@@ -52,21 +53,28 @@
         transform: scale(1.02);
       }
 
-      /* Atlas-style Hexagon Logo Mark */
+      /* Atlas-style Geometric Logo Mark */
       .nav-logo-mark {
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(135deg, #00ED64 0%, #00684A 100%);
-        border-radius: 8px;
+        width: 34px;
+        height: 34px;
+        background: #001E2B;
+        border: 1px solid rgba(0, 237, 100, 0.2);
+        border-radius: 9px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #001E2B;
-        font-weight: 900;
-        font-size: 18px;
-        box-shadow: 0 4px 12px rgba(0, 237, 100, 0.2);
+        box-shadow: 0 4px 15px rgba(0, 237, 100, 0.15);
         position: relative;
         overflow: hidden;
+      }
+
+      .nav-logo-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transform: scale(0.95);
+        mix-blend-mode: screen;
+        filter: brightness(1.2);
       }
       
       .nav-logo-mark::after {
@@ -76,9 +84,9 @@
         left: -50%;
         width: 200%;
         height: 200%;
-        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+        background: linear-gradient(45deg, transparent, rgba(0, 237, 100, 0.1), transparent);
         transform: rotate(45deg);
-        animation: logo-shimmer 3s infinite;
+        animation: logo-shimmer 4s infinite linear;
       }
       
       @keyframes logo-shimmer {
@@ -226,7 +234,7 @@
             </button>
             <a href="/dashboard" class="nav-brand">
                 <div class="nav-logo-mark">
-                    <span class="nav-leaf">🍃</span>
+                    <img src="/images/logo-multitouch.png" alt="Multitouch Academy" class="nav-logo-image">
                 </div>
                 <span class="nav-brand-name">Multitouch<span>Academy</span></span>
             </a>

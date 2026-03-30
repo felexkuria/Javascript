@@ -312,19 +312,23 @@ exports.markVideoWatchedEnhanced = async (req, res) => {
   try {
     const { videoId, courseName } = req.body;
     const userId = req.user?.email || 'guest';
+    
+    // 🏆 Point Awarding Protocol: Fetch BEFORE updating status to check "is first watch"
+    let gamificationData = await dynamoVideoService.getUserGamificationData(userId);
+    const isFirstWatch = !gamificationData.userStats.videosWatched[videoId];
+    
     const success = await dynamoVideoService.updateVideoWatchStatus(courseName, videoId, true, userId);
     
     if (success) {
-      // 🏆 Standardized Point Awarding Protocol
-      const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
-      
-      // Points only awarded on FIRST watch of this specific video
       let awardedPoints = 0;
-      if (!gamificationData.userStats.videosWatched[videoId]) {
+      if (isFirstWatch) {
         // Award Base Points (100)
         const baseXP = 100;
         gamificationData.userStats.totalPoints += baseXP;
+        gamificationData.userStats.experiencePoints = (gamificationData.userStats.experiencePoints || 0) + baseXP;
         awardedPoints += baseXP;
+        
+        // Mark as watched in gamification object (dynamoVideoService.updateVideoWatchStatus also does this internally, so we re-fetch or sync)
         gamificationData.userStats.videosWatched[videoId] = true;
         
         // Calculate Achievements
@@ -339,9 +343,14 @@ exports.markVideoWatchedEnhanced = async (req, res) => {
           if (!gamificationData.achievements.find(a => a.id === achievement.id)) {
             gamificationData.achievements.push({ ...achievement, unlockedAt: new Date().toISOString() });
             gamificationData.userStats.totalPoints += achievement.points;
+            gamificationData.userStats.experiencePoints = (gamificationData.userStats.experiencePoints || 0) + achievement.points;
             awardedPoints += achievement.points;
           }
         });
+        
+        // Update Level based on Experience Points: Level = floor(sqrt(XP/100)) + 1
+        const exp = gamificationData.userStats.experiencePoints || 0;
+        gamificationData.userStats.currentLevel = Math.floor(Math.sqrt(exp / 100)) + 1;
         
         // PERSIST with schema enforcement
         await dynamoVideoService.updateUserGamificationData(userId, gamificationData);
@@ -351,12 +360,15 @@ exports.markVideoWatchedEnhanced = async (req, res) => {
         success, 
         pointsAwarded: awardedPoints, 
         totalPoints: gamificationData.userStats.totalPoints,
+        experiencePoints: gamificationData.userStats.experiencePoints,
+        currentLevel: gamificationData.userStats.currentLevel,
         message: 'Video marked as watched' 
       });
     } else {
       res.json({ success, message: 'Failed to mark watched' });
     }
   } catch (error) {
+    console.error('Error in markVideoWatchedEnhanced:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };

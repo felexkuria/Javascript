@@ -301,6 +301,19 @@ class DynamoVideoService {
           userGamification.userStats.videosWatched = {};
         }
         
+        // --- NEW (Senior Data Engineer): Activity Logging ---
+        if (!userGamification.streakData) {
+          userGamification.streakData = { currentStreak: 0, longestStreak: 0, lastActivity: null, streakDates: [] };
+        }
+        if (!userGamification.streakData.streakDates) {
+          userGamification.streakData.streakDates = [];
+        }
+        
+        const today = new Date().toISOString().split('T')[0];
+        if (watched && !userGamification.streakData.streakDates.includes(today)) {
+          userGamification.streakData.streakDates.push(today);
+        }
+        
         userGamification.userStats.videosWatched[videoId] = watched;
         await this.updateUserGamificationData(userId, userGamification);
         
@@ -392,6 +405,19 @@ class DynamoVideoService {
       };
       normalized.achievements = data.achievements || [];
       normalized.streakData = data.streakData || normalized.streakData;
+      
+      // --- NEW (Senior Data Engineer): SOTA Activity Backfill ---
+      if (normalized.streakData.streakDates.length === 0 && Object.keys(normalized.userStats.videosWatched).length > 0) {
+        console.log(`[SYS] Backfilling streak dates for user ${userId}...`);
+        const watchDates = new Set();
+        // Here we'd ideally fetch all videos to get watchedAt, but for now we'll assume today if none found
+        // To be truly accurate, we trust the updateVideoWatchStatus to handle NEW events,
+        // but for migration, we'll mark the 'lastActivity' date at minimum.
+        if (normalized.streakData.lastActivity) {
+          watchDates.add(normalized.streakData.lastActivity.split('T')[0]);
+        }
+        normalized.streakData.streakDates = Array.from(watchDates);
+      }
     }
 
     return normalized;
@@ -441,6 +467,12 @@ class DynamoVideoService {
       }
       
       streak.lastActivity = new Date().toISOString();
+      
+      const todayDate = new Date().toISOString().split('T')[0];
+      if (!streak.streakDates) streak.streakDates = [];
+      if (!streak.streakDates.includes(todayDate)) {
+        streak.streakDates.push(todayDate);
+      }
       
       // Award points for streak milestones (match legacy logic)
       if (streak.currentStreak > 0 && streak.currentStreak % 7 === 0) {

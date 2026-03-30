@@ -592,12 +592,48 @@ document.addEventListener('DOMContentLoaded', function() {
     window.rewardXP = function(points) {
         if (!points || points <= 0) return;
         
+        // 1. Update Video Player Counter (Compatibility)
         const xpCounter = document.getElementById('userPoints');
         if (xpCounter) {
             const currentPoints = parseInt(xpCounter.innerText) || 0;
             xpCounter.innerText = currentPoints + points;
-            window.triggerXPEffect(points);
         }
+
+        // 2. Update Global Sidebar Status
+        const sidebarXP = document.getElementById('sidebar-xp');
+        const sidebarLevel = document.getElementById('sidebar-level');
+        const progressBar = document.getElementById('sidebar-progress-bar');
+        
+        if (sidebarXP) {
+            const currentTotalXP = parseInt(sidebarXP.innerText) || 0;
+            const newTotalXP = currentTotalXP + points;
+            sidebarXP.innerText = newTotalXP;
+            
+            // Recalculate Level & Progress
+            const newLevel = Math.floor(Math.sqrt(newTotalXP / 100)) + 1;
+            const nextLevelXP = Math.pow(newLevel, 2) * 100;
+            const prevLevelXP = Math.pow(newLevel - 1, 2) * 100;
+            const progress = Math.min(100, Math.max(0, ((newTotalXP - prevLevelXP) / (nextLevelXP - prevLevelXP)) * 100));
+            
+            if (sidebarLevel) {
+                const oldLevel = parseInt(sidebarLevel.innerText) || 1;
+                if (newLevel > oldLevel) {
+                    sidebarLevel.innerText = newLevel;
+                    // Trigger "Level Up" Celebration
+                    window.showAtlasHint?.(`LEVEL UP: REACHED LEVEL ${newLevel}!`);
+                    if (window.confetti) {
+                        confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 }, colors: ['#00ED64', '#FFD700'] });
+                    }
+                }
+            }
+            
+            if (progressBar) {
+                progressBar.style.width = `${progress}%`;
+            }
+        }
+
+        // 3. Trigger Visual Effects
+        window.triggerXPEffect(points);
     };
     
     document.addEventListener('achievementUnlocked', (e) => {

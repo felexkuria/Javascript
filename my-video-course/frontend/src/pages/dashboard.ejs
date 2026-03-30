@@ -124,8 +124,9 @@
         <!-- Main Dashboard Console -->
         <main class="flex-grow overflow-auto p-4 md:p-8 lg:p-12">
             <% 
-                const streak = (typeof gamificationData !== 'undefined' && gamificationData.streakData) ? gamificationData.streakData.currentStreak : 0;
-                const xp = (typeof gamificationData !== 'undefined') ? gamificationData.experiencePoints : 0;
+                const stats = (typeof gamificationData !== 'undefined' && gamificationData.userStats) ? gamificationData.userStats : { experiencePoints: 0, totalPoints: 0 };
+                const streak = (typeof gamificationData !== 'undefined' && gamificationData.streakData) ? (gamificationData.streakData.currentStreak || 0) : 0;
+                const xp = stats.experiencePoints || stats.totalPoints || 0;
                 const rank = (typeof gamificationData !== 'undefined') ? (gamificationData.rank || 'Engineer') : 'Novice';
             %>
             
