@@ -124,6 +124,55 @@ def lambda_handler(event, context):
 EOF
 }
 
+resource "local_file" "extract_thumbnail_py" {
+  filename   = "${path.module}/lambda_src/extract_thumbnail.py"
+  depends_on = [null_resource.lambda_src_dir]
+  content  = <<EOF
+import json, os, subprocess, shlex, boto3, urllib.parse
+
+s3 = boto3.client('s3')
+dynamodb = boto3.resource('dynamodb')
+
+def lambda_handler(event, context):
+    try:
+        if 'Sns' in event['Records'][0]:
+            sns_msg = json.loads(event['Records'][0]['Sns']['Message'])
+            rec = sns_msg['Records'][0]['s3']
+        else:
+            rec = event['Records'][0]['s3']
+            
+        bucket = rec['bucket']['name']
+        key = urllib.parse.unquote_plus(rec['object']['key'])
+    except Exception as e:
+        print(f"Error parsing event: {str(e)}")
+        return {'status': 'ignored'}
+
+    if not key.startswith("videos/") or not key.lower().endswith(('.mp4', '.mov', '.mkv')):
+        return {'status': 'skipped'}
+
+    video_path = f"/tmp/{os.path.basename(key)}"
+    thumb_filename = os.path.splitext(os.path.basename(key))[0] + ".jpg"
+    thumb_path = f"/tmp/{thumb_filename}"
+    
+    path_parts = key.split('/')
+    course_folder = path_parts[1]
+    thumb_key = f"thumbnails/{course_folder}/{thumb_filename}"
+
+    try:
+        s3.download_file(bucket, key, video_path)
+        ffmpeg_cmd = f"/opt/bin/ffmpeg -i {shlex.quote(video_path)} -ss 00:00:01 -vframes 1 -q:v 2 {shlex.quote(thumb_path)} -y"
+        subprocess.check_call(shlex.split(ffmpeg_cmd))
+        s3.upload_file(thumb_path, bucket, thumb_key, ExtraArgs={'ContentType': 'image/jpeg'})
+        return {'status': 'success', 'thumbnail': thumb_key}
+    except Exception as e:
+        print(f"Extraction failed: {str(e)}")
+        return {'status': 'error', 'message': str(e)}
+    finally:
+        if os.path.exists(video_path): os.remove(video_path)
+        if os.path.exists(thumb_path): os.remove(thumb_path)
+EOF
+}
+
 # Zip packaging
 data "archive_file" "start_transcribe_zip" {
   type        = "zip"
@@ -144,6 +193,13 @@ data "archive_file" "add_video_to_db_zip" {
   source_file = local_file.add_video_to_db_py.filename
   output_path = "${path.module}/add_video_to_db.zip"
   depends_on  = [local_file.add_video_to_db_py]
+}
+
+data "archive_file" "extract_thumbnail_zip" {
+  type        = "zip"
+  source_file = local_file.extract_thumbnail_py.filename
+  output_path = "${path.module}/extract_thumbnail.zip"
+  depends_on  = [local_file.extract_thumbnail_py]
 }
 
 # SNS Topic for Fan-Out
@@ -254,6 +310,27 @@ resource "aws_lambda_function" "add_video_to_db" {
   }
 }
 
+resource "aws_lambda_function" "extract_thumbnail" {
+  count            = (var.create_role || var.existing_role_arn != null) ? 1 : 0
+  filename         = data.archive_file.extract_thumbnail_zip.output_path
+  function_name    = "${var.app_name}-extract-thumbnail"
+  role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
+  handler          = "extract_thumbnail.lambda_handler"
+  runtime          = "python3.9"
+  source_code_hash = data.archive_file.extract_thumbnail_zip.output_base64sha256
+  timeout          = 30
+  memory_size      = 512
+
+  # Public FFmpeg Layer for us-east-1
+  layers = ["arn:aws:lambda:us-east-1:145266761615:layer:ffmpeg:1"]
+
+  environment {
+    variables = {
+      DYNAMODB_TABLE = var.dynamodb_table_name
+    }
+  }
+}
+
 # [NEW] Node.js Lambda for Transcribe Completion (Phase 9)
 resource "aws_lambda_function" "on_transcribe_complete" {
   function_name    = "${var.app_name}-on-transcribe-complete"
@@ -311,6 +388,13 @@ resource "aws_sns_topic_subscription" "add_video" {
   endpoint  = aws_lambda_function.add_video_to_db[0].arn
 }
 
+resource "aws_sns_topic_subscription" "extract_thumbnail" {
+  count     = length(aws_lambda_function.extract_thumbnail)
+  topic_arn = aws_sns_topic.video_updates.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.extract_thumbnail[0].arn
+}
+
 # Permissions
 resource "aws_lambda_permission" "sns_start_transcribe" {
   count         = length(aws_lambda_function.start_transcribe)
@@ -324,6 +408,14 @@ resource "aws_lambda_permission" "sns_add_video" {
   count         = length(aws_lambda_function.add_video_to_db)
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.add_video_to_db[0].function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.video_updates.arn
+}
+
+resource "aws_lambda_permission" "sns_extract_thumbnail" {
+  count         = length(aws_lambda_function.extract_thumbnail)
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.extract_thumbnail[0].function_name
   principal     = "sns.amazonaws.com"
   source_arn    = aws_sns_topic.video_updates.arn
 }
