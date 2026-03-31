@@ -14,8 +14,15 @@ variable "s3_bucket_arn" {
   type = string
 }
 
-variable "dynamodb_table_name" {
-  type = string
+variable "dynamodb_table_arn" {
+  description = "The ARN of the DynamoDB table"
+  type        = string
+}
+
+variable "aws_region" {
+  description = "The AWS region to deploy to"
+  type        = string
+  default     = "us-east-1"
 }
 
 variable "create_role" {

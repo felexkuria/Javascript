@@ -55,8 +55,9 @@ exports.handler = async (event) => {
     const video = videos.find(v => v.title.toLowerCase().includes(videoTitle.toLowerCase()));
     const videoId = video ? (video._id || video.videoId) : 'master';
 
+    const stats = { retried: false };
     const [quiz, summary, lab] = await Promise.all([
-      srtQuizGenerator.generateAIQuestions(srtEntries, videoTitle, 600),
+      srtQuizGenerator.generateAIQuestions(srtEntries, videoTitle, 600, { stats }),
       srtQuizGenerator.generateSummaryAndTopics(srtEntries, videoTitle),
       labGeneratorService.generateLabFromSRT(srtEntries, videoTitle, courseName, videoId)
     ]);
@@ -81,6 +82,7 @@ exports.handler = async (event) => {
             Namespace: 'VideoPipeline/Ingestion',
             MetricData: [
                 { MetricName: 'ExtractionSuccess', Value: 1, Unit: 'Count' },
+                { MetricName: 'ExtractionRetryCount', Value: stats.retried ? 1 : 0, Unit: 'Count' },
                 { MetricName: 'TotalProcessingLatency', Value: latencyMs / 1000, Unit: 'Seconds' }
             ]
         }));

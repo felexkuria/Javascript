@@ -4,6 +4,17 @@ This roadmap defines the transition of **Multitouch Academy** from a transcript-
 
 ---
 
+## ✅ Recently Shipped: The "Industrialization" Pillar
+**Objective**: Hardening the foundations for reliability at scale.
+- **Pillar 1: Schema Enforcement & AI Guardrails**: Strict Zod-backed validation with automated self-correction for LLM responses.
+- **Pillar 2: Industrial Orchestration**: Transitioned from SNS fan-out to **AWS Step Functions** for deterministic state management.
+- **Pillar 3: Circuit Breakers**: Standardized **SQS Dead Letter Queues (DLQs)** for ingestion failure recovery.
+- **Pillar 4: SHA-256 Idempotency**: Transitioned from request-ID based `videoId` to deterministic hashes, ensuring zero-duplicate records.
+- **Pillar 5: Storage-to-DB Sync**: Reactive and proactive cleanup jobs preventing S3/DynamoDB drift.
+- **Pillar 6: Pipeline Telemetry**: Real-time CloudWatch Dashboards tracking extraction success and latency.
+
+---
+
 ## 🏗️ Phase 1: Multi-modal Native RAG (The "Visual Memory" Phase)
 **Objective**: Moving beyond "Reading transcripts" to "Watching videos."
 > [!IMPORTANT]
@@ -13,6 +24,12 @@ This roadmap defines the transition of **Multitouch Academy** from a transcript-
 - **Visual Evidence Indexing**: Extract frames from videos where technical diagrams or code snippets are shown and index them alongside transcripts.
 - **Context Caching**: Implement **Gemini Context Caching** for 10-hour courses to provide near-instant semantic search with 90% lower token costs for repetitive queries.
 - **Direct Video Ingestion**: Allow the AI Tutor to "see" specific timestamps to answer questions like "Why did the instructor choose that specific VPC CIDR block at 12:45?"
+
+# RFC: Architecture Review & Hardening of the Video Ingestion Data Pipeline [CLOSED / IMPLEMENTED]
+
+## Status: ✅ SHIPPED TO PRODUCTION (2026-03-31)
+
+## Executive Summary
 
 ---
 

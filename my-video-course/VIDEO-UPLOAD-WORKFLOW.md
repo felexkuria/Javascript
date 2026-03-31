@@ -35,19 +35,25 @@ Complete video upload workflow with compression, S3 storage, caption generation,
   - **Todo List**: Actionable tasks for viewers
 - **Storage**: Embedded in video metadata in DynamoDB
 
-## 🏗️ Architecture
+## 🏗️ Architecture (Pillar 2: Step Functions)
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Admin UI      │───▶│  Video Upload    │───▶│   S3 Storage    │
-│ (Course Mgmt)   │    │   Processing     │    │  (Videos/SRT)   │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │
-                                ▼
-                       ┌──────────────────┐    ┌─────────────────┐
-                       │   AI Services    │───▶│   DynamoDB      │
-                       │ (Quiz/Summary)   │    │ (Metadata/AI)   │
-                       └──────────────────┘    └─────────────────┘
+The pipeline uses **AWS Step Functions** for industrial-grade orchestration. 
+
+```mermaid
+graph TD
+    S3[S3 Upload] -->|EventBridge| SFN{Step Function}
+    SFN --> Init[InitDBStatus]
+    Init --> Parallel[Parallel Processing]
+    subgraph Parallel
+        Thumb[Extract Thumbnail]
+        Trans[Start Transcription]
+    end
+    Parallel --> AI[AI Extraction & Enhance]
+    AI --> Success[READY]
+    
+    Init -.->|Fail| DLQ[SQS DLQ]
+    Parallel -.->|Fail| DLQ
+    AI -.->|Fail| DLQ
 ```
 
 ## 📁 File Structure
@@ -154,11 +160,10 @@ video: [video file]
 - **EC2 Instance**: S3 download → process → upload workflow
 - **Fallback**: Works without FFmpeg or AI services
 
-### 🛡️ Error Handling
-- **Missing FFmpeg**: Uses original video file
-- **S3 Unavailable**: Clear error messages
-- **AI Service Down**: Placeholder content
-- **DynamoDB Issues**: Fallback to localStorage
+### 🛡️ Error Handling (Pillar 3: DLQs)
+- **Circuit Breaker**: Failed videos are routed to an **SQS Dead Letter Queue** for manual replay.
+- **AI Self-Correction**: Zod validation failure triggers an automated LLM retry with error context.
+- **Stale Sync**: A weekly audit job purges DynamoDB records with missing S3 assets.
 
 ## 📊 Monitoring
 
