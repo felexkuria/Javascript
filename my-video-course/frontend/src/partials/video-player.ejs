@@ -105,10 +105,10 @@
                 const controls = document.getElementById('hudControls');
                 const logContainer = document.getElementById('hudLogs');
                 
-                btn.innerText = 'SYNCING...';
+                btn.innerText = 'DISCOVERING...';
                 btn.disabled = true;
                 logContainer.classList.remove('hidden');
-                logContainer.innerHTML = '';
+                logContainer.innerHTML = '<div class="hud-log-entry text-[#00ED64]">📡 ACCESSING DEEP ARCHIVE LAYER...</div>';
                 
                 try {
                     const response = await fetch('/api/sync/repair-manifest', {

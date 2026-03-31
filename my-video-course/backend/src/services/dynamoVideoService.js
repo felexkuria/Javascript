@@ -406,7 +406,21 @@ class DynamoVideoService {
       normalized.achievements = data.achievements || [];
       normalized.streakData = data.streakData || normalized.streakData;
       
-      // --- NEW (Senior Data Engineer): SOTA Activity Backfill ---
+      // --- NEW (Senior Data Engineer): SOTA Activity & XP Recovery ---
+      // 🔧 FIX: If XP is 0 but videosWatched exists, reconstruct the missing XP (50 per activity)
+      if (normalized.userStats.totalPoints === 0) {
+        const watchedCount = Object.keys(normalized.userStats.videosWatched).length;
+        if (watchedCount > 0) {
+          console.log(`[SYS] Reconstructing missing XP for user ${userId} (${watchedCount} lessons found).`);
+          normalized.userStats.totalPoints = watchedCount * 50;
+          normalized.userStats.experiencePoints = watchedCount * 50;
+          normalized.userStats.currentLevel = Math.floor(Math.sqrt(normalized.userStats.totalPoints / 100)) + 1;
+          
+          // Silently trigger an archive of the recovered truth
+          this.updateUserGamificationData(userId, normalized).catch(e => console.error('Archive Sync Failed:', e));
+        }
+      }
+      
       // 🔧 FIX: Null-guard streakDates before accessing .length (first-login crash)
       if (!normalized.streakData.streakDates) normalized.streakData.streakDates = [];
       if (normalized.streakData.streakDates.length === 0 && Object.keys(normalized.userStats.videosWatched).length > 0) {
