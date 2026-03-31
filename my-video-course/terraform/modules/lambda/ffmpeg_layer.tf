@@ -13,7 +13,7 @@ resource "aws_lambda_layer_version" "ffmpeg" {
   layer_name          = "${var.app_name}-ffmpeg"
   description         = "Self-managed FFmpeg binary for media processing (S3-sourced)"
   compatible_runtimes = ["python3.9", "python3.10", "python3.11", "python3.12", "nodejs18.x", "nodejs20.x"]
-  
+
   # Tracks changes to the source zip to trigger a new layer version if the file changes.
   source_code_hash = filebase64sha256("${path.module}/ffmpeg.zip")
 

@@ -9,7 +9,7 @@ resource "null_resource" "lambda_src_dir" {
 resource "local_file" "start_transcribe_py" {
   filename   = "${path.module}/lambda_src/start_transcribe.py"
   depends_on = [null_resource.lambda_src_dir]
-  content  = <<EOF
+  content    = <<EOF
 import json, os, time, urllib.parse, boto3
 
 transcribe = boto3.client('transcribe')
@@ -50,7 +50,7 @@ EOF
 resource "local_file" "postprocess_py" {
   filename   = "${path.module}/lambda_src/postprocess_subtitles.py"
   depends_on = [null_resource.lambda_src_dir]
-  content  = <<EOF
+  content    = <<EOF
 import json, os, urllib.parse, boto3
 
 s3 = boto3.client('s3')
@@ -87,7 +87,7 @@ EOF
 resource "local_file" "add_video_to_db_py" {
   filename   = "${path.module}/lambda_src/add_video_to_db.py"
   depends_on = [null_resource.lambda_src_dir]
-  content  = <<EOF
+  content    = <<EOF
 import json, os, urllib.parse, boto3, re
 from datetime import datetime
 
@@ -138,7 +138,7 @@ EOF
 resource "local_file" "extract_thumbnail_py" {
   filename   = "${path.module}/lambda_src/extract_thumbnail.py"
   depends_on = [null_resource.lambda_src_dir]
-  content  = <<EOF
+  content    = <<EOF
 import json, os, subprocess, boto3, urllib.parse
 
 s3 = boto3.client('s3')
@@ -402,7 +402,7 @@ resource "aws_lambda_function" "extract_thumbnail" {
   # Self-managed FFmpeg layer built from ffmpeg.zip (see ffmpeg_layer.tf).
   # Previously referenced a public 3rd-party ARN — using our own layer gives
   # full control over the binary version and avoids external dependency.
-  layers           = [aws_lambda_layer_version.ffmpeg.arn]
+  layers = [aws_lambda_layer_version.ffmpeg.arn]
 
   environment {
     variables = {
@@ -419,7 +419,7 @@ resource "aws_lambda_function" "on_transcribe_complete" {
   runtime          = "nodejs18.x"
   filename         = data.archive_file.on_transcribe_complete_zip.output_path
   source_code_hash = data.archive_file.on_transcribe_complete_zip.output_base64sha256
-  
+
   environment {
     variables = {
       DYNAMODB_TABLE = var.dynamodb_table_name

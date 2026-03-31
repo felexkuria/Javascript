@@ -6,7 +6,7 @@ data "aws_region" "current" {}
 resource "aws_s3_bucket" "main" {
   count  = var.create_s3_bucket ? 1 : 0
   bucket = var.s3_bucket_name != "" ? var.s3_bucket_name : "${var.app_name}-video-bucket-${var.environment}-${random_string.suffix[0].result}"
-  
+
   tags = {
     Name        = "${var.app_name}-storage"
     Environment = var.environment
@@ -152,7 +152,7 @@ resource "aws_dynamodb_table" "main" {
     for_each = each.value.ttl_attribute != null ? [1] : []
     content {
       attribute_name = each.value.ttl_attribute
-      enabled       = true
+      enabled        = true
     }
   }
 
@@ -183,7 +183,7 @@ resource "aws_iam_policy" "dynamodb_policy" {
         ]
         Resource = var.create_dynamodb_tables ? [
           for table in aws_dynamodb_table.main : table.arn
-        ] : [
+          ] : [
           "arn:aws:dynamodb:*:*:table/${var.app_name}-*-${var.environment}"
         ]
       }

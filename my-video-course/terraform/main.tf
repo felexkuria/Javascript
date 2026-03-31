@@ -152,10 +152,10 @@ module "compute" {
   max_size                  = local.current_config.max_size
   desired_capacity          = local.current_config.desired_cap
   user_data_base64 = base64encode(templatefile("${path.module}/user_data.sh", {
-    aws_region           = var.aws_region
-    s3_bucket_name       = module.storage.s3_bucket_name
-    account_id           = data.aws_caller_identity.current.account_id
-    image_tag            = var.container_image_tag
+    aws_region     = var.aws_region
+    s3_bucket_name = module.storage.s3_bucket_name
+    account_id     = data.aws_caller_identity.current.account_id
+    image_tag      = var.container_image_tag
   }))
 }
 
