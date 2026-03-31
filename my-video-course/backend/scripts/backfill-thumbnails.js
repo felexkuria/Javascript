@@ -6,26 +6,30 @@ const dynamodb = require('../src/utils/dynamodb'); // Use existing DB utility fr
 
 // Configurations
 const BUCKET = "video-course-app-video-bucket-prod-6m5k2til";
-const VIDEO_TABLE = "video-course-app-videos-prod";
+const VIDEO_TABLES = ["video-course-app-videos-prod", "video-course-app-videos-dev"];
 const REGION = "us-east-1";
 
 const s3 = new S3Client({ region: REGION });
 
 async function backfill() {
-  console.log("🚀 Starting SOTA Thumbnail Backfill (Backend Execution)...");
+  console.log("🚀 Starting SOTA Universal Thumbnail Backfill (Environment Expansion)...");
   
   const { ScanCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
-  const videosResult = await dynamodb.docClient.send(new ScanCommand({
-    TableName: VIDEO_TABLE
-  }));
   
-  const videos = videosResult.Items || [];
-  console.log(`🔍 Found ${videos.length} total video records.`);
-  
-  let processed = 0;
-  let skipped = 0;
-  
-  for (const video of videos) {
+  for (const tableName of VIDEO_TABLES) {
+    console.log(`\n📂 Scanning Table: ${tableName}`);
+    const videosResult = await dynamodb.docClient.send(new ScanCommand({
+        TableName: tableName
+    }));
+    
+    const videos = videosResult.Items || [];
+    console.log(`🔍 Found ${videos.length} video records.`);
+    
+    let processed = 0;
+    let skipped = 0;
+    
+    for (const video of videos) {
+        // ... (rest of logic remains same inside the loop)
     // Determine the S3 key from either field
     const s3Key = video.s3Key || (video.videoUrl ? video.videoUrl.split('.com/')[1] : null);
     if (!s3Key) {
@@ -129,7 +133,7 @@ async function backfill() {
       console.log(`   - Updating Manifest...`);
       // Update the flat video record
       await dynamodb.docClient.send(new UpdateCommand({
-        TableName: VIDEO_TABLE,
+        TableName: tableName,
         Key: { 
             courseName: video.courseName, 
             videoId: video.videoId 
@@ -145,15 +149,12 @@ async function backfill() {
         }
       }));
 
-      // Bonus: Update the Course Curriculum to ensure the Dashboard is synced
-      // (This requires finding the course object, but update record is faster)
-
       processed++;
       console.log(`   ✅ Success (${videoSourcePath ? "Frame" : "Placeholder"}).`);
     } catch (err) {
       console.error(`   ❌ Failed: ${err.message}`);
     } finally {
-      if (!isLocal && fs.existsSync(videoSourcePath)) {
+      if (!isLocal && videoSourcePath && fs.existsSync(videoSourcePath)) {
         try { fs.unlinkSync(videoSourcePath); } catch(e) {}
       }
       if (fs.existsSync(tempThumb)) {
@@ -167,8 +168,9 @@ async function backfill() {
         break;
     }
   }
+}
   
-  console.log(`\n🎉 Migration Complete! Processed: ${processed} | Skipped: ${skipped}`);
+  console.log(`\n🎉 Migration Complete!`);
 }
 
 backfill().catch(console.error);

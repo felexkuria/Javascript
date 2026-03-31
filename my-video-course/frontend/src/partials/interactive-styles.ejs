@@ -177,21 +177,28 @@
 .play-button {
     width: 80px;
     height: 80px;
-    background: rgba(255,255,255,0.9);
+    background: #000000; /* Light theme: Sleek Black */
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 32px;
-    color: #007aff;
+    color: #ffffff; /* Light theme: White Icon */
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: all;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.dark .play-button {
+    background: #ffffff; /* Dark theme: Premium White */
+    color: #000000;      /* Dark theme: Black Icon */
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
 
 .play-button:hover {
-    transform: scale(1.1);
-    background: white;
+    transform: scale(1.1) rotate(5deg);
+    filter: brightness(1.1);
 }
 
 /* Counter Animation */
