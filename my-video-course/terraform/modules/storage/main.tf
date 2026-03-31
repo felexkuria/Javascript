@@ -83,11 +83,13 @@ locals {
         { name = "videoId", type = "S" }
       ]
       ttl_attribute = null
-      gsi = {
-        name       = "VideoIdIndex"
-        hash_key   = "videoId"
-        projection = "ALL"
-      }
+      gsis = [
+        {
+          name       = "VideoIdIndex"
+          hash_key   = "videoId"
+          projection = "ALL"
+        }
+      ]
     }
     gamification = {
       hash_key  = "userId"
@@ -96,7 +98,7 @@ locals {
         { name = "userId", type = "S" }
       ]
       ttl_attribute = null
-      gsi           = null
+      gsis          = []
     }
     users = {
       hash_key  = "email"
@@ -105,7 +107,7 @@ locals {
         { name = "email", type = "S" }
       ]
       ttl_attribute = null
-      gsi           = null
+      gsis          = []
     }
     // New Table: AI Captions & Results Cache
     captions = {
@@ -116,7 +118,7 @@ locals {
         { name = "videoId", type = "S" }
       ]
       ttl_attribute = "expiresAt"
-      gsi           = null
+      gsis          = []
     }
   }
 }
@@ -130,11 +132,11 @@ resource "aws_dynamodb_table" "main" {
   range_key    = each.value.range_key
 
   dynamic "global_secondary_index" {
-    for_each = each.value.gsi != null ? [1] : []
+    for_each = each.value.gsis
     content {
-      name            = each.value.gsi.name
-      hash_key        = each.value.gsi.hash_key
-      projection_type = each.value.gsi.projection
+      name            = global_secondary_index.value.name
+      hash_key        = global_secondary_index.value.hash_key
+      projection_type = global_secondary_index.value.projection
     }
   }
 

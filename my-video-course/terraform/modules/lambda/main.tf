@@ -89,6 +89,7 @@ resource "local_file" "add_video_to_db_py" {
   depends_on = [null_resource.lambda_src_dir]
   content  = <<EOF
 import json, os, urllib.parse, boto3, re
+from datetime import datetime
 
 dynamodb = boto3.resource('dynamodb')
 
@@ -109,15 +110,25 @@ def lambda_handler(event, context):
     filename = os.path.basename(key)
     title = os.path.splitext(filename)[0]
     
+    # NEW (Universal SOTA): Standardized Thumbnail Linking
+    thumb_path = f"thumbnails/{course_folder}/{title}.jpg"
+    thumbnail_url = f"https://{bucket}.s3.amazonaws.com/{thumb_path}"
+    
     video_data = {
         'courseName': course_name,
         'videoId': f"{course_name}_{title}_{int(context.aws_request_id.replace('-', '')[:8], 16)}",
         'title': title.replace('_', ' ').title(),
-        'videoUrl': key,
-        'watched': False
+        'videoUrl': f"https://{bucket}.s3.amazonaws.com/{key}",
+        'thumbnailUrl': thumbnail_url,
+        's3Key': key,
+        'watched': False,
+        'createdAt': datetime.utcnow().isoformat() + 'Z'
     }
     
     table_name = os.environ.get('DYNAMODB_TABLE')
+    if not table_name:
+        table_name = f"video-course-app-videos-prod" # Fallback
+        
     table = dynamodb.Table(table_name)
     table.put_item(Item=video_data)
     return {'status': 'success'}
@@ -163,6 +174,28 @@ def lambda_handler(event, context):
         ffmpeg_cmd = f"/opt/bin/ffmpeg -i {shlex.quote(video_path)} -ss 00:00:01 -vframes 1 -q:v 2 {shlex.quote(thumb_path)} -y"
         subprocess.check_call(shlex.split(ffmpeg_cmd))
         s3.upload_file(thumb_path, bucket, thumb_key, ExtraArgs={'ContentType': 'image/jpeg'})
+        
+        # [NEW] Update DynamoDB Handshake (SOTA Schema)
+        table_name = os.environ.get('DYNAMODB_TABLE')
+        if not table_name:
+            table_name = "video-course-app-videos-prod" if "prod" in bucket else "video-course-app-videos-dev"
+            
+        table = dynamodb.Table(table_name)
+        response = table.scan(FilterExpression=boto3.dynamodb.conditions.Attr('s3Key').eq(key))
+        
+        if response['Items']:
+            for item in response['Items']:
+                video_id = item['videoId']
+                course_name = item['courseName']
+                thumbnail_url = f"https://{bucket}.s3.amazonaws.com/{thumb_key}"
+                
+                table.update_item(
+                    Key={'courseName': course_name, 'videoId': video_id},
+                    UpdateExpression="set thumbnailUrl = :t, #s = :online",
+                    ExpressionAttributeNames={ "#s": "status" },
+                    ExpressionAttributeValues={':t': thumbnail_url, ':online': 'ONLINE'}
+                )
+        
         return {'status': 'success', 'thumbnail': thumb_key}
     except Exception as e:
         print(f"Extraction failed: {str(e)}")
