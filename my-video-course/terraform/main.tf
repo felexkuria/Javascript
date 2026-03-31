@@ -111,6 +111,7 @@ module "storage" {
   app_name               = var.app_name
   environment            = var.environment
   create_s3_bucket       = var.create_s3_bucket
+  s3_bucket_name         = var.s3_bucket_name
   create_dynamodb_tables = var.create_dynamodb_tables
   allowed_origins        = ["https://${var.domain_name}", "http://localhost:3000"]
   ec2_role_name          = module.security.ec2_role_name

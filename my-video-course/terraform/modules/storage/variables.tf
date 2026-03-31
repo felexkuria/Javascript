@@ -35,3 +35,9 @@ variable "existing_policy_arn" {
   type    = string
   default = null
 }
+
+variable "s3_bucket_name" {
+  description = "Custom S3 bucket name (optional)"
+  type        = string
+  default     = ""
+}

@@ -5,13 +5,58 @@ data "aws_region" "current" {}
 # S3 Bucket
 resource "aws_s3_bucket" "main" {
   count  = var.create_s3_bucket ? 1 : 0
-  bucket = "${var.app_name}-video-bucket-${var.environment}-${random_string.suffix.result}"
+  bucket = var.s3_bucket_name != "" ? var.s3_bucket_name : "${var.app_name}-video-bucket-${var.environment}-${random_string.suffix[0].result}"
+  
+  tags = {
+    Name        = "${var.app_name}-storage"
+    Environment = var.environment
+  }
 }
 
 resource "random_string" "suffix" {
+  count   = var.create_s3_bucket && var.s3_bucket_name == "" ? 1 : 0
   length  = 8
   special = false
   upper   = false
+}
+
+# --- NEW (Universal SOTA): Bucket Resilience & Hardening ---
+resource "aws_s3_bucket_versioning" "main" {
+  count  = var.create_s3_bucket ? 1 : 0
+  bucket = aws_s3_bucket.main[0].id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "main" {
+  count  = var.create_s3_bucket ? 1 : 0
+  bucket = aws_s3_bucket.main[0].id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "main" {
+  count  = var.create_s3_bucket ? 1 : 0
+  bucket = aws_s3_bucket.main[0].id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "main" {
+  count  = var.create_s3_bucket ? 1 : 0
+  bucket = aws_s3_bucket.main[0].id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
 }
 
 resource "aws_s3_bucket_cors_configuration" "main" {
@@ -20,9 +65,9 @@ resource "aws_s3_bucket_cors_configuration" "main" {
 
   cors_rule {
     allowed_headers = ["*"]
-    allowed_methods = ["GET", "PUT", "POST", "DELETE"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
     allowed_origins = var.allowed_origins
-    expose_headers  = ["ETag"]
+    expose_headers  = ["ETag", "x-amz-server-side-encryption", "x-amz-request-id", "x-amz-id-2"]
     max_age_seconds = 3000
   }
 }
