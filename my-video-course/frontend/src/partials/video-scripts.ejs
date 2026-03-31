@@ -41,10 +41,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 markBtn.innerHTML = '<i class="fas fa-check-double text-[#00ED64]"></i> COMPLETED';
                 markBtn.classList.add('opacity-50');
                 
-                // 🚀 XP Velocity Pop & Confetti! (Synced with Backend)
+                // 🚀 Progress Score Pop & Confetti! (Synced with Backend)
                 const points = data.pointsAwarded || 0;
                 if (points > 0) {
-                    window.rewardXP(points);
+                    window.updateProgressPoints(points);
                 } else {
                     // Just show hint if already watched
                     window.showAtlasHint?.('VIDEO SYNCED TO CURRICULUM');
@@ -204,13 +204,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             const data = await response.json();
             if (data.success && data.awarded) {
-                window.rewardXP(data.awarded);
+                window.updateProgressPoints(data.awarded);
             }
         } catch (e) { /* silent fail for shortcuts */ }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 🎬 AUTO-PLAY NEXT VIDEO + XP + FULL-SCREEN CONFETTI ENGINE
+    // 🎬 AUTO-PLAY NEXT VIDEO + PROGRESS + FULL-SCREEN COMPLETION ENGINE
     // ─────────────────────────────────────────────────────────────────────────
 
     // ── Auto-Next Overlay injection ──────────────────────────────────────────
@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Pre-fetch next video info
         nextVideoCache = await fetchNextVideo();
         if (!nextVideoCache) {
-            // No next video — just do XP + confetti, no overlay
+            // No next video — just do points + completion animation, no overlay
             return;
         }
 
@@ -385,15 +385,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (videoPlayer) {
         let watchedMarked = false;
 
-        // 🔥 VIDEO ENDED: Award XP → Confetti → Auto-next overlay
+        // 🔥 VIDEO ENDED: Award Progress Score → Completion Animation → Auto-next overlay
         videoPlayer.addEventListener('ended', async function() {
-            // 1. Mark complete & award XP (100 base points)
+            // 1. Mark complete & award Progress Score (100 base points)
             await markVideoAsWatched();
 
-            // 2. Fire full-screen confetti
+            // 2. Fire full-screen completion animation
             fireCompletionConfetti();
 
-            // 3. Show auto-next countdown overlay (fires immediately after confetti starts)
+            // 3. Show auto-next countdown overlay (fires immediately after completion animation starts)
             setTimeout(() => showAutoNextOverlay(), 600);
         });
 
@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const timestamp = new Date().toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             const separator = notesBox.value.trim() ? '\n\n---\n\n' : '';
-            const noteEntry = `${separator}📅 [${timestamp}] AI Advisor Insight:\n${rawContent}`;
+            const noteEntry = `${separator}📅 [${timestamp}] Tutor Assistant Insight:\n${rawContent}`;
 
             notesBox.value += noteEntry;
             if (typeof switchLabTab === 'function') switchLabTab('notes');
@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', function() {
             thinkingDiv.className = 'flex flex-col items-start animate-message-in mb-6';
             thinkingDiv.innerHTML = `
                 <div class="bg-white/5 text-[#00ED64] p-3 rounded-2xl rounded-tl-none text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
-                    <div class="velocity-pulse"></div> Thinking...
+                    <div class="loader-pulse"></div> Thinking...
                 </div>
             `;
             messages.appendChild(thinkingDiv);
@@ -585,7 +585,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="w-4 h-4 rounded-full bg-gradient-to-br from-[#00ED64] to-[#00684A] flex items-center justify-center">
                                     <i class="fas fa-bolt text-[8px] text-[#001E2B]"></i>
                                 </div>
-                                <div class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em] opacity-70">Nova AI • ${botTime}</div>
+                                <div class="text-[9px] font-black text-[#00ED64] uppercase tracking-[0.2em] opacity-70">Tutor Assistant • ${botTime}</div>
                             </div>
                             <button onclick="saveAiResponseToNotes(this)" data-content="${encodeURIComponent(data.response)}" class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-bold uppercase tracking-wider text-[#9FB1AD] hover:text-[#00ED64] border border-white/10 hover:border-[#00ED64]/30 flex items-center gap-2 bg-white/5 py-1 px-3 rounded-full hover:bg-[#00ED64]/10">
                                 <i class="fas fa-bookmark"></i> Save Note
@@ -621,7 +621,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById(thinkingId)?.remove();
             messages.innerHTML += `
                 <div class="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs font-bold mt-4">
-                     Protocol Error: Engine Unresponsive.
+                     Error: Assistant Unresponsive.
                 </div>
             `;
         }
@@ -709,10 +709,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 await loadQuiz();
                 await loadLab();
                 
-                window.showAtlasHint?.('AI ENGINE SYNC COMPLETE');
+                window.showAtlasHint?.('TUTOR ENGINE SYNC COMPLETE');
             } catch (err) { 
-                console.error('AI Refresh failed:', err); 
-                window.showAtlasHint?.('SYNC PROTOCOL ERROR');
+                console.error('Tutor Refresh failed:', err); 
+                window.showAtlasHint?.('SYNC ERROR');
             }
             finally { btn.innerHTML = originalText; btn.disabled = false; }
         });
@@ -732,19 +732,18 @@ document.addEventListener('DOMContentLoaded', function() {
             popup.classList.add('show');
             
             // Trigger celebration for achievements
-            if (points) window.rewardXP(parseInt(points));
+            if (points) window.updateProgressPoints(parseInt(points));
             
             setTimeout(() => { popup.classList.remove('show'); }, 4000);
         }
     };
 
-    // --- 🚀 XP Velocity Celebration Engine (Enhanced) ---
-    window.triggerXPEffect = function(points) {
-        const xpCounter = document.getElementById('userPoints');
-        if (!xpCounter) return;
+    // --- 🚀 Progress Score Celebration Engine (Enhanced) ---
+    window.triggerProgressAnimation = function(points) {
+        const pointsCounter = document.getElementById('userPoints');
+        if (!pointsCounter) return;
 
-        // 1. Inline confetti burst (used for shortcut points, quiz points, etc.)
-        // Full-screen completion confetti is fired separately by fireCompletionConfetti()
+        // 1. Inline celebration burst
         if (window.confetti && points > 50) {
             confetti({
                 particleCount: Math.min(points * 1.5, 200),
@@ -758,54 +757,54 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         }
 
-        // 2. Velocity Pop Animation
-        xpCounter.classList.remove('xp-pop');
-        void xpCounter.offsetWidth;
-        xpCounter.classList.add('xp-pop');
+        // 2. Points Pop Animation
+        pointsCounter.classList.remove('points-pop');
+        void pointsCounter.offsetWidth;
+        pointsCounter.classList.add('points-pop');
 
         // 3. Floating Increment Text
         const floatingInc = document.createElement('div');
-        floatingInc.className = 'xp-increment-float';
-        floatingInc.innerText = `+${points} XP`;
-        xpCounter.parentElement.appendChild(floatingInc);
+        floatingInc.className = 'points-increment-float';
+        floatingInc.innerText = `+${points} Score`;
+        pointsCounter.parentElement.appendChild(floatingInc);
         setTimeout(() => floatingInc.remove(), 1200);
 
         // 4. Hint
-        window.showAtlasHint?.(`VELOCITY INCREASE: +${points} XP`);
+        window.showAtlasHint?.(`PROGRESS INCREASE: +${points} Score`);
     };
 
-    window.rewardXP = function(points) {
+    window.updateProgressPoints = function(points) {
         if (!points || points <= 0) return;
         
         // 1. Update Video Player Counter (Compatibility)
-        const xpCounter = document.getElementById('userPoints');
-        if (xpCounter) {
-            const currentPoints = parseInt(xpCounter.innerText) || 0;
-            xpCounter.innerText = currentPoints + points;
+        const pointsCounter = document.getElementById('userPoints');
+        if (pointsCounter) {
+            const currentPoints = parseInt(pointsCounter.innerText) || 0;
+            pointsCounter.innerText = currentPoints + points;
         }
 
         // 2. Update Global Sidebar Status
-        const sidebarXP = document.getElementById('sidebar-xp');
+        const sidebarPoints = document.getElementById('sidebar-points');
         const sidebarLevel = document.getElementById('sidebar-level');
         const progressBar = document.getElementById('sidebar-progress-bar');
         
-        if (sidebarXP) {
-            const currentTotalXP = parseInt(sidebarXP.innerText) || 0;
-            const newTotalXP = currentTotalXP + points;
-            sidebarXP.innerText = newTotalXP;
+        if (sidebarPoints) {
+            const currentTotalPoints = parseInt(sidebarPoints.innerText) || 0;
+            const newTotalPoints = currentTotalPoints + points;
+            sidebarPoints.innerText = newTotalPoints;
             
             // Recalculate Level & Progress
-            const newLevel = Math.floor(Math.sqrt(newTotalXP / 100)) + 1;
-            const nextLevelXP = Math.pow(newLevel, 2) * 100;
-            const prevLevelXP = Math.pow(newLevel - 1, 2) * 100;
-            const progress = Math.min(100, Math.max(0, ((newTotalXP - prevLevelXP) / (nextLevelXP - prevLevelXP)) * 100));
+            const newLevel = Math.floor(Math.sqrt(newTotalPoints / 100)) + 1;
+            const nextLevelPoints = Math.pow(newLevel, 2) * 100;
+            const prevLevelPoints = Math.pow(newLevel - 1, 2) * 100;
+            const progress = Math.min(100, Math.max(0, ((newTotalPoints - prevLevelPoints) / (nextLevelPoints - prevLevelPoints)) * 100));
             
             if (sidebarLevel) {
                 const oldLevel = parseInt(sidebarLevel.innerText) || 1;
                 if (newLevel > oldLevel) {
                     sidebarLevel.innerText = newLevel;
                     // Trigger "Level Up" Celebration
-                    window.showAtlasHint?.(`LEVEL UP: REACHED LEVEL ${newLevel}!`);
+                    window.showAtlasHint?.(`LEVEL REACHED: LEVEL ${newLevel}!`);
                     if (window.confetti) {
                         confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 }, colors: ['#00ED64', '#FFD700'] });
                     }
@@ -818,7 +817,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // 3. Trigger Visual Effects
-        window.triggerXPEffect(points);
+        window.triggerProgressAnimation(points);
     };
     
     document.addEventListener('achievementUnlocked', (e) => {
@@ -871,9 +870,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         container.innerHTML = `
             <div class="py-20 text-center">
-                <div class="velocity-pulse mx-auto mb-6"></div>
-                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#00ED64]">Calibrating Assessment Vectors...</p>
-                <p class="text-[8px] font-bold text-[#9FB1AD]/40 uppercase tracking-widest mt-2 px-10">AI is analyzing transcript and provisioning quiz clusters</p>
+                <div class="loader-pulse mx-auto mb-6"></div>
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#00ED64]">Calibrating Knowledge Check...</p>
+                <p class="text-[8px] font-bold text-[#9FB1AD]/40 uppercase tracking-widest mt-2 px-10">Tutor Assistant is analyzing module content</p>
             </div>
         `;
         
@@ -967,7 +966,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const feedback = document.createElement('div');
                 feedback.className = `mt-6 p-6 rounded-2xl text-[12px] leading-relaxed animate-in fade-in duration-300 ${isCorrect ? 'bg-[#00ED64]/5 border border-[#00ED64]/20 text-[#00ED64]' : 'bg-red-500/5 border border-red-500/20 text-red-500'}`;
-                feedback.innerHTML = `<div class="font-black uppercase tracking-widest mb-2">${isCorrect ? '✅ Protocol Confirmed' : '❌ Validation Failure'}</div>${q.explanation}`;
+                feedback.innerHTML = `<div class="font-black uppercase tracking-widest mb-2">${isCorrect ? '✅ Answer Confirmed' : '❌ Validation Failure'}</div>${q.explanation}`;
                 container.querySelector('.px-2').appendChild(feedback);
 
                 const nextBtn = document.createElement('button');
@@ -992,7 +991,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="w-24 h-24 rounded-full bg-[#00ED64]/10 border border-[#00ED64]/30 flex items-center justify-center mx-auto mb-8">
                     <span class="text-4xl font-black text-[#00ED64]">${percentage}%</span>
                 </div>
-                <h4 class="text-xl font-black text-white uppercase tracking-tight mb-2">${percentage >= 70 ? 'PROTOCOL ACHIEVED' : 'PROTOCOL SUB-OPTIMAL'}</h4>
+                <h4 class="text-xl font-black text-white uppercase tracking-tight mb-2">${percentage >= 70 ? 'GOAL ACHIEVED' : 'SCORE SUB-OPTIMAL'}</h4>
                 <p class="text-[10px] font-black text-[#9FB1AD] uppercase tracking-[0.2em] mb-12">Grade: ${score}/${total} Vectors Verified</p>
                 <button onclick="loadQuiz()" class="btn-atlas border border-white/10 w-full py-4 text-[11px] font-black tracking-widest mb-4">RE-INITIALIZE ASSESSMENT</button>
             </div>
@@ -1007,7 +1006,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             if (data.success) {
                 // Unified trigger
-                window.rewardXP(percentage * 2);
+                window.updateProgressPoints(percentage * 2);
             }
         } catch (e) { console.error('Grade sync error:', e); }
     }
@@ -1017,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = `
             <div class="px-2">
                 <div class="flex items-center gap-3 mb-6">
-                    <span class="technical-label text-[#00ED64]">Phase: Execution</span>
+                    <span class="technical-label text-[#00ED64]">Module Analysis</span>
                     <div class="h-px flex-1 bg-white/5"></div>
                     <span class="technical-label opacity-40">${lab.difficulty}</span>
                 </div>
@@ -1058,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.completeLab = async function(labId) {
         const btn = document.getElementById('verifyLabBtn');
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> PROBING INFRASTRUCTURE...';
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> PROBING SYSTEM...';
         
         try {
             const response = await fetch('/api/quizzes/lab/complete', {
@@ -1069,9 +1068,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data.success) {
-                btn.innerHTML = '<i class="fas fa-check-double"></i> DEPLOYMENT VERIFIED';
+                btn.innerHTML = '<i class="fas fa-check-double"></i> COURSE VERIFIED';
                 btn.className = 'btn-atlas w-full py-5 flex items-center justify-center gap-3 bg-gradient-to-r from-[#00ED64] to-[#00A345] text-[#001E2B] rounded-2xl';
-                window.rewardXP(200);
+                window.updateProgressPoints(200);
             }
         } catch (e) {
             btn.disabled = false;
@@ -1079,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- ARCHITECT CERTIFICATION PROTOCOL ---
+    // --- ARCHITECT CERTIFICATION SYSTEM ---
     window.generateArchitectCertificate = async function() {
         const btn = document.getElementById('claimCertBtn');
         const originalHtml = btn.innerHTML;
@@ -1110,7 +1109,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 btn.className = 'w-full py-4 bg-[#E7EEEB] text-[#00684A] rounded-xl text-[11px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2';
                 
-                window.rewardXP(500);
+                window.updateProgressPoints(500);
                 
                 // Redirect to certificates page after delay
                 setTimeout(() => {

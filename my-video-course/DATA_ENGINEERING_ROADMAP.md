@@ -1,4 +1,4 @@
-# 🌪️ Google-Grade Data Engineering Roadmap **(100% COMPLETE)**
+# 🌪️ Production-Grade Data Engineering Roadmap **(100% COMPLETE)**
 
 This roadmap is now fully implemented, delivering a **Reliable**, **Scalable**, and **Cost-Efficient** video data pipeline.
 
@@ -6,7 +6,7 @@ This roadmap is now fully implemented, delivering a **Reliable**, **Scalable**, 
 
 ## 🏗️ Stage 1: Reliability & Idempotent Ingestion (ETL) **(COMPLETE)**
 - [x] **Task 1.1: Fault-Tolerant AI Processors**: Added **Exponential Backoff with Full Jitter** to the `VideoUploadProcessor`. **(COMPLETE)**
-- [x] **Task 1.2: Atomic Transformations**: Implemented **Atomic Deletion Saga** (Mark -> Purge -> Commit) to ensure storage/DB consistency. **(COMPLETE)**
+- [x] **Task 1.2: Reliable Transformations**: Implemented **Deletion Cleanup Flow** (Mark -> Purge -> Commit) to ensure storage/DB consistency. **(COMPLETE)**
 
 ## 📦 Stage 2: Storage Intelligence & Cost Control **(COMPLETE)**
 - [x] **Task 2.1: DynamoDB TTL (Time-to-Live)**: Enabled TTL for shared caption caching. **(COMPLETE)**

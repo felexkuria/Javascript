@@ -349,14 +349,11 @@ resource "aws_lambda_function" "extract_thumbnail" {
   function_name    = "${var.app_name}-extract-thumbnail"
   role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
   handler          = "extract_thumbnail.lambda_handler"
-  runtime          = "python3.9"
+  runtime          = "python3.12"
   source_code_hash = data.archive_file.extract_thumbnail_zip.output_base64sha256
-  timeout          = 30
-  memory_size      = 512
-
-  # [TEMPORARY DECOUPLE] FFmpeg Layer removed to bypass IAM AccessDenied (lambda:GetLayerVersion).
-  # User must manually attach arn:aws:lambda:us-east-1:464622530412:layer:ffmpeg:1 via AWS Console.
-  # layers = ["arn:aws:lambda:us-east-1:464622530412:layer:ffmpeg:1"]
+  timeout          = 60
+  memory_size      = 1024
+  layers           = ["arn:aws:lambda:us-east-1:145266761615:layer:ffmpeg:4"]
 
   environment {
     variables = {

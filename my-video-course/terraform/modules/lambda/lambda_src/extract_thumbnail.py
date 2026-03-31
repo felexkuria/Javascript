@@ -30,8 +30,21 @@ def lambda_handler(event, context):
 
     try:
         s3.download_file(bucket, key, video_path)
-        ffmpeg_cmd = f"/opt/bin/ffmpeg -i {shlex.quote(video_path)} -ss 00:00:01 -vframes 1 -q:v 2 {shlex.quote(thumb_path)} -y"
-        subprocess.check_call(shlex.split(ffmpeg_cmd))
+        
+        # SOTERA Industry Standard: Using community layer path
+        ffmpeg_bin = "/opt/bin/ffmpeg"
+        ffmpeg_cmd = f"{ffmpeg_bin} -i {shlex.quote(video_path)} -ss 00:00:01 -vframes 1 -q:v 2 {shlex.quote(thumb_path)} -y > /tmp/ffmpeg_out.txt 2>&1"
+        print(f"Running: {ffmpeg_cmd}")
+        
+        exit_code = os.system(ffmpeg_cmd)
+        
+        with open('/tmp/ffmpeg_out.txt', 'r') as f:
+            ffmpeg_log = f.read()
+            print(f"FFmpeg Output:\n{ffmpeg_log}")
+        
+        if exit_code != 0:
+            return {'status': 'error', 'message': f"FFmpeg exit {exit_code}. Log: {ffmpeg_log[:200]}"}
+
         s3.upload_file(thumb_path, bucket, thumb_key, ExtraArgs={'ContentType': 'image/jpeg'})
         
         # [NEW] Update DynamoDB Handshake (SOTA Schema)

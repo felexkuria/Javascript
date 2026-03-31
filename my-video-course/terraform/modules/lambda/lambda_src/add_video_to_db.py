@@ -5,10 +5,19 @@ dynamodb = boto3.resource('dynamodb')
 
 def lambda_handler(event, context):
     try:
-        rec = event['Records'][0]['s3']
+        # Detect and Unwrap SNS Envelope if mediated by SNS
+        record = event['Records'][0]
+        if 'Sns' in record:
+            s3_event = json.loads(record['Sns']['Message'])
+            rec = s3_event['Records'][0]['s3']
+        else:
+            # Direct S3 Trigger
+            rec = record['s3']
+            
         bucket = rec['bucket']['name']
         key = urllib.parse.unquote_plus(rec['object']['key'])
-    except Exception:
+    except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
+        print(f"Ingestion Ignored: {str(e)}")
         return {'status': 'ignored'}
     
     if not key.startswith("videos/") or not key.lower().endswith(('.mp4', '.mov', '.mkv', '.avi', '.webm')):

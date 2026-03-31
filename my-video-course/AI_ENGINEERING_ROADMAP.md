@@ -1,13 +1,13 @@
-# AI Engineering Roadmap: The SOTA Leapfrog Edition 🚀
+# AI Engineering Roadmap: Modernization Edition 🚀
 
-This roadmap defines the transition of **Multitouch Academy** from a transcript-based video platform to a **Multi-modal Agentic Ecosystem**. We are leapfrogging the "Text-only" era to implement Google-grade AI native features.
+This roadmap defines the transition of **Multitouch Academy** from a transcript-based video platform to an **Advanced AI Ecosystem**. We are focusing on implementing high-quality AI native features.
 
 ---
 
 ## 🏗️ Phase 1: Multi-modal Native RAG (The "Visual Memory" Phase)
 **Objective**: Moving beyond "Reading transcripts" to "Watching videos."
 > [!IMPORTANT]
-> **Leapfrog Strategy**: We will skip the 18-month "Text-only" search period and move directly to native video indexing using Gemini 1.5 Pro's 2M context window.
+> **Implementation Strategy**: We will implement native video indexing using Gemini 1.5 Pro's large context window.
 
 ### [NEW] [Multimodal Vector Search](file:///Users/felexirungu/Downloads/ProjectLevi/Javascript/my-video-course/backend/src/services/multimodalSearchService.js)
 - **Visual Evidence Indexing**: Extract frames from videos where technical diagrams or code snippets are shown and index them alongside transcripts.
@@ -46,12 +46,12 @@ This roadmap defines the transition of **Multitouch Academy** from a transcript-
 
 ---
 
-## 🧪 Verification Plan (The Leapfrog Phase)
+## 🧪 Verification Plan
 
 ### Automated Benchmarks
-- **Vector Retrieval Precision**: Measure "Semantic-Visual Match Rate" (SVMR) for video queries.
-- **Latency SLAs**: Target < 1.0s for classification (Agent Intent) and < 3.0s for reasoning (Deep Tutor Answer).
+- **Retrieval Precision**: Measure accuracy for video queries.
+- **Latency SLAs**: Target < 1.0s for classification and < 3.0s for reasoning.
 
 ### Manual Verification
-- **Faculty Blind Test**: Can instructors distinguish between a human-written lab and an AI-generated/verified lab?
-- **Retention Impact**: Measure the lift in course completion for students using "Agentic Mentors."
+- **User Testing**: Can users successfully complete labs and find information?
+- **Retention Impact**: Measure the improvement in course completion.
