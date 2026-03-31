@@ -33,21 +33,37 @@
         </video>
         <% } %>
         
-        <!-- Interactive overlay (only shown when paused and not YouTube) -->
-        <% if (!isYouTube) { %>
-        <div class="video-overlay" id="videoOverlay" style="display: flex; opacity: 0; pointer-events: none;">
-            <div class="play-button" id="playButton" style="pointer-events: all; cursor: pointer;">
-                <span>▶</span>
+        <!-- Cinematic Neural Thumbnail Overlay (Replacing basic poster) -->
+        <% if (!isYouTube && !video.isPdf && video.type !== 'pdf' && !(video.title && video.title.toLowerCase().includes('pdf'))) { %>
+        <div class="video-poster-overlay" id="posterOverlay" 
+             style="background-image: url('<%= video.thumbnailUrl || '/thumbnails/' + (video._id || video.videoId) + '.jpg' %>');">
+            <div class="poster-vignette"></div>
+            <!-- The Play Button lives in the overlay now for maximum z-index pop -->
+            <div class="video-overlay" id="videoOverlay" style="display: flex; opacity: 1; pointer-events: all; position: absolute; inset: 0; z-index: 20;">
+                <div class="play-button" id="playButton" style="cursor: pointer; transform: scale(1);">
+                    <span>▶</span>
+                </div>
             </div>
         </div>
         <% } %>
         
+        <!-- Interactive overlay (legacy fallback for pause state) -->
+        <% if (!isYouTube && (video.isPdf || video.type === 'pdf')) { %>
+        <div class="video-overlay" id="videoOverlay" style="display: none;"></div>
+        <% } %>
+        
         <% if (!video.isPdf && video.type !== 'pdf' && !(video.title && video.title.toLowerCase().includes('pdf'))) { %>
-        <div id="mediaErrorOverlay" class="hidden hud-backdrop">
+        <div id="mediaErrorOverlay" class="hidden hud-backdrop" 
+             style="background-image: url('<%= video.thumbnailUrl || '/thumbnails/' + (video._id || video.videoId) + '.jpg' %>');">
+            <div class="hud-vignette"></div>
             <div class="hud-grid"></div>
             <div class="hud-scanner"></div>
             
             <div class="neural-core-container">
+                <!-- Center the play button on top of the neural core -->
+                <div class="play-button hud-integrated-play" onclick="window.startProtocol()" style="z-index: 200; cursor: pointer;">
+                    <span>▶</span>
+                </div>
                 <div class="neural-ring ring-1"></div>
                 <div class="neural-ring ring-2"></div>
                 <div class="neural-ring ring-3"></div>
@@ -201,6 +217,7 @@
             document.addEventListener('DOMContentLoaded', function() {
                 const videoPlayer = document.getElementById('videoPlayer');
                 const overlay = document.getElementById('videoOverlay');
+                const posterOverlay = document.getElementById('posterOverlay');
                 const playButton = document.getElementById('playButton');
                 
                 // Auto-trigger error check for stalled streams
@@ -214,23 +231,41 @@
                     videoPlayer.addEventListener('loadeddata', () => clearTimeout(timeout));
                 }
 
-                if (videoPlayer && overlay && playButton) {
+                if (videoPlayer && playButton) {
                     playButton.addEventListener('click', function(e) {
                         e.stopPropagation();
                         videoPlayer.play().catch(err => {
                             console.error("Play blocked:", err);
-                            // Some browsers trigger error on play failure if source is 404
                             showErrorOverlay();
                         });
                     });
                     
                     videoPlayer.addEventListener('play', function() {
-                        overlay.style.opacity = '0';
-                        overlay.style.pointerEvents = 'none';
+                        if (overlay) {
+                            overlay.style.opacity = '0';
+                            overlay.style.pointerEvents = 'none';
+                        }
+                        if (posterOverlay) {
+                            posterOverlay.classList.add('fade-out');
+                        }
                     });
                     
                     videoPlayer.addEventListener('pause', function() {
-                        overlay.style.opacity = '1';
+                        if (overlay) {
+                            overlay.style.opacity = '1';
+                            overlay.style.pointerEvents = 'all';
+                        }
+                        // We keep posterOverlay hidden on pause to show the actual frame
+                    });
+
+                    videoPlayer.addEventListener('ended', function() {
+                        if (posterOverlay) {
+                            posterOverlay.classList.remove('fade-out');
+                        }
+                        if (overlay) {
+                            overlay.style.opacity = '1';
+                            overlay.style.pointerEvents = 'all';
+                        }
                     });
 
                     videoPlayer.addEventListener('click', function() {

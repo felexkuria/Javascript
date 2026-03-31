@@ -162,19 +162,28 @@ class WebController {
       let video = null;
       if (videoId) {
         // 1. Primary: match in course.videos by _id or videoId
-        video = courseVideos.find(v =>
+        const courseVideo = courseVideos.find(v =>
           (v._id      && v._id.toString()     === videoId) ||
           (v.videoId  && v.videoId.toString() === videoId) ||
           (v.id       && v.id.toString()       === videoId) ||
           (v.title    === videoId)
         );
 
-        // 2. Fallback: match in standalone videos table
-        if (!video) {
-          video = standaloneVideos.find(v =>
-            (v.videoId && v.videoId.toString() === videoId) ||
-            (v._id     && v._id.toString()     === videoId)
-          );
+        // 2. Standalone Metadata: always try to fetch full data from the standalone videos table
+        const standaloneVideo = (standaloneVideos || []).find(v =>
+          (v.videoId && v.videoId.toString() === videoId) ||
+          (v._id     && v._id.toString()     === videoId) ||
+          (v.title   === (courseVideo ? courseVideo.title : videoId))
+        );
+
+        // 3. Metadata Enrichment: merge full S3 data into the course reference
+        if (courseVideo || standaloneVideo) {
+          video = {
+            ...(courseVideo || {}),
+            ...(standaloneVideo || {}),
+            // Ensure we keep the _id used by the course
+            _id: videoId || (courseVideo ? courseVideo._id : (standaloneVideo ? standaloneVideo._id : null))
+          };
         }
       }
 

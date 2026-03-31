@@ -201,6 +201,38 @@
     filter: brightness(1.1);
 }
 
+/* Cinematic Thumbnail Overlay Expansion */
+.video-poster-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: posterBreathing 20s infinite ease-in-out;
+}
+
+.poster-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 30, 43, 0.4) 50%, rgba(0, 30, 43, 0.8) 100%);
+    pointer-events: none;
+}
+
+@keyframes posterBreathing {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+}
+
+.video-poster-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.1);
+}
+
 /* Counter Animation */
 .animate-counter {
     counter-reset: num var(--num, 0);

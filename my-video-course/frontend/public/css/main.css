@@ -798,7 +798,9 @@ input, select, textarea { font-family: inherit; }
    ============================================================ */
 
 .hud-backdrop {
-  background: radial-gradient(circle at center, #001E2B 0%, #000B0F 100%);
+  background-color: #001E2B;
+  background-size: cover;
+  background-position: center;
   position: absolute;
   inset: 0;
   display: flex;
@@ -807,13 +809,43 @@ input, select, textarea { font-family: inherit; }
   justify-content: center;
   overflow: hidden;
   z-index: 150;
+  animation: posterBreathing 20s infinite ease-in-out;
 }
 
-/* Suppress system clutter when HUD is active */
+.hud-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  filter: blur(40px) brightness(0.3);
+  transform: scale(1.1);
+  z-index: -1;
+}
+
+.hud-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 30, 43, 0.4) 50%, rgba(0, 30, 43, 0.9) 100%);
+  z-index: 0;
+}
+
+/* Suppress system clutter but ALLOW play button */
 .hud-active .system-badge,
-.hud-active #videoOverlay,
-.hud-active .play-button {
+.hud-active #videoOverlay {
   display: none !important;
+}
+
+/* Integrated HUD Play Button */
+.hud-integrated-play {
+  position: absolute;
+  z-index: 100;
+  transform: scale(1);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hud-integrated-play:hover {
+  transform: scale(1.15) rotate(5deg);
+  box-shadow: 0 0 50px rgba(0, 237, 100, 0.3);
 }
 
 /* Geometric Grid Overlay - Specific to HUD */
@@ -824,8 +856,9 @@ input, select, textarea { font-family: inherit; }
     linear-gradient(rgba(0, 237, 100, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 237, 100, 0.05) 1px, transparent 1px);
   background-size: 30px 30px;
-  mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+  mask-image: radial-gradient(circle at center, black 0%, transparent 80%);
   pointer-events: none;
+  z-index: 1;
 }
 
 /* Neural Core Animation */
