@@ -19,6 +19,11 @@ variable "dynamodb_table_arn" {
   type        = string
 }
 
+variable "dynamodb_table_name" {
+  description = "The name of the DynamoDB table (used for environment variables)"
+  type        = string
+}
+
 variable "aws_region" {
   description = "The AWS region to deploy to"
   type        = string

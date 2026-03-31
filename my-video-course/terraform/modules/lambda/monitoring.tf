@@ -31,14 +31,14 @@ resource "aws_cloudwatch_dashboard" "pipeline_health" {
         height = 6
         properties = {
           metrics = [
-            ["VideoPipeline/Ingestion", "ExtractionRetryCount", { "label": "Self-Correction Retries", "color": "#ff7f0e" }],
-            ["VideoPipeline/Ingestion", "ExtractionSuccess", { "label": "Total Success", "color": "#2ca02c" }]
+            ["VideoPipeline/Ingestion", "ExtractionRetryCount", { "label" : "Self-Correction Retries", "color" : "#ff7f0e" }],
+            ["VideoPipeline/Ingestion", "ExtractionSuccess", { "label" : "Total Success", "color" : "#2ca02c" }]
           ]
-          view    = "singleValue"
-          region  = var.aws_region
-          title   = "AI Extraction Health"
-          period  = 86400
-          stat    = "Sum"
+          view   = "singleValue"
+          region = var.aws_region
+          title  = "AI Extraction Health"
+          period = 86400
+          stat   = "Sum"
         }
       },
       {
@@ -49,7 +49,7 @@ resource "aws_cloudwatch_dashboard" "pipeline_health" {
         height = 6
         properties = {
           metrics = [
-            ["VideoPipeline/Ingestion", "TotalProcessingLatency", { "label": "End-to-End Latency" }]
+            ["VideoPipeline/Ingestion", "TotalProcessingLatency", { "label" : "End-to-End Latency" }]
           ]
           view    = "timeSeries"
           stacked = false
@@ -74,7 +74,7 @@ resource "aws_cloudwatch_metric_alarm" "dlq_alarm" {
   statistic           = "Sum"
   threshold           = "0"
   alarm_description   = "Critical: Video failed extraction and is in DLQ"
-  
+
   dimensions = {
     QueueName = "${var.app_name}-ingestion-dlq-${var.environment}"
   }

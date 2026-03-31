@@ -163,8 +163,10 @@ module "lambda" {
   source              = "./modules/lambda"
   app_name            = var.app_name
   environment         = var.environment
+  aws_region          = var.aws_region
   s3_bucket_name      = module.storage.s3_bucket_name
   s3_bucket_arn       = module.storage.s3_bucket_arn
+  dynamodb_table_arn  = module.storage.dynamodb_videos_arn
   dynamodb_table_name = "${var.app_name}-videos-${var.environment}"
   create_role         = var.create_lambda_role
   existing_role_arn   = var.existing_lambda_role_arn
