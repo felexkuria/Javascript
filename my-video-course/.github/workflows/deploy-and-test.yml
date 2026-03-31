@@ -1,0 +1,365 @@
+name: 🏗️ CI/CD Pipeline — Staging QA Gate → Production
+
+# ============================================================
+# TRIGGER
+# This is the authoritative deployment pipeline.
+# It fires on every push to `main` and on manual dispatch.
+# The legacy deploy.yml has been demoted to manual-only.
+# ============================================================
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_staging:
+        description: 'Skip staging deploy (use existing staging env)'
+        required: false
+        default: 'false'
+        type: boolean
+
+# Cancel any in-progress run on the same branch to prevent double-deploys
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: us-east-1
+  APP_NAME: video-course-app
+  TF_WORKING_DIR: ./terraform
+
+# ============================================================
+# JOB 1: Lint & Validate
+# Fast-feedback gate — runs in ~60s, no AWS credentials needed.
+# ============================================================
+jobs:
+  lint-and-validate:
+    name: 🔍 Lint & Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.5"
+
+      - name: 📐 Terraform Format Check
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          echo "Checking Terraform formatting..."
+          terraform fmt -check -recursive
+          echo "✅ Formatting OK"
+
+      - name: ✅ Terraform Validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          # Configure AWS provider without applying (validate only needs these)
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          terraform init -backend=false
+          terraform validate
+          echo "✅ Terraform configuration is valid"
+
+      - name: 🐍 Python Syntax Check (test suite)
+        run: |
+          python3 -m py_compile tests/integration/conftest.py
+          python3 -m py_compile tests/integration/test_s3.py
+          python3 -m py_compile tests/integration/test_dynamodb.py
+          python3 -m py_compile tests/integration/test_route53_tls.py
+          python3 -m py_compile tests/integration/test_infra_state.py
+          echo "✅ All test files are syntactically valid"
+
+# ============================================================
+# JOB 2: Deploy to Staging
+# Uses the 'staging' Terraform workspace (same AWS account,
+# separate state + resource names like *-videos-staging).
+# ============================================================
+  deploy-staging:
+    name: 🚧 Deploy → Staging
+    runs-on: ubuntu-latest
+    needs: lint-and-validate
+    if: github.event.inputs.skip_staging != 'true'
+    environment: staging
+
+    outputs:
+      s3_bucket: ${{ steps.tf-outputs.outputs.s3_bucket }}
+      app_domain: ${{ steps.tf-outputs.outputs.app_domain }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🏗️ Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.5"
+          terraform_wrapper: false  # needed to capture outputs cleanly
+
+      - name: 🚀 Terraform Apply (staging workspace)
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          TF_VAR_environment: staging
+          TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          TF_VAR_nova_api_key: ${{ secrets.NOVA_API_KEY }}
+          TF_VAR_session_secret: ${{ secrets.SESSION_SECRET }}
+          TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
+          TF_VAR_container_image_tag: ${{ github.sha }}
+          # Keep staging lightweight — no full ASG needed
+          TF_VAR_min_size: "1"
+          TF_VAR_max_size: "1"
+          TF_VAR_desired_capacity: "1"
+        run: |
+          terraform init
+          terraform workspace select staging 2>/dev/null || terraform workspace new staging
+          terraform apply \
+            -auto-approve \
+            -var "environment=staging" \
+            -compact-warnings
+          echo "✅ Staging infrastructure deployed"
+
+      - name: 📤 Capture staging outputs
+        id: tf-outputs
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          S3_BUCKET=$(terraform output -raw s3_bucket_name)
+          APP_DOMAIN=$(terraform output -raw load_balancer_dns)
+          echo "s3_bucket=$S3_BUCKET" >> $GITHUB_OUTPUT
+          echo "app_domain=$APP_DOMAIN" >> $GITHUB_OUTPUT
+          echo "Staging S3 bucket: $S3_BUCKET"
+          echo "Staging domain:    $APP_DOMAIN"
+
+# ============================================================
+# JOB 3: QA Gate — THE PRODUCTION BLOCKER
+#
+# If ANY test exits non-zero:
+#   ✗  This job fails
+#   ✗  Job 4 (deploy-production) is blocked by `needs: qa-gate`
+#   ✗  Slack alert fires on the failure step
+#   ✓  Test results are still uploaded for review
+#
+# This is the critical enforcement mechanism. No manual override exists.
+# ============================================================
+  qa-gate:
+    name: 🔬 QA Gate (Production Blocker)
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'tests/integration/requirements.txt'
+
+      - name: 📦 Install test dependencies
+        run: pip install -r tests/integration/requirements.txt
+
+      - name: 🧪 Run QA Test Suite
+        id: pytest
+        env:
+          # Point the tests at staging resources
+          APP_S3_BUCKET: ${{ needs.deploy-staging.outputs.s3_bucket }}
+          APP_DYNAMODB_TABLE: ${{ env.APP_NAME }}-videos-staging
+          APP_DOMAIN: ${{ needs.deploy-staging.outputs.app_domain }}
+          APP_NAME: ${{ env.APP_NAME }}
+          APP_ENVIRONMENT: staging
+          AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
+        run: |
+          pytest tests/integration/ \
+            --verbose \
+            --tb=short \
+            --junitxml=qa-results.xml \
+            --no-header \
+            -rN
+          echo "✅ All QA tests passed — production deployment is authorized"
+
+      # Always upload results — even on failure — so the team can review what broke
+      - name: 📊 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-test-results-${{ github.sha }}
+          path: qa-results.xml
+          retention-days: 30
+
+      # ⛔ PRODUCTION GATE: Alert and halt if tests failed
+      - name: 📧 Alert Email on QA Failure
+        if: failure() && steps.pytest.conclusion == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "⛔ PRODUCTION DEPLOYMENT BLOCKED: ${{ github.repository }}"
+          to: engineerfelex@gmail.com
+          from: GitHub Actions <${{ secrets.MAIL_FROM }}>
+          body: |
+            PRODUCTION DEPLOYMENT BLOCKED
+            
+            The QA gate failed on branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+            
+            View failing run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Fix the failing tests before re-pushing to main.
+
+# ============================================================
+# JOB 4: Deploy to Production
+# Only runs if Job 3 (qa-gate) exits 0.
+# GitHub Actions' `needs` dependency enforces this automatically.
+# ============================================================
+  deploy-production:
+    name: 🚀 Deploy → Production
+    runs-on: ubuntu-latest
+    needs: qa-gate           # ← This single line is the gate. qa-gate must succeed.
+    if: success()            # Explicit guard — skip if qa-gate was skipped/cancelled
+    environment: production  # Requires GitHub Environment protection rules
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🏗️ Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.5"
+          terraform_wrapper: false
+
+      - name: 🛡️ Build, Scan & Push Docker Image
+        id: docker
+        env:
+          ECR_REPOSITORY: video-course-app
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Login to ECR
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            docker login --username AWS --password-stdin \
+            $(aws sts get-caller-identity --query Account --output text).dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+          ECR_REGISTRY=$(aws ecr describe-repositories \
+            --repository-names $ECR_REPOSITORY \
+            --query 'repositories[0].repositoryUri' --output text | sed 's|/.*||')
+
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+                       -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          echo "ecr_registry=$ECR_REGISTRY" >> $GITHUB_OUTPUT
+
+      - name: 🛡️ Scan Image for Vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.docker.outputs.ecr_registry }}/video-course-app:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: 📦 Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.docker.outputs.ecr_registry }}
+          ECR_REPOSITORY: video-course-app
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: 🚀 Terraform Apply (production workspace)
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          TF_VAR_environment: prod
+          TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          TF_VAR_nova_api_key: ${{ secrets.NOVA_API_KEY }}
+          TF_VAR_session_secret: ${{ secrets.SESSION_SECRET }}
+          TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
+          TF_VAR_container_image_tag: ${{ github.sha }}
+        run: |
+          terraform init
+          terraform workspace select prod 2>/dev/null || terraform workspace new prod
+          terraform apply \
+            -auto-approve \
+            -var "environment=prod" \
+            -compact-warnings
+          echo "✅ Production infrastructure updated"
+
+      - name: 🔄 Rolling ASG Refresh
+        run: |
+          ASG_NAME="${{ env.APP_NAME }}-asg"
+          IN_PROGRESS=$(aws autoscaling describe-instance-refreshes \
+            --auto-scaling-group-name $ASG_NAME \
+            --query "InstanceRefreshes[?Status=='InProgress'].InstanceRefreshId" \
+            --output text)
+
+          if [ -n "$IN_PROGRESS" ]; then
+            echo "⚠️  Refresh already running ($IN_PROGRESS). Skipping."
+          else
+            aws autoscaling start-instance-refresh \
+              --auto-scaling-group-name $ASG_NAME \
+              --preferences "MinHealthyPercentage=50,InstanceWarmup=300"
+            echo "🚀 Rolling refresh started"
+          fi
+
+      - name: 🏥 Production Health Check
+        run: |
+          DOMAIN="${{ vars.PROD_DOMAIN }}"
+          URL="https://$DOMAIN/health"
+          echo "Polling $URL (up to 10 minutes)..."
+          for i in $(seq 1 20); do
+            CODE=$(curl -sk -o /dev/null -w "%{http_code}" "$URL" || echo "000")
+            if [ "$CODE" = "200" ]; then
+              echo "✅ Health check PASSED (HTTP 200) — production is stable"
+              exit 0
+            fi
+            echo "  Attempt $i/20: HTTP $CODE — waiting 30s..."
+            sleep 30
+          done
+          echo "❌ Production health check failed after 10 minutes!"
+          exit 1
+
+      - name: 📧 Notify Email — Successful Deploy
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "✅ Production Deployment Successful: ${{ github.repository }}"
+          to: engineerfelex@gmail.com
+          from: GitHub Actions <${{ secrets.MAIL_FROM }}>
+          body: |
+            Production Deployment Successful
+            
+            Commit ${{ github.sha }} by ${{ github.actor }} is now LIVE.
+            All QA gates passed successfully.
+            
+            View run details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

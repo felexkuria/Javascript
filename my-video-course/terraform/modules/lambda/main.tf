@@ -139,70 +139,108 @@ resource "local_file" "extract_thumbnail_py" {
   filename   = "${path.module}/lambda_src/extract_thumbnail.py"
   depends_on = [null_resource.lambda_src_dir]
   content  = <<EOF
-import json, os, subprocess, shlex, boto3, urllib.parse
+import json, os, subprocess, boto3, urllib.parse
 
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 
+def _parse_record(record):
+    """Unwrap either a raw S3 record or an SNS-envelope S3 record."""
+    if 'Sns' in record:
+        s3_rec = json.loads(record['Sns']['Message'])['Records'][0]['s3']
+    else:
+        s3_rec = record['s3']
+    bucket = s3_rec['bucket']['name']
+    key    = urllib.parse.unquote_plus(s3_rec['object']['key'])
+    return bucket, key
+
 def lambda_handler(event, context):
-    try:
-        if 'Sns' in event['Records'][0]:
-            sns_msg = json.loads(event['Records'][0]['Sns']['Message'])
-            rec = sns_msg['Records'][0]['s3']
-        else:
-            rec = event['Records'][0]['s3']
-            
-        bucket = rec['bucket']['name']
-        key = urllib.parse.unquote_plus(rec['object']['key'])
-    except Exception as e:
-        print(f"Error parsing event: {str(e)}")
-        return {'status': 'ignored'}
+    # Batch loop: S3/SNS can deliver multiple records in one invocation.
+    for record in event.get('Records', []):
+        try:
+            bucket, key = _parse_record(record)
+        except Exception as e:
+            print(f"[SKIP] Could not parse record: {e}")
+            continue
 
-    if not key.startswith("videos/") or not key.lower().endswith(('.mp4', '.mov', '.mkv')):
-        return {'status': 'skipped'}
+        if not key.startswith("videos/") or not key.lower().endswith(('.mp4', '.mov', '.mkv')):
+            print(f"[SKIP] Non-video key ignored: {key}")
+            continue
 
-    video_path = f"/tmp/{os.path.basename(key)}"
+        _process(bucket, key)
+
+def _process(bucket, key):
     thumb_filename = os.path.splitext(os.path.basename(key))[0] + ".jpg"
-    thumb_path = f"/tmp/{thumb_filename}"
-    
-    path_parts = key.split('/')
-    course_folder = path_parts[1]
-    thumb_key = f"thumbnails/{course_folder}/{thumb_filename}"
+    thumb_path     = f"/tmp/{thumb_filename}"
+    course_folder  = key.split('/')[1]
+    thumb_key      = f"thumbnails/{course_folder}/{thumb_filename}"
+
+    # --- STREAMING: generate a pre-signed URL so FFmpeg reads only the bytes
+    # it needs (the first keyframe), instead of downloading the entire file
+    # into /tmp/ (which is limited to 512 MB and increases cold-start time).
+    presigned_url = s3.generate_presigned_url(
+        'get_object',
+        Params={'Bucket': bucket, 'Key': key},
+        ExpiresIn=300  # URL valid for 5 minutes
+    )
+    print(f"[INFO] Streaming thumbnail from presigned URL for: {key}")
 
     try:
-        s3.download_file(bucket, key, video_path)
-        ffmpeg_cmd = f"/opt/bin/ffmpeg -i {shlex.quote(video_path)} -ss 00:00:01 -vframes 1 -q:v 2 {shlex.quote(thumb_path)} -y"
-        subprocess.check_call(shlex.split(ffmpeg_cmd))
-        s3.upload_file(thumb_path, bucket, thumb_key, ExtraArgs={'ContentType': 'image/jpeg'})
-        
-        # [NEW] Update DynamoDB Handshake (SOTA Schema)
-        table_name = os.environ.get('DYNAMODB_TABLE')
-        if not table_name:
-            table_name = "video-course-app-videos-prod" if "prod" in bucket else "video-course-app-videos-dev"
-            
-        table = dynamodb.Table(table_name)
-        response = table.scan(FilterExpression=boto3.dynamodb.conditions.Attr('s3Key').eq(key))
-        
-        if response['Items']:
-            for item in response['Items']:
-                video_id = item['videoId']
-                course_name = item['courseName']
-                thumbnail_url = f"https://{bucket}.s3.amazonaws.com/{thumb_key}"
-                
-                table.update_item(
-                    Key={'courseName': course_name, 'videoId': video_id},
-                    UpdateExpression="set thumbnailUrl = :t, #s = :online",
-                    ExpressionAttributeNames={ "#s": "status" },
-                    ExpressionAttributeValues={':t': thumbnail_url, ':online': 'ONLINE'}
-                )
-        
-        return {'status': 'success', 'thumbnail': thumb_key}
-    except Exception as e:
-        print(f"Extraction failed: {str(e)}")
-        return {'status': 'error', 'message': str(e)}
-    finally:
-        if os.path.exists(video_path): os.remove(video_path)
-        if os.path.exists(thumb_path): os.remove(thumb_path)
+        # subprocess.run with check=True raises CalledProcessError on failure.
+        # capture_output=True keeps stdout/stderr in memory — no temp files.
+        result = subprocess.run(
+            [
+                "/opt/bin/ffmpeg",
+                "-i", presigned_url,   # read directly from S3 — no /tmp/ download
+                "-ss", "00:00:01",
+                "-vframes", "1",
+                "-q:v", "2",
+                thumb_path,
+                "-y"
+            ],
+            capture_output=True,
+            check=True  # raises subprocess.CalledProcessError on non-zero exit
+        )
+        print(result.stdout.decode(errors='replace')[-2000:])  # last 2 KB
+    except subprocess.CalledProcessError as e:
+        print(f"[ERROR] FFmpeg failed:\n{e.stderr.decode(errors='replace')[-2000:]}")
+        # Re-raise so Lambda marks this as a FAILURE (enables DLQ / retry).
+        raise
+
+    s3.upload_file(thumb_path, bucket, thumb_key, ExtraArgs={'ContentType': 'image/jpeg'})
+    print(f"[INFO] Thumbnail uploaded to: {thumb_key}")
+
+    # cleanup
+    if os.path.exists(thumb_path):
+        os.remove(thumb_path)
+
+    # --- DynamoDB update --------------------------------------------------
+    table_name = os.environ.get('DYNAMODB_TABLE')
+    if not table_name:
+        table_name = "video-course-app-videos-prod" if "prod" in bucket else "video-course-app-videos-dev"
+
+    table = dynamodb.Table(table_name)
+
+    # ⚠️ PERFORMANCE TODO (Junior Task):
+    # Replace this full-table scan with a GSI query once you have created
+    # a Global Secondary Index with s3Key as the Partition Key.
+    # Example:
+    #   response = table.query(
+    #       IndexName='s3Key-index',
+    #       KeyConditionExpression=boto3.dynamodb.conditions.Key('s3Key').eq(key)
+    #   )
+    response = table.scan(
+        FilterExpression=boto3.dynamodb.conditions.Attr('s3Key').eq(key)
+    )
+
+    thumbnail_url = f"https://{bucket}.s3.amazonaws.com/{thumb_key}"
+    for item in response.get('Items', []):
+        table.update_item(
+            Key={'courseName': item['courseName'], 'videoId': item['videoId']},
+            UpdateExpression="set thumbnailUrl = :t, #s = :online",
+            ExpressionAttributeNames={"#s": "status"},
+            ExpressionAttributeValues={':t': thumbnail_url, ':online': 'ONLINE'}
+        )
 EOF
 }
 
@@ -233,6 +271,14 @@ data "archive_file" "extract_thumbnail_zip" {
   source_file = local_file.extract_thumbnail_py.filename
   output_path = "${path.module}/extract_thumbnail.zip"
   depends_on  = [local_file.extract_thumbnail_py]
+}
+
+# [NEW] Data source to automatically package the Node.js Transcribe completion Lambda.
+# This ensures the .zip exists before terraform apply attempts to create the function.
+data "archive_file" "on_transcribe_complete_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../../../backend/src/lambdas/onTranscribeComplete.js"
+  output_path = "${path.module}/on_transcribe_complete.zip"
 }
 
 # SNS Topic for Fan-Out
@@ -294,7 +340,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
       },
       {
         Effect   = "Allow"
-        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:UpdateItem"]
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:UpdateItem", "dynamodb:Scan", "dynamodb:Query"]
         Resource = "*"
       },
       {
@@ -353,7 +399,10 @@ resource "aws_lambda_function" "extract_thumbnail" {
   source_code_hash = data.archive_file.extract_thumbnail_zip.output_base64sha256
   timeout          = 60
   memory_size      = 1024
-  layers           = ["arn:aws:lambda:us-east-1:145266761615:layer:ffmpeg:4"]
+  # Self-managed FFmpeg layer built from ffmpeg.zip (see ffmpeg_layer.tf).
+  # Previously referenced a public 3rd-party ARN — using our own layer gives
+  # full control over the binary version and avoids external dependency.
+  layers           = [aws_lambda_layer_version.ffmpeg.arn]
 
   environment {
     variables = {
@@ -368,7 +417,8 @@ resource "aws_lambda_function" "on_transcribe_complete" {
   role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
   handler          = "onTranscribeComplete.handler"
   runtime          = "nodejs18.x"
-  filename         = "${path.module}/on_transcribe_complete.zip" # Packaged by CD or manual zip
+  filename         = data.archive_file.on_transcribe_complete_zip.output_path
+  source_code_hash = data.archive_file.on_transcribe_complete_zip.output_base64sha256
   
   environment {
     variables = {
