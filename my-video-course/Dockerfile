@@ -1,48 +1,46 @@
-# Use Ubuntu 22.04 for stable OS support (Pure Cloud Architecture)
-FROM ubuntu:22.04
+# --- STAGE 1: Build & Dependencies ---
+FROM node:22-alpine AS builder
 
 # Avoid prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
-
-# Install dependencies and Node.js 22.x (Active LTS)
-RUN apt-get update && apt-get install -y \
-    curl \
-    gnupg \
-    unzip \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs
-
-# Install AWS CLI (Multi-arch support: aarch64 for Silicon Mac, x86_64 for Cloud)
-RUN arch=$(uname -m) && \
-    if [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ]; then \
-        binary="aarch64"; \
-    else \
-        binary="x86_64"; \
-    fi && \
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-${binary}.zip" -o "awscliv2.zip" \
-    && unzip awscliv2.zip \
-    && ./aws/install \
-    && rm -rf awscliv2.zip aws \
-    && rm -rf /var/lib/apt/lists/*
-
-# Verify installation
-RUN node -v && aws --version
 
 WORKDIR /app
 
 # Copy backend package files and install dependencies
 COPY backend/package*.json ./backend/
-RUN cd backend && npm ci --only=production
+RUN cd backend && npm ci
 
 # Copy application code
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 
-# Use standalone entrypoint script
-RUN chmod +x /app/backend/entrypoint.sh
+# --- STAGE 2: Optimized Runtime ---
+FROM node:22-alpine AS runtime
+
+# Install AWS CLI and essential runtime dependencies
+RUN apk add --no-cache \
+    curl \
+    unzip \
+    python3 \
+    py3-pip \
+    && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws \
+    && apk del unzip curl
+
+WORKDIR /app
+
+# Copy only production dependencies and application code from builder
+COPY --from=builder /app/backend/node_modules ./backend/node_modules
+COPY --from=builder /app/backend ./backend
+COPY --from=builder /app/frontend ./frontend
 
 # Set working directory to backend for execution
 WORKDIR /app/backend
+
+# Ensure entrypoint is executable
+RUN chmod +x entrypoint.sh
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \

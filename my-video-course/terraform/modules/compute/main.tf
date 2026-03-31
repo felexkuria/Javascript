@@ -125,6 +125,32 @@ resource "aws_ecr_lifecycle_policy" "main" {
             "action": {
                 "type": "expire"
             }
+        },
+        {
+            "rulePriority": 2,
+            "description": "Keep last 20 tagged images (Prune old SHAs)",
+            "selection": {
+                "tagStatus": "any",
+                "countType": "imageCountMoreThan",
+                "countNumber": 20
+            },
+            "action": {
+                "type": "expire"
+            }
+        },
+        {
+            "rulePriority": 3,
+            "description": "Expire dev tags older than 7 days",
+            "selection": {
+                "tagStatus": "tagged",
+                "tagPrefixList": ["dev-", "feature-"],
+                "countType": "sinceImagePushed",
+                "countUnit": "days",
+                "countNumber": 7
+            },
+            "action": {
+                "type": "expire"
+            }
         }
     ]
 }

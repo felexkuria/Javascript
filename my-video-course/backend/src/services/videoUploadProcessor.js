@@ -14,22 +14,18 @@ class VideoUploadProcessor {
 
   /**
    * 🏗️ Event-Driven Ingestion Path
-   * Submits the job and returns immediately. 
-   * Post-processing is handled by AWS Lambda + EventBridge.
+   * Decoupled: Only registers intent. 
+   * Media processing (Transcribe/Thumbnail) is handled by S3-Triggered Lambdas.
    */
   async processUploadedVideo(bucketName, videoKey, videoTitle, courseName) {
-    logger.info(`📡 Ingestion Started (Event-Driven): ${videoTitle}`, { videoKey, courseName });
+    logger.info(`📡 Ingestion Started (S3-Triggered): ${videoTitle}`, { videoKey, courseName });
     
     try {
-      const videoUrl = `s3://${bucketName}/${videoKey}`;
+      // NOTE: Transcription is now triggered by S3 -> SNS -> Lambda (start_transcribe).
+      // We no longer call this.submitTranscriptionJob from the backend to avoid 
+      // Account Subscription errors and redundant processing.
       
-      // Submit Job to AWS Transcribe
-      const { jobName } = await this.submitTranscriptionJob(videoUrl, videoTitle);
-      
-      // Note: No polling here. The 'onTranscribeComplete' Lambda will 
-      // automatically trigger when AWS finishes the job.
-      
-      return { success: true, jobName };
+      return { success: true, status: 'INGESTED_TO_S3' };
     } catch (error) {
       logger.error(`❌ Ingestion Trigger Failed: ${videoTitle}`, error, { courseName });
       return { success: false, error: error.message };
