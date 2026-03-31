@@ -1,79 +1,118 @@
-name: Deploy to AWS
+name: 🚀 Build & Deploy Video Course App
 
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-
-env:
-  AWS_REGION: us-east-1
-  ECR_REPOSITORY: video-course-app
+  workflow_dispatch: # Now manual-only to prevent conflicts with the new QA-gated pipeline
 
 jobs:
-  deploy:
-    name: Deploy
+  build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+      - name: 🛠️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-    - name: Create ECR repository if it doesn't exist
-      run: |
-        aws ecr describe-repositories --repository-names $ECR_REPOSITORY --region $AWS_REGION || \
-        aws ecr create-repository --repository-name $ECR_REPOSITORY --region $AWS_REGION
+      - name: 🧪 Run Unit & Integration Tests
+        run: |
+          cd my-video-course
+          npm install
+          npm test
+        env:
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
+      - name: 🔐 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        # Build for linux/amd64 platform
-        docker buildx create --use --name multiarch || true
-        docker buildx build --platform linux/amd64 \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-          --push ./my-video-course
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      - name: 📦 Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.5.0
+      - name: 🏷️ Extract Git SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-    - name: Terraform Init
-      working-directory: ./my-video-course/terraform
-      run: terraform init
+      - name: 🐳 Build, Tag, and Push Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: video-course-app
+          IMAGE_TAG: ${{ steps.vars.outputs.sha_short }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest ./my-video-course
 
-    - name: Trigger Instance Refresh
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      run: |
-        echo "🔄 Triggering instance refresh for existing ASG..."
-        ASG_NAME=$(aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[?contains(AutoScalingGroupName, `video-course-app`)].AutoScalingGroupName' --output text)
-        if [ "$ASG_NAME" != "" ]; then
-          aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME
-          echo "✅ Instance refresh triggered for: $ASG_NAME"
-        else
-          echo "⚠️  No ASG found with video-course-app in name"
-        fi
+      - name: 🛡️ Scan Image for Vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.login-ecr.outputs.registry }}/video-course-app:${{ steps.vars.outputs.sha_short }}
+          format: 'table'
+          exit-code: '1' # Fail the build on High/Critical
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
 
-    - name: Deployment Complete
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      run: |
-        echo "🚀 Deployment completed successfully!"
-        echo "📱 Your app is live at: https://skool.shopmultitouch.com"
-        echo "⏱️  Allow 5-10 minutes for instance refresh to complete"
+      - name: 📦 Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: video-course-app
+          IMAGE_TAG: ${{ steps.vars.outputs.sha_short }}
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: 🏗️ Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: 🚀 Terraform Apply
+        working-directory: ./my-video-course/terraform
+        env:
+          TF_VAR_container_image_tag: ${{ steps.vars.outputs.sha_short }}
+          TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          TF_VAR_nova_api_key: ${{ secrets.NOVA_API_KEY }}
+          TF_VAR_session_secret: ${{ secrets.SESSION_SECRET }}
+          TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
+        run: |
+          terraform init
+          terraform validate
+          terraform apply -auto-approve
+      - name: 🔄 Intelligent Rolling Update
+        run: |
+          ASG_NAME="video-course-app-asg"
+          echo "🔄 Checking for active deployments on $ASG_NAME..."
+          
+          # Check if a refresh is currently running
+          IN_PROGRESS=$(aws autoscaling describe-instance-refreshes --auto-scaling-group-name $ASG_NAME --query "InstanceRefreshes[?Status=='InProgress'].InstanceRefreshId" --output text)
+          
+          if [ -n "$IN_PROGRESS" ]; then
+            echo "⚠️  Deployment already in progress ($IN_PROGRESS). Skipping manual trigger to avoid conflict."
+          else
+            echo "🚀 No active deployment. Triggering new rolling refresh..."
+            aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME --preferences "MinHealthyPercentage=50,InstanceWarmup=300"
+          fi
+
+      - name: 🏥 Post-Deployment Health Check
+        run: |
+          # Fetch the ALB DNS name dynamically
+          ALB_URL=$(aws elbv2 describe-load-balancers --query "LoadBalancers[0].DNSName" --output text)
+          echo "🚥 Pulsing Health Check: https://$ALB_URL/health"
+          
+          # Retry loop to allow for instance refresh spin-up
+          for i in {1..20}; do
+            HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" https://$ALB_URL/health || echo "500")
+            if [ "$HTTP_CODE" == "200" ]; then
+              echo "✅ Health Check PASSED (Code: 200). Cluster is STABLE."
+              exit 0
+            fi
+            echo "⌛ Waiting for Healthy Node (Current Code: $HTTP_CODE)... Attempt $i/20"
+            sleep 30
+          done
+          
+          echo "❌ Health check failed after 10 minutes!"
+          exit 1
