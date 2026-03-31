@@ -1,4 +1,5 @@
 import json, os, urllib.parse, boto3, re
+from datetime import datetime
 
 dynamodb = boto3.resource('dynamodb')
 
@@ -31,10 +32,13 @@ def lambda_handler(event, context):
         'thumbnailUrl': thumbnail_url,
         's3Key': key,
         'watched': False,
-        'createdAt': new Date().toISOString() if 'Date' in globals() else None
+        'createdAt': datetime.utcnow().isoformat() + 'Z'
     }
     
     table_name = os.environ.get('DYNAMODB_TABLE')
+    if not table_name:
+        table_name = f"video-course-app-videos-prod" # Fallback
+        
     table = dynamodb.Table(table_name)
     table.put_item(Item=video_data)
     return {'status': 'success'}

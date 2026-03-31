@@ -46,16 +46,37 @@ def lambda_handler(event, context):
         
         # 4. Update DynamoDB
         table_name = os.environ.get('DYNAMODB_TABLE')
-        if table_name:
-            table = dynamodb.Table(table_name)
-            # Find the video record by title/prefix (Standard Pattern)
-            # Since we don't have the exact ID here, we use the courseName and predictable VideoId
-            course_name = course_folder.split('_')[0]
-            title = os.path.splitext(os.path.basename(key))[0]
+        if not table_name:
+            # Fallback to dev/prod based on bucket name or prefix
+            table_name = "video-course-app-videos-prod" if "prod" in bucket else "video-course-app-videos-dev"
             
-            # Note: The add_video_to_db lambda also runs and creates the record.
-            # We assume it already happened or we update it later.
-            # We'll use a scan or query if needed, but a standard VideoID pattern is better.
+        table = dynamodb.Table(table_name)
+        # Find the video record by s3Key
+        response = table.scan(
+            FilterExpression=boto3.dynamodb.conditions.Attr('s3Key').eq(key)
+        )
+        
+        if response['Items']:
+            for item in response['Items']:
+                video_id = item['videoId']
+                # Construct full S3 URL for thumbnail
+                thumbnail_url = f"https://{bucket}.s3.amazonaws.com/{thumb_key}"
+                
+                table.update_item(
+                    Key={
+                        'courseName': item['courseName'],
+                        'videoId': video_id
+                    },
+                    UpdateExpression="set thumbnailUrl = :t, #s = :online",
+                    ExpressionAttributeNames={ "#s": "status" },
+                    ExpressionAttributeValues={
+                        ':t': thumbnail_url,
+                        ':online': 'ONLINE'
+                    }
+                )
+                print(f"Updated DynamoDB for {video_id} with thumbnail.")
+        else:
+            print(f"No DynamoDB record found for s3Key: {key}")
             
         return {'status': 'success', 'thumbnail': thumb_key}
     except Exception as e:
