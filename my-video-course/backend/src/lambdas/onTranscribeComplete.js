@@ -2,8 +2,7 @@
  * 🛰️ Google-Grade Event-Driven Processor
  * Triggered by AWS EventBridge when a Transcribe Job reaches 'COMPLETED' or 'FAILED'.
  */
-const { TranscribeClient, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { CloudWatchClient, PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
 const srtQuizGenerator = require('../services/srtQuizGenerator');
 const labGeneratorService = require('../services/labGeneratorService');
 const dynamoVideoService = require('../services/dynamoVideoService');
@@ -12,6 +11,7 @@ const https = require('https');
 
 const transcribe = new TranscribeClient({ region: process.env.AWS_REGION || 'us-east-1' });
 const s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
+const cw = new CloudWatchClient({ region: process.env.AWS_REGION || 'us-east-1' });
 
 exports.handler = async (event) => {
   const jobName = event.detail.TranscriptionJobName;
@@ -63,15 +63,29 @@ exports.handler = async (event) => {
 
     // 5. Update DynamoDB (Final Commit)
     if (video) {
+        const processedAt = new Date();
+        const createdAt = video.createdAt ? new Date(video.createdAt) : processedAt;
+        const latencyMs = processedAt - createdAt;
+
         await dynamoVideoService.updateVideo(courseName, video._id, {
             captionsReady: true,
             quizReady: true,
             summaryReady: true,
             labReady: true,
             processing: false,
-            processedAt: new Date().toISOString()
+            processedAt: processedAt.toISOString()
         });
-        logger.info(`✅ Video processed and DB updated: ${videoTitle}`, { videoTitle, jobName });
+
+        // 📊 Pillar 6: CloudWatch Telemetry
+        await cw.send(new PutMetricDataCommand({
+            Namespace: 'VideoPipeline/Ingestion',
+            MetricData: [
+                { MetricName: 'ExtractionSuccess', Value: 1, Unit: 'Count' },
+                { MetricName: 'TotalProcessingLatency', Value: latencyMs / 1000, Unit: 'Seconds' }
+            ]
+        }));
+
+        logger.info(`✅ Video processed and DB updated: ${videoTitle}`, { videoTitle, jobName, latencySeconds: latencyMs / 1000 });
     }
 
     return { statusCode: 200, body: 'Success' };

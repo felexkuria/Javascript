@@ -97,9 +97,9 @@ jobs:
             aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME --preferences "MinHealthyPercentage=50,InstanceWarmup=300"
           fi
 
-      - name: 🏥 Post-Deployment Health Check
+      - name: 🏥 Post-Deployment Health Check (Smoke Test)
         run: |
-          # Fetch the ALB DNS name dynamically
+          node my-video-course/backend/tests/smoke-test.js
           ALB_URL=$(aws elbv2 describe-load-balancers --query "LoadBalancers[0].DNSName" --output text)
           echo "🚥 Pulsing Health Check: https://$ALB_URL/health"
           

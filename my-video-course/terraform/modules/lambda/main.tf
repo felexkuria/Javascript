@@ -94,11 +94,14 @@ from datetime import datetime
 dynamodb = boto3.resource('dynamodb')
 
 def lambda_handler(event, context):
-    try:
+    if 'detail' in event: # EventBridge / Step Function Format
+        bucket = event['detail']['bucket']['name']
+        key = urllib.parse.unquote_plus(event['detail']['object']['key'])
+    elif 'Records' in event: # Legacy S3 / SNS Format
         rec = event['Records'][0]['s3']
         bucket = rec['bucket']['name']
         key = urllib.parse.unquote_plus(rec['object']['key'])
-    except Exception:
+    else:
         return {'status': 'ignored'}
     
     if not key.startswith("videos/") or not key.lower().endswith(('.mp4', '.mov', '.mkv', '.avi', '.webm')):
@@ -146,12 +149,18 @@ dynamodb = boto3.resource('dynamodb')
 
 def _parse_record(record):
     """Unwrap either a raw S3 record or an SNS-envelope S3 record."""
-    if 'Sns' in record:
+    if 'detail' in record: # EventBridge / Step Function Format
+        bucket = record['detail']['bucket']['name']
+        key    = urllib.parse.unquote_plus(record['detail']['object']['key'])
+    elif 'Sns' in record: # Legacy SNS Format
         s3_rec = json.loads(record['Sns']['Message'])['Records'][0]['s3']
+        bucket = s3_rec['bucket']['name']
+        key    = urllib.parse.unquote_plus(s3_rec['object']['key'])
+    elif 's3' in record: # Legacy Raw S3 Format
+        bucket = record['s3']['bucket']['name']
+        key    = urllib.parse.unquote_plus(record['s3']['object']['key'])
     else:
-        s3_rec = record['s3']
-    bucket = s3_rec['bucket']['name']
-    key    = urllib.parse.unquote_plus(s3_rec['object']['key'])
+        raise ValueError("Unknown record format")
     return bucket, key
 
 def lambda_handler(event, context):
@@ -221,16 +230,10 @@ def _process(bucket, key):
 
     table = dynamodb.Table(table_name)
 
-    # ⚠️ PERFORMANCE TODO (Junior Task):
-    # Replace this full-table scan with a GSI query once you have created
-    # a Global Secondary Index with s3Key as the Partition Key.
-    # Example:
-    #   response = table.query(
-    #       IndexName='s3Key-index',
-    #       KeyConditionExpression=boto3.dynamodb.conditions.Key('s3Key').eq(key)
-    #   )
-    response = table.scan(
-        FilterExpression=boto3.dynamodb.conditions.Attr('s3Key').eq(key)
+    # Optimized (Senior Data Engineer): GSI Query via s3Key-index
+    response = table.query(
+        IndexName='s3Key-index',
+        KeyConditionExpression=boto3.dynamodb.conditions.Key('s3Key').eq(key)
     )
 
     thumbnail_url = f"https://{bucket}.s3.amazonaws.com/{thumb_key}"
@@ -271,6 +274,12 @@ data "archive_file" "extract_thumbnail_zip" {
   source_file = local_file.extract_thumbnail_py.filename
   output_path = "${path.module}/extract_thumbnail.zip"
   depends_on  = [local_file.extract_thumbnail_py]
+}
+
+data "archive_file" "cleanup_sync_zip" {
+  type        = "zip"
+  source_file = "${path.module}/lambda_src/cleanup_sync.py"
+  output_path = "${path.module}/cleanup_sync.zip"
 }
 
 # [NEW] Data source to automatically package the Node.js Transcribe completion Lambda.
@@ -347,6 +356,11 @@ resource "aws_iam_role_policy" "lambda_policy" {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:PutObject", "s3:CopyObject"]
         Resource = "${var.s3_bucket_arn}/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["sqs:SendMessage"]
+        Resource = "*"
       }
     ]
   })
@@ -382,6 +396,10 @@ resource "aws_lambda_function" "add_video_to_db" {
   runtime          = "python3.9"
   source_code_hash = data.archive_file.add_video_to_db_zip.output_base64sha256
 
+  dead_letter_config {
+    target_arn = aws_sqs_queue.pipeline_dlq.arn
+  }
+
   environment {
     variables = {
       DYNAMODB_TABLE = var.dynamodb_table_name
@@ -397,8 +415,12 @@ resource "aws_lambda_function" "extract_thumbnail" {
   handler          = "extract_thumbnail.lambda_handler"
   runtime          = "python3.12"
   source_code_hash = data.archive_file.extract_thumbnail_zip.output_base64sha256
-  timeout          = 60
-  memory_size      = 1024
+
+  dead_letter_config {
+    target_arn = aws_sqs_queue.pipeline_dlq.arn
+  }
+  timeout     = 60
+  memory_size = 1024
   # Self-managed FFmpeg layer built from ffmpeg.zip (see ffmpeg_layer.tf).
   # Previously referenced a public 3rd-party ARN — using our own layer gives
   # full control over the binary version and avoids external dependency.
@@ -426,6 +448,72 @@ resource "aws_lambda_function" "on_transcribe_complete" {
       S3_BUCKET_NAME = var.s3_bucket_name
     }
   }
+}
+
+# [NEW] Pillar 5: Data Integrity Lambda (Reactive/Proactive Sync)
+resource "aws_lambda_function" "cleanup_sync" {
+  function_name    = "${var.app_name}-cleanup-sync"
+  role             = var.create_role ? aws_iam_role.lambda_role[0].arn : var.existing_role_arn
+  handler          = "cleanup_sync.lambda_handler"
+  runtime          = "python3.9"
+  filename         = data.archive_file.cleanup_sync_zip.output_path
+  source_code_hash = data.archive_file.cleanup_sync_zip.output_base64sha256
+  timeout          = 300 # Proactive audit needs more time
+
+  environment {
+    variables = {
+      DYNAMODB_TABLE = var.dynamodb_table_name
+      S3_BUCKET_NAME = var.s3_bucket_name
+    }
+  }
+}
+
+# --- Pillar 5 Triggers ------------------------------------------------
+# 1. Proactive Audit (Weekly Cron)
+resource "aws_cloudwatch_event_rule" "weekly_audit" {
+  name                = "${var.app_name}-weekly-audit"
+  description         = "Audit DynamoDB for stale S3 references"
+  schedule_expression = "cron(0 0 ? * SUN *)"
+}
+
+resource "aws_cloudwatch_event_target" "trigger_audit" {
+  rule      = aws_cloudwatch_event_rule.weekly_audit.name
+  target_id = "TriggerAuditLambda"
+  arn       = aws_lambda_function.cleanup_sync.arn
+}
+
+resource "aws_lambda_permission" "allow_audit_eventbridge" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cleanup_sync.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.weekly_audit.arn
+}
+
+# 2. Reactive Cleanup (S3 Object Removed)
+resource "aws_lambda_permission" "allow_s3_removed" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cleanup_sync.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = var.s3_bucket_arn
+}
+
+resource "aws_s3_bucket_notification" "reactive_delete" {
+  bucket = var.s3_bucket_name
+
+  // Legacy support for direct Lambda invocation on S3 object removed
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.cleanup_sync.arn
+    events              = ["s3:ObjectRemoved:*"]
+  }
+
+  // Add the ObjectCreated SNS notification if we're not fully on Step Functions yet
+  topic {
+    topic_arn     = aws_sns_topic.video_updates.arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "videos/"
+  }
+
+  depends_on = [aws_lambda_permission.allow_s3_removed, aws_sns_topic_policy.default]
 }
 
 # [NEW] EventBridge Rule for Transcribe (Phase 9)

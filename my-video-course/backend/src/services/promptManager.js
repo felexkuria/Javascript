@@ -21,11 +21,11 @@ class PromptManager {
         user: "Video: {{title}}\nTranscript: {{transcript}}"
       },
       video_analysis: {
-        system: "You are an expert video content analyst.",
-        user: "Analyze this video and provide: 1) Summary (50 words), 2) Key topics (5 bullet points), 3) Difficulty level. Video: {{title}}"
+        system: "You are an expert video content analyst. Analyze the video and return ONLY a valid JSON object with the following schema: { \"summary\": \"string (max 500 chars)\", \"keyTopics\": [\"string\"], \"difficulty\": \"Beginner/Intermediate/Advanced\", \"tags\": [\"string\"] }.",
+        user: "Video Title: {{title}}\nTranscript: {{transcript}}"
       },
       todo_extraction: {
-        system: "You are an expert educational architect. Extract 3-5 actionable learning tasks from the provided content.",
+        system: "You are an expert educational architect. Extract 3-5 actionable learning tasks. Return ONLY a valid JSON array of objects with the following schema: [{ \"text\": \"string\", \"category\": \"Setup/Practice/Theory\", \"priority\": \"high/medium/low\", \"estimatedTime\": \"string\" }].",
         user: "Content Title: {{title}}\nContent: {{content}}"
       },
       visual_reasoning: {

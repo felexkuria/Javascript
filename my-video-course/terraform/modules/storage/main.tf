@@ -72,6 +72,47 @@ resource "aws_s3_bucket_cors_configuration" "main" {
   }
 }
 
+# --- PILLAR 4: S3 Lifecycle Rules ---
+resource "aws_s3_bucket_lifecycle_configuration" "main" {
+  count  = var.create_s3_bucket ? 1 : 0
+  bucket = aws_s3_bucket.main[0].id
+
+  rule {
+    id     = "archive-raw-uploads"
+    status = "Enabled"
+
+    filter {
+      prefix = "videos/raw/"
+    }
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 90
+      storage_class = "GLACIER"
+    }
+  }
+
+  rule {
+    id     = "cleanup-incomplete-uploads"
+    status = "Enabled"
+    filter {}
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+resource "aws_s3_bucket_notification" "main" {
+  count  = var.create_s3_bucket ? 1 : 0
+  bucket = aws_s3_bucket.main[0].id
+
+  eventbridge = true
+}
+
 # Locals for Dynamic Resources
 locals {
   dynamodb_tables = {
@@ -87,6 +128,11 @@ locals {
         {
           name       = "VideoIdIndex"
           hash_key   = "videoId"
+          projection = "ALL"
+        },
+        {
+          name       = "s3Key-index"
+          hash_key   = "s3Key"
           projection = "ALL"
         }
       ]
@@ -179,7 +225,9 @@ resource "aws_iam_policy" "dynamodb_policy" {
           "dynamodb:UpdateItem",
           "dynamodb:DeleteItem",
           "dynamodb:Query",
-          "dynamodb:Scan"
+          "dynamodb:Scan",
+          "dynamodb:GetRecords",
+          "dynamodb:DescribeTable"
         ]
         Resource = var.create_dynamodb_tables ? [
           for table in aws_dynamodb_table.main : table.arn

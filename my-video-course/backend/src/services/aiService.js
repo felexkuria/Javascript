@@ -16,6 +16,7 @@ try {
 }
 
 const promptManager = require('./promptManager');
+const { QuizSchema, TodoSchema, VideoMetadataSchema } = require('../models/schema');
 
 class AIService {
   constructor() {
@@ -151,13 +152,52 @@ class AIService {
     return await this.generateQuizFromVideo(videoTitle, textOnly);
   }
 
+  /**
+   * Pillar 1 Implementation: Strip filler text and validate again strict Zod contract.
+   * If validation fails, it attempts a recursive self-correction retry.
+   */
+  async cleanAndParseJSON(response, schema, retryContext = null) {
+    try {
+      if (!response) throw new Error("Empty AI response");
+      
+      // 1. Strip Common LLM Fillers
+      const jsonMatch = response.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
+      const rawJson = jsonMatch ? jsonMatch[0] : response;
+      const parsed = JSON.parse(rawJson);
+      
+      // 2. Strict Zod Validation
+      return schema.parse(parsed);
+
+    } catch (error) {
+      console.warn(`⚠️ Schema Validation Error: ${error.message}`);
+      
+      // 3. Automated Error Correction Retry (Only once)
+      if (retryContext && !retryContext.isRetry) {
+        console.log(`🔄 Attempting AI Self-Correction for: ${retryContext.type}...`);
+        const correctionPrompt = `Your previous response had a validation error: "${error.message}". 
+        Please fix the JSON and return ONLY the valid JSON data according to the schema. 
+        Original query: ${retryContext.prompt}`;
+        
+        const retryResponse = await this.generateWithNova(correctionPrompt, "You are a JSON correction assistant. Return ONLY JSON.");
+        return this.cleanAndParseJSON(retryResponse, schema, { ...retryContext, isRetry: true });
+      }
+
+      throw error; // Bubble up if retry also fails or not provided
+    }
+  }
+
   async generateQuizQuestions(transcript, videoTitle) {
     const { system, user } = promptManager.getPrompt('technical_quiz', { title: videoTitle, transcript: transcript.slice(0, 4000) });
-    const response = await this.generateWithNova(user, system);
+    
     try {
-      const jsonMatch = response.match(/\[.*\]/s);
-      return JSON.parse(jsonMatch ? jsonMatch[0] : response);
-    } catch {
+      const response = await this.generateWithNova(user, system);
+      return await this.cleanAndParseJSON(response, QuizSchema, { 
+        type: 'Quiz', 
+        prompt: user 
+      });
+    } catch (error) {
+      console.error(`❌ Final Quiz Extraction Failure: ${error.message}`);
+      // Fallback to static safe default to prevent pipeline crash
       return [{
         question: `What is the main concept covered in "${videoTitle}"?`,
         options: ['System Architecture', 'Implementation Techniques', 'Strategic Planning', 'Operational Excellence'],
@@ -171,8 +211,15 @@ class AIService {
     const { system, user } = promptManager.getPrompt('technical_lab', { title: videoTitle, transcript: transcript.slice(0, 4000) });
     const response = await this.generateWithNova(user, system);
     try {
-      const jsonMatch = response.match(/\{.*\}/s);
-      return JSON.parse(jsonMatch ? jsonMatch[0] : response);
+      // Use dynamic Zod validation for Labs (flexible but structured)
+      const LabSchema = require('zod').object({
+        title: require('zod').string(),
+        scenario: require('zod').string(),
+        objectives: require('zod').array(require('zod').string()),
+        steps: require('zod').array(require('zod').string()),
+        difficulty: require('zod').string()
+      });
+      return await this.cleanAndParseJSON(response, LabSchema, { type: 'Lab', prompt: user });
     } catch {
       return {
         title: `${videoTitle} Application Lab`,
@@ -259,16 +306,23 @@ class AIService {
   }
 
   async analyzeVideoContent(videoTitle, transcript = '') {
-    const prompt = `Analyze this video and provide: 1) Summary (50 words), 2) Key topics (5 bullet points), 3) Difficulty level. Video: "${videoTitle}"`;
+    const { system, user } = promptManager.getPrompt('video_analysis', { title: videoTitle, transcript: transcript.slice(0, 4000) });
     
-    const context = { videoTitle, transcript: transcript.slice(0, 2000) };
-    const response = await this.generateWithNova(prompt, context);
-    
-    return {
-      summary: response.split('Summary:')[1]?.split('Key topics:')[0]?.trim() || 'Video content analysis',
-      keyTopics: response.split('Key topics:')[1]?.split('Difficulty:')[0]?.trim().split('\n') || ['Key concepts'],
-      difficulty: response.split('Difficulty:')[1]?.trim() || 'Intermediate'
-    };
+    try {
+      const response = await this.generateWithNova(user, system);
+      return await this.cleanAndParseJSON(response, VideoMetadataSchema, {
+        type: 'Analysis',
+        prompt: user
+      });
+    } catch (error) {
+      console.warn(`⚠️ Video analysis extraction failed: ${error.message}`);
+      return {
+        summary: 'Video content analysis in progress...',
+        keyTopics: ['Technical implementation', 'Architecture overview'],
+        difficulty: 'Intermediate',
+        tags: ['video', 'learning']
+      };
+    }
   }
 
   async generateCaptionsFromSRT(srtContent, videoTitle) {
@@ -296,20 +350,17 @@ class AIService {
   }
 
   async generateTodos(content, type = 'video', title = '') {
-    const systemPrompt = `You are an expert educational architect. Extract 3-5 actionable learning tasks from the provided ${type} content.
-    Return ONLY a valid JSON array of objects with the following schema:
-    [
-      { "text": "Actionable task string", "category": "Setup/Practice/Theory", "priority": "high/medium/low", "estimatedTime": "approx time" }
-    ]
-    Response format: JSON`;
-    
-    const prompt = `Content Title: ${title}\n\nContent Content:\n${content}`;
+    const { system, user } = promptManager.getPrompt('todo_extraction', { title, content: content.slice(0, 4000) });
     
     try {
-      return await this.generateWithNova(prompt, systemPrompt);
+      const response = await this.generateWithNova(user, system);
+      return await this.cleanAndParseJSON(response, TodoSchema, {
+        type: 'Todos',
+        prompt: user
+      });
     } catch (error) {
-      console.warn("Nova todo extraction failed, falling back to Gemini:", error.message);
-      return await this.fallbackToGemini(prompt, { systemPrompt });
+      console.warn(`⚠️ Todo extraction failed: ${error.message}`);
+      return await this.fallbackToGemini(user, { systemPrompt: system });
     }
   }
 
