@@ -88,7 +88,7 @@ resource "local_file" "add_video_to_db_py" {
   filename   = "${path.module}/lambda_src/add_video_to_db.py"
   depends_on = [null_resource.lambda_src_dir]
   content    = <<EOF
-import json, os, urllib.parse, boto3, re
+import json, os, urllib.parse, boto3, re, hashlib
 from datetime import datetime
 
 dynamodb = boto3.resource('dynamodb')
@@ -117,9 +117,14 @@ def lambda_handler(event, context):
     thumb_path = f"thumbnails/{course_folder}/{title}.jpg"
     thumbnail_url = f"https://{bucket}.s3.amazonaws.com/{thumb_path}"
     
+    # [IDEMPOTENCY FIX]: Deterministic VideoID based on S3 Key
+    video_id_seed = f"{course_name}_{key}"
+    video_id_hash = hashlib.sha256(video_id_seed.encode()).hexdigest()[:12]
+    video_id = f"{course_name}_{title.replace(' ', '_')}_{video_id_hash}"
+    
     video_data = {
         'courseName': course_name,
-        'videoId': f"{course_name}_{title}_{int(context.aws_request_id.replace('-', '')[:8], 16)}",
+        'videoId': video_id,
         'title': title.replace('_', ' ').title(),
         'videoUrl': f"https://{bucket}.s3.amazonaws.com/{key}",
         'thumbnailUrl': thumbnail_url,
@@ -354,8 +359,8 @@ resource "aws_iam_role_policy" "lambda_policy" {
       },
       {
         Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:PutObject", "s3:CopyObject"]
-        Resource = "${var.s3_bucket_arn}/*"
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:CopyObject", "s3:DeleteObject", "s3:ListBucket"]
+        Resource = "*"
       },
       {
         Effect   = "Allow"

@@ -85,4 +85,47 @@ def handle_proactive_audit():
         scan_kwargs['ExclusiveStartKey'] = response['LastEvaluatedKey']
         
     print(f"[PROACTIVE] Audit complete. Checked: {total_checked}, Purged: {total_purged}")
-    return {'status': 'success', 'mode': 'proactive', 'purged': total_purged}
+    
+    # 3. New Sync Logic: Audit S3 for Ghost Files (S3 has it, DB does not)
+    return handle_ghost_file_check(table_name)
+
+def handle_ghost_file_check(table_name):
+    bucket = os.environ['S3_BUCKET_NAME']
+    table = dynamodb.Table(table_name)
+    quarantine_prefix = "quarantine/"
+    
+    print(f"[PROACTIVE] Starting Ghost File audit for bucket: {bucket}")
+    ghost_files_moved = 0
+    
+    paginator = s3.get_paginator('list_objects_v2')
+    for page in paginator.paginate(Bucket=bucket, Prefix="videos/"):
+        for obj in page.get('Contents', []):
+            key = obj['Key']
+            # We only audit videos/, not thumbnails or other assets for now
+            if not key.lower().endswith(('.mp4', '.mov', '.mkv', '.avi', '.webm')):
+                continue
+                
+            # Check if this key exists in DynamoDB using the GSI
+            response = table.query(
+                IndexName='s3Key-index',
+                KeyConditionExpression=boto3.dynamodb.conditions.Key('s3Key').eq(key)
+            )
+            
+            if response['Count'] == 0:
+                print(f"[PROACTIVE] Ghost File detected: {key}. Moving to quarantine...")
+                new_key = key.replace("videos/", quarantine_prefix)
+                
+                try:
+                    # Move = Copy + Delete
+                    s3.copy_object(
+                        Bucket=bucket,
+                        CopySource={'Bucket': bucket, 'Key': key},
+                        Key=new_key
+                    )
+                    s3.delete_object(Bucket=bucket, Key=key)
+                    ghost_files_moved += 1
+                    print(f"[PROACTIVE] Successfully quarantined: {key} -> {new_key}")
+                except Exception as e:
+                    print(f"[ERROR] Failed to quarantine {key}: {e}")
+                    
+    return {'status': 'success', 'mode': 'proactive', 'ghost_files_quarantined': ghost_files_moved}
