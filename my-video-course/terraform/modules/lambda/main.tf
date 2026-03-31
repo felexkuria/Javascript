@@ -354,8 +354,9 @@ resource "aws_lambda_function" "extract_thumbnail" {
   timeout          = 30
   memory_size      = 512
 
-  # Public FFmpeg Layer for us-east-1
-  layers = ["arn:aws:lambda:us-east-1:145266761615:layer:ffmpeg:1"]
+  # [TEMPORARY DECOUPLE] FFmpeg Layer removed to bypass IAM AccessDenied (lambda:GetLayerVersion).
+  # User must manually attach arn:aws:lambda:us-east-1:464622530412:layer:ffmpeg:1 via AWS Console.
+  # layers = ["arn:aws:lambda:us-east-1:464622530412:layer:ffmpeg:1"]
 
   environment {
     variables = {
@@ -408,21 +409,21 @@ resource "aws_lambda_permission" "allow_eventbridge" {
 
 # SNS Subscriptions
 resource "aws_sns_topic_subscription" "start_transcribe" {
-  count     = length(aws_lambda_function.start_transcribe)
+  count     = (var.create_role || var.existing_role_arn != null) ? 1 : 0
   topic_arn = aws_sns_topic.video_updates.arn
   protocol  = "lambda"
   endpoint  = aws_lambda_function.start_transcribe[0].arn
 }
 
 resource "aws_sns_topic_subscription" "add_video" {
-  count     = length(aws_lambda_function.add_video_to_db)
+  count     = (var.create_role || var.existing_role_arn != null) ? 1 : 0
   topic_arn = aws_sns_topic.video_updates.arn
   protocol  = "lambda"
   endpoint  = aws_lambda_function.add_video_to_db[0].arn
 }
 
 resource "aws_sns_topic_subscription" "extract_thumbnail" {
-  count     = length(aws_lambda_function.extract_thumbnail)
+  count     = (var.create_role || var.existing_role_arn != null) ? 1 : 0
   topic_arn = aws_sns_topic.video_updates.arn
   protocol  = "lambda"
   endpoint  = aws_lambda_function.extract_thumbnail[0].arn
@@ -430,7 +431,7 @@ resource "aws_sns_topic_subscription" "extract_thumbnail" {
 
 # Permissions
 resource "aws_lambda_permission" "sns_start_transcribe" {
-  count         = length(aws_lambda_function.start_transcribe)
+  count         = (var.create_role || var.existing_role_arn != null) ? 1 : 0
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.start_transcribe[0].function_name
   principal     = "sns.amazonaws.com"
@@ -438,7 +439,7 @@ resource "aws_lambda_permission" "sns_start_transcribe" {
 }
 
 resource "aws_lambda_permission" "sns_add_video" {
-  count         = length(aws_lambda_function.add_video_to_db)
+  count         = (var.create_role || var.existing_role_arn != null) ? 1 : 0
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.add_video_to_db[0].function_name
   principal     = "sns.amazonaws.com"
@@ -446,7 +447,7 @@ resource "aws_lambda_permission" "sns_add_video" {
 }
 
 resource "aws_lambda_permission" "sns_extract_thumbnail" {
-  count         = length(aws_lambda_function.extract_thumbnail)
+  count         = (var.create_role || var.existing_role_arn != null) ? 1 : 0
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.extract_thumbnail[0].function_name
   principal     = "sns.amazonaws.com"
