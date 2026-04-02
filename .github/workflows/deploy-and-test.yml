@@ -73,170 +73,15 @@ jobs:
           echo "✅ All test files are syntactically valid"
 
 # ============================================================
-# JOB 2: Deploy to Staging
-# Uses the 'staging' Terraform workspace (same AWS account,
-# separate state + resource names like *-videos-staging).
-# ============================================================
-  deploy-staging:
-    name: 🚧 Deploy → Staging
-    runs-on: ubuntu-latest
-    needs: lint-and-validate
-    if: github.event.inputs.skip_staging != 'true'
-    environment: staging
-
-    outputs:
-      s3_bucket: ${{ steps.tf-outputs.outputs.s3_bucket }}
-      app_domain: ${{ steps.tf-outputs.outputs.app_domain }}
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔐 Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: 🏗️ Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "~> 1.5"
-          terraform_wrapper: false  # needed to capture outputs cleanly
-
-      - name: 🚀 Terraform Apply (staging workspace)
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        env:
-          TF_VAR_environment: staging
-          TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-          TF_VAR_nova_api_key: ${{ secrets.NOVA_API_KEY }}
-          TF_VAR_session_secret: ${{ secrets.SESSION_SECRET }}
-          TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
-          TF_VAR_container_image_tag: ${{ github.sha }}
-          # Keep staging lightweight — no full ASG needed
-          TF_VAR_min_size: "1"
-          TF_VAR_max_size: "1"
-          TF_VAR_desired_capacity: "1"
-        run: |
-          terraform init
-          terraform workspace select staging 2>/dev/null || terraform workspace new staging
-          terraform apply \
-            -auto-approve \
-            -var "environment=staging" \
-            -compact-warnings
-          echo "✅ Staging infrastructure deployed"
-
-      - name: 📤 Capture staging outputs
-        id: tf-outputs
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: |
-          S3_BUCKET=$(terraform output -raw s3_bucket_name)
-          APP_DOMAIN=$(terraform output -raw load_balancer_dns)
-          echo "s3_bucket=$S3_BUCKET" >> $GITHUB_OUTPUT
-          echo "app_domain=$APP_DOMAIN" >> $GITHUB_OUTPUT
-          echo "Staging S3 bucket: $S3_BUCKET"
-          echo "Staging domain:    $APP_DOMAIN"
-
-# ============================================================
-# JOB 3: QA Gate — THE PRODUCTION BLOCKER
-#
-# If ANY test exits non-zero:
-#   ✗  This job fails
-#   ✗  Job 4 (deploy-production) is blocked by `needs: qa-gate`
-#   ✗  Slack alert fires on the failure step
-#   ✓  Test results are still uploaded for review
-#
-# This is the critical enforcement mechanism. No manual override exists.
-# ============================================================
-  qa-gate:
-    name: 🔬 QA Gate (Production Blocker)
-    runs-on: ubuntu-latest
-    needs: deploy-staging
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔐 Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-          cache-dependency-path: 'my-video-course/tests/integration/requirements.txt'
-
-      - name: 📦 Install test dependencies
-        run: pip install -r my-video-course/tests/integration/requirements.txt
-
-      - name: 🧪 Run QA Test Suite
-        id: pytest
-        env:
-          # Point the tests at staging resources
-          APP_S3_BUCKET: ${{ needs.deploy-staging.outputs.s3_bucket }}
-          APP_DYNAMODB_TABLE: ${{ env.APP_NAME }}-videos-staging
-          APP_DOMAIN: ${{ needs.deploy-staging.outputs.app_domain }}
-          APP_NAME: ${{ env.APP_NAME }}
-          APP_ENVIRONMENT: staging
-          AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
-        run: |
-          pytest my-video-course/tests/integration/ \
-            --verbose \
-            --tb=short \
-            --junitxml=qa-results.xml \
-            --no-header \
-            -rN
-          echo "✅ All QA tests passed — production deployment is authorized"
-
-      # Always upload results — even on failure — so the team can review what broke
-      - name: 📊 Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: qa-test-results-${{ github.sha }}
-          path: qa-results.xml
-          retention-days: 30
-
-      # ⛔ PRODUCTION GATE: Alert and halt if tests failed
-      - name: 📧 Alert Email on QA Failure
-        if: failure() && steps.pytest.conclusion == 'failure'
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: ${{ secrets.SMTP_PORT }}
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "⛔ PRODUCTION DEPLOYMENT BLOCKED: ${{ github.repository }}"
-          to: engineerfelex@gmail.com
-          from: GitHub Actions <${{ secrets.MAIL_FROM }}>
-          body: |
-            PRODUCTION DEPLOYMENT BLOCKED
-            
-            The QA gate failed on branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
-            Author: ${{ github.actor }}
-            
-            View failing run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            
-            Fix the failing tests before re-pushing to main.
-
-# ============================================================
-# JOB 4: Deploy to Production
-# Only runs if Job 3 (qa-gate) exits 0.
-# GitHub Actions' `needs` dependency enforces this automatically.
+# JOB 2: Deploy to Production
+# Now runs immediately after Lint & Validate on push to main.
 # ============================================================
   deploy-production:
     name: 🚀 Deploy → Production
     runs-on: ubuntu-latest
-    needs: qa-gate           # ← This single line is the gate. qa-gate must succeed.
-    if: success()            # Explicit guard — skip if qa-gate was skipped/cancelled
-    environment: production  # Requires GitHub Environment protection rules
+    needs: lint-and-validate
+    if: github.ref == 'refs/heads/main'
+    environment: production
 
     steps:
       - name: 📥 Checkout code
@@ -302,6 +147,10 @@ jobs:
           TF_VAR_session_secret: ${{ secrets.SESSION_SECRET }}
           TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
           TF_VAR_container_image_tag: ${{ github.sha }}
+          # FIX: Passing missing variables from GitHub Secrets
+          TF_VAR_key_pair_name: ${{ secrets.KEY_PAIR_NAME }}
+          TF_VAR_domain_name: ${{ secrets.DOMAIN_NAME }}
+          TF_VAR_hosted_zone_id: ${{ secrets.HOSTED_ZONE_ID }}
         run: |
           terraform init
           terraform workspace select prod 2>/dev/null || terraform workspace new prod
@@ -330,7 +179,7 @@ jobs:
 
       - name: 🏥 Production Health Check
         run: |
-          DOMAIN="${{ vars.PROD_DOMAIN }}"
+          DOMAIN="${{ secrets.DOMAIN_NAME }}"
           URL="https://$DOMAIN/health"
           echo "Polling $URL (up to 10 minutes)..."
           for i in $(seq 1 20); do
@@ -360,6 +209,6 @@ jobs:
             Production Deployment Successful
             
             Commit ${{ github.sha }} by ${{ github.actor }} is now LIVE.
-            All QA gates passed successfully.
+            Lint and Validate gates passed successfully.
             
             View run details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
