@@ -8,7 +8,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "ffmpeg_laye
   name           = "${var.app_name}-ffmpeg-sar"
   application_id = "arn:aws:serverlessrepo:us-east-1:145266761615:applications/ffmpeg-lambda-layer"
   capabilities   = ["CAPABILITY_IAM", "CAPABILITY_RESOURCE_POLICY"]
-  
+
   # Version 4 is the community standard for most Python/Node runtimes
-  semantic_version = "4.0.0" 
+  semantic_version = "4.0.0"
 }
