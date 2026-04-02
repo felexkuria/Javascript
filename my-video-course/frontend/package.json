@@ -9,7 +9,7 @@
     "lint": "echo 'Frontend linting'"
   },
   "dependencies": {
-    "ejs": "^3.1.9"
+    "ejs": "^3.1.10"
   },
   "devDependencies": {},
   "keywords": ["video", "course", "education", "frontend"],

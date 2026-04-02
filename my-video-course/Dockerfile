@@ -19,21 +19,13 @@ COPY frontend/ ./frontend/
 # --- STAGE 2: Optimized Runtime ---
 FROM node:22-alpine AS runtime
 
-# Install AWS CLI and essential runtime dependencies
+# Install essential runtime dependencies
 # Note: curl is REQUIRED for the Docker HEALTHCHECK (Line 47) 
 # and the CI/CD production health check.
 RUN apk add --no-cache --upgrade apk-tools \
     && apk upgrade --no-cache \
     && apk add --no-cache \
-    curl \
-    unzip \
-    python3 \
-    py3-pip \
-    && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
-    && unzip awscliv2.zip \
-    && ./aws/install \
-    && rm -rf awscliv2.zip aws \
-    && apk del unzip
+    curl
 
 WORKDIR /app
 
