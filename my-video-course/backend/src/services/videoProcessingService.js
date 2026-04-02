@@ -71,18 +71,22 @@ class VideoProcessingService {
         duration = `${mins}:${secs.toString().padStart(2, '0')}`;
       }
 
-      // Save to DynamoDB
+      // Save to DynamoDB with Deterministic ID (Hardened Pipeline Sync)
+      const videoId = dynamodb.generateDeterministicVideoId(courseName, s3Key);
+      
       const videoData = {
-        _id: Date.now().toString(),
+        videoId,
         courseName,
         title,
         videoUrl,
         s3Key,
         captionsUrl,
-        duration, // Store extracted duration/pages here
+        duration, 
         type: isPdf ? 'pdf' : 'video',
-        thumbnailUrl: previews && previews.length > 0 ? previews[0] : null,
-        visualInsights: previews, // Phase 1 Step-down
+        // In hardened mode, Lambda extracts the thumbnail later; 
+        // Predict the path here to ensure consistent UI experience.
+        thumbnailUrl: previews && previews.length > 0 ? previews[0] : `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/thumbnails/${safeCourse}/${safeTitle}.jpg`,
+        visualInsights: previews,
         ...aiContent,
         createdAt: new Date().toISOString()
       };
@@ -105,6 +109,13 @@ class VideoProcessingService {
   async compressVideo(inputPath, tempDir) {
     const outputPath = path.join(tempDir, 'compressed.mp4');
     
+    // Hardened Pipeline Check: Skip local FFmpeg in production to offload to Lambda
+    if (process.env.NODE_ENV === 'production' || process.env.ENABLE_HARDENED_PIPELINE === 'true') {
+      console.log('[HARDENING] Skipping local FFmpeg compression, relying on Cloud-Native pipeline.');
+      fs.copyFileSync(inputPath, outputPath);
+      return outputPath;
+    }
+
     // Check if ffmpeg is available
     try {
       await new Promise((resolve, reject) => {
@@ -121,6 +132,7 @@ class VideoProcessingService {
       fs.copyFileSync(inputPath, outputPath);
       return outputPath;
     }
+
     
     return new Promise((resolve, reject) => {
       const ffmpeg = spawn('ffmpeg', [
@@ -270,6 +282,12 @@ class VideoProcessingService {
   }
 
   async generateVideoPreviews(inputPath, tempDir, safeCourse, safeTitle) {
+    // Hardened Pipeline Check: Skip local preview generation, rely on extract_thumbnail Lambda
+    if (process.env.NODE_ENV === 'production' || process.env.ENABLE_HARDENED_PIPELINE === 'true') {
+      console.log('[HARDENING] Skipping local thumbnail extraction, relying on extract_thumbnail Lambda.');
+      return []; // Return empty array; Lambda will update DynamoDB asynchronously
+    }
+
     const previewDir = path.join(tempDir, 'previews');
     fs.mkdirSync(previewDir, { recursive: true });
 

@@ -3,6 +3,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="/js/confetti.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <div class="flex min-h-screen pt-32 pb-24 px-8 lg:px-12 bg-[#001E2B] learning-canvas">
     <!-- Student Sidebar Integration -->
@@ -77,6 +79,17 @@
                 </div>
             </div>
         </div>
+
+        <!-- XP Snackbar (Hidden by default) -->
+        <div id="xp-snackbar" class="fixed bottom-12 right-12 z-[100] hidden transform translate-y-full opacity-0 px-8 py-5 bg-[#001E2B]/90 border border-[#00ED64]/30 rounded-[32px] shadow-2xl flex items-center gap-5 ring-1 ring-white/10">
+            <div class="w-12 h-12 bg-[#00ED64]/10 rounded-2xl flex items-center justify-center border border-[#00ED64]/20 shadow-inner">
+                <i class="fas fa-bolt text-[#00ED64] text-xl"></i>
+            </div>
+            <div class="flex flex-col pr-4">
+                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-[#9FB1AD] mb-1">Gamification Engine</span>
+                <span id="snackbar-text" class="text-base font-black text-white tracking-tight"></span>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -100,10 +113,13 @@
         let history = JSON.parse(localStorage.getItem("chatbot_history") || "[]");
 
         function addMessage(c, user = false, save = true) {
-            // Premium Markdown & Syntax Highlighting
-            if (window.marked && window.hljs) {
+            const rawContent = c; // Save raw text for memory before parsing
+            
+            // Premium Markdown Rendering using marked.js
+            if (window.marked && !user) {
                 c = marked.parse(c);
-            } else {
+            } else if (!user) {
+                // Fallback for simple formatting if marked fails
                 c = c.replace(/\*\*(.*?)\*\*/g, "<span class='font-black text-[#00ED64]'>$1</span>")
                      .replace(/`(.*?)`/g, "<span class='font-mono bg-black/40 px-2 py-0.5 rounded border border-white/5 text-[#00ED64]'>$1</span>")
                      .replace(/\n/g, "<br>");
@@ -144,14 +160,14 @@
             }
             container.scrollTop = container.scrollHeight;
             if (save) {
-                history.push({ c, user });
+                history.push({ role: user ? 'user' : 'assistant', content: rawContent });
                 localStorage.setItem("chatbot_history", JSON.stringify(history));
             }
         }
 
         if (history.length) {
             container.innerHTML = "";
-            history.forEach(m => addMessage(m.c, m.user, false));
+            history.forEach(m => addMessage(m.content || m.c, (m.role === 'user' || m.user === true), false));
         }
 
         async function send() {
@@ -160,18 +176,73 @@
 
             const tDiv = document.createElement("div");
             tDiv.id = "typing"; tDiv.className = "chat-message bot";
-            tDiv.innerHTML = `<div class="message-bubble animate-pulse technical-label">Synthesizing Response...</div>`;
+            tDiv.innerHTML = `<div class="message-bubble animate-pulse text-[#00ED64] font-black italic">Developing Analogy...</div>`;
             container.appendChild(tDiv); container.scrollTop = container.scrollHeight;
 
             try {
+                // Diagnostic: Log history being sent to Neural Core
+                console.log(`📡 Sending ${history.length} conversation turns to Neural Core...`);
+                
                 const r = await fetch("/api/ai/chatbot", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: m })
+                    body: JSON.stringify({ 
+                        message: m,
+                        courseName: document.getElementById('courseName')?.value,
+                        videoTitle: document.getElementById('videoTitle')?.value,
+                        history: history.slice(-5)
+                    })
                 });
                 const d = await r.json();
                 document.getElementById("typing").remove();
-                if (d.response) addMessage(d.response);
+                
+                if (d.response) {
+                    addMessage(d.response);
+                    
+                    // Award/Deduct XP Logic
+                    if (d.xp_change && d.xp_change !== 0) {
+                        const isPositive = d.xp_change > 0;
+                        
+                        showSnackbar(
+                            isPositive ? `🎉 +10 XP: Correct Answer!` : `📉 -10 XP: Incorrect Answer. Keep trying!`,
+                            isPositive ? 'success' : 'error'
+                        );
+                        
+                        if (isPositive && window.confetti) {
+                            confetti({
+                                particleCount: 150,
+                                spread: 70,
+                                origin: { y: 0.6 },
+                                colors: ['#00ED64', '#ffffff', '#0061FE']
+                            });
+                        }
+                        
+                        // Update global XP total if available in UI (DynamoDB is Source of Truth)
+                        if (d.new_total !== undefined && d.new_total !== null) {
+                            console.log('🎮 Gamification Sync (Live):', { 
+                                xp_change: d.xp_change || 0, 
+                                new_total: d.new_total 
+                            });
+                            
+                            const xpDisplay = document.getElementById('sidebar-points');
+                            if (xpDisplay) xpDisplay.innerText = d.new_total;
+                            
+                            const lvlDisplay = document.getElementById('sidebar-level');
+                            if (lvlDisplay) {
+                                const newLevel = Math.floor(d.new_total / 1000) + 1;
+                                lvlDisplay.innerText = newLevel;
+                            }
+                            
+                            const progressBar = document.getElementById('sidebar-progress-bar');
+                            if (progressBar) {
+                                const currentLevel = Math.floor(d.new_total / 1000) + 1;
+                                const prevLevelPoints = (currentLevel - 1) * 1000;
+                                const progress = Math.min(100, Math.max(0, ((d.new_total - prevLevelPoints) / 1000) * 100));
+                                progressBar.style.width = `${progress}%`;
+                            }
+                        }
+                    }
+                }
             } catch (e) {
                 document.getElementById("typing").remove();
                 addMessage("COMMUNICATION ERROR: Neural pipe obstructed. Please verify AWS connectivity.");
@@ -184,4 +255,63 @@
     });
 </script>
 
+<script>
+    function showSnackbar(message, type = 'success') {
+        const snackbar = document.getElementById('xp-snackbar');
+        const text = document.getElementById('snackbar-text');
+        
+        text.innerText = message;
+        snackbar.classList.remove('hidden', 'translate-y-full', 'opacity-0');
+        
+        // Dynamic border based on type
+        snackbar.style.borderColor = type === 'success' ? '#00ED64' : '#FF4B4B';
+        
+        setTimeout(() => {
+            snackbar.classList.add('translate-y-full', 'opacity-0');
+            setTimeout(() => snackbar.classList.add('hidden'), 500);
+        }, 4000);
+    }
+</script>
+
+<style>
+    /* ── Premium XP Snackbar ─────────────────────────────── */
+    #xp-snackbar {
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+    
+    /* ── Markdown & Typography Hardening ─────────────────── */
+    .message-bubble {
+        line-height: 1.6;
+    }
+    .message-bubble p { margin-bottom: 1rem; }
+    .message-bubble p:last-child { margin-bottom: 0; }
+    .message-bubble strong { color: #00ED64; font-weight: 800; }
+    .message-bubble pre {
+        background: rgba(0, 0, 0, 0.4) !important;
+        padding: 1.25rem !important;
+        border-radius: 1rem !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        margin: 1rem 0 !important;
+        font-family: 'Fira Code', monospace !important;
+    }
+    .message-bubble code {
+        color: #00ED64;
+        background: rgba(0, 237, 100, 0.1);
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.4rem;
+        font-size: 0.9em;
+    }
+    .message-bubble ul, .message-bubble ol {
+        margin-left: 1.5rem;
+        margin-bottom: 1rem;
+        list-style-type: disc;
+    }
+    
+    @keyframes slide-up {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
 <%- include('partials/footer') %>

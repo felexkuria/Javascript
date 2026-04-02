@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const dynamoVideoService = require('../services/dynamoVideoService');
 const dynamodb = require('../utils/dynamodb');
+const gamificationManager = require('../services/gamificationManager');
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
@@ -38,12 +39,23 @@ class WebController {
       }
 
       // Fetch data from DynamoDB
-      const [courses, enrollments, certificates, gamificationData] = await Promise.all([
+      const [courses, enrollments, certificates, rawGamificationData] = await Promise.all([
         dynamoVideoService.getAllCourses(userId),
         dynamoVideoService.getUserEnrollments(userId),
         dynamodb.getCertificates(userId),
-        dynamoVideoService.getUserGamificationData(userId)
+        gamificationManager.getUserData(userId)
       ]);
+
+      // Normalize schema: gamificationManager returns { level, totalPoints, streak, videosWatched, ... }
+      const gamificationData = {
+        userStats: { 
+          totalPoints: rawGamificationData.totalPoints || 0,
+          currentLevel: rawGamificationData.level || 1,
+          experiencePoints: rawGamificationData.totalPoints || 0,
+          videosWatched: rawGamificationData.videosWatched || {}
+        },
+        streakData: { currentStreak: rawGamificationData.streak || 0 }
+      };
 
       // Calculate stats
       const totalCourses = courses.length;
@@ -149,7 +161,16 @@ class WebController {
       }
 
       // Fetch user gamification status
-      const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
+      const rawGamificationData = await gamificationManager.getUserData(userId);
+      const gamificationData = {
+        userStats: { 
+          totalPoints: rawGamificationData.totalPoints || 0,
+          currentLevel: rawGamificationData.level || 1,
+          experiencePoints: rawGamificationData.totalPoints || 0,
+          videosWatched: rawGamificationData.videosWatched || {}
+        },
+        streakData: { currentStreak: rawGamificationData.streak || 0 }
+      };
 
       // ── Video Resolution Strategy ────────────────────────────────────────────
       // course.videos[] uses _id (from DynamoDB course record, matches sidebar URLs)
@@ -305,7 +326,16 @@ class WebController {
   async renderProfile(req, res) {
     try {
       const userId = req.user?.email || 'guest';
-      const gamificationData = await dynamoVideoService.getUserGamificationData(userId);
+      const rawGamificationData = await gamificationManager.getUserData(userId);
+      const gamificationData = {
+        userStats: { 
+          totalPoints: rawGamificationData.totalPoints || 0,
+          currentLevel: rawGamificationData.level || 1,
+          experiencePoints: rawGamificationData.totalPoints || 0,
+          videosWatched: rawGamificationData.videosWatched || {}
+        },
+        streakData: { currentStreak: rawGamificationData.streak || 0 }
+      };
       res.render('profile', { user: req.user, gamificationData });
     } catch (err) {
       res.render('profile', { user: req.user, gamificationData: null });

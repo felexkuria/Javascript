@@ -1,14 +1,21 @@
 # Secrets Management (Day 11/12)
+resource "random_string" "secret_suffix" {
+  count   = var.create_app_secrets ? 1 : 0
+  length  = 6
+  special = false
+  upper   = false
+}
+
 resource "aws_secretsmanager_secret" "app" {
   count       = var.create_app_secrets ? 1 : 0
-  name        = var.app_secrets_id
+  name        = "${var.app_secrets_id}-${random_string.secret_suffix[0].result}"
   description = "Application environment secrets for ${var.app_name}"
 
   # Recovery window set for easy cleanup during training/challenges
   recovery_window_in_days = 0
 
   tags = {
-    Name        = var.app_secrets_id
+    Name        = "${var.app_secrets_id}-${random_string.secret_suffix[0].result}"
     Environment = var.environment
   }
 }
@@ -178,7 +185,13 @@ resource "aws_iam_role_policy" "ec2_secrets" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+        Action   = [
+          "secretsmanager:GetSecretValue", 
+          "secretsmanager:DescribeSecret",
+          "events:PutRule",
+          "events:PutTargets",
+          "events:DescribeRule"
+        ]
         Resource = "*"
       }
     ]

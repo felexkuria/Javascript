@@ -793,19 +793,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const newTotalPoints = currentTotalPoints + points;
             sidebarPoints.innerText = newTotalPoints;
             
-            // Recalculate Level & Progress
-            const newLevel = Math.floor(Math.sqrt(newTotalPoints / 100)) + 1;
-            const nextLevelPoints = Math.pow(newLevel, 2) * 100;
-            const prevLevelPoints = Math.pow(newLevel - 1, 2) * 100;
-            const progress = Math.min(100, Math.max(0, ((newTotalPoints - prevLevelPoints) / (nextLevelPoints - prevLevelPoints)) * 100));
+            // Recalculate Level & Progress (Neural Core Linear: 1000 XP/LVL)
+            const newLevel = Math.floor(newTotalPoints / 1000) + 1;
+            const progress = Math.min(100, Math.max(0, ((newTotalPoints % 1000) / 10) ));
             
             if (sidebarLevel) {
                 const oldLevel = parseInt(sidebarLevel.innerText) || 1;
                 if (newLevel > oldLevel) {
                     sidebarLevel.innerText = newLevel;
-                    // Trigger "Level Up" Celebration
-                    window.showAtlasHint?.(`LEVEL REACHED: LEVEL ${newLevel}!`);
-                    if (window.confetti) {
+                    // Trigger "Level Up" Celebration via Universal Engine
+                    if (window.gamificationSystem) {
+                        window.gamificationSystem.triggerConfetti('high');
+                        window.showAtlasHint?.(`LEVEL REACHED: LEVEL ${newLevel}!`);
+                    } else if (window.confetti) {
                         confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 }, colors: ['#00ED64', '#FFD700'] });
                     }
                 }

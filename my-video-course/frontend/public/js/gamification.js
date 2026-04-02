@@ -28,13 +28,40 @@ class GamificationSystem {
     };
   }
   static calculateLevel(xp) {
-    return Math.floor(Math.sqrt((xp || 0) / 100)) + 1;
+    return Math.floor((xp || 0) / 1000) + 1;
   }
 
   static calculateProgress(xp, level) {
-    const nextLevelXP = Math.pow(level, 2) * 100;
-    const prevLevelXP = Math.pow(level - 1, 2) * 100;
-    return Math.min(100, Math.max(0, (((xp || 0) - prevLevelXP) / (nextLevelXP - prevLevelXP)) * 100));
+    const prevLevelXP = (level - 1) * 1000;
+    return Math.min(100, Math.max(0, (((xp || 0) - prevLevelXP) / 1000) * 100));
+  }
+
+  // 🎊 Celebration Engine (Neural Core Tier)
+  triggerConfetti(intensity = 'medium') {
+    if (typeof window.confetti !== 'function') return;
+
+    const MDB_GREEN = '#00ED64';
+    const GOLD = '#FFD700';
+    const WHITE = '#FFFFFF';
+
+    if (intensity === 'low') {
+        confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 }, colors: [MDB_GREEN, WHITE] });
+    } else if (intensity === 'medium') {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: [MDB_GREEN, GOLD, WHITE] });
+    } else {
+        // High Intensity (Classic Grand Finale)
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) return clearInterval(interval);
+            const particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 } }));
+        }, 250);
+    }
   }
 
   getNSKey(key) {
@@ -282,12 +309,27 @@ class GamificationSystem {
       const response = await fetch('/api/gamification/load');
       if (response.ok) {
         const data = await response.json();
+        
+        // --- 🛡️ NEURAL CORE: Database Primary ---
+        // We prioritize the Server's aggregate truth (totalPoints, level)
+        if (data.userStats) {
+            this.userStats = {
+                ...this.getDefaultStats(),
+                ...data.userStats,
+                // Ensure Root sync (Standard)
+                totalPoints: Number(data.totalPoints || data.userStats.totalPoints || 0),
+                currentLevel: Number(data.level || data.userStats.currentLevel || 1)
+            };
+        }
+        
         if (data.achievements) this.achievements = data.achievements;
-        if (data.userStats) this.userStats = data.userStats;
         if (data.streakData) this.streakData = data.streakData;
         
-        // Sync with localStorage video data
-        await this.syncWithLocalStorageVideos();
+        console.log(`✅ [NEURAL_INIT] DB Truth Hydrated: LB ${this.userStats.totalPoints} XP / LVL ${this.userStats.currentLevel}`);
+        
+        // 🧪 Syncing: We only sync local watch status IF the server is missing it.
+        // We NEVER let local storage downgrade the server's truth.
+        await this.syncWithServerTruth();
         this.updateProgressDisplay();
       }
     } catch (error) {
@@ -295,70 +337,28 @@ class GamificationSystem {
     }
   }
 
-  // Sync gamification stats with localStorage video data
-  async syncWithLocalStorageVideos() {
+  // 🛡️ Neural Core: Sync local status to Match the Server Truth
+  async syncWithServerTruth() {
     try {
-      const response = await fetch('/api/videos/localStorage');
-      if (response.ok) {
-        const localStorageData = await response.json();
-        let totalWatchedVideos = 0;
-        let coursesCompleted = 0;
-        const watchDates = new Set();
-        
-        // Count watched videos and collect watch dates
-        Object.keys(localStorageData).forEach(courseName => {
-          const courseData = localStorageData[courseName];
-          const videos = courseData?.videos || [];
-          if (!Array.isArray(videos)) {
-            console.warn(`Course ${courseName}: videos is not an array:`, videos);
-            return;
-          }
-          console.log(`Course ${courseName}: ${videos.length} total videos`);
-          
-          const watchedInCourse = videos.filter(v => {
-            if (v && v.watched === true) {
-              // Add watch date to streak data
-              if (v.watchedAt) {
-                const watchDate = new Date(v.watchedAt).toISOString().split('T')[0];
-                watchDates.add(watchDate);
-              }
-              return true;
-            }
-            return false;
-          }).length;
-          
-          console.log(`Course ${courseName}: ${watchedInCourse} watched videos`);
-          totalWatchedVideos += watchedInCourse;
-          
-          if (videos.length > 0 && watchedInCourse === videos.length) {
-            coursesCompleted++;
-          }
-        });
-        
-        console.log(`Total watched videos across all courses: ${totalWatchedVideos}`);
-        
-        // Update streak data with actual watch dates (Merging Local + Server)
-        const serverDates = this.streakData.streakDates || [];
-        const combinedDates = new Set([...serverDates, ...watchDates]);
-        this.streakData.streakDates = Array.from(combinedDates).sort();
-        
-        this.calculateStreakFromDates();
-        
-        // Force recount from localStorage to ensure accuracy
-        const actualWatchedCount = await this.countWatchedVideosFromLocalStorage();
-        
-        // Update user stats with accurate count
-        this.userStats.videosWatched = actualWatchedCount;
-        this.userStats.coursesCompleted = coursesCompleted;
-        
-        console.log(`Updated video count: ${actualWatchedCount} watched videos`);
-        
-        this.saveUserStats();
-        this.saveStreakData();
-        await this.syncWithMongoDB();
-      }
+      // We prioritize the maps we just loaded from MongoDB/DynamoDB
+      const serverMap = this.userStats.videosWatched || {};
+      const rootMap = this.videosWatched || {};
+      
+      // Merge for maximum coverage
+      const unifiedMap = { ...rootMap, ...serverMap };
+      const watchedCount = Object.keys(unifiedMap).length;
+      
+      console.log(`📡 [NEURAL_SYNC] Server truth found ${watchedCount} watched lessons. Syncing local counter.`);
+      
+      this.userStats.videosWatched = watchedCount;
+      // Also update the local maps to match the server
+      this.videosWatched = unifiedMap;
+      
+      // Update streak/stats locally for the UI (No Server Push needed as we just loaded)
+      this.saveUserStats();
+      this.saveAchievements();
     } catch (error) {
-      console.warn('Failed to sync with localStorage videos:', error);
+      console.warn('Failed to sync with server truth:', error);
     }
   }
   
@@ -479,13 +479,19 @@ class GamificationSystem {
     }, 2000);
   }
 
-  // Check and award achievements
+  // Check if a specific achievement should be awarded
   checkAchievement(achievementId, customData = {}) {
     const definitions = this.getAchievementDefinitions();
     const achievement = definitions[achievementId];
     
-    if (!achievement || this.achievements.includes(achievementId)) {
-      return false; // Already earned
+    // Check if already earned (Defensive check for both string and object schemas)
+    const isEarned = this.achievements.some(a => {
+        if (typeof a === 'string') return a === achievementId;
+        return a && a.id === achievementId;
+    });
+
+    if (!achievement || isEarned) {
+      return false;
     }
 
     let shouldAward = false;
@@ -539,7 +545,19 @@ class GamificationSystem {
     const definitions = this.getAchievementDefinitions();
     const achievement = definitions[achievementId];
     
-    this.achievements.push(achievementId);
+    // Check if already earned (Defensive check for both string and object schemas)
+    const isEarned = this.achievements.some(a => {
+        if (typeof a === 'string') return a === achievementId;
+        return a && a.id === achievementId;
+    });
+    
+    if (isEarned) return;
+
+    this.achievements.push({
+        id: achievementId,
+        earnedAt: new Date().toISOString()
+    });
+
     this.awardPoints(achievement.points, achievement.name);
     this.showAchievementNotification(achievement);
     this.saveAchievements();
@@ -695,31 +713,51 @@ class GamificationSystem {
   updateProgressDisplay() {
     const totalXP = (this.userStats.experiencePoints || this.userStats.totalPoints || 0);
     const level = this.userStats.currentLevel || 1;
+    const progress = GamificationSystem.calculateProgress(totalXP, level);
     
-    // Update Global Sidebar if present
-    const sidebarXP = document.getElementById('sidebar-xp');
+    // 1. Sidebar Synchronization
+    const sidebarPoints = document.getElementById('sidebar-points');
     const sidebarLevel = document.getElementById('sidebar-level');
-    const progressBar = document.getElementById('sidebar-progress-bar');
+    const sidebarProgress = document.getElementById('sidebar-progress-bar');
+    // Level logic (Unified Neural Core)
+    const levelBefore = parseInt(sidebarLevel?.innerText) || 1;
+    const newLevel = Math.floor(totalXP / 1000) + 1;
+    const progressVal = Math.min(100, Math.max(0, ((totalXP % 1000) / 10) ));
+
+    if (sidebarLevel) sidebarLevel.innerText = newLevel;
+    if (sidebarProgress) sidebarProgress.style.width = `${progressVal}%`;
+
+    // 🚀 Celebration Trigger: Level Up!
+    if (newLevel > levelBefore && levelBefore > 0) {
+        this.triggerConfetti();
+        console.log(`🎊 [NEURAL_CELEBRATION] Level Up detected: ${levelBefore} -> ${newLevel}`);
+    }
     
-    if (sidebarXP) sidebarXP.innerText = totalXP;
-    if (sidebarLevel) sidebarLevel.innerText = level;
-    if (progressBar) {
-      const progress = GamificationSystem.calculateProgress(totalXP, level);
-      progressBar.style.width = `${progress}%`;
+    if (sidebarPoints) sidebarPoints.innerText = totalXP.toLocaleString();
+
+    // 2. Profile Synchronization (if present)
+    const profileXP = document.getElementById('current-xp');
+    const profileLevel = document.getElementById('user-level');
+    const profileProgress = document.getElementById('level-progress');
+    const nextLevelXPText = document.getElementById('next-level-xp');
+
+    if (profileLevel) profileLevel.innerText = level;
+    if (profileXP) profileXP.innerText = `${totalXP.toLocaleString()} XP ARCHIVED`;
+    if (profileProgress) profileProgress.style.width = `${progress}%`;
+    if (nextLevelXPText) {
+      const nextLVL = level * 1000;
+      nextLevelXPText.innerText = `${Math.max(0, nextLVL - totalXP).toLocaleString()} XP TO ASCENSION`;
     }
 
-    // Standard UI counters
-    document.querySelectorAll('.user-points').forEach(el => {
-      el.textContent = totalXP.toLocaleString();
-    });
-    
-    document.querySelectorAll('.user-level').forEach(el => {
-      el.textContent = level;
-    });
-    
-    document.querySelectorAll('.user-streak').forEach(el => {
-      el.textContent = this.streakData.currentStreak || 0;
-    });
+    // 3. Global Broadcast for Reactive UI Nodes
+    window.dispatchEvent(new CustomEvent('pointsUpdated', { 
+      detail: { points: totalXP, level: level, progress: progress } 
+    }));
+
+    // Standard UI counters (Classes)
+    document.querySelectorAll('.user-points').forEach(el => el.textContent = totalXP.toLocaleString());
+    document.querySelectorAll('.user-level').forEach(el => el.textContent = level);
+    document.querySelectorAll('.user-streak').forEach(el => el.textContent = this.streakData.currentStreak || 0);
   }
 
   // Show level up notification

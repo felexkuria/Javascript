@@ -1,0 +1,19 @@
+# Local .terraform directory
+.terraform/
+
+# Terraform state files
+*.tfstate*
+
+# .tfvars files
+terraform.tfvars
+terraform.tfvars.json
+
+# Variables and sensitive info
+*.tfplan
+crash.log
+
+# Mac specific
+.DS_Store
+
+# Pytest
+.pytest_cache/

@@ -351,9 +351,9 @@ exports.markVideoWatchedEnhanced = async (req, res) => {
           }
         });
         
-        // Update Level based on Experience Points: Level = floor(sqrt(XP/100)) + 1
-        const exp = gamificationData.userStats.experiencePoints || 0;
-        gamificationData.userStats.currentLevel = Math.floor(Math.sqrt(exp / 100)) + 1;
+        // Update Level based on Linear Neural Core: Level = floor(XP / 1000) + 1
+        const exp = gamificationData.userStats.totalPoints || gamificationData.userStats.experiencePoints || 0;
+        gamificationData.userStats.currentLevel = Math.floor(exp / 1000) + 1;
         
         // PERSIST with schema enforcement
         await dynamoVideoService.updateUserGamificationData(userId, gamificationData);

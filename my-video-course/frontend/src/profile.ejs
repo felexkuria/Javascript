@@ -171,9 +171,9 @@
                     const watchedCount = Object.keys(stats.videosWatched || {}).length;
                     const totalXP = stats.experiencePoints || stats.totalPoints || 0;
                     const level = stats.currentLevel || 1;
-                    const nextLevelXP = Math.pow(level, 2) * 100;
-                    const prevLevelXP = Math.pow(level - 1, 2) * 100;
-                    const progressPercent = Math.min(100, Math.max(0, ((totalXP - prevLevelXP) / (nextLevelXP - prevLevelXP)) * 100));
+                    const nextLevelXP = level * 1000;
+                    const prevLevelXP = (level - 1) * 1000;
+                    const progressPercent = Math.min(100, Math.max(0, ((totalXP - prevLevelXP) / 1000) * 100));
                 %>
                 <div class="stat-card-atlas premium-glass p-8 flex flex-col items-center text-center">
                     <div class="w-16 h-16 bg-[#00ED64]/5 rounded-3xl flex items-center justify-center text-3xl mb-6">🛰️</div>
@@ -248,17 +248,18 @@
                               {id:'course_complete',  icon:'🏅', name:'Graduate',          description:'Complete an entire course'},
                             ];
                             const earnedIds = (typeof gamificationData !== 'undefined' && gamificationData && gamificationData.achievements) ? gamificationData.achievements : [];
-                            allMerits.forEach(a => {
-                                const isEarned = earnedIds.includes(a.id);
+                            allMerits.forEach(merit => {
+                                const isEarned = earnedIds.some(e => (typeof e === 'string' ? e === merit.id : e && e.id === merit.id));
+                                const cardClass = isEarned ? 'earned' : '';
                             %>
-                            <div class="merit-badge-atlas premium-glass p-6 text-center border border-white/5 <%= isEarned ? 'earned' : '' %>">
-                                <div class="text-3xl mb-4"><%= a.icon %></div>
-                                <div class="text-[11px] font-black text-white uppercase tracking-tighter mb-1"><%= a.name %></div>
-                                <div class="text-[9px] text-gray-500 font-bold px-2 leading-relaxed"><%= a.description %></div>
-                                <% if (isEarned) { %>
-                                <div class="mt-2 text-[8px] font-black text-[#00ED64] uppercase tracking-widest">✓ Earned</div>
-                                <% } %>
-                            </div>
+                                <div class="merit-badge-atlas premium-glass p-6 text-center border border-white/5 <%= cardClass %>">
+                                    <div class="text-3xl mb-4"><%= merit.icon %></div>
+                                    <div class="text-[11px] font-black text-white uppercase tracking-tighter mb-1"><%= merit.name %></div>
+                                    <div class="text-[9px] text-gray-500 font-bold px-2 line-clamp-2 leading-relaxed"><%= merit.description %></div>
+                                    <% if (isEarned) { %>
+                                        <div class="mt-2 text-[8px] font-black text-[#00ED64] uppercase tracking-widest">✓ Earned</div>
+                                    <% } %>
+                                </div>
                             <% }); %>
                         </div>
                     </div>
@@ -301,8 +302,14 @@
             let watchDatesData = [];
 
             const tryUpdateProfile = () => {
-                if (window.gamificationSystem) updateProfileDisplay();
-                else setTimeout(tryUpdateProfile, 100);
+                if (window.gamificationSystem) {
+                    updateProfileDisplay();
+                    // 🚀 Reactive UI Listener: Update when points change elsewhere
+                    window.addEventListener('pointsUpdated', (e) => {
+                        console.log('📡 Profile Sync: Points Updated Received', e.detail);
+                        updateProfileDisplay();
+                    });
+                } else setTimeout(tryUpdateProfile, 100);
             };
 
             async function loadWatchDates() {
@@ -323,10 +330,10 @@
                 document.getElementById('user-level').textContent = progress.level || 1;
                 
                 const currentXP = progress.points || 0;
-                const currentLevel = Math.floor(Math.sqrt(currentXP / 100)) + 1;
-                const nextLevelXP = Math.pow(currentLevel, 2) * 100;
-                const prevLevelXP = Math.pow(currentLevel - 1, 2) * 100;
-                const progressPercent = Math.min(100, Math.max(0, ((currentXP - prevLevelXP) / (nextLevelXP - prevLevelXP)) * 100));
+                const currentLevel = Math.floor(currentXP / 1000) + 1;
+                const nextLevelXP = currentLevel * 1000;
+                const prevLevelXP = (currentLevel - 1) * 1000;
+                const progressPercent = Math.min(100, Math.max(0, ((currentXP - prevLevelXP) / 1000) * 100));
                 
                 document.getElementById('level-progress').style.width = `${progressPercent}%`;
                 document.getElementById('current-xp').textContent = `${currentXP} XP ARCHIVED`;
@@ -345,7 +352,7 @@
                 if (Object.keys(definitions).length === 0) return;
                 container.innerHTML = '';
                 Object.values(definitions).forEach(achievement => {
-                    const isEarned = earned.includes(achievement.id);
+                    const isEarned = earned.some(e => (typeof e === 'string' ? e === achievement.id : e && e.id === achievement.id));
                     const card = document.createElement('div');
                     card.className = `merit-badge-atlas premium-glass p-6 text-center border border-white/5 ${isEarned ? 'earned' : ''}`;
                     card.innerHTML = `
@@ -409,47 +416,27 @@
                 }
             }
 
-            // --- LocalStorage Caching for Performance ---
-            function loadFromCache() {
-                const cache = localStorage.getItem('profile_stats_cache');
-                if (cache) {
-                    const data = JSON.parse(cache);
-                    applyStatsToUI(data);
+            // --- 🛡️ Profile Truth: Rely 100% on DynamoDB (Neural Core) ---
+            async function syncWithServer() {
+                if (window.gamificationSystem) {
+                    const progress = await window.gamificationSystem.getProgressSummary();
+                    updateProfileDisplay();
+                    console.log('✅ [NEURAL_PROFILE] DB Truth Synchronized.');
                 }
             }
-
-            function applyStatsToUI(progress) {
-                document.getElementById('videos-watched').textContent = progress.videosWatched || 0;
-                document.getElementById('courses-completed').textContent = progress.coursesCompleted || 0;
-                document.getElementById('achievements-earned').textContent = progress.achievements || 0;
-                document.getElementById('longest-streak').textContent = progress.longestStreak || 0;
-                document.getElementById('user-level').textContent = progress.level || 1;
-                
-                const currentXP = progress.experiencePoints || progress.points || 0;
-                const currentLevel = GamificationSystem.calculateLevel(currentXP);
-                const progressPercent = GamificationSystem.calculateProgress(currentXP, currentLevel);
-                
-                document.getElementById('level-progress').style.width = `${progressPercent}%`;
-                document.getElementById('current-xp').textContent = `${currentXP} XP ARCHIVED`;
-                const nextLVL = Math.pow(currentLevel, 2) * 100;
-                document.getElementById('next-level-xp').textContent = `${Math.max(0, nextLVL - currentXP)} XP TO ASCENSION`;
-            }
-
-            loadFromCache();
 
             loadWatchDates().then(() => {
                 if (window.gamificationSystem) {
-                    window.gamificationSystem.syncWithLocalStorageVideos().then(() => {
-                        window.gamificationSystem.getProgressSummary().then(progress => {
-                            localStorage.setItem('profile_stats_cache', JSON.stringify(progress));
-                            applyStatsToUI(progress);
-                            populateAchievements();
-                            populateStreakCalendar();
-                        });
-                    });
+                    syncWithServer();
+                } else {
+                    tryUpdateProfile();
                 }
-                else tryUpdateProfile();
             });
+
+            // Reactive update on focus
+            window.onfocus = () => {
+                syncWithServer();
+            };
 
             document.getElementById('prev-month').addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); populateStreakCalendar(); });
             document.getElementById('next-month').addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); populateStreakCalendar(); });

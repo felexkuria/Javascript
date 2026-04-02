@@ -5,12 +5,18 @@ dynamodb = boto3.resource('dynamodb')
 
 def _parse_record(record):
     """Unwrap either a raw S3 record or an SNS-envelope S3 record."""
-    if 'Sns' in record:
+    if 'detail' in record: # EventBridge / Step Function Format
+        bucket = record['detail']['bucket']['name']
+        key    = urllib.parse.unquote_plus(record['detail']['object']['key'])
+    elif 'Sns' in record: # Legacy SNS Format
         s3_rec = json.loads(record['Sns']['Message'])['Records'][0]['s3']
+        bucket = s3_rec['bucket']['name']
+        key    = urllib.parse.unquote_plus(s3_rec['object']['key'])
+    elif 's3' in record: # Legacy Raw S3 Format
+        bucket = record['s3']['bucket']['name']
+        key    = urllib.parse.unquote_plus(record['s3']['object']['key'])
     else:
-        s3_rec = record['s3']
-    bucket = s3_rec['bucket']['name']
-    key    = urllib.parse.unquote_plus(s3_rec['object']['key'])
+        raise ValueError("Unknown record format")
     return bucket, key
 
 def lambda_handler(event, context):
@@ -80,16 +86,10 @@ def _process(bucket, key):
 
     table = dynamodb.Table(table_name)
 
-    # ⚠️ PERFORMANCE TODO (Junior Task):
-    # Replace this full-table scan with a GSI query once you have created
-    # a Global Secondary Index with s3Key as the Partition Key.
-    # Example:
-    #   response = table.query(
-    #       IndexName='s3Key-index',
-    #       KeyConditionExpression=boto3.dynamodb.conditions.Key('s3Key').eq(key)
-    #   )
-    response = table.scan(
-        FilterExpression=boto3.dynamodb.conditions.Attr('s3Key').eq(key)
+    # Optimized (Senior Data Engineer): GSI Query via s3Key-index
+    response = table.query(
+        IndexName='s3Key-index',
+        KeyConditionExpression=boto3.dynamodb.conditions.Key('s3Key').eq(key)
     )
 
     thumbnail_url = f"https://{bucket}.s3.amazonaws.com/{thumb_key}"

@@ -429,7 +429,9 @@ resource "aws_lambda_function" "extract_thumbnail" {
   # Self-managed FFmpeg layer built from ffmpeg.zip (see ffmpeg_layer.tf).
   # Previously referenced a public 3rd-party ARN — using our own layer gives
   # full control over the binary version and avoids external dependency.
-  layers = [aws_lambda_layer_version.ffmpeg.arn]
+  # Using private version of the FFmpeg layer deployed via SAR (Serverless App Repo)
+  # This resolves the 'lambda:GetLayerVersion' access issues identified with public ARNs.
+  layers = [aws_serverlessapplicationrepository_cloudformation_stack.ffmpeg_layer.outputs.LayerVersionArn]
 
   environment {
     variables = {

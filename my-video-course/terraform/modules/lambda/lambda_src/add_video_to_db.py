@@ -1,14 +1,17 @@
-import json, os, urllib.parse, boto3, re
+import json, os, urllib.parse, boto3, re, hashlib
 from datetime import datetime
 
 dynamodb = boto3.resource('dynamodb')
 
 def lambda_handler(event, context):
-    try:
+    if 'detail' in event: # EventBridge / Step Function Format
+        bucket = event['detail']['bucket']['name']
+        key = urllib.parse.unquote_plus(event['detail']['object']['key'])
+    elif 'Records' in event: # Legacy S3 / SNS Format
         rec = event['Records'][0]['s3']
         bucket = rec['bucket']['name']
         key = urllib.parse.unquote_plus(rec['object']['key'])
-    except Exception:
+    else:
         return {'status': 'ignored'}
     
     if not key.startswith("videos/") or not key.lower().endswith(('.mp4', '.mov', '.mkv', '.avi', '.webm')):
@@ -24,9 +27,14 @@ def lambda_handler(event, context):
     thumb_path = f"thumbnails/{course_folder}/{title}.jpg"
     thumbnail_url = f"https://{bucket}.s3.amazonaws.com/{thumb_path}"
     
+    # [IDEMPOTENCY FIX]: Deterministic VideoID based on S3 Key
+    video_id_seed = f"{course_name}_{key}"
+    video_id_hash = hashlib.sha256(video_id_seed.encode()).hexdigest()[:12]
+    video_id = f"{course_name}_{title.replace(' ', '_')}_{video_id_hash}"
+    
     video_data = {
         'courseName': course_name,
-        'videoId': f"{course_name}_{title}_{int(context.aws_request_id.replace('-', '')[:8], 16)}",
+        'videoId': video_id,
         'title': title.replace('_', ' ').title(),
         'videoUrl': f"https://{bucket}.s3.amazonaws.com/{key}",
         'thumbnailUrl': thumbnail_url,

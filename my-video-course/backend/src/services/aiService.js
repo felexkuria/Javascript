@@ -16,6 +16,7 @@ try {
 }
 
 const promptManager = require('./promptManager');
+const gamificationManager = require('./gamificationManager');
 const { QuizSchema, TodoSchema, VideoMetadataSchema } = require('../models/schema');
 
 class AIService {
@@ -47,54 +48,25 @@ class AIService {
   }
 
   async generateContent(prompt, options = {}) {
-    // Primary: Nova Lite (Stable for general generation)
-    // Fallback: Gemini 1.5 Flash
+    // 1. Primary Priority: Bedrock SDK (Converse API)
+    // 2. Secondary Priority: Nova Proxy 
+    // 3. Fallback: Gemini 1.5 Flash
     try {
       return await this.generateWithNova(prompt, options.systemPrompt);
     } catch (error) {
-      console.warn("Nova generation failed, falling back to Gemini:", error.message);
+      console.warn("Nova generation (SDK + Proxy) failed, falling back to Gemini:", error.message);
       return await this.fallbackToGemini(prompt, { systemPrompt: options.systemPrompt });
     }
   }
 
    async generateWithNova(prompt, systemPrompt = "You are a helpful assistant.") {
-    // 1. Check for custom Proxy Endpoint first (Premium High-Fidelity Flow)
-    if (process.env.NOVA_ENDPOINT && process.env.NOVA_API_KEY && process.env.NOVA_API_KEY.includes('bedrock-api-key')) {
-      try {
-        console.log('🚀 Using Premium Nova Proxy Endpoint for high-fidelity generation...');
-        const response = await fetch(process.env.NOVA_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.NOVA_API_KEY}`
-          },
-          body: JSON.stringify({
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: prompt }
-            ],
-            model: 'nova-lite-v1', // Updated to Lite
-            temperature: 0.7,
-            max_tokens: 4096
-          })
-        });
-
-        const data = await response.json();
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-          return data.choices[0].message.content;
-        }
-        console.warn('⚠️ Proxy response invalid or empty, falling back to Bedrock SDK...');
-      } catch (proxyError) {
-        console.error('❌ Nova Proxy Error:', proxyError.message);
-      }
-    }
-
-    // 2. Optimized Bedrock SDK Flow (Using Converse API)
+    // 1. Primary: Optimized Bedrock SDK Flow (Using Converse API with provided keys)
     try {
       if (!this.client || !ConverseCommand) {
         throw new Error("AWS Bedrock Converse client not initialized.");
       }
 
+      console.log('🚀 Attempting direct AWS Bedrock SDK (nova-lite)...');
       const command = new ConverseCommand({
         modelId: "amazon.nova-lite-v1:0", // Matches approved quota
         system: [{ text: systemPrompt }],
@@ -112,16 +84,48 @@ class AIService {
       });
 
       const response = await this.client.send(command);
+      console.log('✅ Success: AWS Bedrock SDK (Standard)');
       return response.output.message.content[0].text;
-    } catch (error) {
-      console.error("❌ Bedrock Nova Error:", error.message);
+    } catch (sdkError) {
+      console.warn("⚠️ Bedrock SDK Error:", sdkError.message);
       
-      if (error.name === 'ThrottlingException' || error.message.includes('Too many tokens')) {
-        console.log('🔄 Throttled on Bedrock, switching to Gemini fallback...');
+      // 2. Secondary: Check for custom Proxy Endpoint (Failover Flow)
+      if (process.env.NOVA_ENDPOINT && process.env.NOVA_API_KEY) {
+        try {
+          console.log('🔄 SDK failed, falling back to Nova Proxy Endpoint...');
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s Timeout
+
+          const response = await fetch(process.env.NOVA_ENDPOINT, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.NOVA_API_KEY}`
+            },
+            body: JSON.stringify({
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: prompt }
+              ],
+              model: 'nova-lite-v1', // Updated to Lite
+              temperature: 0.7,
+              max_tokens: 4096
+            }),
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+          const data = await response.json();
+          if (data.choices && data.choices[0] && data.choices[0].message) {
+            console.log('✅ Success: Nova Proxy Endpoint');
+            return data.choices[0].message.content;
+          }
+        } catch (proxyError) {
+          console.error('❌ Nova Proxy Error:', proxyError.message);
+        }
       }
       
-      // Final fallback to Gemini
-      return await this.fallbackToGemini(prompt, { systemPrompt });
+      throw sdkError; // If both fail, trigger Gemini fallback
     }
   }
 
@@ -235,37 +239,97 @@ class AIService {
     return this.generateQuizQuestions(transcript, videoTitle);
   }
 
-  async generateChatResponse(message, context = {}) {
+  async generateChatResponse(message, context = {}, userId = 'engineerfelex@gmail.com', history = []) {
+    // Fetch user context for gamification (mentions)
+    const userData = await gamificationManager.getUserData(userId);
+    const currentPoints = userData.totalPoints || 0;
+
+    // Format chat history (last 5 turns) for context
+    const formattedHistory = (history || []).slice(-5).map(msg => {
+      const content = msg.content || msg.c || msg.message;
+      const role = (msg.role === 'user' || msg.user === true) ? 'Student' : 'David J. Malan';
+      return content ? `${role}: ${content}` : '';
+    }).filter(line => line !== '').join('\n');
+
+    console.log(`🧠 AI Memory Sync: Processing ${history ? history.length : 0} turns for ${userId}`);
+
     const { system, user } = promptManager.getPrompt('david_malan', { 
       question: message, 
-      context: context?.transcript ? context.transcript.slice(0, 1000) : '' 
+      history: formattedHistory || "No previous history.",
+      context: typeof context === 'string' ? context : (context?.transcript ? context.transcript.slice(0, 1000) : '')
     });
 
-    // 1. Primary Priority: Gemini 2.0 Flash
-    if (this.genAI && !this.geminiDisabled) {
-      try {
-        const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-        const result = await model.generateContent(`${system}\n\nUser: ${user}`);
-        const response = await result.response;
-        return response.text();
-      } catch (geminiError) {
-        if (geminiError.message.includes('403') || geminiError.message.includes('leaked')) {
-          console.error("🚫 Gemini Key is LEAKED. Proactively disabling Gemini for this session.");
-          this.geminiDisabled = true;
+    let aiResponse = '';
+
+    // 1. Primary Priority: Nova (Direct SDK or Proxy)
+    try {
+      console.log('🚀 Attempting Amazon Nova (SDK/Proxy)...');
+      aiResponse = await this.generateWithNova(user, system);
+    } catch (novaError) {
+      console.warn("⚠️ Nova Engine failed, trying Gemini:", novaError.message);
+      
+      // 2. Secondary Priority: Gemini
+      if (this.genAI && !this.geminiDisabled) {
+        try {
+          console.log('🚀 Attempting Google Gemini failover...');
+          let model;
+          try {
+            model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); 
+          } catch (setupError) {
+            console.warn("⚠️ Gemini-1.5-flash setup failed, using pro fallback...");
+            model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+          }
+          
+          const result = await model.generateContent(`${system}\n\nUser: ${user}`);
+          const response = await result.response;
+          aiResponse = response.text();
+          console.log('✅ Success: Google Gemini');
+        } catch (geminiError) {
+          console.warn("❌ Gemini failover failed:", geminiError.message);
         }
-        console.warn("⚠️ Gemini Primary Chat failed, failing over to Nova:", geminiError.message);
-        // Fallthrough seamlessly to Nova
       }
     }
 
-    // 2. Secondary Priority: Nova Lite
-    try {
-      console.log("🚀 Executing Nova Lite secondary failover...");
-      return await this.generateWithNova(user, system);
-    } catch (novaError) {
-      console.warn("❌ Both AI engines failed entirely. Activating static offline fallback:", novaError.message);
-      return this.staticMalanResponse(message, context);
+    // 3. Final Fallback: Static Offline
+    if (!aiResponse) {
+      console.warn("❌ All AI engines failed entirely. Activating static offline fallback.");
+      aiResponse = this.staticMalanResponse(message, context);
     }
+
+    // Intercept evaluation trigger
+    let xp_change = 0;
+    let new_total = null;
+    
+    // Always fetch latest total from DynamoDB (Source of Truth)
+    const currentSync = await gamificationManager.getUserData(userId);
+    new_total = currentSync.totalPoints;
+    
+    const evaluationMatch = aiResponse.match(/\[\[EVALUATION:(.*?)\]\]/);
+    if (evaluationMatch) {
+      try {
+        const evalData = JSON.parse(evaluationMatch[1]);
+        xp_change = evalData.xp_change || 0;
+        
+        console.log(`🎯 AI Evaluation Signal Detected for ${userId}: ${xp_change > 0 ? '+' : ''}${xp_change} XP`);
+        
+        // Award/Deduct XP atomically
+        const result = await gamificationManager.adjustChatExperiencePoints(userId, xp_change);
+        new_total = result.totalPoints;
+        
+        // Strip trigger from response
+        aiResponse = aiResponse.replace(evaluationMatch[0], '').trim();
+      } catch (parseError) {
+        console.error('❌ Failed to parse evaluation trigger:', parseError.message);
+      }
+    } else {
+      console.log(`ℹ️ No AI Evaluation Signal detected for ${userId}. Current Total: ${new_total}`);
+    }
+    
+    return { 
+      response: aiResponse, 
+      xp_change, 
+      new_total 
+    };
   }
 
   async analyzeVisualContent(title, previews = []) {
@@ -277,7 +341,7 @@ class AIService {
     try {
       if (!this.genAI) return "Vision AI not configured.";
       
-      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
       
       // Prepare image parts (for now just the first 3 frames for key insights)
       const imageParts = await Promise.all(previews.slice(0, 3).map(async (url) => {
@@ -379,7 +443,7 @@ class AIService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
       const fullPrompt = `${context.systemPrompt || ''}\n\nPrompt: ${prompt}`;
       
       const result = await model.generateContent(fullPrompt);

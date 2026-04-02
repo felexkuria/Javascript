@@ -235,6 +235,17 @@ class DynamoDBService {
     }
   }
 
+  // --- NEW (Senior Data Engineer): Deterministic VideoID Generation ---
+  // Ensures consistency between Backend-driven saves and S3-triggered Lambda saves.
+  generateDeterministicVideoId(courseName, s3Key) {
+    const crypto = require('crypto');
+    const path = require('path');
+    const title = path.basename(s3Key, path.extname(s3Key));
+    const seed = `${courseName}_${s3Key}`;
+    const hash = crypto.createHash('sha256').update(seed).digest('hex').substring(0, 12);
+    return `${courseName}_${title.replace(/\s+/g, '_')}_${hash}`;
+  }
+
   // Video operations
   async saveVideo(video) {
     if (!this.isConnected) return false;

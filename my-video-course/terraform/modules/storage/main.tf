@@ -121,7 +121,8 @@ locals {
       range_key = "videoId"
       attributes = [
         { name = "courseName", type = "S" },
-        { name = "videoId", type = "S" }
+        { name = "videoId", type = "S" },
+        { name = "s3Key", type = "S" }
       ]
       ttl_attribute = null
       gsis = [

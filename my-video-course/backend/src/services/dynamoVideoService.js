@@ -2,6 +2,7 @@ const dynamodb = require('../utils/dynamodb');
 const { GetCommand, PutCommand } = require('@aws-sdk/lib-dynamodb');
 const fs = require('fs');
 const path = require('path');
+const gamificationManager = require('./gamificationManager');
 
 // Use environment-specific table names
 const environment = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
@@ -91,8 +92,8 @@ class DynamoVideoService {
     if (!course) return [];
     
     // 1. Fetch user-specific progress to ensure watched states are up to date
-    const userGamification = await this.getUserGamificationData(userId);
-    const watchedVideos = userGamification?.userStats?.videosWatched || {};
+    const userGamification = await gamificationManager.getUserData(userId);
+    const watchedVideos = userGamification?.videosWatched || {};
     
     // 2. Normalize videos with watched state
     const allVideos = (course.videos || []).map(v => ({
@@ -182,8 +183,8 @@ class DynamoVideoService {
 
   // Personalize courses with user-specific data and proper sorting
   async personalizeCoursesForUser(courses, userId) {
-    const userGamification = await this.getUserGamificationData(userId);
-    const watchedVideos = userGamification?.userStats?.videosWatched || {};
+    const userGamification = await gamificationManager.getUserData(userId);
+    const watchedVideos = userGamification?.videosWatched || {};
     
     return courses.map(course => {
       const personalizedVideos = (course.videos || []).map(video => ({
@@ -231,8 +232,8 @@ class DynamoVideoService {
 
   // Personalize videos with user-specific watch status and proper sorting
   async personalizeVideosForUser(videos, userId) {
-    const userGamification = await this.getUserGamificationData(userId);
-    const watchedVideos = userGamification?.userStats?.videosWatched || {};
+    const userGamification = await gamificationManager.getUserData(userId);
+    const watchedVideos = userGamification?.videosWatched || {};
     
     const personalizedVideos = videos.map(video => ({
       ...video,
@@ -289,33 +290,10 @@ class DynamoVideoService {
         // Update the actual video watch status in DynamoDB
         const success = await dynamodb.updateVideoWatchStatus(courseName, videoId, watched, userId);
         
-        // Also update user's gamification data with watch status
-        const userGamification = await this.getUserGamificationData(userId) || {
-          userStats: { videosWatched: {}, totalPoints: 0, currentLevel: 1 }
-        };
-        
-        if (!userGamification.userStats) {
-          userGamification.userStats = { videosWatched: {}, totalPoints: 0, currentLevel: 1 };
+        // Also award points via gamificationManager (Syncing Video IDs)
+        if (success && watched) {
+          await gamificationManager.recordVideoWatch(userId, courseName, `lesson_watch_${videoId}`, videoId);
         }
-        if (!userGamification.userStats.videosWatched) {
-          userGamification.userStats.videosWatched = {};
-        }
-        
-        // --- NEW (Senior Data Engineer): Activity Logging ---
-        if (!userGamification.streakData) {
-          userGamification.streakData = { currentStreak: 0, longestStreak: 0, lastActivity: null, streakDates: [] };
-        }
-        if (!userGamification.streakData.streakDates) {
-          userGamification.streakData.streakDates = [];
-        }
-        
-        const today = new Date().toISOString().split('T')[0];
-        if (watched && !userGamification.streakData.streakDates.includes(today)) {
-          userGamification.streakData.streakDates.push(today);
-        }
-        
-        userGamification.userStats.videosWatched[videoId] = watched;
-        await this.updateUserGamificationData(userId, userGamification);
         
         // --- NEW: Sync enrollment progress ---
         if (success && watched) {
@@ -354,111 +332,9 @@ class DynamoVideoService {
     return false;
   }
 
-  // Get user gamification data
-  async getUserGamificationData(userId) {
-    let data = null;
-    if (this.isDynamoAvailable()) {
-      try {
-        data = await dynamodb.getGamificationData(userId);
-      } catch (error) {
-        console.error('DynamoDB error, falling back to localStorage:', error);
-      }
-    }
+  // getUserGamificationData has been consolidated into gamificationManager.js
 
-    // Fallback to localStorage only for engineerfelex@gmail.com
-    if (!data && userId === 'engineerfelex@gmail.com') {
-      const gData = this.getGamificationData();
-      data = gData['default_user'] || null;
-    }
-
-    // 🏗️ Schema Normalization Layer (Fixes Flat vs Nested logic)
-    const normalized = {
-      userStats: {
-        totalPoints: 0,
-        videosWatched: {},
-        coursesCompleted: 0,
-        currentLevel: 1,
-        experiencePoints: 0,
-        quizzesTaken: 0,
-        perfectQuizzes: 0,
-        studyDays: 0
-      },
-      achievements: [],
-      streakData: {
-        currentStreak: 0,
-        longestStreak: 0,
-        lastActivity: new Date().toISOString()
-      }
-    };
-
-    if (data) {
-      const stats = data.userStats || data; // Handle both nested and flat schemas
-      normalized.userStats = {
-        totalPoints: Number(stats.totalPoints || data.totalPoints || 0),
-        videosWatched: stats.videosWatched || data.videosWatched || {},
-        coursesCompleted: Number(stats.coursesCompleted || data.coursesCompleted || 0),
-        currentLevel: Math.floor(Math.sqrt((Number(stats.experiencePoints || data.experiencePoints || stats.totalPoints || data.totalPoints || 0)) / 100)) + 1,
-        experiencePoints: Number(stats.experiencePoints || data.experiencePoints || stats.totalPoints || data.totalPoints || 0),
-        quizzesTaken: Number(stats.quizzesTaken || data.quizzesTaken || 0),
-        perfectQuizzes: Number(stats.perfectQuizzes || data.perfectQuizzes || 0),
-        studyDays: Number(stats.studyDays || data.studyDays || 0)
-      };
-      normalized.achievements = data.achievements || [];
-      normalized.streakData = data.streakData || normalized.streakData;
-      
-      // --- NEW (Senior Data Engineer): SOTA Activity & XP Recovery ---
-      // 🔧 FIX: If XP is 0 but videosWatched exists, reconstruct the missing XP (50 per activity)
-      if (normalized.userStats.totalPoints === 0) {
-        const watchedCount = Object.keys(normalized.userStats.videosWatched).length;
-        if (watchedCount > 0) {
-          console.log(`[SYS] Reconstructing missing XP for user ${userId} (${watchedCount} lessons found).`);
-          normalized.userStats.totalPoints = watchedCount * 50;
-          normalized.userStats.experiencePoints = watchedCount * 50;
-          normalized.userStats.currentLevel = Math.floor(Math.sqrt(normalized.userStats.totalPoints / 100)) + 1;
-          
-          // Silently trigger an archive of the recovered truth
-          this.updateUserGamificationData(userId, normalized).catch(e => console.error('Archive Sync Failed:', e));
-        }
-      }
-      
-      // 🔧 FIX: Null-guard streakDates before accessing .length (first-login crash)
-      if (!normalized.streakData.streakDates) normalized.streakData.streakDates = [];
-      if (normalized.streakData.streakDates.length === 0 && Object.keys(normalized.userStats.videosWatched).length > 0) {
-        console.log(`[SYS] Backfilling streak dates for user ${userId}...`);
-        const watchDates = new Set();
-        // Here we'd ideally fetch all videos to get watchedAt, but for now we'll assume today if none found
-        // To be truly accurate, we trust the updateVideoWatchStatus to handle NEW events,
-        // but for migration, we'll mark the 'lastActivity' date at minimum.
-        if (normalized.streakData.lastActivity) {
-          watchDates.add(normalized.streakData.lastActivity.split('T')[0]);
-        }
-        normalized.streakData.streakDates = Array.from(watchDates);
-      }
-    }
-
-    return normalized;
-  }
-
-  // Update user gamification data with schema enforcement
-  async updateUserGamificationData(userId, data) {
-    if (!this.isDynamoAvailable()) return false;
-    try {
-      // 🛡️ Enforce clean nested schema on save
-      const cleanData = {
-        userStats: data.userStats ? { ...data.userStats } : {},
-        achievements: data.achievements || [],
-        streakData: data.streakData || { currentStreak: 0, longestStreak: 0, streakDates: [] }
-      };
-      
-      // 🔧 FIX: Safe-delete userId only if it exists (prevents TypeError on clean data)
-      if (cleanData.userStats && 'userId' in cleanData.userStats) delete cleanData.userStats.userId;
-      
-      return await dynamodb.saveGamificationData(userId, cleanData);
-    } catch (error) {
-      console.error('Error updating gamification data:', error);
-      return false;
-    }
-  }
+  // updateUserGamificationData has been consolidated into gamificationManager.js
 
   async updateStreak(userId) {
     const data = await this.getUserGamificationData(userId);
@@ -843,6 +719,15 @@ class DynamoVideoService {
       date,
       count: activityMap[date]
     }));
+  }
+
+  // 🛡️ Truth Bridge: Restoration of missing Gamification Service hooks
+  async getUserGamificationData(userId) {
+    return await gamificationManager.getUserData(userId);
+  }
+
+  async updateUserGamificationData(userId, data) {
+    return await gamificationManager.updateUserData(userId, data);
   }
 
   // Health check

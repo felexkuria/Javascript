@@ -11,7 +11,8 @@
     "lint:fix": "eslint src/**/*.js --fix",
     "format": "prettier --write src/**/*.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:smoke": "node tests/smoke-test.js"
+    "test:smoke": "node tests/smoke-test.js",
+    "test:neural-core": "node tests/gamification-neural-sync.test.js"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.876.0",

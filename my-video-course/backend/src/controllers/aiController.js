@@ -193,7 +193,8 @@ class AIController {
 
   async chatbot(req, res) {
     try {
-      const { message, courseName, videoTitle } = req.body;
+      const { message, courseName, videoTitle, history } = req.body;
+      const userId = req.user?.email || req.user?.id || 'engineerfelex@gmail.com';
 
       if (!message || message.trim().length === 0) {
         return res.status(400).json({ error: 'Message is required' });
@@ -201,16 +202,20 @@ class AIController {
 
       try {
         const context = courseName ? `Course: ${courseName}${videoTitle ? `, Video: ${videoTitle}` : ''}` : '';
-        const aiResponse = await aiService.generateChatResponse(message, context);
+        const result = await aiService.generateChatResponse(message, context, userId, history || []);
+        
         res.json({ 
-          response: aiResponse,
-          aiModel: aiResponse.includes('David J. Malan') ? 'Static Fallback' : (process.env.GEMINI_API_KEY ? 'Gemini 1.5 Flash' : 'Amazon Nova Lite')
+          response: result.response,
+          xp_change: result.xp_change,
+          new_total: result.new_total,
+          aiModel: result.response.includes('David J. Malan') ? 'Static Fallback' : (process.env.GEMINI_API_KEY ? 'Gemini 1.5 Flash' : 'Amazon Nova Lite')
         });
       } catch (aiError) {
         console.warn('AI Service Failover Protocol Activated:', aiError.message);
         const offlineResponse = this.getOfflineResponse(message, courseName, videoTitle);
         res.json({ 
           response: offlineResponse,
+          xp_change: 0,
           aiModel: 'Offline Fallback'
         });
       }
