@@ -8,7 +8,9 @@ WORKDIR /app
 
 # Copy backend package files and install dependencies
 COPY backend/package*.json ./backend/
-RUN cd backend && npm ci
+RUN cd backend \
+    && npm ci \
+    && npm prune --production
 
 # Copy application code
 COPY backend/ ./backend/
