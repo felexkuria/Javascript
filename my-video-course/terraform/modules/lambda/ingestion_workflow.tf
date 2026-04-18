@@ -1,14 +1,16 @@
-# Pillar 2 & 3: State Management & Dead Letter Queues
 # This file implements the AWS Step Functions orchestrator and SQS DLQs.
+# (Refreshed to clear linter cache)
 
 # --- SQS Dead Letter Queues ---
 resource "aws_sqs_queue" "pipeline_dlq" {
+  count                     = var.create_pipeline_queue ? 1 : 0
   name                      = "${var.app_name}-ingestion-dlq-${var.environment}"
   message_retention_seconds = 1209600 # 14 days
 }
 
 # --- CloudWatch Metric Alarms for DLQ ---
 resource "aws_cloudwatch_metric_alarm" "dlq_not_empty" {
+  count               = var.create_pipeline_queue ? 1 : 0
   alarm_name          = "${var.app_name}-dlq-alarm-${var.environment}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "1"
@@ -19,13 +21,14 @@ resource "aws_cloudwatch_metric_alarm" "dlq_not_empty" {
   threshold           = "0"
   alarm_description   = "This alarm fires if any message enters the ingestion DLQ."
   dimensions = {
-    QueueName = aws_sqs_queue.pipeline_dlq.name
+    QueueName = aws_sqs_queue.pipeline_dlq[0].name
   }
 }
 
 # --- IAM Role for Step Functions ---
 resource "aws_iam_role" "sfn_role" {
-  name = "${var.app_name}-sfn-role-${var.environment}"
+  count = var.create_ingestion_workflow ? 1 : 0
+  name  = "${var.app_name}-sfn-role-${var.environment}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -38,8 +41,9 @@ resource "aws_iam_role" "sfn_role" {
 }
 
 resource "aws_iam_role_policy" "sfn_policy" {
-  name = "${var.app_name}-sfn-policy-${var.environment}"
-  role = aws_iam_role.sfn_role.id
+  count = var.create_ingestion_workflow ? 1 : 0
+  name  = "${var.app_name}-sfn-policy-${var.environment}"
+  role  = aws_iam_role.sfn_role[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -49,10 +53,14 @@ resource "aws_iam_role_policy" "sfn_policy" {
         Action   = ["lambda:InvokeFunction"]
         Resource = "*" # Restrict this to specific Lambdas if possible
       },
-      {
+      var.create_pipeline_queue ? {
         Effect   = "Allow"
         Action   = ["sqs:SendMessage"]
-        Resource = aws_sqs_queue.pipeline_dlq.arn
+        Resource = aws_sqs_queue.pipeline_dlq[0].arn
+      } : {
+        Effect   = "Allow"
+        Action   = ["sqs:GetQueueAttributes"] # Placeholder if no queue exists
+        Resource = "*"
       }
     ]
   })
@@ -60,8 +68,9 @@ resource "aws_iam_role_policy" "sfn_policy" {
 
 # --- Step Function Definition ---
 resource "aws_sfn_state_machine" "ingestion_workflow" {
+  count    = var.create_ingestion_workflow ? 1 : 0
   name     = "${var.app_name}-ingestion-v2-${var.environment}"
-  role_arn = aws_iam_role.sfn_role.arn
+  role_arn = aws_iam_role.sfn_role[0].arn
 
   definition = jsonencode({
     Comment = "Hardened Video Ingestion Pipeline"
@@ -125,7 +134,7 @@ resource "aws_sfn_state_machine" "ingestion_workflow" {
         Type     = "Task"
         Resource = "arn:aws:states:::sqs:sendMessage"
         Parameters = {
-          QueueUrl = aws_sqs_queue.pipeline_dlq.url
+          QueueUrl = var.create_pipeline_queue ? aws_sqs_queue.pipeline_dlq[0].url : "DISABLED"
           MessageBody = {
             "Input.$" = "$"
             "Error"   = "Pipeline execution failed"
@@ -140,6 +149,7 @@ resource "aws_sfn_state_machine" "ingestion_workflow" {
 # --- Trigger Step Function from S3 via EventBridge ---
 # (Removing the old SNS target and moving to EventBridge for direct SFN trigger)
 resource "aws_cloudwatch_event_rule" "s3_upload" {
+  count       = var.create_ingestion_workflow ? 1 : 0
   name        = "${var.app_name}-s3-upload-trigger"
   description = "Trigger Step Function on S3 Video upload"
   event_pattern = jsonencode({
@@ -153,14 +163,16 @@ resource "aws_cloudwatch_event_rule" "s3_upload" {
 }
 
 resource "aws_cloudwatch_event_target" "sfn_target" {
-  rule      = aws_cloudwatch_event_rule.s3_upload.name
+  count     = var.create_ingestion_workflow ? 1 : 0
+  rule      = aws_cloudwatch_event_rule.s3_upload[0].name
   target_id = "StartIngestionSFN"
-  arn       = aws_sfn_state_machine.ingestion_workflow.arn
-  role_arn  = aws_iam_role.sfn_eb_role.arn
+  arn       = aws_sfn_state_machine.ingestion_workflow[0].arn
+  role_arn  = aws_iam_role.sfn_eb_role[0].arn
 }
 
 resource "aws_iam_role" "sfn_eb_role" {
-  name = "${var.app_name}-eb-to-sfn-role"
+  count = var.create_ingestion_workflow ? 1 : 0
+  name  = "${var.app_name}-eb-to-sfn-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -172,14 +184,15 @@ resource "aws_iam_role" "sfn_eb_role" {
 }
 
 resource "aws_iam_role_policy" "sfn_eb_policy" {
-  name = "${var.app_name}-eb-to-sfn-policy"
-  role = aws_iam_role.sfn_eb_role.id
+  count = var.create_ingestion_workflow ? 1 : 0
+  name  = "${var.app_name}-eb-to-sfn-policy"
+  role  = aws_iam_role.sfn_eb_role[0].id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect   = "Allow"
       Action   = ["states:StartExecution"]
-      Resource = aws_sfn_state_machine.ingestion_workflow.arn
+      Resource = aws_sfn_state_machine.ingestion_workflow[0].arn
     }]
   })
 }

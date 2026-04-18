@@ -39,3 +39,21 @@ variable "existing_role_arn" {
   type    = string
   default = null
 }
+
+variable "create_ffmpeg_layer" {
+  description = "Toggle for FFmpeg layer"
+  type        = bool
+  default     = true
+}
+
+variable "create_pipeline_queue" {
+  description = "Toggle for Pipeline Queue"
+  type        = bool
+  default     = true
+}
+
+variable "create_ingestion_workflow" {
+  description = "Toggle for Step Functions Workflow"
+  type        = bool
+  default     = true
+}

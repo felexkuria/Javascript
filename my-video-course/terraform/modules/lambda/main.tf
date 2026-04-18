@@ -401,8 +401,11 @@ resource "aws_lambda_function" "add_video_to_db" {
   runtime          = "python3.9"
   source_code_hash = data.archive_file.add_video_to_db_zip.output_base64sha256
 
-  dead_letter_config {
-    target_arn = aws_sqs_queue.pipeline_dlq.arn
+  dynamic "dead_letter_config" {
+    for_each = var.create_pipeline_queue ? [1] : []
+    content {
+      target_arn = aws_sqs_queue.pipeline_dlq[0].arn
+    }
   }
 
   environment {
@@ -421,8 +424,11 @@ resource "aws_lambda_function" "extract_thumbnail" {
   runtime          = "python3.12"
   source_code_hash = data.archive_file.extract_thumbnail_zip.output_base64sha256
 
-  dead_letter_config {
-    target_arn = aws_sqs_queue.pipeline_dlq.arn
+  dynamic "dead_letter_config" {
+    for_each = var.create_pipeline_queue ? [1] : []
+    content {
+      target_arn = aws_sqs_queue.pipeline_dlq[0].arn
+    }
   }
   timeout     = 60
   memory_size = 1024
@@ -431,7 +437,7 @@ resource "aws_lambda_function" "extract_thumbnail" {
   # full control over the binary version and avoids external dependency.
   # Using private version of the FFmpeg layer deployed via SAR (Serverless App Repo)
   # This resolves the 'lambda:GetLayerVersion' access issues identified with public ARNs.
-  layers = [aws_serverlessapplicationrepository_cloudformation_stack.ffmpeg_layer.outputs.LayerVersionArn]
+  layers = var.create_ffmpeg_layer ? [aws_serverlessapplicationrepository_cloudformation_stack.ffmpeg_layer[0].outputs.LayerVersionArn] : []
 
   environment {
     variables = {

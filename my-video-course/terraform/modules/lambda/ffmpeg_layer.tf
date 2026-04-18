@@ -5,6 +5,7 @@
 # encountered when referencing public layers across account boundaries.
 
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "ffmpeg_layer" {
+  count          = var.create_ffmpeg_layer ? 1 : 0
   name           = "${var.app_name}-ffmpeg-sar"
   application_id = "arn:aws:serverlessrepo:us-east-1:145266761615:applications/ffmpeg-lambda-layer"
   capabilities   = ["CAPABILITY_IAM", "CAPABILITY_RESOURCE_POLICY"]

@@ -140,6 +140,24 @@ variable "create_dynamodb_tables" {
   default     = true
 }
 
+variable "create_ffmpeg_layer" {
+  description = "Whether to create the FFMPEG Lambda layer via SAR (requires serverlessrepo permissions)"
+  type        = bool
+  default     = true
+}
+
+variable "create_pipeline_queue" {
+  description = "Whether to create the SQS DLQ for the ingestion pipeline"
+  type        = bool
+  default     = true
+}
+
+variable "create_ingestion_workflow" {
+  description = "Whether to create the Step Functions ingestion workflow (requires states permissions)"
+  type        = bool
+  default     = true
+}
+
 variable "existing_lambda_role_arn" {
   description = "Existing IAM role ARN for Lambda (if create_lambda_role is false)"
   type        = string

@@ -35,9 +35,9 @@ locals {
   env_config = {
     prod = {
       instance_type = "t3.micro" # Free-tier eligible in many modern AWS accounts
-      min_size      = 2
-      max_size      = 5
-      desired_cap   = 2
+      min_size      = 1
+      max_size      = 1
+      desired_cap   = 1
     }
     staging = {
       instance_type = "t3.micro"
@@ -170,4 +170,7 @@ module "lambda" {
   dynamodb_table_name = "${var.app_name}-videos-${var.environment}"
   create_role         = var.create_lambda_role
   existing_role_arn   = var.existing_lambda_role_arn
+  create_ffmpeg_layer  = var.create_ffmpeg_layer
+  create_pipeline_queue = var.create_pipeline_queue
+  create_ingestion_workflow = var.create_ingestion_workflow
 }

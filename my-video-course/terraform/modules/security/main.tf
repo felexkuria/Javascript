@@ -18,6 +18,10 @@ resource "aws_secretsmanager_secret" "app" {
     Name        = "${var.app_secrets_id}-${random_string.secret_suffix[0].result}"
     Environment = var.environment
   }
+
+  lifecycle {
+    ignore_changes = [name]
+  }
 }
 
 resource "aws_secretsmanager_secret_version" "app" {

@@ -4,8 +4,9 @@ data "aws_region" "current" {}
 
 # S3 Bucket
 resource "aws_s3_bucket" "main" {
-  count  = var.create_s3_bucket ? 1 : 0
-  bucket = var.s3_bucket_name != "" ? var.s3_bucket_name : "${var.app_name}-video-bucket-${var.environment}-${random_string.suffix[0].result}"
+  count         = var.create_s3_bucket ? 1 : 0
+  bucket        = var.s3_bucket_name != "" ? var.s3_bucket_name : "${var.app_name}-video-bucket-${var.environment}-${random_string.suffix[0].result}"
+  force_destroy = true
 
   tags = {
     Name        = "${var.app_name}-storage"
